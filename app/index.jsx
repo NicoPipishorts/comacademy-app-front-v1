@@ -76,7 +76,7 @@ const AppIndex = () => {
 
 				<ScrollView style={styles.shortcutsContainer} horizontal={true}>
 					<View style={styles.shortcuts}>
-						<ALaUne />
+						<ALaUne content='Notre 10 000eme Utilisateur' />
 					</View>
 				</ScrollView>
 			</ScrollView>
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		padding: 20,
 		paddingTop: 100,
-		backgroundColor: "#fff",
+		backgroundColor: "#f5f5f5",
 	},
 	header: {
 		flexDirection: "row",
@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
 	shortcuts: {
 		flexDirection: "row",
 		justifyContent: "flex-start",
+		minWidth: "100%",
 		marginBottom: 40,
 	},
 	shortcutsCards: {
