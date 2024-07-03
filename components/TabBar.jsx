@@ -11,7 +11,7 @@ import playlists from "../assets/imgs/icons/playlists.png";
 
 function TabBar({ state, descriptors, navigation }) {
 	// Define the desired tab order
-	const desiredOrder = ["index", "le_jeu", "metiers", "dico", "playlists"];
+	const desiredOrder = ["index", "le_jeu", "playlists", "dico", "metiers"];
 
 	// Reorder the state.routes array based on the desired order
 	const orderedRoutes = state.routes.slice().sort((a, b) => {
