@@ -7,6 +7,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import ALaUne from "../components/ALaUne";
 
 // Custom images
 import dico from "../assets/imgs/cards/home_dico.png";
@@ -72,6 +73,12 @@ const AppIndex = () => {
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
+
+				<ScrollView style={styles.shortcutsContainer} horizontal={true}>
+					<View style={styles.shortcuts}>
+						<ALaUne />
+					</View>
+				</ScrollView>
 			</ScrollView>
 		</View>
 	);
@@ -80,8 +87,9 @@ const AppIndex = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#fff",
 		padding: 20,
+		paddingTop: 100,
+		backgroundColor: "#fff",
 	},
 	header: {
 		flexDirection: "row",

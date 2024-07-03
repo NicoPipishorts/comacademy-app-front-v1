@@ -1,4 +1,4 @@
-import TabBar from "@/components/TabBar";
+import TabBar from "@/components/TabBar"; // ensure this path is correct
 import { Tabs } from "expo-router";
 import React from "react";
 
@@ -8,31 +8,41 @@ const _layout = () => {
 			<Tabs.Screen
 				name='index'
 				options={{
-					title: "Accueil",
+					title: null,
+					tabBarLabel: "Accueil",
+					headerShown: false,
 				}}
 			/>
 			<Tabs.Screen
 				name='le_jeu'
 				options={{
-					title: "Le Jeu",
+					title: null,
+					tabBarLabel: "Le Jeu",
+					headerShown: false,
 				}}
 			/>
 			<Tabs.Screen
-				name='playlist'
+				name='playlists'
 				options={{
-					title: "Playlist",
+					title: null,
+					tabBarLabel: "Playlists",
+					headerShown: false,
 				}}
 			/>
 			<Tabs.Screen
 				name='dico'
 				options={{
-					title: "Dico",
+					title: null,
+					tabBarLabel: "Dico",
+					headerShown: false,
 				}}
 			/>
 			<Tabs.Screen
 				name='metiers'
 				options={{
-					title: "Metiers",
+					title: null,
+					tabBarLabel: "Metiers",
+					headerShown: false,
 				}}
 			/>
 		</Tabs>
