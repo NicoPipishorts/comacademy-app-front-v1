@@ -15,6 +15,7 @@ import playlists from "../assets/imgs/cards/home_my_playlists.png";
 import stats from "../assets/imgs/cards/home_my_stats.png";
 import play from "../assets/imgs/cards/home_play.png";
 
+import avatar from "../assets/imgs/avatar/avatar.png";
 import actus from "../assets/imgs/cards/home_actus.png";
 import briefs from "../assets/imgs/cards/home_briefs.png";
 import citations from "../assets/imgs/cards/home_citations.png";
@@ -25,10 +26,7 @@ const AppIndex = () => {
 		<View style={styles.container}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>Hello Arnaud</Text>
-				<Image
-					source={{ uri: "path_to_your_image" }}
-					style={styles.profileImage}
-				/>
+				<Image source={avatar} style={styles.profileImage} />
 			</View>
 
 			<ScrollView
@@ -95,16 +93,16 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 20,
+		marginBottom: 30,
 	},
 	headerText: {
 		fontSize: 22,
 		fontWeight: "bold",
 	},
 	profileImage: {
-		width: 50,
-		height: 50,
-		borderRadius: 25,
+		width: 90,
+		height: 90,
+		marginRight: 10,
 	},
 	contentContainer: {
 		flex: 1, // Control layout with flex
@@ -123,7 +121,7 @@ const styles = StyleSheet.create({
 		marginBottom: 40,
 	},
 	shortcutsCards: {
-		width: 125,
+		width: 127,
 		height: 100,
 	},
 	button: {
