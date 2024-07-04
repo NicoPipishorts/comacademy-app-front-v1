@@ -24,11 +24,10 @@ const ALaUne = ({ content, link }) => {
 const styles = StyleSheet.create({
 	container: {
 		backgroundColor: "#FFF",
-		width: "100%",
+		width: 350,
 		minHeight: 100,
 		padding: 15,
 		borderRadius: 10,
-		overflow: "hidden", // Added to ensure contents do not overflow visually
 	},
 	smallText: {
 		fontSize: 12,
@@ -36,14 +35,14 @@ const styles = StyleSheet.create({
 		paddingBottom: 15,
 	},
 	containerBis: {
-		maxWidth: "94%",
+		flex: 0,
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
 	},
 	mainText: {
 		flex: 1,
-		maxWidth: "70%",
+		maxWidth: "65%",
 		fontSize: 20,
 		fontWeight: "bold",
 	},

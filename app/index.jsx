@@ -35,7 +35,10 @@ const AppIndex = () => {
 				<View style={styles.header}>
 					<Text style={styles.headerShortcuts}>Raccourcis</Text>
 				</View>
-				<ScrollView style={styles.shortcutsContainer} horizontal={true}>
+				<ScrollView
+					style={styles.shortcutsContainer}
+					horizontal={true}
+					showsHorizontalScrollIndicator={false}>
 					<View style={styles.shortcuts}>
 						<TouchableOpacity style={styles.button}>
 							<Image source={stats} style={styles.shortcutsCards} />
@@ -55,7 +58,10 @@ const AppIndex = () => {
 				<View style={styles.header}>
 					<Text style={styles.headerShortcuts}>En ce moment</Text>
 				</View>
-				<ScrollView style={styles.shortcutsContainer} horizontal={true}>
+				<ScrollView
+					style={styles.shortcutsContainer}
+					horizontal={true}
+					showsHorizontalScrollIndicator={false}>
 					<View style={styles.shortcuts}>
 						<TouchableOpacity style={styles.button}>
 							<Image source={actus} style={styles.shortcutsCards} />
@@ -72,7 +78,10 @@ const AppIndex = () => {
 					</View>
 				</ScrollView>
 
-				<ScrollView style={styles.shortcutsContainer} horizontal={true}>
+				<ScrollView
+					style={styles.shortcutsContainer}
+					horizontal={true}
+					showsHorizontalScrollIndicator={false}>
 					<View style={styles.shortcuts}>
 						<ALaUne content='Notre 10 000eme Utilisateur' />
 					</View>
