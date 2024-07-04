@@ -1,0 +1,13 @@
+export const colorBlack = "#272727";
+
+export const colorBlue = "#1B75BB";
+export const colorGreen = "#8BC63F";
+export const colorOrange = "#EE7424";
+export const colorPink = "#CC398C";
+export const colorTurquoise = "#4AADA8";
+export const colorYellow = "#FFBC09";
+export const colorWhite = "#FFF";
+export const colorDarkGrey = "#9F9F9F";
+
+export const primaryBackground = "#f5f5f5";
+export const searchbarBackground = "#E8E8E8";

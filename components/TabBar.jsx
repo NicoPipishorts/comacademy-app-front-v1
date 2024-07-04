@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { primaryColor } from "../constants/colors";
+import { colorBlack, primaryBackground } from "../constants/colors";
+import { FontSizeTabbar } from "../constants/fontsizes";
 
 // Custom icons
 import accueil from "../assets/imgs/icons/accueil.png";
@@ -97,9 +98,10 @@ function TabBar({ state, descriptors, navigation }) {
 const styles = StyleSheet.create({
 	tabbarContainer: {
 		position: "absolute",
-		bottom: 15,
+		bottom: 0,
 		width: "100%",
 		alignItems: "center",
+		backgroundColor: primaryBackground,
 	},
 	tabbar: {
 		flexDirection: "row",
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
 		paddingBottom: 20,
 	},
 	tabbarText: {
-		fontSize: 11,
+		fontSize: FontSizeTabbar,
 		fontWeight: "bold",
 	},
 	tabIcons: {
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
 	focusedTab: {
 		width: "50%",
 		height: 4,
-		backgroundColor: primaryColor,
+		backgroundColor: colorBlack,
 		borderRadius: 2,
 		position: "absolute",
 		bottom: 0,
