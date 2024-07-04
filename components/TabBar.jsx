@@ -102,6 +102,10 @@ const styles = StyleSheet.create({
 		width: "100%",
 		alignItems: "center",
 		backgroundColor: primaryBackground,
+		shadowColor: primaryBackground,
+		shadowOffset: { width: 0, height: -35 },
+		shadowOpacity: 1,
+		shadowRadius: 10,
 	},
 	tabbar: {
 		flexDirection: "row",

@@ -8,9 +8,10 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import FloatingTabBar from "../components/FloatingTabBar";
 import ScreenHeaders from "../components/ScreenHeaders";
 import Searchbar from "../components/Searchbar";
-import { dataMetiers } from "../mocdata/metiers"; // Ensure the path and import are correct
+import { dataMetiers } from "../mocdata/metiers";
 
 const Metier = () => {
 	const [groupedData, setGroupedData] = useState({});
@@ -21,7 +22,7 @@ const Metier = () => {
 		setGroupedData(grouped);
 	}, [data]);
 
-	const alphabet = Object.keys(groupedData).sort(); // Sorted list of first letters
+	const alphabet = Object.keys(groupedData).sort();
 
 	function groupDataByFirstLetter(items, property) {
 		// Sort items alphabetically based on the property
@@ -30,7 +31,7 @@ const Metier = () => {
 		// Group by the first letter of the property
 		const groups = {};
 		items.forEach((item) => {
-			const letter = item[property][0].toUpperCase(); // Get first letter and make it uppercase
+			const letter = item[property][0].toUpperCase();
 			if (!groups[letter]) {
 				groups[letter] = [];
 			}
@@ -66,15 +67,15 @@ const Metier = () => {
 
 				<View style={styles.sidebar}>
 					{alphabet.map((letter) => (
-						<TouchableOpacity
-							key={letter}
-							onPress={() => {
-								/* Implement scrolling to letter */
-							}}>
+						<TouchableOpacity key={letter} onPress={() => {}}>
 							<Text style={styles.sidebarText}>{letter}</Text>
 						</TouchableOpacity>
 					))}
 				</View>
+			</View>
+
+			<View style={styles.floatingTabbarContainer}>
+				<FloatingTabBar />
 			</View>
 		</View>
 	);
@@ -118,6 +119,18 @@ const styles = StyleSheet.create({
 		padding: 1,
 		fontSize: FontSize12,
 		fontWeight: "bold",
+	},
+	floatingTabbarContainer: {
+		backgroundColor: "transparent",
+		flexDirection: "row",
+		justifyContent: "center",
+		alignItems: "center",
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 140,
+		elevation: 5,
+		zIndex: 1,
 	},
 });
 
