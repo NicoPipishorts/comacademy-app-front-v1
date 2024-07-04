@@ -1,3 +1,5 @@
+import { colorWhite } from "@/constants/colors";
+import { FontSize12, FontSize20 } from "@/constants/fontsizes";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import StyledButton from "../components/StyledButton";
@@ -23,14 +25,14 @@ const ALaUne = ({ content, link }) => {
 
 const styles = StyleSheet.create({
 	container: {
-		backgroundColor: "#FFF",
+		backgroundColor: colorWhite,
 		width: 350,
 		minHeight: 100,
 		padding: 15,
 		borderRadius: 10,
 	},
 	smallText: {
-		fontSize: 12,
+		fontSize: FontSize12,
 		fontWeight: "bold",
 		paddingBottom: 15,
 	},
@@ -43,7 +45,7 @@ const styles = StyleSheet.create({
 	mainText: {
 		flex: 1,
 		maxWidth: "65%",
-		fontSize: 20,
+		fontSize: FontSize20,
 		fontWeight: "bold",
 	},
 });
