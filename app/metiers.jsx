@@ -1,6 +1,6 @@
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSizeH4 } from "@/constants/fontsizes";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	ScrollView,
 	StyleSheet,
@@ -12,10 +12,16 @@ import FloatingTabBar from "../components/FloatingTabBar";
 import ScreenHeaders from "../components/ScreenHeaders";
 import Searchbar from "../components/Searchbar";
 import { dataMetiers } from "../mocdata/metiers";
+import MetierDetails from "../screens/MetierDetails";
 
 const Metier = () => {
+	const scrollViewRef = useRef();
+	const sectionRefs = useRef({}).current;
 	const [groupedData, setGroupedData] = useState({});
 	const data = dataMetiers;
+
+	const [showDetails, setShowDetails] = useState(false);
+	const [selectedItem, setSelectedItem] = useState(null);
 
 	useEffect(() => {
 		const grouped = groupDataByFirstLetter(data, "title");
@@ -41,23 +47,59 @@ const Metier = () => {
 		return groups;
 	}
 
+	// Scroll by letter function
+	const scrollToSection = (letter) => {
+		// Find the current ref for the selected letter
+		const section = sectionRefs[letter];
+
+		// Use the ref to scroll into view
+		if (section && scrollViewRef.current) {
+			// Measure the position of the element
+			section.measureLayout(
+				scrollViewRef.current,
+				(x, y, width, height) => {
+					scrollViewRef.current.scrollTo({ x: 0, y, animated: true });
+				},
+				(error) => {
+					console.error("Failed to find element", error);
+				}
+			);
+		}
+	};
+
+	if (showDetails && selectedItem) {
+		return (
+			<MetierDetails
+				item={selectedItem}
+				onGoBack={() => setShowDetails(false)}
+			/>
+		);
+	}
+
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Métiers' />
 
-			<View style={{ paddingTop: 50, paddingHorizontal: 10 }}>
+			<View style={{ paddingTop: 30 }}>
 				<Searchbar placeholder='Rechercher' />
 			</View>
 
 			<View style={styles.contentContainer}>
 				<ScrollView
+					ref={scrollViewRef}
 					style={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
 					{alphabet.map((letter) => (
-						<View key={letter}>
+						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 							<Text style={styles.listHeader}>{letter}</Text>
 							{groupedData[letter].map((item, index) => (
-								<Text key={index} style={styles.listItem}>
+								<Text
+									key={index}
+									style={styles.listItem}
+									onPress={() => {
+										setSelectedItem(item);
+										setShowDetails(true);
+									}}>
 									{item.title}
 								</Text>
 							))}
@@ -67,7 +109,9 @@ const Metier = () => {
 
 				<View style={styles.sidebar}>
 					{alphabet.map((letter) => (
-						<TouchableOpacity key={letter} onPress={() => {}}>
+						<TouchableOpacity
+							key={letter}
+							onPress={() => scrollToSection(letter)}>
 							<Text style={styles.sidebarText}>{letter}</Text>
 						</TouchableOpacity>
 					))}
@@ -84,7 +128,7 @@ const Metier = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 20,
+		padding: 30,
 		paddingTop: 100,
 		backgroundColor: primaryBackground,
 	},
@@ -96,7 +140,7 @@ const styles = StyleSheet.create({
 	},
 	listContainer: {
 		flex: 1,
-		paddingHorizontal: 10,
+		// paddingHorizontal: 10,
 	},
 	listHeader: {
 		fontWeight: "500",

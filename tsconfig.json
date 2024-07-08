@@ -16,7 +16,7 @@
 		"app/dico.jsx",
 		"app/index.jsx",
 		"app/le_jeu.jsx",
-		"app/metiers.jsx",
+		"screen/metiers.jsx",
 		"app/playlist.jsx"
 	]
 }

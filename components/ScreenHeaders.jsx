@@ -13,6 +13,7 @@ const ScreenHeaders = ({ content }) => {
 const styles = StyleSheet.create({
 	container: {
 		paddingVertical: 15,
+		marginRight: 50,
 	},
 	mainText: {
 		fontSize: FontSizeScreenTitles,

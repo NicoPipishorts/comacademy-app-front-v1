@@ -13,7 +13,39 @@ export const dataMetiers = [
 	{ title: "Ehef(fe) de projet" },
 	{ title: "Ehef(fe) de publicité" },
 	{ title: "Nhef(fe) de marque" },
-	{ title: "Mommunity manager" },
+	{
+		title: "Community Manager -",
+		desc: {
+			role: "Appelé aussi DIRCOM, il est chargé de valoriser l’image et l’identité de la société. En lien direct avec le direction générale, il bâtit la stratégie de communication. Il gère, pilote le budget et le plan de communication. Il anime ses équipes et les prestataires (agences, freelance, consultants…) et mesure le résultats. Souvent porte parole de l’entreprise auprès des médias, il est aussi le garant de l’image de l’entreprise auprès du public cible. Et en collaboration étroite avec la direction des Ressources Humaines, il intervient également sur la stratégie et les outils de communication interne pour activer et valoriser la marque employeur.",
+			skills: [
+				"Pluridisciplinaire, polyvalent avec une approche 360° (stratégie, création, digital, RP Influence, event, achat media…)",
+				"Stratège et manager",
+				"Maîtrise et capacité d’expression écrite et orale",
+				"Organisé, réactif, disponible",
+				"Bonne gestion du stress",
+				"Bon sens du relationnel",
+				"Bonne culture générale",
+			],
+			similar:
+				"Responsable de la communication, directeur de la marque, brand manager",
+			opinion:
+				"(profil, parcours types, évolution, missions) \n\n Un passage en agence n’est pas obligatoire mais il peut être fort utile, surtout dans la gestion et le pilotage de la relation avec les agences. On commence souvent chargé de communication puis responsable de la com. Le niveau de responsabilité, le champ d’action et l’organisation de son service peuvent être très différents d’une entreprise à une autre mais aussi d’un secteur à un autre. \n\nIl doit souvent défendre l’utilité de son service et justifier le bien fondé de ses actions. \n\nIl doit faire face aux évolutions des outils et des médias. \n\nLe Dircom doit donc savoir évoluer, s’adapter sans cesse, se former pour rester à la page. C’est un poste de direction où il y a plus de femmes que d’hommes. \nC’est une fonction prenante où il ne faut pas compter ses heures et son énergie. Les missions sont riches et diversifiées.",
+			infos:
+				"Comme c’est souvent le cas pour les postes de direction, il existe de nombreuses organisations professionnelles auxquelles il est important de participer et de contribuer. Club des annonceurs, Association des directeurs de la communication… ces organisations proposent des temps forts : débats, ateliers, groupe de travail, voyages d’études, séminaires, formation, veille. Très utile pour partager son expérience, échanger, débattre, nourrir son réseau, s’inspirer et s’informer.",
+			degree:
+				"Bac +5 \nMaster en communication des entreprises et stratégie en école de communication, école de commerce",
+			salary:
+				"Profil junior : 40 à 50K€ \nProfil senior : de 75K€ à +150K€ / an \nExtrêmement variable selon la taille des entreprises et des secteurs",
+			location: "Annonceur (entreprises, collectivités, associations)",
+			verbatim: [
+				"Je suis le gardien de la cohérence",
+				"Je suis un chef d’orchestre",
+				"De l’audace, toujours de l’audace",
+				"Je dois anticiper les évolutions qui marché, défricher les tendances et projeter la marque dans l’avenir",
+				"Je dois bâtir la marque dans le temps, la rendre plus forte, plus porteuse de valeur.",
+			],
+		},
+	},
 	{ title: "Montent manager" },
 	{ title: "Dhargé(e) de com" },
 	{ title: "Rhargé(e) de com interne" },
