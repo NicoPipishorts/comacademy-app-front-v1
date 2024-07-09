@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
 	},
 
 	headerContainer: {
-		paddingHorizontal: 30,
+		paddingHorizontal: 25,
 	},
 	backBtnContainer: {
 		alignItems: "center",
