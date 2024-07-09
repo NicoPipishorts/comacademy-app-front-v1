@@ -1,5 +1,6 @@
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSizeH4 } from "@/constants/fontsizes";
+import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	ScrollView,
@@ -11,21 +12,29 @@ import {
 import FloatingTabBar from "../components/FloatingTabBar";
 import ScreenHeaders from "../components/ScreenHeaders";
 import Searchbar from "../components/Searchbar";
-import { dataMetiers } from "../mocdata/metiers";
 import MetierDetails from "../screens/MetierDetails";
 
 const Metier = () => {
+	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
 	const [groupedData, setGroupedData] = useState({});
-	const data = dataMetiers;
+	// const data = dataMetiers;
+
+	const { data } = useQuery({
+		queryKey: ["metiers"],
+		queryFn: () => fetch(`${apiUrl}/metiers`).then((res) => res.json()),
+	});
 
 	const [showDetails, setShowDetails] = useState(false);
 	const [selectedItem, setSelectedItem] = useState(null);
 
 	useEffect(() => {
-		const grouped = groupDataByFirstLetter(data, "title");
-		setGroupedData(grouped);
+		if (data && data.data) {
+			const mappedData = data.data.map((item) => item.attributes); // Accessing attributes of each item
+			const grouped = groupDataByFirstLetter(mappedData, "METIER");
+			setGroupedData(grouped);
+		}
 	}, [data]);
 
 	const alphabet = Object.keys(groupedData).sort();
@@ -100,7 +109,7 @@ const Metier = () => {
 										setSelectedItem(item);
 										setShowDetails(true);
 									}}>
-									{item.title}
+									{item.METIER}
 								</Text>
 							))}
 						</View>
