@@ -96,7 +96,8 @@ const Metier = () => {
 			<View style={styles.contentContainer}>
 				<ScrollView
 					ref={scrollViewRef}
-					style={styles.listContainer}
+					style={styles.listWrapper}
+					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
 					{alphabet.map((letter) => (
 						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
@@ -147,9 +148,11 @@ const styles = StyleSheet.create({
 		marginTop: 20,
 		marginBottom: 100,
 	},
-	listContainer: {
+	listWrapper: {
 		flex: 1,
-		// paddingHorizontal: 10,
+	},
+	listContainer: {
+		paddingBottom: 100, // Adjust this value as needed
 	},
 	listHeader: {
 		fontWeight: "500",
