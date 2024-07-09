@@ -29,6 +29,7 @@ import UnorderedList from "../components/UnorderedList";
 import { colorWhite } from "../constants/colors";
 
 function DetailsScreen({ item, onGoBack }) {
+	console.log(item);
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.headerContainer}>
@@ -74,7 +75,7 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.desc.role}</Text>
+					<Text style={styles.containerText}>{item.ROLE_MISSIONS}</Text>
 				</View>
 
 				<HR />
@@ -83,7 +84,7 @@ function DetailsScreen({ item, onGoBack }) {
 					<Text style={styles.textTitles}>Compétence</Text>
 				</View>
 
-				<UnorderedList array={item.desc.skills} />
+				<UnorderedList array={item.COMPETENCES} />
 
 				<HR />
 
@@ -92,16 +93,16 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.desc.similar}</Text>
+					<Text style={styles.containerText}>{item.METIERS_SIMILAIRES}</Text>
 				</View>
 
 				<GradientContainer
 					title='Notre Avis'
-					content={item.desc.opinion}
+					content={item.NOTRE_AVIS}
 					colors={["#EF6D8C", "#FAB837"]}
 				/>
 
-				<View style={styles.containerTitles}>
+				{/* <View style={styles.containerTitles}>
 					<Text style={styles.textTitles}>Infos +</Text>
 				</View>
 
@@ -109,14 +110,14 @@ function DetailsScreen({ item, onGoBack }) {
 					<Text style={styles.containerText}>{item.desc.infos}</Text>
 				</View>
 
-				<HR />
+				<HR /> */}
 
 				<View style={styles.containerTitles}>
 					<Text style={styles.textTitles}>diplôme & formation</Text>
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.desc.degree}</Text>
+					<Text style={styles.containerText}>{item.FORMATION}</Text>
 				</View>
 
 				<HR />
@@ -126,22 +127,22 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.desc.salary}</Text>
+					<Text style={styles.containerText}>{item.SALAIRES}</Text>
 				</View>
 
 				<HR />
 
 				<View style={styles.containerTitles}>
-					<Text style={styles.textTitles}>lieu d'exercice</Text>
+					<Text style={styles.textTitles}>portrait chinois</Text>
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.desc.location}</Text>
+					<Text style={styles.containerText}>{item.PORTRAIT_CHINOIS}</Text>
 				</View>
 
 				<GradientContainer
 					title='verbatim'
-					content={item.desc.verbatim}
+					content={item.VERBATIM}
 					colors={["#0DA2CC", "#93F6A0"]}
 				/>
 
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
 	},
 
 	headerContainer: {
-		paddingHorizontal: 30,
+		paddingHorizontal: 25,
 	},
 	backBtnContainer: {
 		alignItems: "center",
