@@ -43,7 +43,7 @@ function DetailsScreen({ item, onGoBack }) {
 						<Text style={styles.backBtnText}>Retour</Text>
 					</TouchableOpacity>
 				</View>
-				<ScreenHeaders content={item.title} />
+				<ScreenHeaders content={item.METIER} />
 			</View>
 
 			<ScrollView
