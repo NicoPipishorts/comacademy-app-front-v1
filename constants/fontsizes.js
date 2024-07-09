@@ -1,0 +1,10 @@
+export const FontSizeScreenTitles = 32;
+export const FontSizeH1 = 26;
+export const FontSizeH2 = 22;
+export const FontSizeH3 = 18;
+export const FontSizeH4 = 16;
+export const FontSizeTabbar = 11;
+export const FontSize12 = 12;
+export const FontSize16 = 16;
+export const FontSize20 = 20;
+export const FontSizeAvaterText = 22;

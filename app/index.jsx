@@ -15,6 +15,8 @@ import playlists from "../assets/imgs/cards/home_my_playlists.png";
 import stats from "../assets/imgs/cards/home_my_stats.png";
 import play from "../assets/imgs/cards/home_play.png";
 
+import { primaryBackground } from "@/constants/colors";
+import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
 import avatar from "../assets/imgs/avatar/avatar.png";
 import actus from "../assets/imgs/cards/home_actus.png";
 import briefs from "../assets/imgs/cards/home_briefs.png";
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		padding: 20,
 		paddingTop: 100,
-		backgroundColor: "#f5f5f5",
+		backgroundColor: primaryBackground,
 	},
 	header: {
 		flexDirection: "row",
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
 		marginBottom: 30,
 	},
 	headerText: {
-		fontSize: 22,
+		fontSize: FontSizeAvaterText,
 		fontWeight: "bold",
 	},
 	profileImage: {
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
 		flex: 1, // Control layout with flex
 	},
 	headerShortcuts: {
-		fontSize: 26,
+		fontSize: FontSizeH1,
 		fontWeight: "bold",
 	},
 	shortcutsContainer: {
