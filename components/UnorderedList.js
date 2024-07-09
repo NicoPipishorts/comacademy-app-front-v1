@@ -1,15 +1,30 @@
+import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { FontSize16 } from "../constants/fontsizes";
 
 const UnorderedList = ({ array }) => {
+	const isArray = Array.isArray(array);
+
 	return (
 		<View>
-			{array.map((skill, index) => (
-				<View key={index} style={styles.listItem}>
-					<Text style={styles.bullet}>•</Text>
-					<Text style={styles.itemText}>{skill}</Text>
+			{isArray ? (
+				array.map((skill, index) => (
+					<View key={index} style={styles.listItem}>
+						<Text style={styles.bullet}>•</Text>
+						<Text style={styles.itemText}>{skill}</Text>
+					</View>
+				))
+			) : (
+				<View style={styles.listItem}>
+					<Text style={styles.itemText}>
+						{array
+							? typeof array === "string"
+								? array
+								: "Not a valid input"
+							: "Input is null or undefined"}
+					</Text>
 				</View>
-			))}
+			)}
 		</View>
 	);
 };

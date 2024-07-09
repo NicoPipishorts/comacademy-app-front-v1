@@ -11,8 +11,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 const FloatingTabBar = () => {
 	const [selectedTab, setSelectedTab] = useState("all");
 
-	console.log(selectedTab);
-
 	return (
 		<View style={styles.container}>
 			<TouchableOpacity
