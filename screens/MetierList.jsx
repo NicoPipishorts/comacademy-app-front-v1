@@ -1,4 +1,4 @@
-import { colorBlack, primaryBackground } from "@/constants/colors";
+import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSizeH4 } from "@/constants/fontsizes";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
@@ -9,25 +9,19 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import FloatingTabBar from "../components/FloatingTabBar";
-import ScreenHeaders from "../components/ScreenHeaders";
 import Searchbar from "../components/Searchbar";
-import MetierDetails from "../screens/MetierDetails";
 
-const Metier = () => {
+const MetierList = ({ setShowDetails, setSelectedItem }) => {
 	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
 	const [groupedData, setGroupedData] = useState({});
-	// const data = dataMetiers;
 
 	const { data } = useQuery({
 		queryKey: ["metiers"],
-		queryFn: () => fetch(`${apiUrl}/metiers`).then((res) => res.json()),
+		queryFn: () =>
+			fetch(`${apiUrl}/metiers?populate=*`).then((res) => res.json()),
 	});
-
-	const [showDetails, setShowDetails] = useState(false);
-	const [selectedItem, setSelectedItem] = useState(null);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -75,20 +69,8 @@ const Metier = () => {
 			);
 		}
 	};
-
-	if (showDetails && selectedItem) {
-		return (
-			<MetierDetails
-				item={selectedItem}
-				onGoBack={() => setShowDetails(false)}
-			/>
-		);
-	}
-
 	return (
-		<View style={styles.wrapper}>
-			<ScreenHeaders content='Métiers' />
-
+		<>
 			<View style={{ paddingTop: 30 }}>
 				<Searchbar placeholder='Rechercher' />
 			</View>
@@ -127,21 +109,11 @@ const Metier = () => {
 					))}
 				</View>
 			</View>
-
-			<View style={styles.floatingTabbarContainer}>
-				<FloatingTabBar />
-			</View>
-		</View>
+		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	wrapper: {
-		flex: 1,
-		padding: 30,
-		paddingTop: 100,
-		backgroundColor: primaryBackground,
-	},
 	contentContainer: {
 		flexDirection: "row",
 		flex: 1,
@@ -190,4 +162,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default Metier;
+export default MetierList;
