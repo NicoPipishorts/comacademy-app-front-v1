@@ -1,6 +1,5 @@
 import { colorBlack } from "@/constants/colors";
-import { FontSize12, FontSizeH4 } from "@/constants/fontsizes";
-import { useQuery } from "@tanstack/react-query";
+import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	ScrollView,
@@ -11,17 +10,18 @@ import {
 } from "react-native";
 import Searchbar from "../components/Searchbar";
 
-const MetierList = ({ setShowDetails, setSelectedItem }) => {
-	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+const MetierList = ({
+	data,
+	setShowDetails,
+	setSelectedItem,
+	filterByCat,
+	setFilterByCat,
+}) => {
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
 	const [groupedData, setGroupedData] = useState({});
 
-	const { data } = useQuery({
-		queryKey: ["metiers"],
-		queryFn: () =>
-			fetch(`${apiUrl}/metiers?populate=*`).then((res) => res.json()),
-	});
+	console.log(data);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -50,14 +50,10 @@ const MetierList = ({ setShowDetails, setSelectedItem }) => {
 		return groups;
 	}
 
-	// Scroll by letter function
 	const scrollToSection = (letter) => {
-		// Find the current ref for the selected letter
 		const section = sectionRefs[letter];
 
-		// Use the ref to scroll into view
 		if (section && scrollViewRef.current) {
-			// Measure the position of the element
 			section.measureLayout(
 				scrollViewRef.current,
 				(x, y, width, height) => {
@@ -75,12 +71,27 @@ const MetierList = ({ setShowDetails, setSelectedItem }) => {
 				<Searchbar placeholder='Rechercher' />
 			</View>
 
+			{data.data.length <= 0 && (
+				<View style={styles.noDataContainer}>
+					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
+					<Text>Sélectionnez une autre catégorie. catégorie.</Text>
+				</View>
+			)}
+
 			<View style={styles.contentContainer}>
 				<ScrollView
 					ref={scrollViewRef}
 					style={styles.listWrapper}
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
+					{filterByCat && (
+						<View>
+							<Text>Cat chosen is {filterByCat}</Text>
+							<TouchableOpacity onPress={() => setFilterByCat(null)}>
+								<Text>Remove Filter</Text>
+							</TouchableOpacity>
+						</View>
+					)}
 					{alphabet.map((letter) => (
 						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 							<Text style={styles.listHeader}>{letter}</Text>
@@ -118,13 +129,13 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		flex: 1,
 		marginTop: 20,
-		marginBottom: 100,
+		marginBottom: 80,
 	},
 	listWrapper: {
 		flex: 1,
 	},
 	listContainer: {
-		paddingBottom: 100, // Adjust this value as needed
+		paddingBottom: 80, // Adjust this value as needed
 	},
 	listHeader: {
 		fontWeight: "500",
@@ -159,6 +170,18 @@ const styles = StyleSheet.create({
 		bottom: 140,
 		elevation: 5,
 		zIndex: 1,
+	},
+	noDataContainer: {
+		flex: 1,
+		minHeight: "50%",
+		justifyContent: "center",
+		alignItems: "center",
+		textAlign: "center",
+	},
+	noDataText: {
+		fontSize: FontSize22,
+		fontWeight: "bold",
+		marginBottom: 20,
 	},
 });
 
