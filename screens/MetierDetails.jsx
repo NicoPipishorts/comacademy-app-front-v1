@@ -29,7 +29,6 @@ import UnorderedList from "../components/UnorderedList";
 import { colorWhite } from "../constants/colors";
 
 function DetailsScreen({ item, onGoBack }) {
-	console.log(item);
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.headerContainer}>

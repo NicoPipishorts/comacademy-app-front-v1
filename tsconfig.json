@@ -12,10 +12,10 @@
 		".expo/types/**/*.ts",
 		"expo-env.d.ts",
 		"components/TabBar.jsx",
-		"app/_layout.jsx",
-		"app/dico.jsx",
-		"app/index.jsx",
-		"app/le_jeu.jsx",
+		"app/(tabs)/_layout.jsx",
+		"app/(tabs)/dico.jsx",
+		"app/(tabs)/index.jsx",
+		"app/(tabs)/le_jeu.jsx",
 		"screen/metiers.jsx",
 		"app/playlist.jsx"
 	]

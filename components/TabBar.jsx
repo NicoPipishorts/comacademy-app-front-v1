@@ -1,9 +1,9 @@
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { colorBlack, primaryBackground } from "../constants/colors";
+import { useAuth } from "../auth/AutContext"; // Make sure the path matches your structure
+import { colorBlack } from "../constants/colors";
 import { FontSizeTabbar } from "../constants/fontsizes";
 
-// Custom icons
 import accueil from "../assets/imgs/icons/accueil.png";
 import dico from "../assets/imgs/icons/dico.png";
 import le_jeu from "../assets/imgs/icons/le_jeu.png";
@@ -11,15 +11,13 @@ import metiers from "../assets/imgs/icons/metiers.png";
 import playlists from "../assets/imgs/icons/playlists.png";
 
 function TabBar({ state, descriptors, navigation }) {
-	// Define the desired tab order
-	const desiredOrder = ["index", "le_jeu", "playlists", "dico", "metiers"];
+	const { isAuthenticated } = useAuth(); // Using the authentication status
 
-	// Reorder the state.routes array based on the desired order
+	const desiredOrder = ["index", "le_jeu", "playlists", "dico", "metiers"];
 	const orderedRoutes = state.routes.slice().sort((a, b) => {
 		return desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name);
 	});
 
-	// Create a mapping of route names to their original indices
 	const routeNameToOriginalIndex = {};
 	state.routes.forEach((route, originalIndex) => {
 		routeNameToOriginalIndex[route.name] = originalIndex;
@@ -30,16 +28,9 @@ function TabBar({ state, descriptors, navigation }) {
 			<View style={styles.tabbar}>
 				{orderedRoutes.map((route, index) => {
 					const { options } = descriptors[route.key];
-					const label =
-						options.tabBarLabel !== undefined
-							? options.tabBarLabel
-							: options.title !== undefined
-							? options.title
-							: route.name;
+					const label = options.tabBarLabel ?? options.title ?? route.name;
 
 					if (["_sitemap", "+not-found"].includes(route.name)) return null;
-
-					// Determine if this tab is focused by comparing with the original index
 					const isFocused =
 						state.index === routeNameToOriginalIndex[route.name];
 
@@ -51,7 +42,18 @@ function TabBar({ state, descriptors, navigation }) {
 						});
 
 						if (!isFocused && !event.defaultPrevented) {
-							navigation.navigate(route.name, route.params);
+							// Check if the tab requires authentication
+							if (
+								["index", "le_jeu", "playlists", "dico", "metiers"].includes(
+									route.name
+								) &&
+								!isAuthenticated
+							) {
+								// Optionally show an alert or redirect to login
+								alert("You must be logged in to access this tab.");
+							} else {
+								navigation.navigate(route.name, route.params);
+							}
 						}
 					};
 
@@ -62,24 +64,18 @@ function TabBar({ state, descriptors, navigation }) {
 						});
 					};
 
-					const icons = {
-						index: accueil,
-						le_jeu,
-						metiers,
-						dico,
-						playlists,
-					};
+					const icons = { index: accueil, le_jeu, metiers, dico, playlists };
 
 					return (
 						<TouchableOpacity
 							key={route.name}
-							style={styles.tabbarItem}
 							accessibilityRole='button'
 							accessibilityState={isFocused ? { selected: true } : {}}
 							accessibilityLabel={options.tabBarAccessibilityLabel}
 							testID={options.tabBarTestID}
 							onPress={onPress}
-							onLongPress={onLongPress}>
+							onLongPress={onLongPress}
+							style={styles.tabbarItem}>
 							<Image
 								source={icons[route.name]}
 								style={styles.tabIcons}
@@ -101,7 +97,6 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		width: "100%",
 		alignItems: "center",
-		backgroundColor: primaryBackground,
 	},
 	tabbar: {
 		flexDirection: "row",
