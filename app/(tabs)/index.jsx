@@ -7,6 +7,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useAuth } from "../../auth/AutContext";
 import ALaUne from "../../components/ALaUne";
 
 // Custom images
@@ -24,11 +25,15 @@ import citations from "../../assets/imgs/cards/home_citations.png";
 import un_pour_un from "../../assets/imgs/cards/home_un_pour_un.png";
 
 const HomeScreen = () => {
+	const { logout } = useAuth();
+
 	return (
 		<View style={styles.container}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>Hello Arnaud</Text>
-				<Image source={avatar} style={styles.profileImage} />
+				<TouchableOpacity onPress={logout}>
+					<Image source={avatar} style={styles.profileImage} />
+				</TouchableOpacity>
 			</View>
 
 			<ScrollView
