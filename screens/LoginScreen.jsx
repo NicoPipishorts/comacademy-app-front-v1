@@ -39,7 +39,6 @@ const LoginScreen = () => {
 	};
 
 	const onSuccess = (data) => {
-		console.log("Login successful:", data);
 		login(data);
 	};
 
