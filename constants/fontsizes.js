@@ -8,4 +8,5 @@ export const FontSize12 = 12;
 export const FontSize14 = 14;
 export const FontSize16 = 16;
 export const FontSize20 = 20;
+export const FontSize22 = 22;
 export const FontSizeAvaterText = 22;
