@@ -4,7 +4,7 @@ import Cat3 from "@/assets/imgs/icons/cat_3.png";
 import Cat4 from "@/assets/imgs/icons/cat_4.png";
 import Cat5 from "@/assets/imgs/icons/cat_5.png";
 import Cat6 from "@/assets/imgs/icons/cat_6.png";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
 	colorBlue,
 	colorGreen,
@@ -17,34 +17,46 @@ import {
 } from "../constants/colors";
 import { FontSize22 } from "../constants/fontsizes";
 
-const MetierCategories = () => {
+const MetierCategories = ({ setFilterByCat }) => {
 	return (
 		<>
 			<View style={styles.cardContainer}>
-				<View style={[styles.card, { backgroundColor: colorYellow }]}>
+				<TouchableOpacity
+					onPress={() => setFilterByCat(1)}
+					style={[styles.card, { backgroundColor: colorYellow }]}>
 					<Image source={Cat3} style={styles.icon} />
 					<Text style={styles.cardText}>Stratégie {"\n"}de Marque</Text>
-				</View>
-				<View style={[styles.card, { backgroundColor: colorOrange }]}>
+				</TouchableOpacity>
+				<TouchableOpacity
+					onPress={() => setFilterByCat(2)}
+					style={[styles.card, { backgroundColor: colorOrange }]}>
 					<Image source={Cat2} style={styles.icon} />
 					<Text style={styles.cardText}>Stratégie {"\n"}de Com</Text>
-				</View>
-				<View style={[styles.card, { backgroundColor: colorPurple }]}>
+				</TouchableOpacity>
+				<TouchableOpacity
+					onPress={() => setFilterByCat(3)}
+					style={[styles.card, { backgroundColor: colorPurple }]}>
 					<Image source={Cat1} style={styles.icon} />
 					<Text style={styles.cardText}>Création {"\n"} & design</Text>
-				</View>
-				<View style={[styles.card, { backgroundColor: colorBlue }]}>
+				</TouchableOpacity>
+				<TouchableOpacity
+					onPress={() => setFilterByCat(4)}
+					style={[styles.card, { backgroundColor: colorBlue }]}>
 					<Image source={Cat4} style={styles.icon} />
 					<Text style={styles.cardText}>Marketing Digital</Text>
-				</View>
-				<View style={[styles.card, { backgroundColor: colorTurquoise }]}>
+				</TouchableOpacity>
+				<TouchableOpacity
+					onPress={() => setFilterByCat(5)}
+					style={[styles.card, { backgroundColor: colorTurquoise }]}>
 					<Image source={Cat6} style={styles.icon} />
 					<Text style={styles.cardText}>Event / RP / Influence</Text>
-				</View>
-				<View style={[styles.card, { backgroundColor: colorGreen }]}>
+				</TouchableOpacity>
+				<TouchableOpacity
+					onPress={() => setFilterByCat(6)}
+					style={[styles.card, { backgroundColor: colorGreen }]}>
 					<Image source={Cat5} style={styles.icon} />
 					<Text style={styles.cardText}>Culture Publicitaire</Text>
-				</View>
+				</TouchableOpacity>
 			</View>
 		</>
 	);
