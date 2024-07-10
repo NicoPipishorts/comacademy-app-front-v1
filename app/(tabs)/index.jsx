@@ -28,7 +28,7 @@ const HomeScreen = () => {
 	const { logout } = useAuth();
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.wrapper}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>Hello Arnaud</Text>
 				<TouchableOpacity onPress={logout}>
@@ -38,7 +38,7 @@ const HomeScreen = () => {
 
 			<ScrollView
 				style={styles.contentContainer}
-				showsVerticalScrollIndicator={true}>
+				showsVerticalScrollIndicator={false}>
 				<View style={styles.header}>
 					<Text style={styles.headerShortcuts}>Raccourcis</Text>
 				</View>
@@ -99,7 +99,7 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-	container: {
+	wrapper: {
 		flex: 1,
 		padding: 20,
 		paddingTop: 100,
@@ -121,14 +121,15 @@ const styles = StyleSheet.create({
 		marginRight: 10,
 	},
 	contentContainer: {
-		flex: 1, // Control layout with flex
+		flex: 1,
+		marginBottom: 80,
 	},
 	headerShortcuts: {
 		fontSize: FontSizeH1,
 		fontWeight: "bold",
 	},
 	shortcutsContainer: {
-		flexGrow: 0, // Control layout with flex
+		flexGrow: 0,
 	},
 	shortcuts: {
 		flexDirection: "row",
