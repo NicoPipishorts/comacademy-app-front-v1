@@ -7,23 +7,23 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import ALaUne from "../components/ALaUne";
+import ALaUne from "../../components/ALaUne";
 
 // Custom images
-import dico from "../assets/imgs/cards/home_dico.png";
-import playlists from "../assets/imgs/cards/home_my_playlists.png";
-import stats from "../assets/imgs/cards/home_my_stats.png";
-import play from "../assets/imgs/cards/home_play.png";
+import dico from "../../assets/imgs/cards/home_dico.png";
+import playlists from "../../assets/imgs/cards/home_my_playlists.png";
+import stats from "../../assets/imgs/cards/home_my_stats.png";
+import play from "../../assets/imgs/cards/home_play.png";
 
 import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
-import avatar from "../assets/imgs/avatar/avatar.png";
-import actus from "../assets/imgs/cards/home_actus.png";
-import briefs from "../assets/imgs/cards/home_briefs.png";
-import citations from "../assets/imgs/cards/home_citations.png";
-import un_pour_un from "../assets/imgs/cards/home_un_pour_un.png";
+import avatar from "../../assets/imgs/avatar/avatar.png";
+import actus from "../../assets/imgs/cards/home_actus.png";
+import briefs from "../../assets/imgs/cards/home_briefs.png";
+import citations from "../../assets/imgs/cards/home_citations.png";
+import un_pour_un from "../../assets/imgs/cards/home_un_pour_un.png";
 
-const AppIndex = () => {
+const HomeScreen = () => {
 	return (
 		<View style={styles.container}>
 			<View style={styles.header}>
@@ -141,4 +141,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default AppIndex;
+export default HomeScreen;

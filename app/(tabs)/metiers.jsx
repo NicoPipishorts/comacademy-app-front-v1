@@ -9,17 +9,16 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import FloatingTabBar from "../components/FloatingTabBar";
-import ScreenHeaders from "../components/ScreenHeaders";
-import Searchbar from "../components/Searchbar";
-import MetierDetails from "../screens/MetierDetails";
+import FloatingTabBar from "../../components/FloatingTabBar";
+import ScreenHeaders from "../../components/ScreenHeaders";
+import Searchbar from "../../components/Searchbar";
+import MetierDetails from "../../screens/MetierDetails";
 
 const Metier = () => {
 	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
 	const [groupedData, setGroupedData] = useState({});
-	// const data = dataMetiers;
 
 	const { data } = useQuery({
 		queryKey: ["metiers"],
