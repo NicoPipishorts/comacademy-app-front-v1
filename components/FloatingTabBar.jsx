@@ -5,27 +5,23 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSizeH4 } from "@/constants/fontsizes";
-import React, { useState } from "react";
+import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const FloatingTabBar = () => {
-	const [selectedTab, setSelectedTab] = useState("all");
-
+const FloatingTabBar = ({ selectedTab, setSelectedTab }) => {
 	return (
 		<View style={styles.container}>
 			<TouchableOpacity
-				style={selectedTab === "all" ? styles.buttonBlack : styles.buttonWhite}
-				onPress={() => setSelectedTab("all")}>
-				<Text
-					style={selectedTab === "all" ? styles.textBlack : styles.textWhite}>
+				style={!selectedTab ? styles.buttonBlack : styles.buttonWhite}
+				onPress={() => setSelectedTab(false)}>
+				<Text style={!selectedTab ? styles.textBlack : styles.textWhite}>
 					Voir tout
 				</Text>
 			</TouchableOpacity>
 			<TouchableOpacity
-				style={selectedTab === "cat" ? styles.buttonBlack : styles.buttonWhite}
-				onPress={() => setSelectedTab("cat")}>
-				<Text
-					style={selectedTab === "cat" ? styles.textBlack : styles.textWhite}>
+				style={selectedTab ? styles.buttonBlack : styles.buttonWhite}
+				onPress={() => setSelectedTab(true)}>
+				<Text style={selectedTab ? styles.textBlack : styles.textWhite}>
 					Catégories
 				</Text>
 			</TouchableOpacity>
@@ -47,8 +43,8 @@ const styles = StyleSheet.create({
 			width: 0,
 			height: 2,
 		},
-		shadowOpacity: 0.45,
-		shadowRadius: 17,
+		shadowOpacity: 0.35,
+		shadowRadius: 13,
 		elevation: 5,
 		zIndex: 1,
 	},

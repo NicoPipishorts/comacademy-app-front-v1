@@ -1,15 +1,17 @@
-import { colorBlack, primaryBackground } from "@/constants/colors";
+import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSizeH4 } from "@/constants/fontsizes";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import FloatingTabBar from "../../components/FloatingTabBar";
-import ScreenHeaders from "../../components/ScreenHeaders";
-import MetierCategories from "../../screens/MetierCategories";
-import MetierDetails from "../../screens/MetierDetails";
-import MetierList from "../../screens/MetierList";
+import {
+	ScrollView,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import Searchbar from "../components/Searchbar";
 
-const Metier = () => {
+const MetierList = ({ setShowDetails, setSelectedItem }) => {
 	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
@@ -20,10 +22,6 @@ const Metier = () => {
 		queryFn: () =>
 			fetch(`${apiUrl}/metiers?populate=*`).then((res) => res.json()),
 	});
-
-	const [showDetails, setShowDetails] = useState(false);
-	const [selectedItem, setSelectedItem] = useState(null);
-	const [selectedTab, setSelectedTab] = useState(false);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -71,45 +69,51 @@ const Metier = () => {
 			);
 		}
 	};
-
-	if (showDetails && selectedItem) {
-		return (
-			<MetierDetails
-				item={selectedItem}
-				onGoBack={() => setShowDetails(false)}
-			/>
-		);
-	}
 	return (
-		<View style={styles.wrapper}>
-			<ScreenHeaders content='Métiers' />
-
-			{!selectedTab && (
-				<MetierList
-					setShowDetails={setShowDetails}
-					setSelectedItem={setSelectedItem}
-				/>
-			)}
-
-			{selectedTab && <MetierCategories />}
-
-			<View style={styles.floatingTabbarContainer}>
-				<FloatingTabBar
-					selectedTab={selectedTab}
-					setSelectedTab={setSelectedTab}
-				/>
+		<>
+			<View style={{ paddingTop: 30 }}>
+				<Searchbar placeholder='Rechercher' />
 			</View>
-		</View>
+
+			<View style={styles.contentContainer}>
+				<ScrollView
+					ref={scrollViewRef}
+					style={styles.listWrapper}
+					contentContainerStyle={styles.listContainer}
+					showsVerticalScrollIndicator={false}>
+					{alphabet.map((letter) => (
+						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
+							<Text style={styles.listHeader}>{letter}</Text>
+							{groupedData[letter].map((item, index) => (
+								<Text
+									key={index}
+									style={styles.listItem}
+									onPress={() => {
+										setSelectedItem(item);
+										setShowDetails(true);
+									}}>
+									{item.METIER}
+								</Text>
+							))}
+						</View>
+					))}
+				</ScrollView>
+
+				<View style={styles.sidebar}>
+					{alphabet.map((letter) => (
+						<TouchableOpacity
+							key={letter}
+							onPress={() => scrollToSection(letter)}>
+							<Text style={styles.sidebarText}>{letter}</Text>
+						</TouchableOpacity>
+					))}
+				</View>
+			</View>
+		</>
 	);
 };
 
 const styles = StyleSheet.create({
-	wrapper: {
-		flex: 1,
-		padding: 30,
-		paddingTop: 80,
-		backgroundColor: primaryBackground,
-	},
 	contentContainer: {
 		flexDirection: "row",
 		flex: 1,
@@ -152,10 +156,10 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 113,
+		bottom: 140,
 		elevation: 5,
 		zIndex: 1,
 	},
 });
 
-export default Metier;
+export default MetierList;

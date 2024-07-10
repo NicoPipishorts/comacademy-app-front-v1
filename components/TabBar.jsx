@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AutContext"; // Make sure the path matches your structure
-import { colorBlack, primaryBackground } from "../constants/colors";
+import { colorBlack } from "../constants/colors";
 import { FontSizeTabbar } from "../constants/fontsizes";
 
 import accueil from "../assets/imgs/icons/accueil.png";
@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		width: "100%",
 		alignItems: "center",
-		backgroundColor: primaryBackground,
 	},
 	tabbar: {
 		flexDirection: "row",
