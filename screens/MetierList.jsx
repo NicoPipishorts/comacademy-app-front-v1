@@ -1,5 +1,6 @@
-import { colorBlack } from "@/constants/colors";
+import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	ScrollView,
@@ -16,12 +17,11 @@ const MetierList = ({
 	setSelectedItem,
 	filterByCat,
 	setFilterByCat,
+	categories,
 }) => {
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
 	const [groupedData, setGroupedData] = useState({});
-
-	console.log(data);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -65,6 +65,8 @@ const MetierList = ({
 			);
 		}
 	};
+
+	if (!data) return;
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
@@ -74,7 +76,7 @@ const MetierList = ({
 			{data.data.length <= 0 && (
 				<View style={styles.noDataContainer}>
 					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
-					<Text>Sélectionnez une autre catégorie. catégorie.</Text>
+					<Text>Sélectionnez une autre catégorie.</Text>
 				</View>
 			)}
 
@@ -84,14 +86,28 @@ const MetierList = ({
 					style={styles.listWrapper}
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
-					{filterByCat && (
-						<View>
-							<Text>Cat chosen is {filterByCat}</Text>
-							<TouchableOpacity onPress={() => setFilterByCat(null)}>
-								<Text>Remove Filter</Text>
-							</TouchableOpacity>
-						</View>
-					)}
+					{
+						// This adds the remove FIlter Button
+						filterByCat && (
+							<View style={styles.filterCWrapper}>
+								<Text>Filtre: </Text>
+								<TouchableOpacity
+									style={styles.filterContainer}
+									onPress={() => setFilterByCat(null)}>
+									<Text style={styles.filterText}>
+										{categories[filterByCat]?.attributes.Title} {filterByCat}
+									</Text>
+									<MaterialCommunityIcons
+										name='close-circle-outline'
+										size={24}
+										color={colorBlack}
+										style={styles.eyeIcon}
+									/>
+								</TouchableOpacity>
+							</View>
+						)
+					}
+
 					{alphabet.map((letter) => (
 						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 							<Text style={styles.listHeader}>{letter}</Text>
@@ -130,6 +146,26 @@ const styles = StyleSheet.create({
 		flex: 1,
 		marginTop: 20,
 		marginBottom: 80,
+	},
+	filterCWrapper: {
+		flexDirection: "row",
+		alignItems: "center",
+		alignSelf: "flex-start",
+	},
+	filterContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		alignSelf: "flex-start",
+		// borderWidth: 1,
+		// // borderColor: colorGrey,
+		paddingVertical: 5,
+		paddingHorizontal: 10,
+		borderRadius: 50,
+		backgroundColor: colorGrey,
+	},
+	filterText: {
+		fontWeight: "bold",
+		paddingRight: 10,
 	},
 	listWrapper: {
 		flex: 1,

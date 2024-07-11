@@ -17,7 +17,7 @@ const Metier = () => {
 	const [selectedTab, setSelectedTab] = useState(false);
 	const [filterByCat, setFilterByCat] = useState(null);
 
-	const { data } = useQuery({
+	const { data: dataMetier } = useQuery({
 		queryKey: ["metiers"],
 		queryFn: () =>
 			fetch(
@@ -27,6 +27,11 @@ const Metier = () => {
 						: `filters[CATEGORIE][$contains]=${filterByCat}`
 				}`
 			).then((res) => res.json()),
+	});
+
+	const { data: dataCategory } = useQuery({
+		queryKey: ["categories"],
+		queryFn: () => fetch(`${apiUrl}/categories`).then((res) => res.json()),
 	});
 
 	useEffect(() => {
@@ -48,7 +53,8 @@ const Metier = () => {
 
 			{!selectedTab && (
 				<MetierList
-					data={data}
+					data={dataMetier}
+					categories={dataCategory?.data || []}
 					setShowDetails={setShowDetails}
 					setSelectedItem={setSelectedItem}
 					filterByCat={filterByCat}
