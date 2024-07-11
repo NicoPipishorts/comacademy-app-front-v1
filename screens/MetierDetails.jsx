@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
 	},
 
 	contentContainer: {
-		marginBottom: 90,
+		marginBottom: 100,
 	},
 	wrapperIcons: {
 		flexDirection: "row",
