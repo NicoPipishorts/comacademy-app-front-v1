@@ -1,13 +1,13 @@
 import { primaryBackground } from "@/constants/colors";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import FloatingTabBar from "../../components/FloatingTabBar";
-import ScreenHeaders from "../../components/ScreenHeaders";
+import { Image, StyleSheet, Text, View } from "react-native";
+import FloatingTabBar from "../../../components/FloatingTabBar";
+import ScreenHeaders from "../../../components/ScreenHeaders";
 
 // Assets
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
-import PlayButton from "../../assets/imgs/BigPlayButton.png";
+import PlayButton from "../../../assets/imgs/BigPlayButton.png";
 
 const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
@@ -20,13 +20,13 @@ const LeJeu = () => {
 					<Text style={styles.centerTitle}>A toi de jouer !</Text>
 				</View>
 				<View style={styles.playButtonContainer}>
-					<TouchableOpacity>
-						<Image
-							source={PlayButton}
-							resizeMode='contain'
-							style={styles.playButton}
-						/>
-					</TouchableOpacity>
+					{/* <Link href='/leJeu'> */}
+					<Image
+						source={PlayButton}
+						resizeMode='contain'
+						style={styles.playButton}
+					/>
+					{/* </Link> */}
 				</View>
 
 				<View style={styles.floatingTabbarContainer}>
