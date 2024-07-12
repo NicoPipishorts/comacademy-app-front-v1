@@ -12,38 +12,39 @@ import { FontSizeTabbar } from "../constants/fontsizes";
 const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 	const icons: { [key: string]: any } = {
 		index: accueil,
-		le_jeu: le_jeu,
+		leJeu: le_jeu,
 		metiers: metiers,
 		dico: dico,
 		playlists: playlists,
 	};
 
-	const desiredOrder = ["index", "le_jeu", "playlists", "dico", "metiers"];
+	const desiredOrder = ["index", "leJeu", "playlists", "dico", "metiers"];
 	const orderedRoutes = state.routes
 		.slice()
 		.sort(
 			(a, b) => desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name)
 		);
 
+	// Define a custom label for each route if necessary
+	const customLabels: { [key: string]: string } = {
+		leJeu: "Le Jeu",
+		metiers: "Métiers",
+		dico: "Dictionnaire",
+		playlists: "Playlists",
+		index: "Accueil",
+	};
+
 	return (
 		<View style={styles.tabbarContainer}>
 			<View style={styles.tabbar}>
 				{orderedRoutes.map((route) => {
-					const descriptor = descriptors[route.key]; // Access the descriptor
-					if (!descriptor) return null; // Check if the descriptor is undefined and return early
+					const descriptor = descriptors[route.key];
+					if (!descriptor) return null;
 
 					const { options } = descriptor;
 					const isFocused = state.index === desiredOrder.indexOf(route.name);
 
-					const label =
-						typeof options.tabBarLabel === "function"
-							? options.tabBarLabel({
-									focused: isFocused,
-									color: isFocused ? "blue" : "gray", // Example colors
-									position: "below-icon",
-									children: route.name,
-							  })
-							: options.tabBarLabel ?? options.title ?? route.name;
+					const label = customLabels[route.name] || route.name; // Use custom label or default to route name
 
 					const onPress = () => {
 						const event = navigation.emit({
