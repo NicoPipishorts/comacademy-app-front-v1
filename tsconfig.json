@@ -1,5 +1,6 @@
 {
 	"extends": "expo/tsconfig.base",
+	"typeRoots": ["./types"],
 	"compilerOptions": {
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
@@ -27,6 +28,8 @@
 	"include": [
 		"**/*.ts",
 		"**/*.tsx",
+		"src/**/*",
+		"types/**/*",
 		".expo/types/**/*.ts",
 		"expo-env.d.ts",
 		"components/TabBar.jsx",
@@ -35,7 +38,8 @@
 		"app/(tabs)/index.jsx",
 		"app/(tabs)/le_jeu.jsx",
 		"screen/metiers.jsx",
-		"app/playlist.jsx"
+		"app/playlist.jsx",
+		"app/(tabs)/metiers.jsx"
 	],
 	"exclude": [
 		"node_modules",

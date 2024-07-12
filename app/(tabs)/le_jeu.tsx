@@ -6,9 +6,11 @@ import ScreenHeaders from "../../components/ScreenHeaders";
 
 // Assets
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
+import { useTab } from "@/context/floatingTabbarContext";
 import PlayButton from "../../assets/imgs/BigPlayButton.png";
 
 const LeJeu = () => {
+	const { selectedTab, setSelectedTab } = useTab();
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Le Jeu' />
@@ -28,7 +30,10 @@ const LeJeu = () => {
 				</View>
 
 				<View style={styles.floatingTabbarContainer}>
-					<FloatingTabBar />
+					<FloatingTabBar
+						selectedTab={selectedTab}
+						setSelectedTab={setSelectedTab}
+					/>
 				</View>
 			</View>
 		</View>

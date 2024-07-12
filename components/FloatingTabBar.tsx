@@ -5,10 +5,15 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSizeH4 } from "@/constants/fontsizes";
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const FloatingTabBar = ({ selectedTab, setSelectedTab }) => {
+type Prpos = {
+	selectedTab?: boolean;
+	setSelectedTab: Dispatch<SetStateAction<boolean>>;
+};
+
+const FloatingTabBar = ({ selectedTab, setSelectedTab }: Prpos) => {
 	return (
 		<View style={styles.container}>
 			<TouchableOpacity
@@ -31,8 +36,6 @@ const FloatingTabBar = ({ selectedTab, setSelectedTab }) => {
 
 const styles = StyleSheet.create({
 	container: {
-		flexDirection: "row",
-		justifyContent: "space-around",
 		backgroundColor: primaryBackground,
 		flexDirection: "row",
 		justifyContent: "center",
