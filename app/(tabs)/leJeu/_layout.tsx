@@ -13,10 +13,11 @@ const LeJeuLayout = () => {
 			/>
 
 			<Stack.Screen
-				name='jeu'
+				name='Jeu'
 				options={{
 					headerShown: false,
-					presentation: "modal",
+					presentation: "fullScreenModal",
+					gestureEnabled: true,
 				}}
 			/>
 		</Stack>

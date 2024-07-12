@@ -1,16 +1,26 @@
 import { primaryBackground } from "@/constants/colors";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import FloatingTabBar from "../../../components/FloatingTabBar";
 import ScreenHeaders from "../../../components/ScreenHeaders";
 
 // Assets
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { useNavigation } from "expo-router";
 import PlayButton from "../../../assets/imgs/BigPlayButton.png";
+
+export type NavigationType = {
+	navigate: (screenName: string) => void;
+};
 
 const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
+	const navigation = useNavigation<NavigationType>();
+	const handlePress = () => {
+		navigation.navigate("Jeu");
+	};
+
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Le Jeu' />
@@ -20,19 +30,20 @@ const LeJeu = () => {
 					<Text style={styles.centerTitle}>A toi de jouer !</Text>
 				</View>
 				<View style={styles.playButtonContainer}>
-					{/* <Link href='/leJeu'> */}
-					<Image
-						source={PlayButton}
-						resizeMode='contain'
-						style={styles.playButton}
-					/>
-					{/* </Link> */}
+					<TouchableOpacity onPress={handlePress}>
+						<Image
+							source={PlayButton}
+							resizeMode='contain'
+							style={styles.playButton}
+						/>
+					</TouchableOpacity>
 				</View>
 
 				<View style={styles.floatingTabbarContainer}>
 					<FloatingTabBar
 						selectedTab={selectedTab}
 						setSelectedTab={setSelectedTab}
+						values={{ btn1: "Aléatoire", btn2: "Catégories" }}
 					/>
 				</View>
 			</View>
@@ -51,8 +62,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		width: "100%",
 		alignItems: "center",
-		justifyContent: "center",
-		marginBottom: 120,
+		justifyContent: "flex-start",
+		marginBottom: 83,
+		paddingTop: "35%",
 	},
 	centerTitle: {
 		fontSize: FontSizeScreenTitles,
