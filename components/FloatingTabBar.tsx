@@ -11,23 +11,27 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 type Prpos = {
 	selectedTab?: boolean;
 	setSelectedTab: Dispatch<SetStateAction<boolean>>;
+	values: {
+		btn1: string;
+		btn2: string;
+	};
 };
 
-const FloatingTabBar = ({ selectedTab, setSelectedTab }: Prpos) => {
+const FloatingTabBar = ({ selectedTab, setSelectedTab, values }: Prpos) => {
 	return (
 		<View style={styles.container}>
 			<TouchableOpacity
 				style={!selectedTab ? styles.buttonBlack : styles.buttonWhite}
 				onPress={() => setSelectedTab(false)}>
 				<Text style={!selectedTab ? styles.textBlack : styles.textWhite}>
-					Voir tout
+					{values.btn1}
 				</Text>
 			</TouchableOpacity>
 			<TouchableOpacity
 				style={selectedTab ? styles.buttonBlack : styles.buttonWhite}
 				onPress={() => setSelectedTab(true)}>
 				<Text style={selectedTab ? styles.textBlack : styles.textWhite}>
-					Catégories
+					{values.btn2}
 				</Text>
 			</TouchableOpacity>
 		</View>

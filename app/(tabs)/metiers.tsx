@@ -70,6 +70,7 @@ const Metier = () => {
 				<FloatingTabBar
 					selectedTab={selectedTab}
 					setSelectedTab={setSelectedTab}
+					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>
 		</View>
