@@ -3,7 +3,13 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { colorBlack, colorWhite } from "../constants/colors";
 
-const StyledButton = ({ title, handlePress, variant }) => {
+type Props = {
+	title: string;
+	handlePress: () => void;
+	variant: string;
+};
+
+const StyledButton = ({ title, handlePress, variant }: Props) => {
 	// Conditionally set the style based on the 'dark' prop
 	const buttonStyle =
 		variant === "dark"

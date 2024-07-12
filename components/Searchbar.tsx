@@ -3,7 +3,11 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import React from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
-const Searchbar = ({ placeholder }) => {
+type Props = {
+	placeholder: string;
+};
+
+const Searchbar = ({ placeholder }: Props) => {
 	return (
 		<View style={styles.container}>
 			<FontAwesome5 name='search' size={20} color={colorDarkGrey} />
