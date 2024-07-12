@@ -1,4 +1,6 @@
 import { primaryBackground } from "@/constants/colors";
+import { useTab } from "@/context/floatingTabbarContext";
+import { EXPO_PUBLIC_API_URL } from "@env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -9,13 +11,13 @@ import MetierDetails from "../../screens/MetierDetails";
 import MetierList from "../../screens/MetierList";
 
 const Metier = () => {
-	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+	const apiUrl = EXPO_PUBLIC_API_URL;
 	const queryClient = useQueryClient();
+	const { selectedTab, setSelectedTab } = useTab();
 
-	const [showDetails, setShowDetails] = useState(false);
+	const [showDetails, setShowDetails] = useState<boolean>(false);
 	const [selectedItem, setSelectedItem] = useState(null);
-	const [selectedTab, setSelectedTab] = useState(false);
-	const [filterByCat, setFilterByCat] = useState(null);
+	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
 	const { data: dataMetier } = useQuery({
 		queryKey: ["metiers"],
@@ -35,7 +37,7 @@ const Metier = () => {
 	});
 
 	useEffect(() => {
-		queryClient.invalidateQueries(["metiers"]);
+		queryClient.invalidateQueries({ queryKey: ["metiers"] });
 		setSelectedTab(false);
 	}, [filterByCat, queryClient]);
 

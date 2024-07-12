@@ -2,7 +2,11 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { FontSizeScreenTitles } from "../constants/fontsizes";
 
-const ScreenHeaders = ({ content }) => {
+type Props = {
+	content: string;
+};
+
+const ScreenHeaders = ({ content }: Props) => {
 	return (
 		<View style={styles.container}>
 			<Text style={styles.mainText}>{content}</Text>

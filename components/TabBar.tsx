@@ -1,38 +1,49 @@
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useAuth } from "../auth/AutContext"; // Make sure the path matches your structure
-import { colorBlack } from "../constants/colors";
-import { FontSizeTabbar } from "../constants/fontsizes";
-
 import accueil from "../assets/imgs/icons/accueil.png";
 import dico from "../assets/imgs/icons/dico.png";
 import le_jeu from "../assets/imgs/icons/le_jeu.png";
 import metiers from "../assets/imgs/icons/metiers.png";
 import playlists from "../assets/imgs/icons/playlists.png";
+import { colorBlack } from "../constants/colors";
+import { FontSizeTabbar } from "../constants/fontsizes";
 
-function TabBar({ state, descriptors, navigation }) {
-	const { isAuthenticated } = useAuth(); // Using the authentication status
+const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
+	const icons: { [key: string]: any } = {
+		index: accueil,
+		le_jeu: le_jeu,
+		metiers: metiers,
+		dico: dico,
+		playlists: playlists,
+	};
 
 	const desiredOrder = ["index", "le_jeu", "playlists", "dico", "metiers"];
-	const orderedRoutes = state.routes.slice().sort((a, b) => {
-		return desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name);
-	});
-
-	const routeNameToOriginalIndex = {};
-	state.routes.forEach((route, originalIndex) => {
-		routeNameToOriginalIndex[route.name] = originalIndex;
-	});
+	const orderedRoutes = state.routes
+		.slice()
+		.sort(
+			(a, b) => desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name)
+		);
 
 	return (
 		<View style={styles.tabbarContainer}>
 			<View style={styles.tabbar}>
-				{orderedRoutes.map((route, index) => {
-					const { options } = descriptors[route.key];
-					const label = options.tabBarLabel ?? options.title ?? route.name;
+				{orderedRoutes.map((route) => {
+					const descriptor = descriptors[route.key]; // Access the descriptor
+					if (!descriptor) return null; // Check if the descriptor is undefined and return early
 
-					if (["_sitemap", "+not-found"].includes(route.name)) return null;
-					const isFocused =
-						state.index === routeNameToOriginalIndex[route.name];
+					const { options } = descriptor;
+					const isFocused = state.index === desiredOrder.indexOf(route.name);
+
+					const label =
+						typeof options.tabBarLabel === "function"
+							? options.tabBarLabel({
+									focused: isFocused,
+									color: isFocused ? "blue" : "gray", // Example colors
+									position: "below-icon",
+									children: route.name,
+							  })
+							: options.tabBarLabel ?? options.title ?? route.name;
 
 					const onPress = () => {
 						const event = navigation.emit({
@@ -40,44 +51,21 @@ function TabBar({ state, descriptors, navigation }) {
 							target: route.key,
 							canPreventDefault: true,
 						});
-
 						if (!isFocused && !event.defaultPrevented) {
-							// Check if the tab requires authentication
-							if (
-								["index", "le_jeu", "playlists", "dico", "metiers"].includes(
-									route.name
-								) &&
-								!isAuthenticated
-							) {
-								// Optionally show an alert or redirect to login
-								alert("You must be logged in to access this tab.");
-							} else {
-								navigation.navigate(route.name, route.params);
-							}
+							navigation.navigate(route.name);
 						}
 					};
-
-					const onLongPress = () => {
-						navigation.emit({
-							type: "tabLongPress",
-							target: route.key,
-						});
-					};
-
-					const icons = { index: accueil, le_jeu, metiers, dico, playlists };
 
 					return (
 						<TouchableOpacity
 							key={route.name}
 							accessibilityRole='button'
 							accessibilityState={isFocused ? { selected: true } : {}}
-							accessibilityLabel={options.tabBarAccessibilityLabel}
 							testID={options.tabBarTestID}
 							onPress={onPress}
-							onLongPress={onLongPress}
 							style={styles.tabbarItem}>
 							<Image
-								source={icons[route.name]}
+								source={icons[route.name] || accueil}
 								style={styles.tabIcons}
 								resizeMode='contain'
 							/>
@@ -89,7 +77,7 @@ function TabBar({ state, descriptors, navigation }) {
 			</View>
 		</View>
 	);
-}
+};
 
 const styles = StyleSheet.create({
 	tabbarContainer: {

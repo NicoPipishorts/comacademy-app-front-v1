@@ -2,9 +2,14 @@ import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import StyledButton from "../components/StyledButton";
+import StyledButton from "./StyledButton";
 
-const ALaUne = ({ content, link }) => {
+type Props = {
+	content: string;
+	link?: string;
+};
+
+const ALaUne = ({ content, link }: Props) => {
 	const handlePress = () => {
 		console.log("Button pressed!");
 	};

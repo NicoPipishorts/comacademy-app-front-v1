@@ -10,6 +10,7 @@ import MetierDetails from "../../screens/MetierDetails";
 import MetierList from "../../screens/MetierList";
 
 const Dico = () => {
+// @ts-expect-error TS(2591): Cannot find name 'process'. Do you need to install... Remove this comment to see the full error message
 	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const scrollViewRef = useRef();
 	const sectionRefs = useRef({}).current;
@@ -27,6 +28,7 @@ const Dico = () => {
 
 	useEffect(() => {
 		if (data && data.data) {
+// @ts-expect-error TS(7006): Parameter 'item' implicitly has an 'any' type.
 			const mappedData = data.data.map((item) => item.attributes); // Accessing attributes of each item
 			const grouped = groupDataByFirstLetter(mappedData, "METIER");
 			setGroupedData(grouped);
@@ -35,17 +37,23 @@ const Dico = () => {
 
 	const alphabet = Object.keys(groupedData).sort();
 
+// @ts-expect-error TS(7006): Parameter 'items' implicitly has an 'any' type.
 	function groupDataByFirstLetter(items, property) {
 		// Sort items alphabetically based on the property
+// @ts-expect-error TS(7006): Parameter 'a' implicitly has an 'any' type.
 		items.sort((a, b) => a[property].localeCompare(b[property]));
 
 		// Group by the first letter of the property
 		const groups = {};
+// @ts-expect-error TS(7006): Parameter 'item' implicitly has an 'any' type.
 		items.forEach((item) => {
 			const letter = item[property][0].toUpperCase();
+// @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
 			if (!groups[letter]) {
+// @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
 				groups[letter] = [];
 			}
+// @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
 			groups[letter].push(item);
 		});
 
@@ -53,8 +61,10 @@ const Dico = () => {
 	}
 
 	// Scroll by letter function
+// @ts-expect-error TS(7006): Parameter 'letter' implicitly has an 'any' type.
 	const scrollToSection = (letter) => {
 		// Find the current ref for the selected letter
+// @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
 		const section = sectionRefs[letter];
 
 		// Use the ref to scroll into view
@@ -62,9 +72,12 @@ const Dico = () => {
 			// Measure the position of the element
 			section.measureLayout(
 				scrollViewRef.current,
+// @ts-expect-error TS(7006): Parameter 'x' implicitly has an 'any' type.
 				(x, y, width, height) => {
+// @ts-expect-error TS(2532): Object is possibly 'undefined'.
 					scrollViewRef.current.scrollTo({ x: 0, y, animated: true });
 				},
+// @ts-expect-error TS(7006): Parameter 'error' implicitly has an 'any' type.
 				(error) => {
 					console.error("Failed to find element", error);
 				}
@@ -85,12 +98,14 @@ const Dico = () => {
 			<ScreenHeaders content='Dico' />
 
 			{!selectedTab && (
+// @ts-expect-error TS(2739): Type '{ setShowDetails: Dispatch<SetStateAction<bo... Remove this comment to see the full error message
 				<MetierList
 					setShowDetails={setShowDetails}
 					setSelectedItem={setSelectedItem}
 				/>
 			)}
 
+// @ts-expect-error TS(2741): Property 'setFilterByCat' is missing in type '{}' ... Remove this comment to see the full error message
 			{selectedTab && <MetierCategories />}
 
 			<View style={styles.floatingTabbarContainer}>

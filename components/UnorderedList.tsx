@@ -2,7 +2,11 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { FontSize16 } from "../constants/fontsizes";
 
-const UnorderedList = ({ array }) => {
+type Props = {
+	array: [];
+};
+
+const UnorderedList = ({ array }: Props) => {
 	const isArray = Array.isArray(array);
 
 	return (
