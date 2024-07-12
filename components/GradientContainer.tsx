@@ -4,7 +4,13 @@ import { StyleSheet, Text, View } from "react-native";
 import { colorWhite } from "../constants/colors";
 import { FontSize16, FontSizeH2 } from "../constants/fontsizes";
 
-const GradientContainer = ({ title, content, colors }) => {
+type Props = {
+	title: string;
+	content: string;
+	colors: [];
+};
+
+const GradientContainer = ({ title, content, colors }: Props) => {
 	const renderContent = () => {
 		if (Array.isArray(content)) {
 			return (
