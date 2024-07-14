@@ -31,15 +31,7 @@
 		"src/**/*",
 		"types/**/*",
 		".expo/types/**/*.ts",
-		"expo-env.d.ts",
-		"components/TabBar.jsx",
-		"app/(tabs)/_layout.jsx",
-		"app/(tabs)/dico.jsx",
-		"app/(tabs)/index.jsx",
-		"app/(tabs)/le_jeu.jsx",
-		"screen/metiers.jsx",
-		"app/playlist.jsx",
-		"app/(tabs)/metiers.jsx"
+		"expo-env.d.ts"
 	],
 	"exclude": [
 		"node_modules",
