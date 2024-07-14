@@ -18,7 +18,7 @@ const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
 	const navigation = useNavigation<NavigationType>();
 	const handlePress = () => {
-		navigation.navigate("Jeu");
+		navigation.navigate("jeu");
 	};
 
 	return (
