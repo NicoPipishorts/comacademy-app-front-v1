@@ -13,7 +13,7 @@ const LeJeuLayout = () => {
 			/>
 
 			<Stack.Screen
-				name='Jeu'
+				name='jeu'
 				options={{
 					headerShown: false,
 					presentation: "fullScreenModal",
