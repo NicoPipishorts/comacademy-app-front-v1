@@ -1,6 +1,5 @@
 import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
-import { EXPO_PUBLIC_API_URL } from "@env";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -11,7 +10,7 @@ import MetierDetails from "../../screens/MetierDetails";
 import MetierList from "../../screens/MetierList";
 
 const Metier = () => {
-	const apiUrl = EXPO_PUBLIC_API_URL;
+	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const queryClient = useQueryClient();
 	const { selectedTab, setSelectedTab } = useTab();
 
