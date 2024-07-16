@@ -5,8 +5,17 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Assets
 import Cat1 from "@/assets/imgs/icons/cat_1.png";
+interface CardProps {
+	cardIndex: number;
+	onSwipeLeft: () => void;
+	onSwipeRight: () => void;
+}
 
-const Card = () => {
+const Card = ({ cardIndex, onSwipeLeft, onSwipeRight }: CardProps) => {
+	const testPress = () => {
+		console.log("pressing on the button", onSwipeRight);
+		onSwipeRight();
+	};
 	return (
 		<View style={styles.cardsWrapper}>
 			<View style={styles.cardContainer}>
@@ -37,11 +46,12 @@ const Card = () => {
 				</View>
 				<View style={styles.containerText}>
 					<Text style={styles.textText}>
-						La marque, c’est le logo d’une entreprise ou d’une organisation.
+						{cardIndex} La marque, c’est le logo d’une entreprise ou d’une
+						organisation.
 					</Text>
 				</View>
 				<View style={styles.containerCardIcons}>
-					<TouchableOpacity>
+					<TouchableOpacity onPress={onSwipeLeft}>
 						<MaterialCommunityIcons
 							name='thumb-down-outline'
 							size={30}
@@ -49,7 +59,7 @@ const Card = () => {
 							style={styles.cardIcon}
 						/>
 					</TouchableOpacity>
-					<TouchableOpacity>
+					<TouchableOpacity onPress={testPress}>
 						<MaterialCommunityIcons
 							name='thumb-up-outline'
 							size={30}
@@ -70,7 +80,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	cardContainer: {
-		minHeight: "45%",
+		minHeight: "55%",
 		minWidth: "100%",
 		padding: 20,
 		paddingTop: 0,

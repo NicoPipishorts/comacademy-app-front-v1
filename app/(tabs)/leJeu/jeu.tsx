@@ -2,16 +2,35 @@ import Card from "@/components/leJeu/Card";
 import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useNavigation } from "expo-router";
-import React from "react";
+import React, { useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Swiper from "react-native-deck-swiper";
 import { NavigationType } from ".";
 
 const Jeu = () => {
+	const swiperRef = useRef<Swiper<number>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const cards = [1, 2, 3, 4, 5];
 
-	const renderCard = (cardIndex: React.Key | null | undefined) => {
-		return <Card key={cardIndex} />;
+	const onSwipeLeft = () => {
+		console.log("Attempting to swipe left");
+		swiperRef.current?.swipeLeft();
+	};
+
+	const onSwipeRight = () => {
+		console.log("Attempting to swipe right");
+		swiperRef.current?.swipeRight();
+	};
+
+	const renderCard = (cardIndex: number) => {
+		return (
+			<Card
+				key={cardIndex}
+				cardIndex={cardIndex}
+				onSwipeLeft={onSwipeLeft}
+				onSwipeRight={onSwipeRight}
+			/>
+		);
 	};
 
 	const handlePress = () => {
@@ -20,20 +39,18 @@ const Jeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			<View style={styles.container}>
-				<Card />
-				{/* <Swiper
-					cards={cards}
-					renderCard={renderCard}
-					onSwiped={(cardIndex) => console.log("Card swiped:", cardIndex)}
-					onSwipedLeft={(cardIndex) => console.log("Swiped left:", cardIndex)}
-					onSwipedRight={(cardIndex) => console.log("Swiped right:", cardIndex)}
-					infinite // Loop through cards
-					backgroundColor={"transparent"}
-					cardVerticalMargin={80}
-					stackSize={3} // Number of cards shown in stack
-				/> */}
-			</View>
+			{/* <Card /> */}
+			<Swiper
+				cards={cards}
+				renderCard={renderCard}
+				verticalSwipe={false}
+				onSwipedLeft={(cardIndex) => console.log("Swiped left:", cardIndex)}
+				onSwipedRight={(cardIndex) => console.log("Swiped right:", cardIndex)}
+				infinite
+				backgroundColor={"transparent"}
+				cardVerticalMargin={120}
+				stackSize={5}
+			/>
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
@@ -51,10 +68,6 @@ const styles = StyleSheet.create({
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
 		alignItems: "center",
-	},
-	container: {
-		flex: 1,
-		backgroundColor: "#f2f2f2",
 	},
 	containerBackButton: {
 		position: "absolute",
