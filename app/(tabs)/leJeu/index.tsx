@@ -1,8 +1,19 @@
-import { primaryBackground } from "@/constants/colors";
-import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+	colorBlack,
+	colorWhite,
+	colorYellow,
+	primaryBackground,
+} from "@/constants/colors";
+import React, { useState } from "react";
+import {
+	Image,
+	StyleSheet,
+	Switch,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import FloatingTabBar from "../../../components/FloatingTabBar";
-import ScreenHeaders from "../../../components/ScreenHeaders";
 
 // Assets
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
@@ -16,6 +27,8 @@ export type NavigationType = {
 
 const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
+	const [isEnabled, setIsEnabled] = useState(false);
+	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 	const navigation = useNavigation<NavigationType>();
 	const handlePress = () => {
 		navigation.navigate("jeu");
@@ -23,7 +36,22 @@ const LeJeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			<ScreenHeaders content='Le Jeu' />
+			<View style={styles.containerHeader}>
+				<View style={styles.header}>
+					<Text style={styles.headerMainText}>Le Jeu</Text>
+				</View>
+				<View style={styles.containerSwitch}>
+					<Text style={styles.textJouer}>Jouer</Text>
+					<Switch
+						trackColor={{ false: colorBlack, true: colorYellow }}
+						ios_backgroundColor={colorBlack}
+						thumbColor={colorWhite}
+						onValueChange={toggleSwitch}
+						value={isEnabled}
+					/>
+					<Text style={styles.textReponses}>Réponses</Text>
+				</View>
+			</View>
 
 			<View style={styles.wrapperCenter}>
 				<View>
@@ -57,6 +85,31 @@ const styles = StyleSheet.create({
 		padding: 30,
 		paddingTop: 100,
 		backgroundColor: primaryBackground,
+	},
+	containerHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignContent: "center",
+	},
+	header: {
+		paddingVertical: 15,
+	},
+	headerMainText: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "bold",
+	},
+	containerSwitch: {
+		flexDirection: "row",
+		justifyContent: "flex-end",
+		alignItems: "center",
+	},
+	textJouer: {
+		paddingRight: 8,
+		fontWeight: "bold",
+	},
+	textReponses: {
+		paddingLeft: 8,
+		fontWeight: "bold",
 	},
 	wrapperCenter: {
 		flex: 1,

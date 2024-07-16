@@ -101,7 +101,6 @@ const MetierList = ({
 										name='close-circle-outline'
 										size={24}
 										color={colorBlack}
-										style={styles.eyeIcon}
 									/>
 								</TouchableOpacity>
 							</View>
