@@ -8,7 +8,7 @@
 		"isolatedModules": true,
 		"jsx": "react-native",
 		"lib": ["esnext"],
-		"types": ["react-native", "jest"],
+		"types": ["react-native", "jest", "node"],
 		"moduleResolution": "node",
 		"noEmit": true,
 		"strict": true,
@@ -40,7 +40,8 @@
 		"app/(tabs)/le_jeu.jsx",
 		"screen/metiers.jsx",
 		"app/playlist.jsx",
-		"app/(tabs)/metiers.jsx"
+		"app/(tabs)/metiers.jsx",
+		"screens/MetierCategories.jsx"
 	],
 	"exclude": [
 		"node_modules",
