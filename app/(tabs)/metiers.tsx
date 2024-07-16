@@ -32,7 +32,8 @@ const Metier = () => {
 
 	const { data: dataCategory } = useQuery({
 		queryKey: ["categories"],
-		queryFn: () => fetch(`${apiUrl}/categories`).then((res) => res.json()),
+		queryFn: () =>
+			fetch(`${apiUrl}/categories?populate=*`).then((res) => res.json()),
 	});
 
 	useEffect(() => {
@@ -48,6 +49,7 @@ const Metier = () => {
 			/>
 		);
 	}
+
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Métiers' />
@@ -63,7 +65,12 @@ const Metier = () => {
 				/>
 			)}
 
-			{selectedTab && <MetierCategories setFilterByCat={setFilterByCat} />}
+			{selectedTab && (
+				<MetierCategories
+					setFilterByCat={setFilterByCat}
+					dataCategory={dataCategory}
+				/>
+			)}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
