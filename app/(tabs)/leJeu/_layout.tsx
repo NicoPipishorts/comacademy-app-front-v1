@@ -16,8 +16,9 @@ const LeJeuLayout = () => {
 				name='jeu'
 				options={{
 					headerShown: false,
-					presentation: "fullScreenModal",
 					gestureEnabled: true,
+					presentation: "fullScreenModal",
+					animation: "slide_from_bottom",
 				}}
 			/>
 		</Stack>

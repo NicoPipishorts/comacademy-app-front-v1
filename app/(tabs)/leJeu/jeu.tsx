@@ -1,8 +1,9 @@
 import Card from "@/components/leJeu/Card";
 import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useNavigation } from "expo-router";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { NavigationType } from ".";
@@ -10,7 +11,14 @@ import { NavigationType } from ".";
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<number>>(null);
 	const navigation = useNavigation<NavigationType>();
+
+	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const cards = [1, 2, 3, 4, 5];
+
+	useEffect(() => {
+		console.log("in the jeu view, hiding tabbar useEffect");
+		hideTabBar();
+	}, []);
 
 	const onSwipeLeft = () => {
 		console.log("Attempting to swipe left");
@@ -34,6 +42,7 @@ const Jeu = () => {
 	};
 
 	const handlePress = () => {
+		showTabBar();
 		navigation.navigate("index");
 	};
 
