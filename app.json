@@ -17,6 +17,9 @@
 		"android": {
 			"adaptiveIcon": {
 				"backgroundColor": "#ffffff"
+			},
+			"config": {
+				"usesCleartextTraffic": true
 			}
 		},
 		"web": {
