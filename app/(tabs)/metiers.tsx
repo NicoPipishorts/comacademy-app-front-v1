@@ -1,8 +1,9 @@
-import { primaryBackground } from "@/constants/colors";
+import { colorYellow, primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
+import { SelectedMetier } from "@/types/metiers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import FloatingTabBar from "../../components/FloatingTabBar";
 import ScreenHeaders from "../../components/ScreenHeaders";
 import MetierCategories from "../../screens/MetierCategories";
@@ -13,19 +14,18 @@ const Metier = () => {
 	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const queryClient = useQueryClient();
 	const { selectedTab, setSelectedTab } = useTab();
-
 	const [showDetails, setShowDetails] = useState<boolean>(false);
-	const [selectedItem, setSelectedItem] = useState(null);
+	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const { data: dataMetier } = useQuery({
-		queryKey: ["metiers"],
+	const { data: dataMetier, isLoading } = useQuery({
+		queryKey: ["metiersList"],
 		queryFn: () =>
 			fetch(
 				`${apiUrl}/metiers?${
 					filterByCat === null
-						? ""
-						: `filters[CATEGORIE][$contains]=${filterByCat}`
+						? "fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$notContains]=&filters[CATEGORIE][$notContains]=,,,"
+						: `fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$notContains]=&filters[CATEGORIE][$notContains]=,,,&filters[CATEGORIE][$contains]=${filterByCat}`
 				}`
 			).then((res) => res.json()),
 	});
@@ -53,11 +53,15 @@ const Metier = () => {
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Métiers' />
-
-			{!selectedTab && (
+			{isLoading && (
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size='large' color={colorYellow} />
+				</View>
+			)}
+			{!selectedTab && !isLoading && (
 				<MetierList
 					data={dataMetier}
-					categories={dataCategory?.data || []}
+					categories={dataCategory}
 					setShowDetails={setShowDetails}
 					setSelectedItem={setSelectedItem}
 					filterByCat={filterByCat}
@@ -89,6 +93,11 @@ const styles = StyleSheet.create({
 		padding: 30,
 		paddingTop: 80,
 		backgroundColor: primaryBackground,
+	},
+	loadingContainer: {
+		paddingTop: "60%",
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	floatingTabbarContainer: {
 		backgroundColor: "transparent",

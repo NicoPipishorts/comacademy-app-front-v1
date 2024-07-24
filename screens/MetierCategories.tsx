@@ -18,14 +18,10 @@ const MetierCategories = ({ setFilterByCat, dataCategory }: Props) => {
 		<>
 			<View style={styles.cardContainer}>
 				{dataCategory.data.map((cat) => {
-					console.log(
-						process.env.EXPO_PUBLIC_URL,
-						cat.attributes.smallIcon.data.attributes.url
-					);
 					return (
 						<TouchableOpacity
 							key={cat.id}
-							onPress={() => setFilterByCat(1)}
+							onPress={() => setFilterByCat(cat.id)}
 							style={[
 								styles.card,
 								{ backgroundColor: `#${cat.attributes.backgroundColor}` },
@@ -36,7 +32,7 @@ const MetierCategories = ({ setFilterByCat, dataCategory }: Props) => {
 								}}
 								style={styles.icon}
 							/>
-							<Text style={styles.cardText}>Stratégie {"\n"}de Marque</Text>
+							<Text style={styles.cardText}>{cat.attributes.Title}</Text>
 						</TouchableOpacity>
 					);
 				})}

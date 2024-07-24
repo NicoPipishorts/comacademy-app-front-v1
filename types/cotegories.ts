@@ -1,11 +1,11 @@
 export type CategoriePayload = {
 	data: Array<{
 		id: number;
-		attributes: Attributes;
+		attributes: CategoriesAttributes;
 	}>;
 };
 
-export type Attributes = {
+export type CategoriesAttributes = {
 	Name: string;
 	Description: string | null;
 	createdAt: string;
@@ -13,24 +13,24 @@ export type Attributes = {
 	publishedAt: string;
 	Title: string;
 	backgroundColor: string;
-	smallIcon: Icon;
-	bigIcon: Icon;
+	smallIcon: CategoriesIcon;
+	bigIcon: CategoriesIcon;
 };
 
-export type Icon = {
+export type CategoriesIcon = {
 	data: {
 		id: number;
-		attributes: IconAttributes;
+		attributes: CategoriesIconAttributes;
 	};
 };
 
-export type IconAttributes = {
+export type CategoriesIconAttributes = {
 	name: string;
 	alternativeText: string | null;
 	caption: string | null;
 	width: number;
 	height: number;
-	formats: Formats | null;
+	formats: CategoriesFormats | null;
 	hash: string;
 	ext: string;
 	mime: string;
@@ -43,7 +43,7 @@ export type IconAttributes = {
 	updatedAt: string;
 };
 
-export type Formats = {
+export type CategoriesFormats = {
 	thumbnail?: {
 		ext: string;
 		url: string;
