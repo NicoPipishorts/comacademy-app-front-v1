@@ -1,17 +1,19 @@
-import { colorWhite, colorYellow } from "@/constants/colors";
+import { colorBlack, colorWhite, colorYellow } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Assets
 import Cat1 from "@/assets/imgs/icons/cat_1.png";
+import { GameData } from "@/types/game";
 interface CardProps {
 	cardIndex: number;
+	data?: GameData;
 	onSwipeLeft: () => void;
 	onSwipeRight: () => void;
 }
 
-const Card = ({ cardIndex, onSwipeLeft, onSwipeRight }: CardProps) => {
+const Card = ({ cardIndex, onSwipeLeft, onSwipeRight, data }: CardProps) => {
 	const testPress = () => {
 		onSwipeRight();
 	};
@@ -87,6 +89,11 @@ const styles = StyleSheet.create({
 		borderRadius: 25,
 		justifyContent: "flex-start",
 		alignItems: "center",
+		shadowColor: colorBlack,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.25,
+		shadowRadius: 3.84,
+		elevation: 5, // Elevation for Android shadow
 	},
 	containerTopRow: {
 		width: "100%",
