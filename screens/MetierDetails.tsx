@@ -69,7 +69,6 @@ function DetailsScreen({ item, onGoBack }: Props) {
 			},
 		})
 	).current;
-	console.log("Metier Details Data: ", data);
 
 	if (!data) return;
 	return (
@@ -97,7 +96,7 @@ function DetailsScreen({ item, onGoBack }: Props) {
 					<View style={styles.containerIcons}>
 						{data.data.attributes.CATEGORIE !== undefined &&
 						data.data.attributes.CATEGORIE !== null
-							? data.data.attributes.CATEGORIE.split(", ").map((cat) => {
+							? data.data.attributes.CATEGORIE.split(",").map((cat) => {
 									const categoryNumber = parseInt(cat, 10); // Convert string to number
 									return (
 										<SmallCategroieIcons

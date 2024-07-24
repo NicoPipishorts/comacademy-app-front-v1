@@ -13,7 +13,6 @@ interface CardProps {
 
 const Card = ({ cardIndex, onSwipeLeft, onSwipeRight }: CardProps) => {
 	const testPress = () => {
-		console.log("pressing on the button", onSwipeRight);
 		onSwipeRight();
 	};
 	return (

@@ -18,16 +18,22 @@ const Metier = () => {
 	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
+	const fetchMetiers = async (filterByCat: number | null) => {
+		const url = `${apiUrl}/metiers?${
+			filterByCat === null
+				? "fields[0]=METIER&_fields=id,METIER&"
+				: `fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$contains]=${filterByCat}`
+		}`;
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error("Network response was not ok");
+		}
+		return response.json();
+	};
+
 	const { data: dataMetier, isLoading } = useQuery({
 		queryKey: ["metiersList"],
-		queryFn: () =>
-			fetch(
-				`${apiUrl}/metiers?${
-					filterByCat === null
-						? "fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$notContains]=&filters[CATEGORIE][$notContains]=,,,"
-						: `fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$notContains]=&filters[CATEGORIE][$notContains]=,,,&filters[CATEGORIE][$contains]=${filterByCat}`
-				}`
-			).then((res) => res.json()),
+		queryFn: () => fetchMetiers(filterByCat),
 	});
 
 	const { data: dataCategory } = useQuery({
@@ -37,7 +43,7 @@ const Metier = () => {
 	});
 
 	useEffect(() => {
-		queryClient.invalidateQueries({ queryKey: ["metiers"] });
+		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
 		setSelectedTab(false);
 	}, [filterByCat, queryClient]);
 
