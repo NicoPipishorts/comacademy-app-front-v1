@@ -2,6 +2,8 @@ import Card from "@/components/leJeu/Card";
 import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { GameData, GameDataPayload } from "@/types/game";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -9,32 +11,44 @@ import Swiper from "react-native-deck-swiper";
 import { NavigationType } from ".";
 
 const Jeu = () => {
-	const swiperRef = useRef<Swiper<number>>(null);
+	const swiperRef = useRef<Swiper<GameData>>(null);
 	const navigation = useNavigation<NavigationType>();
 
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
-	const cards = [1, 2, 3, 4, 5];
 
 	useEffect(() => {
-		console.log("in the jeu view, hiding tabbar useEffect");
 		hideTabBar();
 	}, []);
 
+	const { data: dataGame } = useQuery<GameDataPayload>({
+		queryKey: ["GameQuestions"],
+		queryFn: () =>
+			fetch(
+				`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&pagination[limit]=50`
+			).then((res) => res.json()),
+	});
+
+	if (!dataGame) return null;
+	const dataArray: GameData[] = Object.keys(dataGame.data).map(
+		(key) => dataGame.data[key] as GameData
+	);
+
+	const cards = dataArray;
+
 	const onSwipeLeft = () => {
-		console.log("Attempting to swipe left");
 		swiperRef.current?.swipeLeft();
 	};
 
 	const onSwipeRight = () => {
-		console.log("Attempting to swipe right");
 		swiperRef.current?.swipeRight();
 	};
 
-	const renderCard = (cardIndex: number) => {
+	const renderCard = (card: GameData) => {
 		return (
 			<Card
-				key={cardIndex}
-				cardIndex={cardIndex}
+				key={card.id}
+				cardIndex={card.id}
+				data={card}
 				onSwipeLeft={onSwipeLeft}
 				onSwipeRight={onSwipeRight}
 			/>
@@ -48,8 +62,8 @@ const Jeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			{/* <Card /> */}
 			<Swiper
+				ref={swiperRef}
 				cards={cards}
 				renderCard={renderCard}
 				verticalSwipe={false}
@@ -58,7 +72,10 @@ const Jeu = () => {
 				infinite
 				backgroundColor={"transparent"}
 				cardVerticalMargin={120}
+				cardHorizontalMargin={30}
 				stackSize={5}
+				stackScale={5}
+				stackSeparation={20}
 			/>
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
