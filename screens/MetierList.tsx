@@ -42,8 +42,6 @@ const MetierList = ({
 		[key: string]: SelectedMetier[];
 	}>({});
 
-	console.log(data.data);
-
 	useEffect(() => {
 		if (data && data.data) {
 			const mappedData = data.data.map((item) => {
@@ -138,7 +136,7 @@ const MetierList = ({
 								style={styles.filterContainer}
 								onPress={() => setFilterByCat(null)}>
 								<Text style={styles.filterText}>
-									{categories.data[filterByCat]?.attributes.Title} {filterByCat}
+									{categories.data[filterByCat]?.attributes.Title}
 								</Text>
 								<MaterialCommunityIcons
 									name='close-circle-outline'
@@ -153,7 +151,6 @@ const MetierList = ({
 						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 							<Text style={styles.listHeader}>{letter}</Text>
 							{groupedData[letter]?.map((item, index) => {
-								// console.log("Item:", item);
 								return (
 									<Text
 										key={index}

@@ -31,7 +31,6 @@ export const TabBarVisibilityProvider: React.FC<
 	const [isTabBarVisible, setTabBarVisible] = useState(true);
 
 	const showTabBar = () => {
-		console.log("hiding tabbar");
 		setTabBarVisible(true);
 	};
 	const hideTabBar = () => setTabBarVisible(false);
