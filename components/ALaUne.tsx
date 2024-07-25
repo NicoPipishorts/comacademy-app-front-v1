@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
 		minHeight: 100,
 		padding: 15,
 		borderRadius: 10,
+		marginBottom: 20,
 	},
 	smallText: {
 		fontSize: FontSize12,

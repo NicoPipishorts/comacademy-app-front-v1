@@ -11,30 +11,20 @@ import { useAuth } from "../../auth/AutContext";
 import ALaUne from "../../components/ALaUne";
 
 // Custom images
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_d... Remove this comment to see the full error message
-import dico from "../../assets/imgs/cards/home_dico.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_m... Remove this comment to see the full error message
-import playlists from "../../assets/imgs/cards/home_my_playlists.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_m... Remove this comment to see the full error message
-import stats from "../../assets/imgs/cards/home_my_stats.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_p... Remove this comment to see the full error message
-import play from "../../assets/imgs/cards/home_play.png";
-
 import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/avatar/avata... Remove this comment to see the full error message
 import avatar from "../../assets/imgs/avatar/avatar.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_a... Remove this comment to see the full error message
-import actus from "../../assets/imgs/cards/home_actus.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_b... Remove this comment to see the full error message
-import briefs from "../../assets/imgs/cards/home_briefs.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_c... Remove this comment to see the full error message
-import citations from "../../assets/imgs/cards/home_citations.png";
-// @ts-expect-error TS(2307): Cannot find module '../../assets/imgs/cards/home_u... Remove this comment to see the full error message
-import un_pour_un from "../../assets/imgs/cards/home_un_pour_un.png";
+
+import dixAstuces from "../../assets/imgs/cards/home_10_astuces.png";
+import secrets from "../../assets/imgs/cards/home_3_secrets.png";
+import homeActus from "../../assets/imgs/cards/home_actus.png";
+import lesBrieds from "../../assets/imgs/cards/home_briefs.png";
+import lesCitations from "../../assets/imgs/cards/home_citations.png";
+import homeCreme from "../../assets/imgs/cards/home_creme.png";
+import homeFlops from "../../assets/imgs/cards/home_flops.png";
+import mesStats from "../../assets/imgs/cards/home_mes_stats.png";
 
 const HomeScreen = () => {
-	// @ts-expect-error TS(2339): Property 'logout' does not exist on type 'null'.
 	const { logout } = useAuth();
 
 	return (
@@ -50,7 +40,7 @@ const HomeScreen = () => {
 				style={styles.contentContainer}
 				showsVerticalScrollIndicator={false}>
 				<View style={styles.header}>
-					<Text style={styles.headerShortcuts}>Raccourcis</Text>
+					<Text style={styles.headerShortcuts}>Let's Go</Text>
 				</View>
 				<ScrollView
 					style={styles.shortcutsContainer}
@@ -58,21 +48,33 @@ const HomeScreen = () => {
 					showsHorizontalScrollIndicator={false}>
 					<View style={styles.shortcuts}>
 						<TouchableOpacity style={styles.button}>
-							<Image source={stats} style={styles.shortcutsCards} />
+							<Image source={secrets} style={styles.shortcutsCards} />
 						</TouchableOpacity>
 						<TouchableOpacity style={styles.button}>
-							<Image source={playlists} style={styles.shortcutsCards} />
+							<Image source={homeFlops} style={styles.shortcutsCards} />
 						</TouchableOpacity>
 						<TouchableOpacity style={styles.button}>
-							<Image source={dico} style={styles.shortcutsCards} />
+							<Image source={lesCitations} style={styles.shortcutsCards} />
 						</TouchableOpacity>
 						<TouchableOpacity style={styles.button}>
-							<Image source={play} style={styles.shortcutsCards} />
+							<Image source={homeActus} style={styles.shortcutsCards} />
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.button}>
+							<Image source={mesStats} style={styles.shortcutsCards} />
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.button}>
+							<Image source={dixAstuces} style={styles.shortcutsCards} />
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.button}>
+							<Image source={lesBrieds} style={styles.shortcutsCards} />
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.button}>
+							<Image source={homeCreme} style={styles.shortcutsCards} />
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
 
-				<View style={styles.header}>
+				{/* <View style={styles.header}>
 					<Text style={styles.headerShortcuts}>En ce moment</Text>
 				</View>
 				<ScrollView
@@ -93,13 +95,17 @@ const HomeScreen = () => {
 							<Image source={citations} style={styles.shortcutsCards} />
 						</TouchableOpacity>
 					</View>
-				</ScrollView>
+				</ScrollView> */}
 
+				<View style={styles.header}>
+					<Text style={styles.headerShortcuts}>A la une</Text>
+				</View>
 				<ScrollView
-					style={styles.shortcutsContainer}
+					style={styles.alLaUneContainer}
 					horizontal={true}
 					showsHorizontalScrollIndicator={false}>
-					<View style={styles.shortcuts}>
+					<View style={styles.alLaUne}>
+						<ALaUne content='Notre 10 000eme Utilisateur' />
 						<ALaUne content='Notre 10 000eme Utilisateur' />
 					</View>
 				</ScrollView>
@@ -111,7 +117,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 20,
 		paddingTop: 100,
 		backgroundColor: primaryBackground,
 	},
@@ -120,6 +125,7 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		alignItems: "center",
 		marginBottom: 30,
+		paddingHorizontal: 20,
 	},
 	headerText: {
 		fontSize: FontSizeAvaterText,
@@ -140,9 +146,21 @@ const styles = StyleSheet.create({
 	},
 	shortcutsContainer: {
 		flexGrow: 0,
+		paddingHorizontal: 20,
 	},
 	shortcuts: {
 		flexDirection: "row",
+		justifyContent: "flex-start",
+		minWidth: "100%",
+		marginBottom: 40,
+	},
+	alLaUneContainer: {
+		flexDirection: "column",
+		flexGrow: 0,
+		paddingHorizontal: 20,
+	},
+	alLaUne: {
+		flexDirection: "column",
 		justifyContent: "flex-start",
 		minWidth: "100%",
 		marginBottom: 40,
