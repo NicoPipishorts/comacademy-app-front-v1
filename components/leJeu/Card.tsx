@@ -1,25 +1,52 @@
-import { colorBlack, colorWhite, colorYellow } from "@/constants/colors";
+import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Assets
-import Cat1 from "@/assets/imgs/icons/cat_1.png";
+import { CategorieColors } from "@/types/categories";
 import { GameData } from "@/types/game";
+
 interface CardProps {
-	cardIndex: number;
-	data?: GameData;
+	data: GameData;
+	catColors: CategorieColors;
 	onSwipeLeft: () => void;
 	onSwipeRight: () => void;
 }
 
-const Card = ({ cardIndex, onSwipeLeft, onSwipeRight, data }: CardProps) => {
+const Card = ({ onSwipeLeft, onSwipeRight, data, catColors }: CardProps) => {
+	const [firstElement, setFirstElement] = useState<number>(0);
+
+	useEffect(() => {
+		const categorieStr: string = data.attributes.CATEGORIE || "";
+		const categories: string[] = categorieStr
+			.split(",")
+			.map((cat) => cat.trim());
+		const selectedCategory: number =
+			categories.length > 0
+				? parseInt(
+						categories[Math.floor(Math.random() * categories.length)] || "0"
+				  )
+				: 0;
+		setFirstElement(selectedCategory);
+	}, [data]);
+
 	const testPress = () => {
 		onSwipeRight();
 	};
+
+	if (!catColors || !catColors.data[firstElement]) return null;
+
 	return (
 		<View style={styles.cardsWrapper}>
-			<View style={styles.cardContainer}>
+			<View
+				style={[
+					{
+						backgroundColor: `#${catColors.data[firstElement].attributes.backgroundColor}`,
+					},
+					styles.cardContainer,
+				]}>
 				<View style={styles.containerTopRow}>
 					<View style={styles.containerStars}>
 						<MaterialCommunityIcons
@@ -42,14 +69,15 @@ const Card = ({ cardIndex, onSwipeLeft, onSwipeRight, data }: CardProps) => {
 						/>
 					</View>
 					<View style={styles.containerCatIcon}>
-						<Image source={Cat1} style={styles.catIcon}></Image>
+						<Image
+							source={{
+								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[firstElement].attributes.smallIcon.data.attributes.url}`,
+							}}
+							style={styles.catIcon}></Image>
 					</View>
 				</View>
 				<View style={styles.containerText}>
-					<Text style={styles.textText}>
-						{cardIndex} La marque, c’est le logo d’une entreprise ou d’une
-						organisation.
-					</Text>
+					<Text style={styles.textText}>{data.attributes.QUESTION}</Text>
 				</View>
 				<View style={styles.containerCardIcons}>
 					<TouchableOpacity onPress={onSwipeLeft}>
@@ -85,7 +113,6 @@ const styles = StyleSheet.create({
 		minWidth: "100%",
 		padding: 20,
 		paddingTop: 0,
-		backgroundColor: colorYellow,
 		borderRadius: 25,
 		justifyContent: "flex-start",
 		alignItems: "center",
@@ -121,6 +148,7 @@ const styles = StyleSheet.create({
 		fontSize: FontSizeH1,
 		color: colorWhite,
 		fontWeight: "bold",
+		marginBottom: 80,
 	},
 	containerCardIcons: {
 		width: "100%",
