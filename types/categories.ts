@@ -65,3 +65,13 @@ export type CategroiesMenu = {
 		url: string;
 	}>;
 };
+
+export type CategorieColors = {
+	data: Array<{
+		id: number;
+		attributes: {
+			backgroundColor: string;
+			smallIcon: CategoriesIcon;
+		};
+	}>;
+};

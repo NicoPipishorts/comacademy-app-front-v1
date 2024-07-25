@@ -1,4 +1,4 @@
-import { CategoriePayload } from "@/types/cotegories";
+import { CategoriePayload } from "@/types/categories";
 import { Dispatch, SetStateAction } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {

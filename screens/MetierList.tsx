@@ -1,6 +1,6 @@
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
-import { CategoriePayload } from "@/types/cotegories";
+import { CategoriePayload } from "@/types/categories";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, {
