@@ -1,9 +1,12 @@
+type CategoryNumber = 1 | 2 | 3 | 4 | 5 | 6;
+type CategoryArray = CategoryNumber[];
+
 export type GameAttributes = {
 	QUESTION: string;
 	createdAt: string;
 	updatedAt: string;
 	publishedAt: string;
-	CATEGORIE: string;
+	CATEGORIE: CategoryArray;
 	TAG: string | null;
 	ANSWER: boolean;
 	REPONSE: string;
@@ -12,11 +15,11 @@ export type GameAttributes = {
 	SENSIBILITE: string | null;
 };
 
+export type GameDataPayload = {
+	data: Record<string, GameData>;
+};
+
 export type GameData = {
 	id: number;
 	attributes: GameAttributes;
-};
-
-export type GameDataPayload = {
-	data: Record<string, GameData>;
 };

@@ -4,6 +4,7 @@ import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
+import React from "react";
 import {
 	Image,
 	ImageStyle,
@@ -23,14 +24,15 @@ type Props = {
 };
 
 const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
-	console.log("jeu console", currentCardData?.attributes.CATEGORIE);
 	return (
 		<Modal
 			visible={visible}
 			transparent={true}
 			animationType='slide'
 			onRequestClose={handleCloseModal}>
-			<View style={styles.modalContainer}>
+			<TouchableOpacity
+				style={styles.modalContainer}
+				onPress={handleCloseModal}>
 				<View style={styles.modalContent}>
 					{currentCardData && (
 						<>
@@ -43,17 +45,15 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 								<View style={styles.containerIcons}>
 									{currentCardData.attributes.CATEGORIE !== undefined &&
 									currentCardData.attributes.CATEGORIE !== null
-										? currentCardData.attributes.CATEGORIE.split(",").map(
-												(cat) => {
-													const categoryNumber = parseInt(cat, 10); // Convert string to number
-													return (
-														<SmallCategroieIcons
-															key={categoryNumber}
-															cats={categoryNumber}
-														/>
-													);
-												}
-										  )
+										? currentCardData.attributes.CATEGORIE.map((cat) => {
+												const categoryNumber = cat;
+												return (
+													<SmallCategroieIcons
+														key={categoryNumber}
+														cats={categoryNumber}
+													/>
+												);
+										  })
 										: ""}
 								</View>
 								<View style={styles.containerIcons}>
@@ -84,7 +84,7 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 						</TouchableOpacity>
 					</View>
 				</View>
-			</View>
+			</TouchableOpacity>
 		</Modal>
 	);
 };

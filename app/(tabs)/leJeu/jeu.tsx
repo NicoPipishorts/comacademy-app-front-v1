@@ -37,17 +37,43 @@ const Jeu = () => {
 	useEffect(() => {
 		hideTabBar();
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
-	}, []);
+	}, [hideTabBar, showTabBar]);
 
-	const { data: dataGame, isLoading } = useQuery<GameDataPayload>({
-		queryKey: ["GameQuestions"],
-		queryFn: () =>
-			fetch(
-				`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&pagination[limit]=30`
-			).then((res) => res.json()),
-	});
+	const { data: dataGame, isLoading: isGameLoading } =
+		useQuery<GameDataPayload>({
+			queryKey: ["GameQuestions"],
+			queryFn: () =>
+				fetch(
+					`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&pagination[limit]=30`
+				)
+					.then((res) => res.json())
+					.then((data) => {
+						// Transform the CATEGORIE string into a number array
+						const transformedData = {
+							...data,
+							data: Object.keys(data.data).reduce((acc, key) => {
+								const item = data.data[key];
+								const categories = item.attributes.CATEGORIE.split(",").map(
+									(cat: string) => {
+										const parsed = parseInt(cat.trim(), 10);
+										return !isNaN(parsed) ? parsed : 1;
+									}
+								);
+								acc[key] = {
+									...item,
+									attributes: {
+										...item.attributes,
+										CATEGORIE: categories,
+									},
+								};
+								return acc;
+							}, {} as Record<string, GameData>),
+						};
+						return transformedData;
+					}),
+		});
 
-	const { data: catData } = useQuery<CategorieColors>({
+	const { data: catData, isLoading: isCatLoading } = useQuery<CategorieColors>({
 		queryKey: ["Categories"],
 		queryFn: () =>
 			fetch(
@@ -55,7 +81,7 @@ const Jeu = () => {
 			).then((res) => res.json()),
 	});
 
-	if (isLoading) {
+	if (isGameLoading || isCatLoading) {
 		return (
 			<View style={styles.loadingContainer}>
 				<ActivityIndicator size='large' color={colorYellow} />
@@ -63,7 +89,7 @@ const Jeu = () => {
 		);
 	}
 
-	if (!dataGame || !dataGame.data) {
+	if (!dataGame || !dataGame.data || !catData) {
 		return (
 			<View style={styles.loadingContainer}>
 				<Text style={styles.noDataText}>No game data available</Text>
@@ -106,7 +132,6 @@ const Jeu = () => {
 		setCurrentIndex(cardIndex + 1);
 	};
 
-	if (!catData) return;
 	const renderCard = (card: GameData, cardIndex: number) => {
 		return (
 			<Card
