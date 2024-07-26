@@ -1,0 +1,164 @@
+import Heart from "@/assets/imgs/icons/heart.png";
+import Plus from "@/assets/imgs/icons/plus.png";
+import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
+import { Answer } from "@/types/enums";
+import { GameData } from "@/types/game";
+import {
+	Image,
+	ImageStyle,
+	Modal,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import SmallCategroieIcons from "../SmallCategroieIcons";
+
+type Props = {
+	visible: boolean;
+	feedbackMessage: Answer | null;
+	handleCloseModal: () => void;
+	currentCardData: GameData | null;
+};
+
+const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
+	console.log("jeu console", currentCardData?.attributes.CATEGORIE);
+	return (
+		<Modal
+			visible={visible}
+			transparent={true}
+			animationType='slide'
+			onRequestClose={handleCloseModal}>
+			<View style={styles.modalContainer}>
+				<View style={styles.modalContent}>
+					{currentCardData && (
+						<>
+							<View style={styles.headerContainer}>
+								<Text style={styles.headerMainText}>
+									{currentCardData.attributes.QUESTION}
+								</Text>
+							</View>
+							<View style={styles.wrapperIcons}>
+								<View style={styles.containerIcons}>
+									{currentCardData.attributes.CATEGORIE !== undefined &&
+									currentCardData.attributes.CATEGORIE !== null
+										? currentCardData.attributes.CATEGORIE.split(",").map(
+												(cat) => {
+													const categoryNumber = parseInt(cat, 10); // Convert string to number
+													return (
+														<SmallCategroieIcons
+															key={categoryNumber}
+															cats={categoryNumber}
+														/>
+													);
+												}
+										  )
+										: ""}
+								</View>
+								<View style={styles.containerIcons}>
+									<Image
+										source={Plus}
+										style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+										resizeMode='contain'
+									/>
+									<Image
+										source={Heart}
+										style={styles.catIcons as ImageStyle}
+										resizeMode='contain'
+									/>
+								</View>
+							</View>
+							<View style={styles.containerAnswer}>
+								<Text style={styles.textAnswer}>
+									{currentCardData.attributes.REPONSE}
+								</Text>
+							</View>
+						</>
+					)}
+					<View style={styles.closeButtonContainer}>
+						<TouchableOpacity
+							onPress={handleCloseModal}
+							style={styles.closeButton}>
+							<Text style={styles.closeButtonText}>Fermer</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</View>
+		</Modal>
+	);
+};
+
+const styles = StyleSheet.create({
+	modalContainer: {
+		flex: 1,
+		justifyContent: "flex-end",
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+	},
+	modalContent: {
+		width: "100%",
+		height: "90%",
+		backgroundColor: primaryBackground,
+		padding: 20,
+		paddingTop: 50,
+		borderTopLeftRadius: 10,
+		borderTopRightRadius: 10,
+		alignItems: "center",
+	},
+	headerContainer: {
+		width: "100%",
+		paddingHorizontal: 20,
+		marginBottom: 30,
+	},
+	headerMainText: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "bold",
+	},
+	wrapperIcons: {
+		paddingHorizontal: 20,
+		width: "100%",
+		flexDirection: "row",
+		justifyContent: "space-between",
+	},
+	containerIcons: {
+		flexDirection: "row",
+		marginBottom: 30,
+	},
+	catIcons: {
+		width: 24,
+		height: 24,
+		aspectRatio: 1,
+		marginRight: 5,
+	},
+	containerAnswer: {
+		width: "100%",
+		backgroundColor: colorWhite,
+		padding: 20,
+		borderRadius: 15,
+	},
+	textAnswer: {
+		fontSize: FontSize16,
+		fontWeight: "bold",
+		lineHeight: 25,
+	},
+	closeButtonContainer: {
+		position: "absolute",
+		bottom: 70,
+		justifyContent: "center",
+		alignItems: "center",
+		width: "100%",
+	},
+	closeButton: {
+		paddingHorizontal: 30,
+		paddingVertical: 10,
+		backgroundColor: colorBlack,
+		borderRadius: 50,
+	},
+	closeButtonText: {
+		fontSize: 18,
+		fontWeight: "bold",
+		color: colorWhite,
+	},
+});
+
+export default AnswerModal;

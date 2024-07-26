@@ -11,32 +11,55 @@ import { GameData } from "@/types/game";
 interface CardProps {
 	data: GameData;
 	catColors: CategorieColors;
-	onSwipeLeft: () => void;
-	onSwipeRight: () => void;
+	onSwipeLeft: (cardIndex: number) => void;
+	onSwipeRight: (cardIndex: number) => void;
+	cardIndex: number;
 }
 
-const Card = ({ onSwipeLeft, onSwipeRight, data, catColors }: CardProps) => {
+const Card = ({
+	onSwipeLeft,
+	onSwipeRight,
+	data,
+	catColors,
+	cardIndex,
+}: CardProps) => {
 	const [firstElement, setFirstElement] = useState<number>(0);
 
 	useEffect(() => {
 		const categorieStr: string = data.attributes.CATEGORIE || "";
-		const categories: string[] = categorieStr
+		const categories: number[] = categorieStr
 			.split(",")
-			.map((cat) => cat.trim());
-		const selectedCategory: number =
-			categories.length > 0
-				? parseInt(
-						categories[Math.floor(Math.random() * categories.length)] || "0"
-				  )
-				: 0;
+			.map((cat) => parseInt(cat.trim(), 10))
+			.filter((cat) => !isNaN(cat)); // Ensure the categories array contains valid numbers
+
+		// Ensure there is at least one category, defaulting to 1 if empty
+		if (categories.length === 0) {
+			categories.push(1); // Push a default number to avoid empty array
+		}
+
+		let selectedCategory: number;
+
+		if (categories.length > 1) {
+			const randomCategoryIndex = Math.floor(Math.random() * categories.length);
+			selectedCategory = categories[randomCategoryIndex] - 1;
+		} else {
+			selectedCategory = categories[0] - 1; // Subtract 1 from the first element
+		}
+
 		setFirstElement(selectedCategory);
 	}, [data]);
 
 	const testPress = () => {
-		onSwipeRight();
+		onSwipeRight(cardIndex);
 	};
 
 	if (!catColors || !catColors.data[firstElement]) return null;
+	console.log(
+		"card console",
+		{ ...catColors.data },
+		catColors.data[firstElement].attributes.backgroundColor,
+		firstElement
+	);
 
 	return (
 		<View style={styles.cardsWrapper}>
@@ -80,7 +103,7 @@ const Card = ({ onSwipeLeft, onSwipeRight, data, catColors }: CardProps) => {
 					<Text style={styles.textText}>{data.attributes.QUESTION}</Text>
 				</View>
 				<View style={styles.containerCardIcons}>
-					<TouchableOpacity onPress={onSwipeLeft}>
+					<TouchableOpacity onPress={() => onSwipeLeft(cardIndex)}>
 						<MaterialCommunityIcons
 							name='thumb-down-outline'
 							size={30}
