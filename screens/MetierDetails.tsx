@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1,
 		marginRight: 5,
 	},
-	// Text related Styles
 	containerTitles: {
 		marginBottom: 20,
 		paddingHorizontal: 30,
