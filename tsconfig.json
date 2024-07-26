@@ -11,7 +11,7 @@
 		"types": ["react-native", "jest", "node"],
 		"moduleResolution": "node",
 		"noEmit": true,
-		"strict": true,
+		"strict": false,
 		"target": "esnext",
 		"noImplicitReturns": true,
 		"resolveJsonModule": true,

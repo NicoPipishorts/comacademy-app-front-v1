@@ -26,24 +26,18 @@ const Card = ({
 	const [firstElement, setFirstElement] = useState<number>(0);
 
 	useEffect(() => {
-		const categorieStr: string = data.attributes.CATEGORIE || "";
-		const categories: number[] = categorieStr
-			.split(",")
-			.map((cat) => parseInt(cat.trim(), 10))
-			.filter((cat) => !isNaN(cat)); // Ensure the categories array contains valid numbers
-
-		// Ensure there is at least one category, defaulting to 1 if empty
-		if (categories.length === 0) {
-			categories.push(1); // Push a default number to avoid empty array
-		}
+		const categories: number[] = data.attributes.CATEGORIE;
 
 		let selectedCategory: number;
 
 		if (categories.length > 1) {
-			const randomCategoryIndex = Math.floor(Math.random() * categories.length);
-			selectedCategory = categories[randomCategoryIndex] - 1;
+			selectedCategory =
+				categories[Math.floor(Math.random() * categories.length)] - 1;
+		} else if (categories.length === 1) {
+			selectedCategory = categories[0] - 1;
 		} else {
-			selectedCategory = categories[0] - 1; // Subtract 1 from the first element
+			// Handle case where categories is empty
+			selectedCategory = 0;
 		}
 
 		setFirstElement(selectedCategory);
@@ -54,13 +48,6 @@ const Card = ({
 	};
 
 	if (!catColors || !catColors.data[firstElement]) return null;
-	console.log(
-		"card console",
-		{ ...catColors.data },
-		catColors.data[firstElement].attributes.backgroundColor,
-		firstElement
-	);
-
 	return (
 		<View style={styles.cardsWrapper}>
 			<View
