@@ -11,7 +11,6 @@ const LeJeuLayout = () => {
 					headerTitle: "Le Jeu",
 				}}
 			/>
-
 			<Stack.Screen
 				name='jeu'
 				options={{
