@@ -185,8 +185,8 @@ const Jeu = () => {
 				</View>
 			)}
 			<AnswerModal
-				feedbackMessage={feedbackMessage}
 				visible={isModalVisible}
+				feedbackMessage={feedbackMessage}
 				handleCloseModal={handleCloseModal}
 				currentCardData={currentCardData}
 			/>

@@ -1,10 +1,15 @@
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
-import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import {
+	colorBlack,
+	colorWhite,
+	colorYellow,
+	primaryBackground,
+} from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	Image,
 	ImageStyle,
@@ -14,6 +19,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import * as Progress from "react-native-progress";
 import SmallCategroieIcons from "../SmallCategroieIcons";
 
 type Props = {
@@ -24,15 +30,48 @@ type Props = {
 };
 
 const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
+	const [progress, setProgress] = useState(0);
+	const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+	const progressInterval = 100; // Update every 100 milliseconds
+	const progressIncrement = 0.01; // Increment by 0.01 each time
+
+	useEffect(() => {
+		if (visible) {
+			const startProgress = () => {
+				setProgress(0);
+				timerRef.current = setInterval(() => {
+					setProgress((prev) => {
+						if (prev >= 1) {
+							if (timerRef.current) {
+								clearInterval(timerRef.current);
+							}
+							// Delay the state update until after the render phase
+							setTimeout(() => {
+								handleCloseModal();
+							}, 0);
+							return 1;
+						}
+						return prev + progressIncrement;
+					});
+				}, progressInterval);
+			};
+			startProgress();
+			return () => {
+				if (timerRef.current) {
+					clearInterval(timerRef.current);
+				}
+			};
+		}
+	}, [visible, handleCloseModal, progressIncrement, progressInterval]);
+
 	return (
 		<Modal
 			visible={visible}
 			transparent={true}
 			animationType='slide'
 			onRequestClose={handleCloseModal}>
-			<TouchableOpacity
-				style={styles.modalContainer}
-				onPress={handleCloseModal}>
+			<View style={styles.modalContainer}>
 				<View style={styles.modalContent}>
 					{currentCardData && (
 						<>
@@ -76,6 +115,15 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 							</View>
 						</>
 					)}
+					<View style={styles.progressBarContainer}>
+						<Progress.Bar
+							progress={progress}
+							width={null}
+							height={6}
+							color={colorYellow}
+							borderRadius={10}
+						/>
+					</View>
 					<View style={styles.closeButtonContainer}>
 						<TouchableOpacity
 							onPress={handleCloseModal}
@@ -84,7 +132,7 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 						</TouchableOpacity>
 					</View>
 				</View>
-			</TouchableOpacity>
+			</View>
 		</Modal>
 	);
 };
@@ -141,9 +189,14 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		lineHeight: 25,
 	},
+	progressBarContainer: {
+		position: "absolute",
+		bottom: 50,
+		width: "90%",
+	},
 	closeButtonContainer: {
 		position: "absolute",
-		bottom: 70,
+		bottom: 80,
 		justifyContent: "center",
 		alignItems: "center",
 		width: "100%",

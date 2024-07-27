@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	cardContainer: {
-		minHeight: "55%",
+		minHeight: "65%",
 		minWidth: "100%",
 		padding: 20,
 		paddingTop: 0,
