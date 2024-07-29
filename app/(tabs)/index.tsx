@@ -7,7 +7,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useAuth } from "../../auth/AutContext";
+import { useAuth } from "../../auth/AuthContext";
 import ALaUne from "../../components/ALaUne";
 
 // Custom images

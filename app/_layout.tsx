@@ -1,7 +1,7 @@
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { AuthProvider } from "../auth/AutContext";
+import { AuthProvider } from "../auth/AuthContext";
 import { queryClient } from "../hooks/reactQueryConfig";
 
 export default function RootLayout() {

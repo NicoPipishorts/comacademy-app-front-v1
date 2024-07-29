@@ -1,5 +1,5 @@
 // app/(tabs)/_layout.tsx
-import { useAuth } from "@/auth/AutContext";
+import { useAuth } from "@/auth/AuthContext";
 import TabBar from "@/components/TabBar";
 import {
 	TabBarVisibilityProvider,
