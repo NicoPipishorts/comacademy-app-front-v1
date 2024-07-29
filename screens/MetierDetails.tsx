@@ -1,7 +1,13 @@
 import { primaryBackground } from "@/constants/colors";
-import React from "react";
+import React, { Dispatch, SetStateAction, useRef } from "react";
 import {
+	Dimensions,
+	GestureResponderEvent,
 	Image,
+	ImageStyle,
+	PanResponder,
+	PanResponderGestureState,
+	PanResponderInstance,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -10,39 +16,77 @@ import {
 } from "react-native";
 import HR from "../components/HR";
 import ScreenHeaders from "../components/ScreenHeaders";
-import {
-	FontSize12,
-	FontSize16,
-	FontSize20,
-	FontSizeH2,
-} from "../constants/fontsizes";
+import { FontSize12, FontSize16, FontSizeH2 } from "../constants/fontsizes";
 // Icons
-import Cat1 from "@/assets/imgs/icons/cat_1.png";
-import Cat2 from "@/assets/imgs/icons/cat_2.png";
-import Cat3 from "@/assets/imgs/icons/cat_3.png";
-import Cat4 from "@/assets/imgs/icons/cat_4.png";
 import Chevron from "@/assets/imgs/icons/chevron.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
+import SmallCategroieIcons from "@/components/SmallCategroieIcons";
+import { MetierPayload } from "@/types/metiers";
+import { useQuery } from "@tanstack/react-query";
 import GradientContainer from "../components/GradientContainer";
 import UnorderedList from "../components/UnorderedList";
 import { colorWhite } from "../constants/colors";
 
-function DetailsScreen({ item, onGoBack }) {
+type Props = {
+	item: {
+		METIER: string;
+		id: number;
+	};
+	onGoBack: Dispatch<SetStateAction<boolean>>;
+};
+
+const EDGE_DISTANCE = 30;
+
+function DetailsScreen({ item, onGoBack }: Props) {
+	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+	const { data, isLoading } = useQuery<MetierPayload>({
+		queryKey: ["metiersDetails"],
+		queryFn: () =>
+			fetch(`${apiUrl}/metiers/${item.id}`).then((res) => res.json()),
+	});
+
+	const panResponder: PanResponderInstance = useRef(
+		PanResponder.create({
+			onStartShouldSetPanResponder: (evt: GestureResponderEvent) => {
+				return (
+					evt.nativeEvent.locationX < EDGE_DISTANCE ||
+					evt.nativeEvent.locationX >
+						Dimensions.get("window").width - EDGE_DISTANCE
+				);
+			},
+			onMoveShouldSetPanResponder: (_, gestureState) => {
+				return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+			},
+			onPanResponderRelease: (
+				evt: GestureResponderEvent,
+				gestureState: PanResponderGestureState
+			) => {
+				if (gestureState.dx > 50) {
+					onGoBack(false);
+				}
+			},
+		})
+	).current;
+
+	if (!data) return;
 	return (
-		<View style={styles.wrapper}>
+		<View style={styles.wrapper} {...panResponder.panHandlers}>
 			<View style={styles.headerContainer}>
 				<View style={styles.backBtnContainer}>
-					<TouchableOpacity style={styles.backButton} onPress={onGoBack}>
+					<TouchableOpacity
+						style={styles.backButton}
+						onPress={() => onGoBack(false)}>
 						<Image
 							source={Chevron}
-							style={styles.backBtnIcon}
+							style={styles.backBtnIcon as ImageStyle}
 							resizeMode='contain'
 						/>
 						<Text style={styles.backBtnText}>Retour</Text>
 					</TouchableOpacity>
 				</View>
-				<ScreenHeaders content={item.METIER} />
+				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 
 			<ScrollView
@@ -50,20 +94,28 @@ function DetailsScreen({ item, onGoBack }) {
 				showsVerticalScrollIndicator={false}>
 				<View style={styles.wrapperIcons}>
 					<View style={styles.containerIcons}>
-						<Image source={Cat1} style={styles.catIcons} resizeMode='contain' />
-						<Image source={Cat2} style={styles.catIcons} resizeMode='contain' />
-						<Image source={Cat3} style={styles.catIcons} resizeMode='contain' />
-						<Image source={Cat4} style={styles.catIcons} resizeMode='contain' />
+						{data.data.attributes.CATEGORIE !== undefined &&
+						data.data.attributes.CATEGORIE !== null
+							? data.data.attributes.CATEGORIE.split(",").map((cat) => {
+									const categoryNumber = parseInt(cat, 10); // Convert string to number
+									return (
+										<SmallCategroieIcons
+											key={categoryNumber}
+											cats={categoryNumber}
+										/>
+									);
+							  })
+							: ""}
 					</View>
 					<View style={styles.containerIcons}>
 						<Image
 							source={Plus}
-							style={[styles.catIcons, { marginRight: 20 }]}
+							style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
 							resizeMode='contain'
 						/>
 						<Image
 							source={Heart}
-							style={styles.catIcons}
+							style={styles.catIcons as ImageStyle}
 							resizeMode='contain'
 						/>
 					</View>
@@ -74,7 +126,9 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.ROLE_MISSIONS}</Text>
+					<Text style={styles.containerText}>
+						{data.data.attributes.ROLE_MISSIONS}
+					</Text>
 				</View>
 
 				<HR />
@@ -83,7 +137,7 @@ function DetailsScreen({ item, onGoBack }) {
 					<Text style={styles.textTitles}>Compétence</Text>
 				</View>
 
-				<UnorderedList array={item.COMPETENCES} />
+				<UnorderedList array={data.data.attributes.COMPETENCES} />
 
 				<HR />
 
@@ -92,31 +146,25 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.METIERS_SIMILAIRES}</Text>
+					<Text style={styles.containerText}>
+						{data.data.attributes.METIERS_SIMILAIRES}
+					</Text>
 				</View>
 
 				<GradientContainer
 					title='Notre Avis'
-					content={item.NOTRE_AVIS}
+					content={data.data.attributes.NOTRE_AVIS}
 					colors={["#EF6D8C", "#FAB837"]}
 				/>
-
-				{/* <View style={styles.containerTitles}>
-					<Text style={styles.textTitles}>Infos +</Text>
-				</View>
-
-				<View>
-					<Text style={styles.containerText}>{item.desc.infos}</Text>
-				</View>
-
-				<HR /> */}
 
 				<View style={styles.containerTitles}>
 					<Text style={styles.textTitles}>diplôme & formation</Text>
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.FORMATION}</Text>
+					<Text style={styles.containerText}>
+						{data.data.attributes.FORMATION}
+					</Text>
 				</View>
 
 				<HR />
@@ -126,7 +174,9 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.SALAIRES}</Text>
+					<Text style={styles.containerText}>
+						{data.data.attributes.SALAIRES}
+					</Text>
 				</View>
 
 				<HR />
@@ -136,14 +186,26 @@ function DetailsScreen({ item, onGoBack }) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{item.PORTRAIT_CHINOIS}</Text>
+					<Text style={styles.containerText}>
+						{data.data.attributes.PORTRAIT_CHINOIS}
+					</Text>
 				</View>
 
 				<GradientContainer
 					title='verbatim'
-					content={item.VERBATIM}
+					content={data.data.attributes.VERBATIM}
 					colors={["#0DA2CC", "#93F6A0"]}
 				/>
+
+				<View style={styles.containerTitles}>
+					<Text style={styles.textTitles}>
+						BREF, TU VAS ADORER CE METIER SI….
+					</Text>
+				</View>
+
+				<View>
+					<Text style={styles.containerText}>{data.data.attributes.BREF}</Text>
+				</View>
 
 				<View style={styles.containerSatisfaction}>
 					<Text style={styles.ttlSatisfaction}>Cette fiche a été utile :</Text>
@@ -165,20 +227,15 @@ const styles = StyleSheet.create({
 		paddingTop: 100,
 		backgroundColor: primaryBackground,
 	},
-
 	headerContainer: {
 		paddingHorizontal: 25,
 	},
 	backBtnContainer: {
-		alignItems: "center",
+		alignItems: "flex-start",
 	},
 	backButton: {
 		flexDirection: "row",
 		alignItems: "center",
-	},
-	backBtnContainer: {
-		flexDirection: "row",
-		fontSize: FontSize20,
 	},
 	backBtnText: {
 		fontSize: FontSize12,
@@ -190,7 +247,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1,
 		marginRight: 3,
 	},
-
 	contentContainer: {
 		marginBottom: 100,
 	},
@@ -210,8 +266,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1,
 		marginRight: 5,
 	},
-
-	// Text related Styles
 	containerTitles: {
 		marginBottom: 20,
 		paddingHorizontal: 30,
@@ -227,13 +281,13 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 30,
 	},
 	gradientContainer: {
-		pading: 20,
+		padding: 20,
 	},
 	containerSatisfaction: {
 		flexDirection: "row",
 		alignItems: "center",
 		paddingHorizontal: 30,
-		paddingTop: 50,
+		paddingTop: 100,
 		paddingBottom: 80,
 	},
 	ttlSatisfaction: {

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { FontSizeScreenTitles } from "../constants/fontsizes";
 
 type Props = {
-	content: string;
+	content: string | undefined;
 };
 
 const ScreenHeaders = ({ content }: Props) => {

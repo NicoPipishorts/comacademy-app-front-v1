@@ -11,13 +11,13 @@ const LeJeuLayout = () => {
 					headerTitle: "Le Jeu",
 				}}
 			/>
-
 			<Stack.Screen
-				name='Jeu'
+				name='jeu'
 				options={{
 					headerShown: false,
-					presentation: "fullScreenModal",
 					gestureEnabled: true,
+					presentation: "fullScreenModal",
+					animation: "slide_from_bottom",
 				}}
 			/>
 		</Stack>

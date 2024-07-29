@@ -1,6 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native"; // Ensure you have the correct navigation import
 import React, { useEffect, useState } from "react";
 import {
+	Alert,
 	Image,
 	StyleSheet,
 	Text,
@@ -9,7 +11,7 @@ import {
 	View,
 } from "react-native";
 import { useLoginMutation } from "../api/login";
-import { useAuth } from "../auth/AutContext";
+import { useAuth } from "../auth/AuthContext";
 
 // Import Assets
 import {
@@ -25,25 +27,28 @@ import {
 	colorYellow,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
+import { LoginPayload } from "@/types/login";
 import Logo from "../assets/imgs/logos/Login.png";
 
 const LoginScreen = () => {
+	const navigation = useNavigation();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const { login } = useAuth();
+	const { login, checkLoggedIn } = useAuth();
 
 	const toggleShowPassword = () => {
 		setShowPassword(!showPassword);
 	};
 
-	const onSuccess = (data) => {
+	const onSuccess = (data: LoginPayload) => {
 		login(data);
+		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
 	};
 
 	const onError = (error) => {
-		alert("Login failed: " + error.message);
+		Alert.alert("L'adresse email ou mot de passe sont incorrect."); // Using Alert from react-native
 	};
 
 	const mutation = useLoginMutation(authUrl, onSuccess, onError);
@@ -53,8 +58,15 @@ const LoginScreen = () => {
 	};
 
 	useEffect(() => {
-		// No need to track mutation state here, it's handled in the hook
-	}, []);
+		const checkIfLoggedIn = async () => {
+			const loggedIn = await checkLoggedIn();
+			if (loggedIn) {
+				navigation.navigate("(tabs)"); // Navigate to the home screen if already logged in
+			}
+		};
+
+		checkIfLoggedIn();
+	}, [navigation, checkLoggedIn]);
 
 	return (
 		<View style={styles.container}>
@@ -196,7 +208,7 @@ const styles = StyleSheet.create({
 		paddingVertical: 15,
 		color: colorWhite,
 		fontWeight: "bold",
-		borderRadius: "50%",
+		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,
@@ -205,3 +217,6 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+function alert(arg0: string) {
+	throw new Error("Function not implemented.");
+}
