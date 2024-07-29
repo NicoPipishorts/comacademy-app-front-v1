@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { FontSize16 } from "../constants/fontsizes";
 
 type Props = {
-	array: [];
+	array?: string;
 };
 
 const UnorderedList = ({ array }: Props) => {

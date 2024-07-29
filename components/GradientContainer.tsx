@@ -6,8 +6,8 @@ import { FontSize16, FontSizeH2 } from "../constants/fontsizes";
 
 type Props = {
 	title: string;
-	content: string;
-	colors: [];
+	content?: string;
+	colors: string[];
 };
 
 const GradientContainer = ({ title, content, colors }: Props) => {

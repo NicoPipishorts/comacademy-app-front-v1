@@ -1,7 +1,15 @@
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
+import { CategoriePayload } from "@/types/categories";
+import { MetiersList, SelectedMetier } from "@/types/metiers";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	ScrollView,
 	StyleSheet,
@@ -11,21 +19,37 @@ import {
 } from "react-native";
 import Searchbar from "../components/Searchbar";
 
+type Props = {
+	data: MetiersList;
+	categories: CategoriePayload;
+	setShowDetails: Dispatch<SetStateAction<boolean>>;
+	setSelectedItem: Dispatch<SetStateAction<SelectedMetier | null>>;
+	filterByCat: number | null;
+	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+};
+
 const MetierList = ({
 	data,
+	categories,
 	setShowDetails,
 	setSelectedItem,
 	filterByCat,
 	setFilterByCat,
-	categories,
-}) => {
-	const scrollViewRef = useRef();
-	const sectionRefs = useRef({}).current;
-	const [groupedData, setGroupedData] = useState({});
+}: Props) => {
+	const scrollViewRef = useRef<ScrollView | null>(null);
+	const sectionRefs = useRef<{ [key: string]: View | null }>({}).current;
+	const [groupedData, setGroupedData] = useState<{
+		[key: string]: SelectedMetier[];
+	}>({});
 
 	useEffect(() => {
 		if (data && data.data) {
-			const mappedData = data.data.map((item) => item.attributes); // Accessing attributes of each item
+			const mappedData = data.data.map((item) => {
+				return {
+					...item.attributes,
+					id: item.id,
+				};
+			});
 			const grouped = groupDataByFirstLetter(mappedData, "METIER");
 			setGroupedData(grouped);
 		}
@@ -33,40 +57,59 @@ const MetierList = ({
 
 	const alphabet = Object.keys(groupedData).sort();
 
-	function groupDataByFirstLetter(items, property) {
+	function isString(value: any): value is string {
+		return typeof value === "string";
+	}
+
+	function groupDataByFirstLetter(
+		items: SelectedMetier[],
+		property: keyof SelectedMetier
+	) {
 		// Sort items alphabetically based on the property
-		items.sort((a, b) => a[property].localeCompare(b[property]));
+		items.sort((a, b) => {
+			const propA = a[property];
+			const propB = b[property];
+
+			if (typeof propA === "string" && typeof propB === "string") {
+				return propA.localeCompare(propB);
+			}
+			return 0; // Handle non-string values by considering them equal
+		});
 
 		// Group by the first letter of the property
-		const groups = {};
+		const groups: { [key: string]: SelectedMetier[] } = {};
 		items.forEach((item) => {
-			const letter = item[property][0].toUpperCase();
-			if (!groups[letter]) {
-				groups[letter] = [];
+			const propValue = item[property];
+			if (typeof propValue === "string") {
+				const letter = propValue.charAt(0).toUpperCase();
+				if (!groups[letter]) {
+					groups[letter] = [];
+				}
+				groups[letter].push(item);
 			}
-			groups[letter].push(item);
 		});
 
 		return groups;
 	}
 
-	const scrollToSection = (letter) => {
+	const scrollToSection = (letter: string) => {
 		const section = sectionRefs[letter];
 
 		if (section && scrollViewRef.current) {
+			const scrollView = scrollViewRef.current as unknown as any;
 			section.measureLayout(
-				scrollViewRef.current,
+				scrollView,
 				(x, y, width, height) => {
-					scrollViewRef.current.scrollTo({ x: 0, y, animated: true });
+					scrollView.scrollTo({ x: 0, y, animated: true });
 				},
-				(error) => {
-					console.error("Failed to find element", error);
+				() => {
+					console.error("Failed to find element");
 				}
 			);
 		}
 	};
 
-	if (!data) return;
+	if (!data) return null;
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
@@ -86,42 +129,40 @@ const MetierList = ({
 					style={styles.listWrapper}
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
-					{
-						// This adds the remove FIlter Button
-						filterByCat && (
-							<View style={styles.filterCWrapper}>
-								<Text>Filtre: </Text>
-								<TouchableOpacity
-									style={styles.filterContainer}
-									onPress={() => setFilterByCat(null)}>
-									<Text style={styles.filterText}>
-										{categories[filterByCat]?.attributes.Title} {filterByCat}
-									</Text>
-									<MaterialCommunityIcons
-										name='close-circle-outline'
-										size={24}
-										color={colorBlack}
-										style={styles.eyeIcon}
-									/>
-								</TouchableOpacity>
-							</View>
-						)
-					}
+					{filterByCat && (
+						<View style={styles.filterCWrapper}>
+							<Text>Filtre: </Text>
+							<TouchableOpacity
+								style={styles.filterContainer}
+								onPress={() => setFilterByCat(null)}>
+								<Text style={styles.filterText}>
+									{categories.data[filterByCat]?.attributes.Title}
+								</Text>
+								<MaterialCommunityIcons
+									name='close-circle-outline'
+									size={24}
+									color={colorBlack}
+								/>
+							</TouchableOpacity>
+						</View>
+					)}
 
 					{alphabet.map((letter) => (
 						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 							<Text style={styles.listHeader}>{letter}</Text>
-							{groupedData[letter].map((item, index) => (
-								<Text
-									key={index}
-									style={styles.listItem}
-									onPress={() => {
-										setSelectedItem(item);
-										setShowDetails(true);
-									}}>
-									{item.METIER}
-								</Text>
-							))}
+							{groupedData[letter]?.map((item, index) => {
+								return (
+									<Text
+										key={index}
+										style={styles.listItem}
+										onPress={() => {
+											setSelectedItem(item);
+											setShowDetails(true);
+										}}>
+										{item.METIER}
+									</Text>
+								);
+							})}
 						</View>
 					))}
 				</ScrollView>
@@ -156,8 +197,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		alignSelf: "flex-start",
-		// borderWidth: 1,
-		// // borderColor: colorGrey,
 		paddingVertical: 5,
 		paddingHorizontal: 10,
 		borderRadius: 50,
