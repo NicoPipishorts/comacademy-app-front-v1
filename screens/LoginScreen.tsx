@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native"; // Ensure you have the correct navigation import
+import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
 	Alert,
@@ -30,8 +30,12 @@ import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { LoginPayload } from "@/types/login";
 import Logo from "../assets/imgs/logos/Login.png";
 
+export type NavigationType = {
+	navigate: (screenName: string) => void;
+};
+
 const LoginScreen = () => {
-	const navigation = useNavigation();
+	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -48,7 +52,7 @@ const LoginScreen = () => {
 	};
 
 	const onError = (error) => {
-		Alert.alert("L'adresse email ou mot de passe sont incorrect."); // Using Alert from react-native
+		Alert.alert("Login failed", error.message); // Using Alert from react-native
 	};
 
 	const mutation = useLoginMutation(authUrl, onSuccess, onError);
@@ -217,6 +221,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-function alert(arg0: string) {
-	throw new Error("Function not implemented.");
-}
