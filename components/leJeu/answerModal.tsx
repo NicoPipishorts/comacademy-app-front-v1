@@ -1,3 +1,4 @@
+import { useAddFavoriteQuestionMutation } from "@/api/favoriteQuestion";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import {
@@ -7,6 +8,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
+import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
 import React, { useEffect, useRef, useState } from "react";
@@ -32,9 +34,32 @@ type Props = {
 const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 	const [progress, setProgress] = useState(0);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const { userId } = useUserId();
 
-	const progressInterval = 100; // Update every 100 milliseconds
-	const progressIncrement = 0.01; // Increment by 0.01 each time
+	const progressInterval = 100;
+	const progressIncrement = 0.01;
+
+	const questionId: number | undefined = currentCardData?.id;
+
+	// Define onSuccess and onError handlers
+	const handleSuccess = (data: any) => {
+		console.log("Successfully added to favorites!", data);
+	};
+
+	const handleError = (error: any) => {
+		console.error("Error adding favorite question", error);
+	};
+
+	// Use the custom hook
+	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
+
+	const handleAddFavoriteQuestion = () => {
+		if (userId && questionId) {
+			mutation.mutate({ userId, questionId });
+		} else {
+			console.error("User ID or Question ID is undefined");
+		}
+	};
 
 	useEffect(() => {
 		if (visible) {
@@ -101,11 +126,13 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 										style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
 										resizeMode='contain'
 									/>
-									<Image
-										source={Heart}
-										style={styles.catIcons as ImageStyle}
-										resizeMode='contain'
-									/>
+									<TouchableOpacity onPress={handleAddFavoriteQuestion}>
+										<Image
+											source={Heart}
+											style={styles.catIcons as ImageStyle}
+											resizeMode='contain'
+										/>
+									</TouchableOpacity>
 								</View>
 							</View>
 							<View style={styles.containerAnswer}>

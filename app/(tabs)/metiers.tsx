@@ -1,5 +1,6 @@
 import { colorYellow, primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
+import useJwtToken from "@/hooks/useJwtToken";
 import { SelectedMetier } from "@/types/metiers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ const Metier = () => {
 	const [showDetails, setShowDetails] = useState<boolean>(false);
 	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
+	const { token } = useJwtToken();
 
 	const fetchMetiers = async (filterByCat: number | null) => {
 		const url = `${apiUrl}/metiers?${
@@ -31,15 +33,24 @@ const Metier = () => {
 		return response.json();
 	};
 
-	const { data: dataMetier, isLoading } = useQuery({
+	const { data: dataMetier } = useQuery({
 		queryKey: ["metiersList"],
 		queryFn: () => fetchMetiers(filterByCat),
 	});
 
-	const { data: dataCategory } = useQuery({
+	const fetchCategories = async () => {
+		const response = await fetch(`${apiUrl}/categories?populate=*`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+		return response.json();
+	};
+
+	const { data: dataCategory, isLoading } = useQuery({
 		queryKey: ["categories"],
-		queryFn: () =>
-			fetch(`${apiUrl}/categories?populate=*`).then((res) => res.json()),
+		queryFn: fetchCategories,
+		enabled: !!token,
 	});
 
 	useEffect(() => {

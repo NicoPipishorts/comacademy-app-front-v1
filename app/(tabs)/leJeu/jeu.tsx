@@ -9,6 +9,7 @@ import {
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import useJwtToken from "@/hooks/useJwtToken";
 import { CategorieColors } from "@/types/categories";
 import { Answer } from "@/types/enums";
 import { GameData, GameDataPayload } from "@/types/game";
@@ -33,6 +34,12 @@ const Jeu = () => {
 	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 	const [currentCardData, setCurrentCardData] = useState<GameData | null>(null);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
+	const { token } = useJwtToken();
+
+	const handlePress = () => {
+		showTabBar();
+		navigation.navigate("index");
+	};
 
 	useEffect(() => {
 		hideTabBar();
@@ -73,12 +80,22 @@ const Jeu = () => {
 					}),
 		});
 
-	const { data: catData, isLoading: isCatLoading } = useQuery<CategorieColors>({
+	const {
+		data: catData,
+		isLoading: isCatLoading,
+		isError: isCatError,
+	} = useQuery<CategorieColors>({
 		queryKey: ["Categories"],
 		queryFn: () =>
 			fetch(
-				`${process.env.EXPO_PUBLIC_API_URL}/categories?fields[0]=backgroundColor&populate[smallIcon][fields][0]=url`
+				`${process.env.EXPO_PUBLIC_API_URL}/categories?fields[0]=backgroundColor&populate[smallIcon][fields][0]=url`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
 			).then((res) => res.json()),
+		enabled: !!token,
 	});
 
 	if (isGameLoading || isCatLoading) {
@@ -91,9 +108,16 @@ const Jeu = () => {
 
 	if (!dataGame || !dataGame.data || !catData) {
 		return (
-			<View style={styles.loadingContainer}>
-				<Text style={styles.noDataText}>No game data available</Text>
-			</View>
+			<>
+				<View style={styles.loadingContainer}>
+					<Text style={styles.noDataText}>No game data available</Text>
+				</View>
+				<View style={styles.containerBackButton}>
+					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+						<Text style={styles.textBackButton}>Quitter</Text>
+					</TouchableOpacity>
+				</View>
+			</>
 		);
 	}
 
@@ -143,11 +167,6 @@ const Jeu = () => {
 				cardIndex={cardIndex}
 			/>
 		);
-	};
-
-	const handlePress = () => {
-		showTabBar();
-		navigation.navigate("index");
 	};
 
 	const handleCloseModal = () => {
