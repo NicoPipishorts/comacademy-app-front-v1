@@ -54,11 +54,7 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
 
 	const handleAddFavoriteQuestion = () => {
-		if (userId && questionId) {
-			mutation.mutate({ userId, questionId });
-		} else {
-			console.error("User ID or Question ID is undefined");
-		}
+		mutation.mutate({ userId, questionId });
 	};
 
 	useEffect(() => {

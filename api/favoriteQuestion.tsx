@@ -33,17 +33,16 @@ export const useAddFavoriteQuestionMutation = (
 				},
 			};
 
-			const response: AxiosResponse<FavoriteQuestionResponse> =
-				await axios.post(
-					`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}`,
-					payload,
-					{
-						headers: {
-							"Content-Type": "application/json",
-							Authorization: `Bearer ${token}`,
-						},
-					}
-				);
+			const response: AxiosResponse<FavoriteQuestionResponse> = await axios.put(
+				`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}`,
+				payload,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
 			return response.data; // Extract and return the data
 		},
 		onSuccess: (data) => {
