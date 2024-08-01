@@ -9,11 +9,12 @@ import {
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import useJwtToken from "@/hooks/useJwtToken";
-import { CategorieColors } from "@/types/categories";
+import useCategories from "@/hooks/useCategories";
+import useGameQuestions from "@/hooks/useGameQuestions";
+import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
-import { GameData, GameDataPayload } from "@/types/game";
-import { useQuery } from "@tanstack/react-query";
+import { GameData } from "@/types/game";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -33,8 +34,9 @@ const Jeu = () => {
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
 	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 	const [currentCardData, setCurrentCardData] = useState<GameData | null>(null);
+	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
-	const { token } = useJwtToken();
+	const { userId } = useUserId();
 
 	const handlePress = () => {
 		showTabBar();
@@ -46,59 +48,21 @@ const Jeu = () => {
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
 	}, [hideTabBar, showTabBar]);
 
-	const { data: dataGame, isLoading: isGameLoading } =
-		useQuery<GameDataPayload>({
-			queryKey: ["GameQuestions"],
-			queryFn: () =>
-				fetch(
-					`${process.env.EXPO_PUBLIC_API_URL}/questions?populate[favorite-questions][fields]=id&random=true&pagination[limit]=30`
-				)
-					.then((res) => res.json())
-					.then((data) => {
-						// Transform the CATEGORIE string into a number array
-						const transformedData = {
-							...data,
-							data: Object.keys(data.data).reduce((acc, key) => {
-								const item = data.data[key];
-								const categories = item.attributes.CATEGORIE.split(",").map(
-									(cat: string) => {
-										const parsed = parseInt(cat.trim(), 10);
-										return !isNaN(parsed) ? parsed : 1;
-									}
-								);
-								acc[key] = {
-									...item,
-									attributes: {
-										...item.attributes,
-										CATEGORIE: categories,
-									},
-								};
-								return acc;
-							}, {} as Record<string, GameData>),
-						};
-						return transformedData;
-					}),
-		});
+	const { data: dataGame, isLoading: isGameLoading } = useGameQuestions();
+	const { data: catData, isLoading: isCatLoading } = useCategories();
+	const { data: fqData, isLoading: isLoadingFQ } =
+		useGetFavoriteQuestions(userId);
 
-	const {
-		data: catData,
-		isLoading: isCatLoading,
-		isError: isCatError,
-	} = useQuery<CategorieColors>({
-		queryKey: ["Categories"],
-		queryFn: () =>
-			fetch(
-				`${process.env.EXPO_PUBLIC_API_URL}/categories?fields[0]=backgroundColor&populate[smallIcon][fields][0]=url`,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
-			).then((res) => res.json()),
-		enabled: !!token,
-	});
+	useEffect(() => {
+		if (fqData) {
+			const initialFavQuestions = fqData.data.attributes.questions.data.map(
+				(question) => question.id
+			);
+			setFavoriteQuestions(initialFavQuestions);
+		}
+	}, [fqData]);
 
-	if (isGameLoading || isCatLoading) {
+	if (isGameLoading || isCatLoading || isLoadingFQ) {
 		return (
 			<View style={styles.loadingContainer}>
 				<ActivityIndicator size='large' color={colorYellow} />
@@ -106,7 +70,7 @@ const Jeu = () => {
 		);
 	}
 
-	if (!dataGame || !dataGame.data || !catData) {
+	if (!dataGame || !dataGame.data || !catData || !fqData) {
 		return (
 			<>
 				<View style={styles.loadingContainer}>
@@ -204,6 +168,8 @@ const Jeu = () => {
 				feedbackMessage={feedbackMessage}
 				setIsModalVisible={setIsModalVisible}
 				currentCardData={currentCardData}
+				favoriteQuestions={favoriteQuestions}
+				setFavoriteQuestions={setFavoriteQuestions}
 			/>
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
