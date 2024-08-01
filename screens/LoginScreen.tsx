@@ -27,12 +27,9 @@ import {
 	colorYellow,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
+import { NavigationType } from "@/types/general";
 import { LoginPayload } from "@/types/login";
 import Logo from "../assets/imgs/logos/Login.png";
-
-export type NavigationType = {
-	navigate: (screenName: string) => void;
-};
 
 const LoginScreen = () => {
 	const navigation = useNavigation<NavigationType>();
