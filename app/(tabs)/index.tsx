@@ -15,17 +15,18 @@ import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
 import avatar from "../../assets/imgs/avatar/avatar.png";
 
-import dixAstuces from "../../assets/imgs/cards/home_10_astuces.png";
+import { NavigationType } from "@/types/general";
+import { useNavigation } from "expo-router";
 import secrets from "../../assets/imgs/cards/home_3_secrets.png";
-import homeActus from "../../assets/imgs/cards/home_actus.png";
-import lesBrieds from "../../assets/imgs/cards/home_briefs.png";
+import homeActusDis from "../../assets/imgs/cards/home_actus_dis.png";
 import lesCitations from "../../assets/imgs/cards/home_citations.png";
-import homeCreme from "../../assets/imgs/cards/home_creme.png";
-import homeFlops from "../../assets/imgs/cards/home_flops.png";
+import homeFlopsDis from "../../assets/imgs/cards/home_flops_dis.png";
+import homeJouer from "../../assets/imgs/cards/home_jouer.png";
 import mesStats from "../../assets/imgs/cards/home_mes_stats.png";
 
 const HomeScreen = () => {
 	const { logout } = useAuth();
+	const navigation = useNavigation<NavigationType>();
 
 	return (
 		<View style={styles.wrapper}>
@@ -47,55 +48,66 @@ const HomeScreen = () => {
 					horizontal={true}
 					showsHorizontalScrollIndicator={false}>
 					<View style={styles.shortcuts}>
-						<TouchableOpacity style={styles.button}>
-							<Image source={secrets} style={styles.shortcutsCards} />
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("leJeu")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={homeJouer}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={homeFlops} style={styles.shortcutsCards} />
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("lesCitations")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={lesCitations}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={lesCitations} style={styles.shortcutsCards} />
+						<TouchableOpacity style={styles.cardsButton}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={secrets}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={homeActus} style={styles.shortcutsCards} />
+						<TouchableOpacity style={styles.cardsButton}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={mesStats}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={mesStats} style={styles.shortcutsCards} />
+						<TouchableOpacity style={styles.cardsButton}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={homeFlopsDis}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={dixAstuces} style={styles.shortcutsCards} />
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={lesBrieds} style={styles.shortcutsCards} />
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={homeCreme} style={styles.shortcutsCards} />
+						<TouchableOpacity style={styles.cardsButton}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={homeActusDis}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
-
-				{/* <View style={styles.header}>
-					<Text style={styles.headerShortcuts}>En ce moment</Text>
-				</View>
-				<ScrollView
-					style={styles.shortcutsContainer}
-					horizontal={true}
-					showsHorizontalScrollIndicator={false}>
-					<View style={styles.shortcuts}>
-						<TouchableOpacity style={styles.button}>
-							<Image source={actus} style={styles.shortcutsCards} />
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={briefs} style={styles.shortcutsCards} />
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={un_pour_un} style={styles.shortcutsCards} />
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button}>
-							<Image source={citations} style={styles.shortcutsCards} />
-						</TouchableOpacity>
-					</View>
-				</ScrollView> */}
 
 				<View style={styles.header}>
 					<Text style={styles.headerShortcuts}>A la une</Text>
@@ -165,13 +177,21 @@ const styles = StyleSheet.create({
 		minWidth: "100%",
 		marginBottom: 40,
 	},
-	shortcutsCards: {
-		width: 127,
-		height: 100,
-	},
-	button: {
-		alignItems: "center",
+	cardsButton: {
+		position: "relative",
+		padding: 0,
 		marginRight: 20,
+		width: 127,
+		height: 110,
+	},
+	imageContainer: {
+		width: "100%",
+		height: "100%",
+	},
+	shortcutsCards: {
+		alignItems: "flex-end",
+		width: "100%",
+		height: "100%",
 	},
 });
 
