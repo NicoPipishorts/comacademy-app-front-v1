@@ -62,16 +62,9 @@ const AnswerModal = ({
 	const progressInterval = 100;
 	const progressIncrement = 0.01;
 
-	const questionId: number | undefined = currentCardData?.id;
-	const newQuestionId = currentCardData?.id;
-	const updatedFavoriteQuestions =
-		newQuestionId !== undefined
-			? [...favoriteQuestions, questionId]
-			: favoriteQuestions;
-
 	// Define onSuccess and onError handlers
 	const handleSuccess = (data: any) => {
-		setFavorite(true);
+		// setFavorite(true);
 	};
 
 	const handleError = (error: any) => {
@@ -80,15 +73,37 @@ const AnswerModal = ({
 
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
 
+	// Set favorite status based on the favoriteQuestions array when the modal becomes visible
 	useEffect(() => {
-		setFavorite(favoriteQuestions.includes(currentCardData?.id));
-	}, [favoriteQuestions, currentCardData]);
+		if (visible && currentCardData) {
+			// console.log("setting to true", favoriteQuestions);
+			setFavorite(favoriteQuestions.includes(currentCardData.id));
+		}
+	}, [visible, currentCardData, favoriteQuestions]);
 
 	const handleAddFavoriteQuestion = () => {
-		setFavoriteQuestions(updatedFavoriteQuestions);
-		mutation.mutate({ userId, updatedFavoriteQuestions, token });
+		if (currentCardData?.id === undefined) return;
+
+		const questionId = currentCardData.id;
+
+		if (favoriteQuestions.includes(questionId)) {
+			// Remove from favorites
+			const updatedFavoriteQuestions = favoriteQuestions.filter(
+				(id) => id !== questionId
+			);
+			setFavoriteQuestions(updatedFavoriteQuestions);
+			setFavorite(false); // Set favorite to false
+			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+		} else {
+			// Add to favorites
+			const updatedFavoriteQuestions = [...favoriteQuestions, questionId];
+			setFavoriteQuestions(updatedFavoriteQuestions);
+			setFavorite(true); // Set favorite to true
+			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+		}
 	};
 
+	// Progress bar effect
 	useEffect(() => {
 		if (visible) {
 			const startProgress = () => {
@@ -119,7 +134,7 @@ const AnswerModal = ({
 		}
 		// Return undefined if visible is false to ensure all code paths return a value
 		return undefined;
-	}, [visible, progressIncrement, progressInterval, setFavorite]);
+	}, [visible]);
 
 	return (
 		<Modal
