@@ -13,6 +13,7 @@ export type GameAttributes = {
 	ACTIVE: boolean;
 	COEF: string | null;
 	SENSIBILITE: string | null;
+	favorite_questions: [];
 };
 
 export type GameDataPayload = {
