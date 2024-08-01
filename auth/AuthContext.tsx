@@ -1,5 +1,6 @@
 import { LoginPayload } from "@/types/login";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode"; // Correct import
 import React, {
 	createContext,
 	FunctionComponent,
@@ -34,7 +35,6 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const login = async (data: LoginPayload) => {
 		setIsAuthenticated(true);
 		await AsyncStorage.setItem("jwtToken", data.jwt);
-		console.log(data.jwt);
 	};
 
 	const logout = async () => {
@@ -46,8 +46,21 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const checkLoggedIn = async (): Promise<boolean> => {
 		const token = await AsyncStorage.getItem("jwtToken");
 		if (token) {
-			setIsAuthenticated(true);
-			return true;
+			try {
+				const decodedToken: { exp: number } = jwtDecode(token);
+				const currentTime = Date.now() / 1000;
+				if (decodedToken.exp < currentTime) {
+					setIsAuthenticated(false);
+					await AsyncStorage.removeItem("jwtToken");
+					return false;
+				}
+				setIsAuthenticated(true);
+				return true;
+			} catch (error) {
+				setIsAuthenticated(false);
+				await AsyncStorage.removeItem("jwtToken");
+				return false;
+			}
 		} else {
 			setIsAuthenticated(false);
 			return false;

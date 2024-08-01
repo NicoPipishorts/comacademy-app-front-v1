@@ -1,4 +1,5 @@
 import { useAddFavoriteQuestionMutation } from "@/api/favoriteQuestion";
+import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import {
@@ -8,10 +9,17 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	Image,
 	ImageStyle,
@@ -27,23 +35,43 @@ import SmallCategroieIcons from "../SmallCategroieIcons";
 type Props = {
 	visible: boolean;
 	feedbackMessage: Answer | null;
-	handleCloseModal: () => void;
+	setIsModalVisible: Dispatch<SetStateAction<boolean>>;
 	currentCardData: GameData | null;
+	favoriteQuestions: number[];
+	setFavoriteQuestions: Dispatch<SetStateAction<number[]>>;
 };
 
-const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
+const AnswerModal = ({
+	visible,
+	setIsModalVisible,
+	currentCardData,
+	favoriteQuestions,
+	setFavoriteQuestions,
+}: Props) => {
 	const [progress, setProgress] = useState(0);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
 	const { userId } = useUserId();
+	const { token } = useJwtToken();
+	const [favorite, setFavorite] = useState<boolean>(false);
+
+	const handleCloseModal = () => {
+		setIsModalVisible(false);
+		setFavorite(false);
+	};
 
 	const progressInterval = 100;
 	const progressIncrement = 0.01;
 
 	const questionId: number | undefined = currentCardData?.id;
+	const newQuestionId = currentCardData?.id;
+	const updatedFavoriteQuestions =
+		newQuestionId !== undefined
+			? [...favoriteQuestions, questionId]
+			: favoriteQuestions;
 
 	// Define onSuccess and onError handlers
 	const handleSuccess = (data: any) => {
-		console.log("Successfully added to favorites!", data);
+		setFavorite(true);
 	};
 
 	const handleError = (error: any) => {
@@ -54,11 +82,8 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
 
 	const handleAddFavoriteQuestion = () => {
-		if (userId && questionId) {
-			mutation.mutate({ userId, questionId });
-		} else {
-			console.error("User ID or Question ID is undefined");
-		}
+		setFavoriteQuestions(updatedFavoriteQuestions);
+		mutation.mutate({ userId, updatedFavoriteQuestions, token });
 	};
 
 	useEffect(() => {
@@ -74,6 +99,7 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 							// Delay the state update until after the render phase
 							setTimeout(() => {
 								handleCloseModal();
+								setFavorite(false);
 							}, 0);
 							return 1;
 						}
@@ -88,7 +114,9 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 				}
 			};
 		}
-	}, [visible, handleCloseModal, progressIncrement, progressInterval]);
+		// Return undefined if visible is false to ensure all code paths return a value
+		return undefined;
+	}, [visible, progressIncrement, progressInterval, setFavorite]);
 
 	return (
 		<Modal
@@ -128,7 +156,7 @@ const AnswerModal = ({ visible, handleCloseModal, currentCardData }: Props) => {
 									/>
 									<TouchableOpacity onPress={handleAddFavoriteQuestion}>
 										<Image
-											source={Heart}
+											source={favorite ? HeartFull : Heart}
 											style={styles.catIcons as ImageStyle}
 											resizeMode='contain'
 										/>

@@ -4,7 +4,8 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 // Define the payload and response types
 interface AddFavoriteQuestionPayload {
 	userId: number;
-	questionId: number;
+	updatedFavoriteQuestions: number[];
+	token: string; // Include token in the payload
 }
 
 interface FavoriteQuestionResponse {
@@ -21,37 +22,46 @@ export const useAddFavoriteQuestionMutation = (
 		AxiosError,
 		AddFavoriteQuestionPayload
 	>({
-		mutationFn: async ({ userId, questionId }: AddFavoriteQuestionPayload) => {
-			const { token } = useJwtToken();
-			if (!token) {
-				throw new Error("No JWT token found in storage");
-			}
-
+		mutationFn: async ({
+			userId,
+			updatedFavoriteQuestions,
+			token,
+		}: AddFavoriteQuestionPayload) => {
 			const payload = {
 				data: {
-					questions: questionId,
+					questions: updatedFavoriteQuestions,
 				},
 			};
 
-			const response: AxiosResponse<FavoriteQuestionResponse> =
-				await axios.post(
-					`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}`,
-					payload,
-					{
-						headers: {
-							"Content-Type": "application/json",
-							Authorization: `Bearer ${token}`,
-						},
-					}
-				);
-			return response.data; // Extract and return the data
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}`;
+
+			try {
+				const response: AxiosResponse<FavoriteQuestionResponse> = await axios({
+					method: "PUT",
+					url: url,
+					data: payload,
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				});
+				return response.data;
+			} catch (error) {
+				if (axios.isAxiosError(error)) {
+					throw error;
+				} else {
+					throw new Error("An unexpected error occurred");
+				}
+			}
 		},
 		onSuccess: (data) => {
 			onSuccess(data); // Call the original onSuccess callback
 		},
-		onError,
+		onError: (error) => {
+			if (error.response) {
+				console.error("Error code:", error.response.status);
+			}
+			onError(error); // Call the original onError callback
+		},
 	});
 };
-function useJwtToken(): { token: any; loading: any } {
-	throw new Error("Function not implemented.");
-}
