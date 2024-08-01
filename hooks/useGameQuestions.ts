@@ -8,6 +8,7 @@ const fetchGameQuestions = async (token: string) => {
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/questions?populate[favorite-questions][fields]=id&random=true&pagination[limit]=30`,
+			// `${process.env.EXPO_PUBLIC_API_URL}/questions?populate[favorite-questions][fields]=id&filters[id][$in]=20&filters[id][$in]=16&filters[id][$in]=17&filters[id][$in]=3&filters[id][$in]=2`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
