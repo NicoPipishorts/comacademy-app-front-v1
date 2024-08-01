@@ -15,6 +15,7 @@ import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
+import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -25,7 +26,6 @@ import {
 	View,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
-import { NavigationType } from ".";
 
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<GameData>>(null);
