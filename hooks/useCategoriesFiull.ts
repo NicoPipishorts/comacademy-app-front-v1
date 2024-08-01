@@ -1,10 +1,13 @@
+// src/hooks/useCategories.ts
+
 import useJwtToken from "@/hooks/useJwtToken";
+import { CategoriePayload } from "@/types/categories";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCitations = async (token: string): Promise<any> => {
+const fetchCategories = async (token: string): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/citations?random=true&pagination[limit]=30`,
+			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -28,14 +31,14 @@ const fetchCitations = async (token: string): Promise<any> => {
 	}
 };
 
-const useLesCitations = () => {
+const useCategoriesFull = () => {
 	const { token } = useJwtToken();
 
-	return useQuery<LesCitationsPayload>({
-		queryKey: ["Citations"],
-		queryFn: () => fetchCitations(token),
+	return useQuery<CategoriePayload>({
+		queryKey: ["CategoriesFull"],
+		queryFn: () => fetchCategories(token),
 		enabled: !!token,
 	});
 };
 
-export default useLesCitations;
+export default useCategoriesFull;
