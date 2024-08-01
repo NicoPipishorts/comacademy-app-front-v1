@@ -42,6 +42,13 @@ const _layout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
+					name='lesCitations'
+					options={{
+						tabBarLabel: "Les Citations",
+						headerShown: false,
+					}}
+				/>
+				<Tabs.Screen
 					name='playlists'
 					options={{
 						tabBarLabel: "Playlists",

@@ -18,12 +18,9 @@ import FloatingTabBar from "../../../components/FloatingTabBar";
 // Assets
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import PlayButton from "../../../assets/imgs/BigPlayButton.png";
-
-export type NavigationType = {
-	navigate: (screenName: string) => void;
-};
 
 const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
