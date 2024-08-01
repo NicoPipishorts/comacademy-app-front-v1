@@ -28,6 +28,8 @@ const Card = ({
 	useEffect(() => {
 		const categories: number[] = data.attributes.CATEGORIE;
 
+		console.log(data.attributes.favorite_questions);
+
 		let selectedCategory: number;
 
 		if (categories.length > 1) {

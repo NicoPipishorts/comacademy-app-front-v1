@@ -51,7 +51,7 @@ const Jeu = () => {
 			queryKey: ["GameQuestions"],
 			queryFn: () =>
 				fetch(
-					`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&pagination[limit]=30`
+					`${process.env.EXPO_PUBLIC_API_URL}/questions?populate[favorite-questions][fields]=id&random=true&pagination[limit]=30`
 				)
 					.then((res) => res.json())
 					.then((data) => {
@@ -169,10 +169,6 @@ const Jeu = () => {
 		);
 	};
 
-	const handleCloseModal = () => {
-		setIsModalVisible(false);
-	};
-
 	return (
 		<View style={styles.wrapper}>
 			<Swiper
@@ -206,7 +202,7 @@ const Jeu = () => {
 			<AnswerModal
 				visible={isModalVisible}
 				feedbackMessage={feedbackMessage}
-				handleCloseModal={handleCloseModal}
+				setIsModalVisible={setIsModalVisible}
 				currentCardData={currentCardData}
 			/>
 			<View style={styles.containerBackButton}>
