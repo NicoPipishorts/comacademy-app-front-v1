@@ -78,8 +78,11 @@ const AnswerModal = ({
 		console.error("Error adding favorite question", error);
 	};
 
-	// Use the custom hook
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
+
+	useEffect(() => {
+		setFavorite(favoriteQuestions.includes(currentCardData?.id));
+	}, [favoriteQuestions, currentCardData]);
 
 	const handleAddFavoriteQuestion = () => {
 		setFavoriteQuestions(updatedFavoriteQuestions);
