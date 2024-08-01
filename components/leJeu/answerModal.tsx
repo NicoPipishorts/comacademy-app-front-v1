@@ -76,7 +76,6 @@ const AnswerModal = ({
 	// Set favorite status based on the favoriteQuestions array when the modal becomes visible
 	useEffect(() => {
 		if (visible && currentCardData) {
-			// console.log("setting to true", favoriteQuestions);
 			setFavorite(favoriteQuestions.includes(currentCardData.id));
 		}
 	}, [visible, currentCardData, favoriteQuestions]);
