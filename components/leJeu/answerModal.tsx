@@ -37,12 +37,16 @@ type Props = {
 	feedbackMessage: Answer | null;
 	setIsModalVisible: Dispatch<SetStateAction<boolean>>;
 	currentCardData: GameData | null;
+	favoriteQuestions: number[];
+	setFavoriteQuestions: Dispatch<SetStateAction<number[]>>;
 };
 
 const AnswerModal = ({
 	visible,
 	setIsModalVisible,
 	currentCardData,
+	favoriteQuestions,
+	setFavoriteQuestions,
 }: Props) => {
 	const [progress, setProgress] = useState(0);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -59,10 +63,14 @@ const AnswerModal = ({
 	const progressIncrement = 0.01;
 
 	const questionId: number | undefined = currentCardData?.id;
+	const newQuestionId = currentCardData?.id;
+	const updatedFavoriteQuestions =
+		newQuestionId !== undefined
+			? [...favoriteQuestions, questionId]
+			: favoriteQuestions;
 
 	// Define onSuccess and onError handlers
 	const handleSuccess = (data: any) => {
-		console.log("Successfully added to favorites!");
 		setFavorite(true);
 	};
 
@@ -74,7 +82,8 @@ const AnswerModal = ({
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
 
 	const handleAddFavoriteQuestion = () => {
-		mutation.mutate({ userId, questionId, token });
+		setFavoriteQuestions(updatedFavoriteQuestions);
+		mutation.mutate({ userId, updatedFavoriteQuestions, token });
 	};
 
 	useEffect(() => {

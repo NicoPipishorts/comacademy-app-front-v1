@@ -4,7 +4,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 // Define the payload and response types
 interface AddFavoriteQuestionPayload {
 	userId: number;
-	questionId: number;
+	updatedFavoriteQuestions: number[];
 	token: string; // Include token in the payload
 }
 
@@ -24,12 +24,12 @@ export const useAddFavoriteQuestionMutation = (
 	>({
 		mutationFn: async ({
 			userId,
-			questionId,
+			updatedFavoriteQuestions,
 			token,
 		}: AddFavoriteQuestionPayload) => {
 			const payload = {
 				data: {
-					questions: [questionId],
+					questions: updatedFavoriteQuestions,
 				},
 			};
 
