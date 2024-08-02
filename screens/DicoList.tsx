@@ -63,13 +63,17 @@ const DicoList = ({
 		items: DicoSelected[],
 		property: keyof DicoSelected
 	) {
-		// Sort items alphabetically based on the property
+		// Normalize the string and remove accents
+		const normalizeString = (str: string) =>
+			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+		// Sort items alphabetically based on the normalized property
 		items.sort((a, b) => {
 			const propA = a[property];
 			const propB = b[property];
 
 			if (typeof propA === "string" && typeof propB === "string") {
-				return propA.localeCompare(propB);
+				return normalizeString(propA).localeCompare(normalizeString(propB));
 			}
 			return 0;
 		});
@@ -78,7 +82,7 @@ const DicoList = ({
 		items.forEach((item) => {
 			const propValue = item[property];
 			if (typeof propValue === "string") {
-				const letter = propValue.charAt(0).toUpperCase();
+				const letter = normalizeString(propValue).charAt(0).toUpperCase();
 				if (!groups[letter]) {
 					groups[letter] = [];
 				}

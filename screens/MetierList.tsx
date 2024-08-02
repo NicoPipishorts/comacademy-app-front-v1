@@ -57,31 +57,30 @@ const MetierList = ({
 
 	const alphabet = Object.keys(groupedData).sort();
 
-	function isString(value: any): value is string {
-		return typeof value === "string";
-	}
-
 	function groupDataByFirstLetter(
 		items: SelectedMetier[],
 		property: keyof SelectedMetier
 	) {
-		// Sort items alphabetically based on the property
+		// Normalize the string and remove accents
+		const normalizeString = (str: string) =>
+			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+		// Sort items alphabetically based on the normalized property
 		items.sort((a, b) => {
 			const propA = a[property];
 			const propB = b[property];
 
 			if (typeof propA === "string" && typeof propB === "string") {
-				return propA.localeCompare(propB);
+				return normalizeString(propA).localeCompare(normalizeString(propB));
 			}
-			return 0; // Handle non-string values by considering them equal
+			return 0;
 		});
 
-		// Group by the first letter of the property
 		const groups: { [key: string]: SelectedMetier[] } = {};
 		items.forEach((item) => {
 			const propValue = item[property];
 			if (typeof propValue === "string") {
-				const letter = propValue.charAt(0).toUpperCase();
+				const letter = normalizeString(propValue).charAt(0).toUpperCase();
 				if (!groups[letter]) {
 					groups[letter] = [];
 				}
