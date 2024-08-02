@@ -7,7 +7,6 @@ const PrivateRoute = ({ name, component: Component, options }) => {
 	const { isAuthenticated } = useAuth();
 
 	if (!isAuthenticated) {
-		console.log("Not authenticated, redirecting to login.");
 		return (
 			<Stack>
 				<Stack.Screen

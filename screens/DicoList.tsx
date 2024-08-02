@@ -1,7 +1,7 @@
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
-import { MetiersList, SelectedMetier } from "@/types/metiers";
+import { DicoLists, DicoSelected } from "@/types/dico";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, {
 	Dispatch,
@@ -20,15 +20,15 @@ import {
 import Searchbar from "../components/Searchbar";
 
 type Props = {
-	data: MetiersList;
+	data: DicoLists;
 	categories: CategoriePayload;
 	setShowDetails: Dispatch<SetStateAction<boolean>>;
-	setSelectedItem: Dispatch<SetStateAction<SelectedMetier | null>>;
+	setSelectedItem: Dispatch<SetStateAction<DicoSelected | null>>;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 };
 
-const MetierList = ({
+const DicoList = ({
 	data,
 	categories,
 	setShowDetails,
@@ -39,18 +39,20 @@ const MetierList = ({
 	const scrollViewRef = useRef<ScrollView | null>(null);
 	const sectionRefs = useRef<{ [key: string]: View | null }>({}).current;
 	const [groupedData, setGroupedData] = useState<{
-		[key: string]: SelectedMetier[];
+		[key: string]: DicoSelected[];
 	}>({});
 
 	useEffect(() => {
 		if (data && data.data) {
-			const mappedData = data.data.map((item) => {
-				return {
-					...item.attributes,
-					id: item.id,
-				};
-			});
-			const grouped = groupDataByFirstLetter(mappedData, "METIER");
+			const mappedData = data.data
+				.map((item) => {
+					return {
+						...item.attributes,
+						id: item.id,
+					};
+				})
+				.filter((item) => item.Word && item.Word !== "-"); // Filter out invalid entries
+			const grouped = groupDataByFirstLetter(mappedData, "Word");
 			setGroupedData(grouped);
 		}
 	}, [data]);
@@ -58,8 +60,8 @@ const MetierList = ({
 	const alphabet = Object.keys(groupedData).sort();
 
 	function groupDataByFirstLetter(
-		items: SelectedMetier[],
-		property: keyof SelectedMetier
+		items: DicoSelected[],
+		property: keyof DicoSelected
 	) {
 		// Normalize the string and remove accents
 		const normalizeString = (str: string) =>
@@ -76,7 +78,7 @@ const MetierList = ({
 			return 0;
 		});
 
-		const groups: { [key: string]: SelectedMetier[] } = {};
+		const groups: { [key: string]: DicoSelected[] } = {};
 		items.forEach((item) => {
 			const propValue = item[property];
 			if (typeof propValue === "string") {
@@ -158,7 +160,7 @@ const MetierList = ({
 											setSelectedItem(item);
 											setShowDetails(true);
 										}}>
-										{item.METIER}
+										{item.Word}
 									</Text>
 								);
 							})}
@@ -259,4 +261,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default MetierList;
+export default DicoList;

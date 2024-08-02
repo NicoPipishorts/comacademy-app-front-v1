@@ -104,7 +104,8 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		paddingBottom: 20,
+		paddingBottom: 15,
+		marginBottom: 10,
 	},
 	tabbarText: {
 		fontSize: FontSizeTabbar,
