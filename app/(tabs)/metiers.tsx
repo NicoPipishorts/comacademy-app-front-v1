@@ -1,5 +1,6 @@
 import { colorYellow, primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
+import useCategoriesFull from "@/hooks/useCategoriesFiull";
 import useJwtToken from "@/hooks/useJwtToken";
 import { SelectedMetier } from "@/types/metiers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,8 +24,8 @@ const Metier = () => {
 	const fetchMetiers = async (filterByCat: number | null) => {
 		const url = `${apiUrl}/metiers?${
 			filterByCat === null
-				? "fields[0]=METIER&_fields=id,METIER&"
-				: `fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$contains]=${filterByCat}`
+				? "fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500"
+				: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[CATEGORIE][$contains]=${filterByCat}`
 		}`;
 		const response = await fetch(url);
 		if (!response.ok) {
@@ -38,20 +39,7 @@ const Metier = () => {
 		queryFn: () => fetchMetiers(filterByCat),
 	});
 
-	const fetchCategories = async () => {
-		const response = await fetch(`${apiUrl}/categories?populate=*`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
-		return response.json();
-	};
-
-	const { data: dataCategory, isLoading } = useQuery({
-		queryKey: ["categories"],
-		queryFn: fetchCategories,
-		enabled: !!token,
-	});
+	const { data: dataCategory, isLoading: isLoading } = useCategoriesFull();
 
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
@@ -75,6 +63,7 @@ const Metier = () => {
 					<ActivityIndicator size='large' color={colorYellow} />
 				</View>
 			)}
+
 			{!selectedTab && !isLoading && (
 				<MetierList
 					data={dataMetier}

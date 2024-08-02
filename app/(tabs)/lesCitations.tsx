@@ -25,7 +25,6 @@ const LesCitations = () => {
 			</View>
 		);
 	}
-	console.log("citations data", data);
 
 	if (!data) {
 		return (
