@@ -39,10 +39,17 @@ const useDicoById = (id: number) => {
 	});
 };
 
-const fetchDicoIds = async (token: string): Promise<any> => {
+const fetchDicoIds = async (
+	token: string,
+	filterByCat: number | null
+): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos?fields[0]=Word&_fields=id,Word`,
+			`${process.env.EXPO_PUBLIC_API_URL}/dicos?${
+				filterByCat === null
+					? "fields[0]=Word&_fields=id,Word"
+					: `fields[0]=Word&_fields=id,Word&filters[Categories][$contains]=${filterByCat}`
+			}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -66,12 +73,12 @@ const fetchDicoIds = async (token: string): Promise<any> => {
 	}
 };
 
-const useDicoIds = () => {
+const useDicoIds = (filterByCat: number | null) => {
 	const { token } = useJwtToken();
 
 	return useQuery<DicoLists>({
-		queryKey: ["DicoIds"],
-		queryFn: () => fetchDicoIds(token),
+		queryKey: ["DicoIds", filterByCat],
+		queryFn: () => fetchDicoIds(token, filterByCat),
 		enabled: !!token,
 	});
 };

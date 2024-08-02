@@ -5,9 +5,10 @@ import { useDicoIds } from "@/hooks/useGetDico";
 import useJwtToken from "@/hooks/useJwtToken";
 import DicoDetails from "@/screens/DicoDetails";
 import DicoList from "@/screens/DicoList";
+import MetierCategories from "@/screens/MetierCategories";
 import { DicoSelected } from "@/types/dico";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import FloatingTabBar from "../../components/FloatingTabBar";
 import ScreenHeaders from "../../components/ScreenHeaders";
@@ -20,25 +21,29 @@ const Dico = () => {
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const { token } = useJwtToken();
 
-	const { data: dataDico, isLoading: isLoadingDico } = useDicoIds();
+	const { data: dataDico, isLoading: isLoadingDico } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
+
+	useEffect(() => {
+		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
+		setSelectedTab(false);
+	}, [filterByCat, queryClient]);
 
 	if (showDetails && selectedItem) {
 		return (
 			<DicoDetails item={selectedItem} onGoBack={() => setShowDetails(false)} />
 		);
 	}
-
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Dico' />
-			{isLoadingDico && (
+			{isLoadingCat && (
 				<View style={styles.loadingContainer}>
 					<ActivityIndicator size='large' color={colorYellow} />
 				</View>
 			)}
 
-			{!selectedTab && !isLoadingDico && (
+			{!selectedTab && !isLoadingCat && (
 				<DicoList
 					data={dataDico}
 					categories={dataCat}
@@ -46,6 +51,13 @@ const Dico = () => {
 					setSelectedItem={setSelectedItem}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
+				/>
+			)}
+
+			{selectedTab && (
+				<MetierCategories
+					setFilterByCat={setFilterByCat}
+					dataCategory={dataCat}
 				/>
 			)}
 
