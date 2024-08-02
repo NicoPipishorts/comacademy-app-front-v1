@@ -24,8 +24,8 @@ const Metier = () => {
 	const fetchMetiers = async (filterByCat: number | null) => {
 		const url = `${apiUrl}/metiers?${
 			filterByCat === null
-				? "fields[0]=METIER&_fields=id,METIER&"
-				: `fields[0]=METIER&_fields=id,METIER&filters[CATEGORIE][$contains]=${filterByCat}`
+				? "fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500"
+				: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[CATEGORIE][$contains]=${filterByCat}`
 		}`;
 		const response = await fetch(url);
 		if (!response.ok) {
