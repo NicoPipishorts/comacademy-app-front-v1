@@ -47,8 +47,8 @@ const fetchDicoIds = async (
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/dicos?${
 				filterByCat === null
-					? "fields[0]=Word&_fields=id,Word"
-					: `fields[0]=Word&_fields=id,Word&filters[Categories][$contains]=${filterByCat}`
+					? "fields[0]=Word&_fields=id,Word&pagination[limit]=2500"
+					: `fields[0]=Word&_fields=id,Word&pagination[limit]=2500&filters[Categories][$contains]=${filterByCat}`
 			}`,
 			{
 				headers: {
