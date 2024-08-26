@@ -1,9 +1,11 @@
+import { GameDataPayload } from "@/types/game";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 interface CreateNewGameSession {
 	userId: number;
 	token: string;
+	questionsPool: GameDataPayload;
 }
 
 interface NewSessionResponse {
@@ -12,14 +14,21 @@ interface NewSessionResponse {
 
 // Custom hook to add favorite question
 export const startNewGameSession = (
-	onSuccess: (data: any) => void, //TODO
+	onSuccess: (data: any) => void, // TODO: Replace `any` with the correct type if possible
 	onError: (error: AxiosError) => void
 ) => {
 	return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
-		mutationFn: async ({ userId, token }: CreateNewGameSession) => {
+		mutationFn: async ({
+			userId,
+			token,
+			questionsPool,
+		}: CreateNewGameSession) => {
+			// Log the questionsPool prop to see what data it contains
+
 			const payload = {
 				data: {
 					userId,
+					questionsPool,
 				},
 			};
 
@@ -35,11 +44,14 @@ export const startNewGameSession = (
 						Authorization: `Bearer ${token}`,
 					},
 				});
+
 				return response.data;
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
+					console.error("Axios error:", error); // Log Axios errors
 					throw error;
 				} else {
+					console.error("Unexpected error:", error); // Log unexpected errors
 					throw new Error("An unexpected error occurred");
 				}
 			}
@@ -49,7 +61,7 @@ export const startNewGameSession = (
 		},
 		onError: (error) => {
 			if (error.response) {
-				console.error("Error code:", error.response.status);
+				console.error("Error code:", error.response.status); // Log the error status code
 			}
 			onError(error); // Call the original onError callback
 		},

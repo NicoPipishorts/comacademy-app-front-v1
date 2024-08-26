@@ -11,7 +11,7 @@ interface NewSessionResponse {
 }
 
 // Custom hook to add favorite question
-export const startNewGameSession = (
+export const addSessionQuestions = (
 	onSuccess: (data: any) => void, //TODO
 	onError: (error: AxiosError) => void
 ) => {

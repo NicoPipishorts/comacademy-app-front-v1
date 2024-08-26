@@ -53,32 +53,27 @@ const Jeu = () => {
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
 	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
-	const handleSuccessnewGameSession = (data: any) => {
-		console.log("Created new sessiosn : ", data);
-	};
-
-	const handleError = (error: any) => {
-		console.error(error);
-	};
-
 	const { data: dataGame } = useGameQuestions();
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
 	const { data: gameSessions } = useGameSessions(userId);
-
+	const handleError = (error: any) => {
+		console.error(error);
+	};
+	const handleSuccessNewGameSession = (data: any) => {};
 	const newGameSession = startNewGameSession(
-		handleSuccessnewGameSession,
+		handleSuccessNewGameSession,
 		handleError
 	);
 
 	useEffect(() => {
 		if (!gameSessions) {
-			if (userId && token) {
-				newGameSession.mutate({ userId, token });
+			if (userId && token && dataGame) {
+				newGameSession.mutate({ userId, token, questionsPool: dataGame });
 			}
 		}
-	}, [gameSessions, userId, token]);
+	}, [gameSessions, userId, token, dataGame]);
 
 	useEffect(() => {
 		if (fqData) {
