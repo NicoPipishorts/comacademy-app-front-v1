@@ -27,9 +27,6 @@ const LeJeu = () => {
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 	const navigation = useNavigation<NavigationType>();
-	const handlePress = () => {
-		navigation.navigate("jeu");
-	};
 
 	return (
 		<View style={styles.wrapper}>
@@ -55,7 +52,7 @@ const LeJeu = () => {
 					<Text style={styles.centerTitle}>A toi de jouer !</Text>
 				</View>
 				<View style={styles.playButtonContainer}>
-					<TouchableOpacity onPress={handlePress}>
+					<TouchableOpacity onPress={() => navigation.navigate("jeu")}>
 						<Image
 							source={PlayButton}
 							resizeMode='contain'

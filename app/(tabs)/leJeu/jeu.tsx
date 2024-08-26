@@ -1,3 +1,4 @@
+import { startNewGameSession } from "@/api/gameNewSession";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
@@ -11,7 +12,9 @@ import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
 import useGameQuestions from "@/hooks/useGameQuestions";
+import useGameSessions from "@/hooks/useGameSessions";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
@@ -30,6 +33,7 @@ import Swiper from "react-native-deck-swiper";
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<GameData>>(null);
 	const navigation = useNavigation<NavigationType>();
+	const [creatingNewSessions, setCreatingNewSession] = useState<boolean>(false);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
 	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -37,6 +41,7 @@ const Jeu = () => {
 	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
+	const { token } = useJwtToken();
 
 	const handlePress = () => {
 		showTabBar();
@@ -46,12 +51,34 @@ const Jeu = () => {
 	useEffect(() => {
 		hideTabBar();
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
-	}, [hideTabBar, showTabBar]);
+	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
-	const { data: dataGame, isLoading: isGameLoading } = useGameQuestions();
-	const { data: catData, isLoading: isCatLoading } = useCategories();
-	const { data: fqData, isLoading: isLoadingFQ } =
-		useGetFavoriteQuestions(userId);
+	const handleSuccessnewGameSession = (data: any) => {
+		console.log("Created new sessiosn : ", data);
+	};
+
+	const handleError = (error: any) => {
+		console.error(error);
+	};
+
+	const { data: dataGame } = useGameQuestions();
+	const { data: catData } = useCategories();
+	const { data: fqData } = useGetFavoriteQuestions(userId);
+
+	const { data: gameSessions } = useGameSessions(userId);
+
+	const newGameSession = startNewGameSession(
+		handleSuccessnewGameSession,
+		handleError
+	);
+
+	useEffect(() => {
+		if (!gameSessions) {
+			if (userId && token) {
+				newGameSession.mutate({ userId, token });
+			}
+		}
+	}, [gameSessions, userId, token]);
 
 	useEffect(() => {
 		if (fqData) {
@@ -62,7 +89,7 @@ const Jeu = () => {
 		}
 	}, [fqData]);
 
-	if (isGameLoading || isCatLoading || isLoadingFQ) {
+	if (creatingNewSessions) {
 		return (
 			<View style={styles.loadingContainer}>
 				<ActivityIndicator size='large' color={colorYellow} />

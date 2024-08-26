@@ -24,3 +24,30 @@ export type GameData = {
 	id: number;
 	attributes: GameAttributes;
 };
+
+export type GameSession = {
+	data: {
+		id: number;
+		attributes: {
+			userId: number;
+			score: number;
+			inProgress: boolean;
+			abandoned: boolean;
+			createdAt: string;
+			updatedAt: string;
+			publishedAt: string;
+			finished_at: string;
+		};
+	};
+	meta: Record<string, unknown>;
+};
+
+export type GameSessionQuestions = {
+	id: number;
+	attributes: {
+		gameId: number;
+		questionId: number;
+		order: number;
+		answer: boolean;
+	};
+};
