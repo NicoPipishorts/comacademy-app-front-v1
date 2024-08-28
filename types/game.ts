@@ -33,6 +33,7 @@ export type GameSession = {
 			score: number;
 			inProgress: boolean;
 			abandoned: boolean;
+			questionsPool: GameData;
 			createdAt: string;
 			updatedAt: string;
 			publishedAt: string;
@@ -43,11 +44,13 @@ export type GameSession = {
 };
 
 export type GameSessionQuestions = {
-	id: number;
-	attributes: {
-		gameId: number;
-		questionId: number;
-		order: number;
-		answer: boolean;
+	data: {
+		id: number;
+		attributes: {
+			gameId: number;
+			questionId: number;
+			answer: boolean;
+			order: number;
+		};
 	};
 };

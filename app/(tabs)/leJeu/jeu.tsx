@@ -1,4 +1,3 @@
-import { startNewGameSession } from "@/api/gameNewSession";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
@@ -11,11 +10,9 @@ import {
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
-import useGameQuestions from "@/hooks/useGameQuestions";
-import useGameSessions from "@/hooks/useGameSessions";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
-import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import { useGameContext } from "@/providers/gameDataContext";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
 import { NavigationType } from "@/types/general";
@@ -33,7 +30,6 @@ import Swiper from "react-native-deck-swiper";
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<GameData>>(null);
 	const navigation = useNavigation<NavigationType>();
-	const [creatingNewSessions, setCreatingNewSession] = useState<boolean>(false);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
 	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -41,7 +37,7 @@ const Jeu = () => {
 	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
-	const { token } = useJwtToken();
+	const { dataGame } = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
@@ -53,27 +49,8 @@ const Jeu = () => {
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
 	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
-	const { data: dataGame } = useGameQuestions();
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
-
-	const { data: gameSessions } = useGameSessions(userId);
-	const handleError = (error: any) => {
-		console.error(error);
-	};
-	const handleSuccessNewGameSession = (data: any) => {};
-	const newGameSession = startNewGameSession(
-		handleSuccessNewGameSession,
-		handleError
-	);
-
-	useEffect(() => {
-		if (!gameSessions) {
-			if (userId && token && dataGame) {
-				newGameSession.mutate({ userId, token, questionsPool: dataGame });
-			}
-		}
-	}, [gameSessions, userId, token, dataGame]);
 
 	useEffect(() => {
 		if (fqData) {
@@ -84,7 +61,8 @@ const Jeu = () => {
 		}
 	}, [fqData]);
 
-	if (creatingNewSessions) {
+	// If dataGame is not yet available, show a loading indicator
+	if (!dataGame || !catData || !fqData) {
 		return (
 			<View style={styles.loadingContainer}>
 				<ActivityIndicator size='large' color={colorYellow} />
@@ -92,23 +70,9 @@ const Jeu = () => {
 		);
 	}
 
-	if (!dataGame || !dataGame.data || !catData || !fqData) {
-		return (
-			<>
-				<View style={styles.loadingContainer}>
-					<Text style={styles.noDataText}>No game data available</Text>
-				</View>
-				<View style={styles.containerBackButton}>
-					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Text style={styles.textBackButton}>Quitter</Text>
-					</TouchableOpacity>
-				</View>
-			</>
-		);
-	}
-
-	const dataArray: GameData[] = Object.keys(dataGame.data).map(
-		(key) => dataGame.data[key] as GameData
+	// Map dataGame to the cards array
+	const dataArray: GameData[] = Object.keys(dataGame).map(
+		(key) => dataGame[key] as GameData
 	);
 
 	const cards = dataArray;

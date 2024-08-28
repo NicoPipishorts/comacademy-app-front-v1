@@ -1,11 +1,11 @@
-import { GameDataPayload } from "@/types/game";
+import { GameData } from "@/types/game";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 interface CreateNewGameSession {
 	userId: number;
 	token: string;
-	questionsPool: GameDataPayload;
+	questionsPool: GameData;
 }
 
 interface NewSessionResponse {

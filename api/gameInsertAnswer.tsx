@@ -1,8 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-interface CreateNewGameSession {
-	userId: number;
+export interface CreateNewGameSession {
+	gameId: number;
+	questionId: number;
+	order: number;
+	answer: boolean;
 	token: string;
 }
 
@@ -11,19 +14,28 @@ interface NewSessionResponse {
 }
 
 // Custom hook to add favorite question
-export const addSessionQuestions = (
+export const insertAnswer = (
 	onSuccess: (data: any) => void, //TODO
 	onError: (error: AxiosError) => void
 ) => {
 	return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
-		mutationFn: async ({ userId, token }: CreateNewGameSession) => {
+		mutationFn: async ({
+			gameId,
+			questionId,
+			order,
+			answer,
+			token,
+		}: CreateNewGameSession) => {
 			const payload = {
 				data: {
-					userId,
+					gameId,
+					questionId,
+					order,
+					answer,
 				},
 			};
 
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/game-sessions`;
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/game-questions`;
 
 			try {
 				const response: AxiosResponse<NewSessionResponse> = await axios({
