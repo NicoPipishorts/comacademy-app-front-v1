@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 interface CreateNewGameSession {
 	userId: number;
 	token: string;
-	questionsPool: GameData;
+	questionsPool: GameData[];
 }
 
 interface NewSessionResponse {

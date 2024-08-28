@@ -1,3 +1,4 @@
+import { insertAnswer } from "@/api/gameInsertAnswer";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
@@ -11,6 +12,7 @@ import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { Answer } from "@/types/enums";
@@ -37,7 +39,8 @@ const Jeu = () => {
 	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
-	const { dataGame } = useGameContext();
+	const { token } = useJwtToken();
+	const { dataGame, sessionId } = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
@@ -51,6 +54,8 @@ const Jeu = () => {
 
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
+
+	const insertPlayerAnswer = insertAnswer();
 
 	useEffect(() => {
 		if (fqData) {
@@ -88,11 +93,19 @@ const Jeu = () => {
 
 	const onSwipeLeft = (cardIndex: number) => {
 		const currentCard = dataArray[cardIndex];
+		console.log();
 		if (currentCard && currentCard.attributes.ANSWER === true) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.true, currentCard);
 		}
+		insertPlayerAnswer.mutate({
+			gameId: sessionId,
+			questionId: currentCard.id,
+			order: cardIndex,
+			answer: currentCard.attributes.ANSWER === false,
+			token,
+		});
 		setCurrentIndex(cardIndex + 1);
 	};
 
@@ -103,6 +116,13 @@ const Jeu = () => {
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.true, currentCard);
 		}
+		insertPlayerAnswer.mutate({
+			gameId: sessionId,
+			questionId: currentCard.id,
+			order: cardIndex,
+			answer: currentCard.attributes.ANSWER === true,
+			token,
+		});
 		setCurrentIndex(cardIndex + 1);
 	};
 

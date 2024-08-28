@@ -14,56 +14,56 @@ interface NewSessionResponse {
 }
 
 // Custom hook to add favorite question
-export const insertAnswer = (
-	onSuccess: (data: any) => void, //TODO
-	onError: (error: AxiosError) => void
-) => {
-	return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
-		mutationFn: async ({
-			gameId,
-			questionId,
-			order,
-			answer,
-			token,
-		}: CreateNewGameSession) => {
-			const payload = {
-				data: {
-					gameId,
-					questionId,
-					order,
-					answer,
-				},
-			};
-
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/game-questions`;
-
-			try {
-				const response: AxiosResponse<NewSessionResponse> = await axios({
-					method: "POST",
-					url: url,
-					data: payload,
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${token}`,
+export const insertAnswer = () =>
+	// onSuccess: (data: any) => void, //TODO
+	// onError: (error: AxiosError) => void
+	{
+		return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
+			mutationFn: async ({
+				gameId,
+				questionId,
+				order,
+				answer,
+				token,
+			}: CreateNewGameSession) => {
+				const payload = {
+					data: {
+						gameId,
+						questionId,
+						order,
+						answer,
 					},
-				});
-				return response.data;
-			} catch (error) {
-				if (axios.isAxiosError(error)) {
-					throw error;
-				} else {
-					throw new Error("An unexpected error occurred");
+				};
+
+				const url = `${process.env.EXPO_PUBLIC_API_URL}/game-questions`;
+
+				try {
+					const response: AxiosResponse<NewSessionResponse> = await axios({
+						method: "POST",
+						url: url,
+						data: payload,
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+					});
+					return response.data;
+				} catch (error) {
+					if (axios.isAxiosError(error)) {
+						throw error;
+					} else {
+						throw new Error("An unexpected error occurred");
+					}
 				}
-			}
-		},
-		onSuccess: (data) => {
-			onSuccess(data); // Call the original onSuccess callback
-		},
-		onError: (error) => {
-			if (error.response) {
-				console.error("Error code:", error.response.status);
-			}
-			onError(error); // Call the original onError callback
-		},
-	});
-};
+			},
+			// onSuccess: (data) => {
+			// 	onSuccess(data); // Call the original onSuccess callback
+			// },
+			// onError: (error) => {
+			// 	if (error.response) {
+			// 		console.error("Error code:", error.response.status);
+			// 	}
+			// 	onError(error); // Call the original onError callback
+			// },
+		});
+	};

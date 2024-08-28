@@ -33,7 +33,7 @@ const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
-	const { dataGame, setDataGame } = useGameContext();
+	const { dataGame, setDataGame, setSessionsId } = useGameContext();
 
 	const navigation = useNavigation<NavigationType>();
 	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
@@ -44,7 +44,8 @@ const LeJeu = () => {
 	const { data: gameSessions } = useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
 
-	const handleSuccessNewGameSession = () => {
+	const handleSuccessNewGameSession = (data: any) => {
+		setSessionsId(data.data.id);
 		navigation.navigate("jeu");
 	};
 
@@ -64,6 +65,7 @@ const LeJeu = () => {
 			// Use the session's questions pool if a session is in progress
 			const sessionQuestionsPool =
 				gameSessions.data[0].attributes.questionsPool;
+			setSessionsId(gameSessions.data[0].id);
 			setDataGame(
 				Object.keys(sessionQuestionsPool).map(
 					(key) => sessionQuestionsPool[key] as GameData
