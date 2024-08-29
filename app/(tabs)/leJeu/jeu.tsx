@@ -1,4 +1,5 @@
 import { insertAnswer } from "@/api/gameInsertAnswer";
+import Loader from "@/components/experience/loader";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
@@ -20,13 +21,7 @@ import { GameData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import {
-	ActivityIndicator,
-	StyleSheet,
-	Text,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 
 const Jeu = () => {
@@ -70,11 +65,7 @@ const Jeu = () => {
 
 	// If dataGame is not yet available, show a loading indicator
 	if (!dataGame || !catData || !fqData) {
-		return (
-			<View style={styles.loadingContainer}>
-				<ActivityIndicator size='large' color={colorYellow} />
-			</View>
-		);
+		return <Loader />;
 	}
 
 	// Map dataGame to the cards array
@@ -192,11 +183,6 @@ const styles = StyleSheet.create({
 		paddingTop: 100,
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
-		alignItems: "center",
-	},
-	loadingContainer: {
-		flex: 1,
-		justifyContent: "center",
 		alignItems: "center",
 	},
 	noDataText: {

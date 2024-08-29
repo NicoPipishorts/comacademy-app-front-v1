@@ -1,11 +1,11 @@
 import BackgroundImg from "@/assets/imgs/cards/citationsBg.png";
-import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
+import Loader from "@/components/experience/loader";
+import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import useGetLesCitations from "@/hooks/useGetLesCitations";
 import useJwtToken from "@/hooks/useJwtToken";
 import React from "react";
 import {
-	ActivityIndicator,
 	ImageBackground,
 	ScrollView,
 	StyleSheet,
@@ -19,11 +19,7 @@ const LesCitations = () => {
 	const { token } = useJwtToken();
 
 	if (isLoading) {
-		return (
-			<View style={styles.loadingContainer}>
-				<ActivityIndicator size='large' color={colorYellow} />
-			</View>
-		);
+		return <Loader />;
 	}
 
 	if (!data) {
@@ -76,11 +72,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingTop: 80,
 		backgroundColor: primaryBackground,
-	},
-	loadingContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
 	},
 	noDataContainer: {
 		flex: 1,
