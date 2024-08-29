@@ -1,11 +1,12 @@
-import { colorYellow, primaryBackground } from "@/constants/colors";
+import Loader from "@/components/experience/loader";
+import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFiull";
 import useJwtToken from "@/hooks/useJwtToken";
 import { SelectedMetier } from "@/types/metiers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import FloatingTabBar from "../../components/FloatingTabBar";
 import ScreenHeaders from "../../components/ScreenHeaders";
 import MetierCategories from "../../screens/MetierCategories";
@@ -58,11 +59,7 @@ const Metier = () => {
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Métiers' />
-			{isLoading && (
-				<View style={styles.loadingContainer}>
-					<ActivityIndicator size='large' color={colorYellow} />
-				</View>
-			)}
+			{isLoading && <Loader />}
 
 			{!selectedTab && !isLoading && (
 				<MetierList
@@ -99,11 +96,6 @@ const styles = StyleSheet.create({
 		padding: 30,
 		paddingTop: 80,
 		backgroundColor: primaryBackground,
-	},
-	loadingContainer: {
-		paddingTop: "60%",
-		justifyContent: "center",
-		alignItems: "center",
 	},
 	floatingTabbarContainer: {
 		backgroundColor: "transparent",

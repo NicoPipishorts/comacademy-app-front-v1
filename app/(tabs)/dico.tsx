@@ -1,4 +1,5 @@
-import { colorYellow, primaryBackground } from "@/constants/colors";
+import Loader from "@/components/experience/loader";
+import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFiull";
 import { useDicoIds } from "@/hooks/useGetDico";
@@ -9,7 +10,7 @@ import MetierCategories from "@/screens/MetierCategories";
 import { DicoSelected } from "@/types/dico";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import FloatingTabBar from "../../components/FloatingTabBar";
 import ScreenHeaders from "../../components/ScreenHeaders";
 
@@ -37,11 +38,7 @@ const Dico = () => {
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Dico' />
-			{isLoadingCat && (
-				<View style={styles.loadingContainer}>
-					<ActivityIndicator size='large' color={colorYellow} />
-				</View>
-			)}
+			{isLoadingCat && <Loader />}
 
 			{!selectedTab && !isLoadingCat && (
 				<DicoList
@@ -78,11 +75,6 @@ const styles = StyleSheet.create({
 		padding: 30,
 		paddingTop: 80,
 		backgroundColor: primaryBackground,
-	},
-	loadingContainer: {
-		paddingTop: "60%",
-		justifyContent: "center",
-		alignItems: "center",
 	},
 	floatingTabbarContainer: {
 		backgroundColor: "transparent",
