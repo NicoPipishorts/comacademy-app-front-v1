@@ -4,7 +4,7 @@ import {
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	Image,
 	StyleSheet,
@@ -16,8 +16,16 @@ import {
 import FloatingTabBar from "../../../components/FloatingTabBar";
 
 // Assets
+import { startNewGameSession } from "@/api/gameNewSession";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import useGameQuestions from "@/hooks/useGameQuestions";
+import useGameSessions from "@/hooks/useGameSessions";
+import useGameSessionsQuesionts from "@/hooks/useGetCurrentQuestion";
+import useJwtToken from "@/hooks/useJwtToken";
+import useUserId from "@/hooks/useUserId";
+import { useGameContext } from "@/providers/gameDataContext";
+import { GameData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import PlayButton from "../../../assets/imgs/BigPlayButton.png";
@@ -26,9 +34,82 @@ const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
+
 	const navigation = useNavigation<NavigationType>();
-	const handlePress = () => {
+	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
+	const { userId } = useUserId();
+	const { token } = useJwtToken();
+
+	// Always call the hooks
+	const { data: gameSessions } = useGameSessions(userId);
+	const { data: fetchedDataGame } = useGameQuestions();
+	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
+
+	const handleSuccessNewGameSession = (data: any) => {
+		setSessionsId(data.data.id);
 		navigation.navigate("jeu");
+	};
+
+	const handleError = (error: any) => {
+		console.error(error);
+	};
+
+	const newGameSession = startNewGameSession(
+		handleSuccessNewGameSession,
+		handleError
+	);
+
+	// Determine if a session is in progress
+	useEffect(() => {
+		if (gameSessions?.data[0]?.attributes) {
+			setSessionsId(gameSessions.data[0].id);
+			setIsCurrentSession(true);
+			const sessionQuestionsPool =
+				gameSessions.data[0].attributes.questionsPool;
+
+			if (
+				currentQuestion?.meta.pagination.total ||
+				typeof currentQuestion?.meta.pagination.total === "number"
+			) {
+				const currentOrder = currentQuestion?.meta.pagination.total;
+
+				// Filter out questions that have been answered
+				const filteredQuestionsPool = sessionQuestionsPool.slice(
+					currentOrder + 1
+				);
+
+				console.log;
+
+				// Update the session data with the filtered questions
+				setSessionsId(gameSessions.data[0].id);
+				setDataGame(filteredQuestionsPool);
+			}
+		} else {
+			setIsCurrentSession(false);
+			setDataGame(
+				fetchedDataGame
+					? Object.keys(fetchedDataGame.data).map(
+							(key) => fetchedDataGame.data[key] as GameData
+					  )
+					: null
+			);
+		}
+	}, [
+		gameSessions,
+		fetchedDataGame,
+		currentQuestion, // Added this dependency
+		setSessionsId, // Added this dependency
+		setIsCurrentSession, // Added this dependency
+		setDataGame, // Added this dependency
+	]);
+
+	const handlePressPlay = () => {
+		if (!isCurrentSession) {
+			newGameSession.mutate({ userId, token, questionsPool: dataGame });
+		} else {
+			navigation.navigate("jeu");
+		}
 	};
 
 	return (
@@ -55,7 +136,7 @@ const LeJeu = () => {
 					<Text style={styles.centerTitle}>A toi de jouer !</Text>
 				</View>
 				<View style={styles.playButtonContainer}>
-					<TouchableOpacity onPress={handlePress}>
+					<TouchableOpacity onPress={handlePressPlay}>
 						<Image
 							source={PlayButton}
 							resizeMode='contain'
