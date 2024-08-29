@@ -7,7 +7,7 @@ const fetchCurrentQuestion = async (
 	sessionId: number
 ): Promise<GameSessionQuestions> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[gameId][$eq]=${sessionId}&sort[0]=order:desc&pagination[limit]=1`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[gameId][$eq]=${sessionId}`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,

@@ -21,6 +21,7 @@ import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
 import useGameQuestions from "@/hooks/useGameQuestions";
 import useGameSessions from "@/hooks/useGameSessions";
+import useGameSessionsQuesionts from "@/hooks/useGetCurrentQuestion";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -33,7 +34,7 @@ const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
-	const { dataGame, setDataGame, setSessionsId } = useGameContext();
+	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
 
 	const navigation = useNavigation<NavigationType>();
 	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
@@ -43,6 +44,7 @@ const LeJeu = () => {
 	// Always call the hooks
 	const { data: gameSessions } = useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
+	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
 
 	const handleSuccessNewGameSession = (data: any) => {
 		setSessionsId(data.data.id);
@@ -61,19 +63,30 @@ const LeJeu = () => {
 	// Determine if a session is in progress
 	useEffect(() => {
 		if (gameSessions?.data[0]?.attributes) {
+			setSessionsId(gameSessions.data[0].id);
 			setIsCurrentSession(true);
-			// Use the session's questions pool if a session is in progress
 			const sessionQuestionsPool =
 				gameSessions.data[0].attributes.questionsPool;
-			setSessionsId(gameSessions.data[0].id);
-			setDataGame(
-				Object.keys(sessionQuestionsPool).map(
-					(key) => sessionQuestionsPool[key] as GameData
-				)
-			);
+
+			if (
+				currentQuestion?.meta.pagination.total ||
+				typeof currentQuestion?.meta.pagination.total === "number"
+			) {
+				const currentOrder = currentQuestion?.meta.pagination.total;
+
+				// Filter out questions that have been answered
+				const filteredQuestionsPool = sessionQuestionsPool.slice(
+					currentOrder + 1
+				);
+
+				console.log;
+
+				// Update the session data with the filtered questions
+				setSessionsId(gameSessions.data[0].id);
+				setDataGame(filteredQuestionsPool);
+			}
 		} else {
 			setIsCurrentSession(false);
-			// Use fetched game data if no session is in progress
 			setDataGame(
 				fetchedDataGame
 					? Object.keys(fetchedDataGame.data).map(
@@ -82,7 +95,14 @@ const LeJeu = () => {
 					: null
 			);
 		}
-	}, [gameSessions, fetchedDataGame]);
+	}, [
+		gameSessions,
+		fetchedDataGame,
+		currentQuestion, // Added this dependency
+		setSessionsId, // Added this dependency
+		setIsCurrentSession, // Added this dependency
+		setDataGame, // Added this dependency
+	]);
 
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {

@@ -53,4 +53,9 @@ export type GameSessionQuestions = {
 			order: number;
 		};
 	};
+	meta: {
+		pagination: {
+			total: number;
+		};
+	};
 };

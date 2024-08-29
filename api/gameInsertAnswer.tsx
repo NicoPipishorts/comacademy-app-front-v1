@@ -4,7 +4,6 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 export interface CreateNewGameSession {
 	gameId: number;
 	questionId: number;
-	order: number;
 	answer: boolean;
 	token: string;
 }
@@ -22,7 +21,6 @@ export const insertAnswer = () =>
 			mutationFn: async ({
 				gameId,
 				questionId,
-				order,
 				answer,
 				token,
 			}: CreateNewGameSession) => {
@@ -30,7 +28,6 @@ export const insertAnswer = () =>
 					data: {
 						gameId,
 						questionId,
-						order,
 						answer,
 					},
 				};

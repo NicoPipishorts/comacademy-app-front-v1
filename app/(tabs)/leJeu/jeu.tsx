@@ -40,10 +40,12 @@ const Jeu = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
-	const { dataGame, sessionId } = useGameContext();
+	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
+		setDataGame(null);
+		setSessionsId(null);
 		navigation.navigate("index");
 	};
 
@@ -76,11 +78,8 @@ const Jeu = () => {
 	}
 
 	// Map dataGame to the cards array
-	const dataArray: GameData[] = Object.keys(dataGame).map(
-		(key) => dataGame[key] as GameData
-	);
 
-	const cards = dataArray;
+	const cards = dataGame;
 
 	const handleFeedbackMessage = (message: Answer, cardData: GameData) => {
 		setFeedbackMessage(message);
@@ -92,7 +91,7 @@ const Jeu = () => {
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {
-		const currentCard = dataArray[cardIndex];
+		const currentCard = dataGame[cardIndex];
 		console.log();
 		if (currentCard && currentCard.attributes.ANSWER === true) {
 			handleFeedbackMessage(Answer.false, currentCard);
@@ -102,7 +101,6 @@ const Jeu = () => {
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
 			questionId: currentCard.id,
-			order: cardIndex,
 			answer: currentCard.attributes.ANSWER === false,
 			token,
 		});
@@ -110,7 +108,7 @@ const Jeu = () => {
 	};
 
 	const onSwipeRight = (cardIndex: number) => {
-		const currentCard = dataArray[cardIndex];
+		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === false) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		} else if (currentCard) {
@@ -119,7 +117,6 @@ const Jeu = () => {
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
 			questionId: currentCard.id,
-			order: cardIndex,
 			answer: currentCard.attributes.ANSWER === true,
 			token,
 		});
