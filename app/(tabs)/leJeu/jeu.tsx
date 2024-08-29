@@ -1,3 +1,4 @@
+import { insertAnswer } from "@/api/gameInsertAnswer";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
@@ -10,9 +11,10 @@ import {
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
-import useGameQuestions from "@/hooks/useGameQuestions";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import { useGameContext } from "@/providers/gameDataContext";
 import { Answer } from "@/types/enums";
 import { GameData } from "@/types/game";
 import { NavigationType } from "@/types/general";
@@ -37,21 +39,25 @@ const Jeu = () => {
 	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
+	const { token } = useJwtToken();
+	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
+		setDataGame(null);
+		setSessionsId(null);
 		navigation.navigate("index");
 	};
 
 	useEffect(() => {
 		hideTabBar();
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
-	}, [hideTabBar, showTabBar]);
+	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
-	const { data: dataGame, isLoading: isGameLoading } = useGameQuestions();
-	const { data: catData, isLoading: isCatLoading } = useCategories();
-	const { data: fqData, isLoading: isLoadingFQ } =
-		useGetFavoriteQuestions(userId);
+	const { data: catData } = useCategories();
+	const { data: fqData } = useGetFavoriteQuestions(userId);
+
+	const insertPlayerAnswer = insertAnswer();
 
 	useEffect(() => {
 		if (fqData) {
@@ -62,7 +68,8 @@ const Jeu = () => {
 		}
 	}, [fqData]);
 
-	if (isGameLoading || isCatLoading || isLoadingFQ) {
+	// If dataGame is not yet available, show a loading indicator
+	if (!dataGame || !catData || !fqData) {
 		return (
 			<View style={styles.loadingContainer}>
 				<ActivityIndicator size='large' color={colorYellow} />
@@ -70,26 +77,9 @@ const Jeu = () => {
 		);
 	}
 
-	if (!dataGame || !dataGame.data || !catData || !fqData) {
-		return (
-			<>
-				<View style={styles.loadingContainer}>
-					<Text style={styles.noDataText}>No game data available</Text>
-				</View>
-				<View style={styles.containerBackButton}>
-					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Text style={styles.textBackButton}>Quitter</Text>
-					</TouchableOpacity>
-				</View>
-			</>
-		);
-	}
+	// Map dataGame to the cards array
 
-	const dataArray: GameData[] = Object.keys(dataGame.data).map(
-		(key) => dataGame.data[key] as GameData
-	);
-
-	const cards = dataArray;
+	const cards = dataGame;
 
 	const handleFeedbackMessage = (message: Answer, cardData: GameData) => {
 		setFeedbackMessage(message);
@@ -101,22 +91,35 @@ const Jeu = () => {
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {
-		const currentCard = dataArray[cardIndex];
+		const currentCard = dataGame[cardIndex];
+		console.log();
 		if (currentCard && currentCard.attributes.ANSWER === true) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.true, currentCard);
 		}
+		insertPlayerAnswer.mutate({
+			gameId: sessionId,
+			questionId: currentCard.id,
+			answer: currentCard.attributes.ANSWER === false,
+			token,
+		});
 		setCurrentIndex(cardIndex + 1);
 	};
 
 	const onSwipeRight = (cardIndex: number) => {
-		const currentCard = dataArray[cardIndex];
+		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === false) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.true, currentCard);
 		}
+		insertPlayerAnswer.mutate({
+			gameId: sessionId,
+			questionId: currentCard.id,
+			answer: currentCard.attributes.ANSWER === true,
+			token,
+		});
 		setCurrentIndex(cardIndex + 1);
 	};
 
