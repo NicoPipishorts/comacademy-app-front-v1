@@ -5,15 +5,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import React, { useEffect, useState } from "react";
-import {
-	Image,
-	StyleSheet,
-	Switch,
-	Text,
-	TouchableOpacity,
-	View,
-} from "react-native";
-import FloatingTabBar from "../../../components/FloatingTabBar";
+import { StyleSheet, Switch, Text, View } from "react-native";
 
 // Assets
 import { startNewGameSession } from "@/api/gameNewSession";
@@ -28,7 +20,8 @@ import { useGameContext } from "@/providers/gameDataContext";
 import { GameData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
-import PlayButton from "../../../assets/imgs/BigPlayButton.png";
+import Answers from "./answers";
+import LetsPlay from "./play";
 
 const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
@@ -129,28 +122,15 @@ const LeJeu = () => {
 				</View>
 			</View>
 
-			<View style={styles.wrapperCenter}>
-				<View>
-					<Text style={styles.centerTitle}>A toi de jouer !</Text>
-				</View>
-				<View style={styles.playButtonContainer}>
-					<TouchableOpacity onPress={handlePressPlay}>
-						<Image
-							source={PlayButton}
-							resizeMode='contain'
-							style={styles.playButton}
-						/>
-					</TouchableOpacity>
-				</View>
+			{!isEnabled && (
+				<LetsPlay
+					setSelectedTab={setSelectedTab}
+					selectedTab={selectedTab}
+					handlePressPlay={handlePressPlay}
+				/>
+			)}
 
-				<View style={styles.floatingTabbarContainer}>
-					<FloatingTabBar
-						selectedTab={selectedTab}
-						setSelectedTab={setSelectedTab}
-						values={{ btn1: "Aléatoire", btn2: "Catégories" }}
-					/>
-				</View>
-			</View>
+			{isEnabled && <Answers />}
 		</View>
 	);
 };
@@ -186,40 +166,6 @@ const styles = StyleSheet.create({
 	textReponses: {
 		paddingLeft: 8,
 		fontWeight: "bold",
-	},
-	wrapperCenter: {
-		flex: 1,
-		width: "100%",
-		alignItems: "center",
-		justifyContent: "flex-start",
-		marginBottom: 83,
-		paddingTop: "35%",
-	},
-	centerTitle: {
-		fontSize: FontSizeScreenTitles,
-		fontWeight: "bold",
-		marginBottom: 30,
-	},
-	playButtonContainer: {
-		width: "100%",
-		alignItems: "center",
-	},
-	playButton: {
-		width: "60%",
-		height: undefined,
-		aspectRatio: 1,
-	},
-	floatingTabbarContainer: {
-		backgroundColor: "transparent",
-		flexDirection: "row",
-		justifyContent: "center",
-		alignItems: "center",
-		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 0,
-		elevation: 5,
-		zIndex: 1,
 	},
 });
 
