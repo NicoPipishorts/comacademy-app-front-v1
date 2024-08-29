@@ -100,6 +100,7 @@ const Jeu = () => {
 		}
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
+			userId: userId,
 			questionId: currentCard.id,
 			answer: currentCard.attributes.ANSWER === false,
 			token,
@@ -116,6 +117,7 @@ const Jeu = () => {
 		}
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
+			userId: userId,
 			questionId: currentCard.id,
 			answer: currentCard.attributes.ANSWER === true,
 			token,

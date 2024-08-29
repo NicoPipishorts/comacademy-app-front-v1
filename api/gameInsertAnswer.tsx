@@ -3,6 +3,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 export interface CreateNewGameSession {
 	gameId: number;
+	userId: number;
 	questionId: number;
 	answer: boolean;
 	token: string;
@@ -20,6 +21,7 @@ export const insertAnswer = () =>
 		return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
 			mutationFn: async ({
 				gameId,
+				userId,
 				questionId,
 				answer,
 				token,
@@ -27,6 +29,7 @@ export const insertAnswer = () =>
 				const payload = {
 					data: {
 						gameId,
+						userId,
 						questionId,
 						answer,
 					},
