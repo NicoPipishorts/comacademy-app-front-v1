@@ -79,8 +79,6 @@ const LeJeu = () => {
 					currentOrder + 1
 				);
 
-				console.log;
-
 				// Update the session data with the filtered questions
 				setSessionsId(gameSessions.data[0].id);
 				setDataGame(filteredQuestionsPool);
