@@ -1,7 +1,7 @@
 import Loader from "@/components/experience/loader";
 import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
-import useCategoriesFull from "@/hooks/useCategoriesFiull";
+import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
 import useJwtToken from "@/hooks/useJwtToken";
 import DicoDetails from "@/screens/DicoDetails";

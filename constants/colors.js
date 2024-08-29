@@ -5,6 +5,7 @@ export const colorGreen = "#8BC63F";
 export const colorOrange = "#EE7424";
 export const colorPink = "#CC398C";
 export const colorTurquoise = "#4AADA8";
+export const colorTurquoiseRGB = "12, 162, 204";
 export const colorYellow = "#FFBC09";
 export const colorWhite = "#FFF";
 export const colorGrey = "#E4E4E4";

@@ -1,0 +1,79 @@
+import FloatingTabBar from "@/components/FloatingTabBar";
+import { FontSizeScreenTitles } from "@/constants/fontsizes";
+import React, { Dispatch, SetStateAction } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import PlayButton from "../../../assets/imgs/BigPlayButton.png";
+
+interface Props {
+	handlePressPlay: () => void;
+	selectedTab: boolean;
+	setSelectedTab: Dispatch<SetStateAction<boolean>>;
+}
+
+export default function LetsPlay({
+	handlePressPlay,
+	selectedTab,
+	setSelectedTab,
+}: Props) {
+	return (
+		<View style={styles.wrapperCenter}>
+			<View>
+				<Text style={styles.centerTitle}>A toi de jouer !</Text>
+			</View>
+			<View style={styles.playButtonContainer}>
+				<TouchableOpacity onPress={handlePressPlay}>
+					<Image
+						source={PlayButton}
+						resizeMode='contain'
+						style={styles.playButton}
+					/>
+				</TouchableOpacity>
+			</View>
+
+			<View style={styles.floatingTabbarContainer}>
+				<FloatingTabBar
+					selectedTab={selectedTab}
+					setSelectedTab={setSelectedTab}
+					values={{ btn1: "Aléatoire", btn2: "Catégories" }}
+				/>
+			</View>
+		</View>
+	);
+}
+
+const styles = StyleSheet.create({
+	wrapperCenter: {
+		flex: 1,
+		width: "100%",
+		alignItems: "center",
+		justifyContent: "flex-start",
+		marginBottom: 83,
+		paddingTop: "35%",
+	},
+	centerTitle: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "bold",
+		marginBottom: 30,
+	},
+	playButtonContainer: {
+		width: "100%",
+		alignItems: "center",
+	},
+	playButton: {
+		width: "60%",
+		height: undefined,
+		aspectRatio: 1,
+	},
+	floatingTabbarContainer: {
+		backgroundColor: "transparent",
+		flexDirection: "row",
+		justifyContent: "center",
+		alignItems: "center",
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		elevation: 5,
+		zIndex: 1,
+	},
+});
