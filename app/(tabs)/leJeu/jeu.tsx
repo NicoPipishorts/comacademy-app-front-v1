@@ -83,7 +83,6 @@ const Jeu = () => {
 
 	const onSwipeLeft = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
-		console.log();
 		if (currentCard && currentCard.attributes.ANSWER === true) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		} else if (currentCard) {
