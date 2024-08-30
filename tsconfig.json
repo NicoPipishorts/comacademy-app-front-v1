@@ -42,7 +42,8 @@
 		"screen/metiers.jsx",
 		"app/playlist.jsx",
 		"app/(tabs)/metiers.jsx",
-		"screens/MetierCategories.jsx"
+		"screens/MetierCategories.jsx",
+		"components/user"
 	],
 	"exclude": [
 		"node_modules",

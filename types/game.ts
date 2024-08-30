@@ -6,7 +6,7 @@ export type GameAttributes = {
 	createdAt: string;
 	updatedAt: string;
 	publishedAt: string;
-	CATEGORIE: CategoryArray;
+	CATEGORIE: number;
 	TAG: string | null;
 	ANSWER: boolean;
 	REPONSE: string;
@@ -43,16 +43,19 @@ export type GameSession = {
 	meta: Record<string, unknown>;
 };
 
-export type GameSessionQuestions = {
-	data: {
-		id: number;
-		attributes: {
-			gameId: number;
-			questionId: number;
-			answer: boolean;
-			order: number;
-		};
+export type GameSessionQuestion = {
+	id: number;
+	attributes: {
+		gameId: number;
+		questionId: number;
+		answer: boolean;
+		order: number;
+		categorie: number; // Assuming this is part of attributes
 	};
+};
+
+export type GameSessionQuestions = {
+	data: GameSessionQuestion[]; // Updated to an array of GameSessionQuestion objects
 	meta: {
 		pagination: {
 			total: number;

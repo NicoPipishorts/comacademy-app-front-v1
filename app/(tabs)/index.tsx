@@ -7,7 +7,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useAuth } from "../../auth/AuthContext";
 import ALaUne from "../../components/ALaUne";
 
 // Custom images
@@ -25,14 +24,13 @@ import homeJouer from "../../assets/imgs/cards/home_jouer.png";
 import mesStats from "../../assets/imgs/cards/home_mes_stats.png";
 
 const HomeScreen = () => {
-	const { logout } = useAuth();
 	const navigation = useNavigation<NavigationType>();
 
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>Hello Arnaud</Text>
-				<TouchableOpacity onPress={logout}>
+				<TouchableOpacity onPress={() => navigation.navigate("user")}>
 					<Image source={avatar} style={styles.profileImage} />
 				</TouchableOpacity>
 			</View>

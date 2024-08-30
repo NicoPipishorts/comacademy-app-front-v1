@@ -68,9 +68,10 @@ const LeJeu = () => {
 				const currentOrder = currentQuestion?.meta.pagination.total;
 
 				// Filter out questions that have been answered
-				const filteredQuestionsPool = sessionQuestionsPool.slice(
-					currentOrder + 1
-				);
+				const filteredQuestionsPool =
+					currentOrder > 0
+						? sessionQuestionsPool.slice(currentOrder)
+						: sessionQuestionsPool;
 
 				// Update the session data with the filtered questions
 				setSessionsId(gameSessions.data[0].id);
