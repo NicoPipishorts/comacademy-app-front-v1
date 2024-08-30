@@ -1,7 +1,7 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 // Assets
@@ -16,35 +16,16 @@ interface CardProps {
 	cardIndex: number;
 }
 
-const Card = ({
-	onSwipeLeft,
-	onSwipeRight,
-	data,
-	catColors,
-	cardIndex,
-}: CardProps) => {
+const Card = ({ data, catColors }: CardProps) => {
 	const [firstElement, setFirstElement] = useState<number>(0);
 
-	useEffect(() => {
-		const categories: number[] = data.attributes.CATEGORIE;
+	const selectedCategory: number = data.attributes.CATEGORIE;
 
-		let selectedCategory: number;
-
-		if (categories.length > 1) {
-			selectedCategory =
-				categories[Math.floor(Math.random() * categories.length)] - 1;
-		} else if (categories.length === 1) {
-			selectedCategory = categories[0] - 1;
-		} else {
-			// Handle case where categories is empty
-			selectedCategory = 0;
-		}
-
-		setFirstElement(selectedCategory);
-	}, [data]);
-
-	const testPress = () => {
-		onSwipeRight(cardIndex);
+	const backGroundColor = () => {
+		const colorItem = catColors.data.find(
+			(color) => color.id === selectedCategory[0]
+		);
+		return `#${colorItem?.attributes.backgroundColor}`;
 	};
 
 	if (!catColors || !catColors.data[firstElement]) return null;
@@ -53,7 +34,7 @@ const Card = ({
 			<View
 				style={[
 					{
-						backgroundColor: `#${catColors.data[firstElement].attributes.backgroundColor}`,
+						backgroundColor: `${backGroundColor()}`,
 					},
 					styles.cardContainer,
 				]}>
@@ -122,7 +103,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	cardContainer: {
-		minHeight: "60%",
+		minHeight: "65%",
 		minWidth: "100%",
 		padding: 20,
 		paddingTop: 0,
@@ -161,12 +142,12 @@ const styles = StyleSheet.create({
 		fontSize: FontSizeH1,
 		color: colorWhite,
 		fontWeight: "bold",
-		marginBottom: 80,
 	},
 	containerCardIcons: {
 		width: "100%",
 		position: "absolute",
 		bottom: 20,
+		marginTop: 80,
 		flexDirection: "row",
 		justifyContent: "space-between",
 	},

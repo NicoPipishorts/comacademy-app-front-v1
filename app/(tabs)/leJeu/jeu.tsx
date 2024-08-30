@@ -83,10 +83,10 @@ const Jeu = () => {
 
 	const onSwipeLeft = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
-		if (currentCard && currentCard.attributes.ANSWER === true) {
-			handleFeedbackMessage(Answer.false, currentCard);
-		} else if (currentCard) {
+		if (currentCard && currentCard.attributes.ANSWER === false) {
 			handleFeedbackMessage(Answer.true, currentCard);
+		} else if (currentCard) {
+			handleFeedbackMessage(Answer.false, currentCard);
 		}
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
@@ -101,10 +101,10 @@ const Jeu = () => {
 
 	const onSwipeRight = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
-		if (currentCard && currentCard.attributes.ANSWER === false) {
-			handleFeedbackMessage(Answer.false, currentCard);
-		} else if (currentCard) {
+		if (currentCard && currentCard.attributes.ANSWER === true) {
 			handleFeedbackMessage(Answer.true, currentCard);
+		} else if (currentCard) {
+			handleFeedbackMessage(Answer.false, currentCard);
 		}
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
@@ -144,7 +144,7 @@ const Jeu = () => {
 				cardHorizontalMargin={30}
 				stackSize={5}
 				stackScale={5}
-				stackSeparation={20}
+				stackSeparation={24}
 				onSwiped={(cardIndex) => setCurrentIndex(cardIndex + 1)}
 			/>
 			{feedbackMessage && (

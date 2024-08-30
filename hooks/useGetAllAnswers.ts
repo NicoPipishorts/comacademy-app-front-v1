@@ -1,4 +1,3 @@
-import useJwtToken from "@/hooks/useJwtToken";
 import { GameSessionQuestions } from "@/types/game";
 import { useQuery } from "@tanstack/react-query";
 
@@ -27,13 +26,11 @@ const fetchPayload = async (
 	return data;
 };
 
-const useGetAllAnswers = (userId: number) => {
-	const { token, loading } = useJwtToken();
-
+const useGetAllAnswers = (userId: number, token: string) => {
 	return useQuery<GameSessionQuestions>({
 		queryKey: ["GameSessionQuestions", userId],
 		queryFn: () => fetchPayload(token!, userId),
-		enabled: !loading && !!token && !!userId,
+		enabled: !!token && !!userId,
 	});
 };
 

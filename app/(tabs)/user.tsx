@@ -1,3 +1,4 @@
+import Loader from "@/components/experience/loader";
 import {
 	colorBlack,
 	colorLightGrey,
@@ -7,9 +8,11 @@ import {
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
 import useGetAllAnswers from "@/hooks/useGetAllAnswers";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -18,10 +21,33 @@ import {
 } from "react-native";
 import ScreenHeaders from "../../components/ScreenHeaders";
 
-const Playlist = () => {
+export default function UserProfile() {
 	const { userId } = useUserId();
+	const { token, loading: tokenLoading } = useJwtToken();
 	const { data: categories } = useCategories();
-	const { data: answers } = useGetAllAnswers(userId);
+	const {
+		data: answers,
+		isFetching,
+		refetch,
+	} = useGetAllAnswers(userId, token); // Destructure refetch and isFetching from the hook
+	const [refreshing, setRefreshing] = useState(false);
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		refetch().finally(() => {
+			setTimeout(() => {
+				setRefreshing(false);
+			}, 2000);
+		});
+	};
+
+	useEffect(() => {
+		// Refetch data every time the component is focused or rendered,
+		// but only when the token is available and the token loading is complete
+		if (token && !tokenLoading) {
+			refetch();
+		}
+	}, [refetch, token, tokenLoading]);
 
 	const result = answers?.data.reduce((acc, current) => {
 		const { categorie, answer } = current.attributes;
@@ -45,10 +71,18 @@ const Playlist = () => {
 		return acc;
 	}, {});
 
+	if (!categories || !answers || !result) {
+		return <Loader />; // Show Loader while fetching data
+	}
+
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Mon Profil' />
-			<ScrollView showsVerticalScrollIndicator={false}>
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+				}>
 				<ScreenHeaders content='Mes Stats' />
 				<View style={styles.cardWrapper}>
 					<View>
@@ -108,7 +142,7 @@ const Playlist = () => {
 			</ScrollView>
 		</View>
 	);
-};
+}
 
 const styles = StyleSheet.create({
 	wrapper: {
@@ -173,5 +207,3 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 });
-
-export default Playlist;
