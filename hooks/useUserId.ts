@@ -1,4 +1,4 @@
-import getUserIdFromToken from "@/helpers/getUserIdFromToken";
+import getUserFromToken from "@/helpers/getUserFromToken";
 import { useEffect, useState } from "react";
 
 const useUserId = () => {
@@ -7,8 +7,8 @@ const useUserId = () => {
 
 	useEffect(() => {
 		const fetchUserId = async () => {
-			const id = await getUserIdFromToken();
-			setUserId(id);
+			const data = await getUserFromToken();
+			setUserId(data.id);
 			setLoading(false);
 		};
 

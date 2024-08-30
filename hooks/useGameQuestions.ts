@@ -30,12 +30,22 @@ const fetchGameQuestions = async (token: string) => {
 			...data,
 			data: Object.keys(data.data).reduce((acc, key) => {
 				const item = data.data[key];
-				const categories = item.attributes.CATEGORIE.split(",").map(
+
+				// Split and parse the CATEGORIE string into an array of numbers
+				let categories = item.attributes.CATEGORIE.split(",").map(
 					(cat: string) => {
 						const parsed = parseInt(cat.trim(), 10);
 						return !isNaN(parsed) ? parsed : 1;
 					}
 				);
+
+				// If there is more than one category, pick one at random
+				if (categories.length > 1) {
+					const randomIndex = Math.floor(Math.random() * categories.length);
+					categories = [categories[randomIndex]]; // Only keep the randomly chosen category
+				}
+
+				// Assign the (possibly reduced) categories array back to the transformed data
 				acc[key] = {
 					...item,
 					attributes: {
@@ -43,6 +53,7 @@ const fetchGameQuestions = async (token: string) => {
 						CATEGORIE: categories,
 					},
 				};
+
 				return acc;
 			}, {} as Record<string, GameData>),
 		};

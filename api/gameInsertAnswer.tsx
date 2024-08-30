@@ -5,6 +5,7 @@ export interface CreateNewGameSession {
 	gameId: number;
 	userId: number;
 	questionId: number;
+	categorie: number;
 	answer: boolean;
 	token: string;
 }
@@ -23,6 +24,7 @@ export const insertAnswer = () =>
 				gameId,
 				userId,
 				questionId,
+				categorie,
 				answer,
 				token,
 			}: CreateNewGameSession) => {
@@ -31,6 +33,7 @@ export const insertAnswer = () =>
 						gameId,
 						userId,
 						questionId,
+						categorie,
 						answer,
 					},
 				};
