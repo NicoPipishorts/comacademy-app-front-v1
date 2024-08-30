@@ -69,6 +69,13 @@ const _layout: React.FC = () => {
 						headerShown: false,
 					}}
 				/>
+				<Tabs.Screen
+					name='user'
+					options={{
+						tabBarLabel: "User",
+						headerShown: false,
+					}}
+				/>
 			</Tabs>
 		</TabBarVisibilityProvider>
 	);
