@@ -94,6 +94,7 @@ const Jeu = () => {
 			userId: userId,
 			questionId: currentCard.id,
 			answer: currentCard.attributes.ANSWER === false,
+			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
 		setCurrentIndex(cardIndex + 1);
@@ -111,6 +112,7 @@ const Jeu = () => {
 			userId: userId,
 			questionId: currentCard.id,
 			answer: currentCard.attributes.ANSWER === true,
+			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
 		setCurrentIndex(cardIndex + 1);

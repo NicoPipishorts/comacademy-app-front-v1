@@ -6,7 +6,7 @@ export type GameAttributes = {
 	createdAt: string;
 	updatedAt: string;
 	publishedAt: string;
-	CATEGORIE: CategoryArray;
+	CATEGORIE: number;
 	TAG: string | null;
 	ANSWER: boolean;
 	REPONSE: string;
