@@ -9,7 +9,7 @@ interface Credentials {
 
 interface LoginPayload {
 	jwt: string;
-	user: any; // Adjust the type based on your user object structure
+	user: string; // Adjust the type based on your user object structure
 }
 
 export const useLoginMutation = (
