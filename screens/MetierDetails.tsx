@@ -21,6 +21,7 @@ import { FontSize12, FontSize16, FontSizeH2 } from "../constants/fontsizes";
 import Chevron from "@/assets/imgs/icons/chevron.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
+import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
 import { MetierPayload } from "@/types/metiers";
 import { useQuery } from "@tanstack/react-query";
@@ -41,7 +42,7 @@ const EDGE_DISTANCE = 30;
 function DetailsScreen({ item, onGoBack }: Props) {
 	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-	const { data, isLoading } = useQuery<MetierPayload>({
+	const { data } = useQuery<MetierPayload>({
 		queryKey: ["metiersDetails"],
 		queryFn: () =>
 			fetch(`${apiUrl}/metiers/${item.id}`).then((res) => res.json()),
@@ -70,7 +71,9 @@ function DetailsScreen({ item, onGoBack }: Props) {
 		})
 	).current;
 
-	if (!data) return;
+	if (!data) {
+		return <Loader />;
+	}
 	return (
 		<View style={styles.wrapper} {...panResponder.panHandlers}>
 			<View style={styles.headerContainer}>

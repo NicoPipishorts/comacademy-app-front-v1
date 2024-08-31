@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 
 // Assets
-import { startNewGameSession } from "@/api/gameNewSession";
+import { StartNewGameSession } from "@/api/gameNewSession";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
 import useGameQuestions from "@/hooks/useGameQuestions";
@@ -48,7 +48,7 @@ const LeJeu = () => {
 		console.error(error);
 	};
 
-	const newGameSession = startNewGameSession(
+	const newGameSession = StartNewGameSession(
 		handleSuccessNewGameSession,
 		handleError
 	);

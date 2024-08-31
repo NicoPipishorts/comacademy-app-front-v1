@@ -1,7 +1,7 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 // Assets
@@ -17,8 +17,6 @@ interface CardProps {
 }
 
 const Card = ({ data, catColors }: CardProps) => {
-	const [firstElement, setFirstElement] = useState<number>(0);
-
 	const selectedCategory: number = data.attributes.CATEGORIE;
 
 	const backGroundColor = () => {
@@ -28,7 +26,7 @@ const Card = ({ data, catColors }: CardProps) => {
 		return `#${colorItem?.attributes.backgroundColor}`;
 	};
 
-	if (!catColors || !catColors.data[firstElement]) return null;
+	if (!catColors || !catColors.data[0]) return null;
 	return (
 		<View style={styles.cardsWrapper}>
 			<View
@@ -62,7 +60,7 @@ const Card = ({ data, catColors }: CardProps) => {
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[firstElement].attributes.smallIcon.data.attributes.url}`,
+								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[0].attributes.smallIcon.data.attributes.url}`,
 							}}
 							style={styles.catIcon}></Image>
 					</View>
