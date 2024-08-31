@@ -7,6 +7,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 // Assets
 import { CategorieColors } from "@/types/categories";
 import { GameData } from "@/types/game";
+import Loader from "../experience/loader";
 
 interface CardProps {
 	data: GameData;
@@ -17,7 +18,10 @@ interface CardProps {
 }
 
 const Card = ({ data, catColors }: CardProps) => {
-	const selectedCategory: number = data.attributes.CATEGORIE;
+	if (!catColors || !catColors.data[0]) {
+		return <Loader />;
+	}
+	const selectedCategory: number = data?.attributes.CATEGORIE;
 
 	const backGroundColor = () => {
 		const colorItem = catColors.data.find(
@@ -25,8 +29,6 @@ const Card = ({ data, catColors }: CardProps) => {
 		);
 		return `#${colorItem?.attributes.backgroundColor}`;
 	};
-
-	if (!catColors || !catColors.data[0]) return null;
 	return (
 		<View style={styles.cardsWrapper}>
 			<View

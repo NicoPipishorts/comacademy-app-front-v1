@@ -2,7 +2,6 @@ import Loader from "@/components/experience/loader";
 import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
-import useJwtToken from "@/hooks/useJwtToken";
 import { SelectedMetier } from "@/types/metiers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
@@ -20,7 +19,6 @@ const Metier = () => {
 	const [showDetails, setShowDetails] = useState<boolean>(false);
 	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
-	const { token } = useJwtToken();
 
 	const fetchMetiers = async (filterByCat: number | null) => {
 		const url = `${apiUrl}/metiers?${
@@ -45,7 +43,7 @@ const Metier = () => {
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
 		setSelectedTab(false);
-	}, [filterByCat, queryClient]);
+	}, [filterByCat, queryClient, setSelectedTab]);
 
 	if (showDetails && selectedItem) {
 		return (

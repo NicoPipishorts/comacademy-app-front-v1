@@ -3,7 +3,6 @@ import Loader from "@/components/experience/loader";
 import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import useGetLesCitations from "@/hooks/useGetLesCitations";
-import useJwtToken from "@/hooks/useJwtToken";
 import React from "react";
 import {
 	ImageBackground,
@@ -16,7 +15,6 @@ import ScreenHeaders from "../../components/ScreenHeaders";
 
 const LesCitations = () => {
 	const { data, isLoading } = useGetLesCitations();
-	const { token } = useJwtToken();
 
 	if (isLoading) {
 		return <Loader />;
