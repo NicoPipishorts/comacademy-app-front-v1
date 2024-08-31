@@ -36,7 +36,7 @@ export default function UserAccount() {
 	}, [userData]);
 
 	if (!userData) {
-		<Loader />;
+		return <Loader />;
 	}
 	return (
 		<>

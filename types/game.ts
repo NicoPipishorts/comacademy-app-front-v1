@@ -1,6 +1,3 @@
-type CategoryNumber = 1 | 2 | 3 | 4 | 5 | 6;
-type CategoryArray = CategoryNumber[];
-
 export type GameAttributes = {
 	QUESTION: string;
 	createdAt: string;

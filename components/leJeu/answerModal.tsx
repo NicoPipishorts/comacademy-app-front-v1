@@ -16,6 +16,7 @@ import { GameData } from "@/types/game";
 import React, {
 	Dispatch,
 	SetStateAction,
+	useCallback,
 	useEffect,
 	useRef,
 	useState,
@@ -54,10 +55,10 @@ const AnswerModal = ({
 	const { token } = useJwtToken();
 	const [favorite, setFavorite] = useState<boolean>(false);
 
-	const handleCloseModal = () => {
+	const handleCloseModal = useCallback(() => {
 		setIsModalVisible(false);
 		setFavorite(false);
-	};
+	}, [setIsModalVisible, setFavorite]);
 
 	const progressInterval = 100;
 	const progressIncrement = 0.01;
@@ -133,7 +134,7 @@ const AnswerModal = ({
 		}
 		// Return undefined if visible is false to ensure all code paths return a value
 		return undefined;
-	}, [visible]);
+	}, [handleCloseModal, visible]);
 
 	return (
 		<Modal
@@ -153,17 +154,14 @@ const AnswerModal = ({
 							<View style={styles.wrapperIcons}>
 								<View style={styles.containerIcons}>
 									{currentCardData.attributes.CATEGORIE !== undefined &&
-									currentCardData.attributes.CATEGORIE !== null
-										? currentCardData.attributes.CATEGORIE.map((cat) => {
-												const categoryNumber = cat;
-												return (
-													<SmallCategroieIcons
-														key={categoryNumber}
-														cats={categoryNumber}
-													/>
-												);
-										  })
-										: ""}
+									currentCardData.attributes.CATEGORIE !== null ? (
+										<SmallCategroieIcons
+											key={currentCardData.attributes.CATEGORIE}
+											cats={currentCardData.attributes.CATEGORIE}
+										/>
+									) : (
+										""
+									)}
 								</View>
 								<View style={styles.containerIcons}>
 									<Image

@@ -15,7 +15,7 @@ interface NewSessionResponse {
 }
 
 // Custom hook to add favorite question
-export const insertAnswer = () =>
+export const InsertAnswer = () =>
 	// onSuccess: (data: any) => void, //TODO
 	// onError: (error: AxiosError) => void
 	{

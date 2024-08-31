@@ -35,9 +35,7 @@ type Props = {
 const EDGE_DISTANCE = 30;
 
 function DicoDetails({ item, onGoBack }: Props) {
-	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
-	const { data, isLoading } = useDicoById(item.id);
+	const { data } = useDicoById(item.id);
 
 	const panResponder: PanResponderInstance = useRef(
 		PanResponder.create({

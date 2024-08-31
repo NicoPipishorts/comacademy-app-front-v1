@@ -1,8 +1,8 @@
 export type CategoriePayload = {
-	data: Array<{
+	data: {
 		id: number;
 		attributes: CategoriesAttributes;
-	}>;
+	}[];
 };
 
 export type CategoriesAttributes = {
@@ -59,19 +59,19 @@ export type CategoriesFormats = {
 };
 
 export type CategroiesMenu = {
-	data: Array<{
+	data: {
 		id: number;
 		Title: string;
 		url: string;
-	}>;
+	}[];
 };
 
 export type CategorieColors = {
-	data: Array<{
+	data: {
 		id: number;
 		attributes: {
 			backgroundColor: string;
 			smallIcon: CategoriesIcon;
 		};
-	}>;
+	}[];
 };
