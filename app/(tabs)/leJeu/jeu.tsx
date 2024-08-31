@@ -1,4 +1,4 @@
-import { insertAnswer } from "@/api/gameInsertAnswer";
+import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
@@ -27,7 +27,6 @@ import Swiper from "react-native-deck-swiper";
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<GameData>>(null);
 	const navigation = useNavigation<NavigationType>();
-	const [currentIndex, setCurrentIndex] = useState(0);
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
 	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 	const [currentCardData, setCurrentCardData] = useState<GameData | null>(null);
@@ -52,7 +51,7 @@ const Jeu = () => {
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
-	const insertPlayerAnswer = insertAnswer();
+	const insertPlayerAnswer = InsertAnswer();
 
 	useEffect(() => {
 		if (fqData) {
@@ -96,7 +95,6 @@ const Jeu = () => {
 			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
-		setCurrentIndex(cardIndex + 1);
 	};
 
 	const onSwipeRight = (cardIndex: number) => {
@@ -114,13 +112,12 @@ const Jeu = () => {
 			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
-		setCurrentIndex(cardIndex + 1);
 	};
 
 	const renderCard = (card: GameData, cardIndex: number) => {
 		return (
 			<Card
-				key={card.id}
+				key={card?.id}
 				catColors={catData}
 				data={card}
 				onSwipeLeft={onSwipeLeft}
@@ -145,7 +142,6 @@ const Jeu = () => {
 				stackSize={5}
 				stackScale={5}
 				stackSeparation={24}
-				onSwiped={(cardIndex) => setCurrentIndex(cardIndex + 1)}
 			/>
 			{feedbackMessage && (
 				<View

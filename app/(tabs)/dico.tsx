@@ -3,7 +3,6 @@ import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
-import useJwtToken from "@/hooks/useJwtToken";
 import DicoDetails from "@/screens/DicoDetails";
 import DicoList from "@/screens/DicoList";
 import MetierCategories from "@/screens/MetierCategories";
@@ -20,15 +19,14 @@ const Dico = () => {
 	const [showDetails, setShowDetails] = useState<boolean>(false);
 	const [selectedItem, setSelectedItem] = useState<DicoSelected | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
-	const { token } = useJwtToken();
 
-	const { data: dataDico, isLoading: isLoadingDico } = useDicoIds(filterByCat);
+	const { data: dataDico } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
 		setSelectedTab(false);
-	}, [filterByCat, queryClient]);
+	}, [filterByCat, queryClient, setSelectedTab]);
 
 	if (showDetails && selectedItem) {
 		return (

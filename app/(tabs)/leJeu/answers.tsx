@@ -18,12 +18,12 @@ export default function Answers() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
 
-	if (!userId) {
-		<Loader />;
-	}
-
 	const { data: all } = useCountAllQuestions(token);
 	const { data: answered } = useCountAnsweredQuestions(userId, token);
+
+	if (!userId) {
+		return <Loader />;
+	}
 
 	const progressBarProgressions = () => {
 		if (

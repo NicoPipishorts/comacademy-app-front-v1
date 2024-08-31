@@ -57,6 +57,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 				setIsAuthenticated(true);
 				return true;
 			} catch (error) {
+				console.log(error);
 				setIsAuthenticated(false);
 				await AsyncStorage.removeItem("jwtToken");
 				return false;
