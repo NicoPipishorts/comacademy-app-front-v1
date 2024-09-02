@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
 	},
 	containerDefintion: {
 		backgroundColor: colorWhite,
-		borderRadius: 20,
+		borderRadius: 25,
 		marginHorizontal: 20,
 		paddingHorizontal: 20,
 		paddingVertical: 30,
