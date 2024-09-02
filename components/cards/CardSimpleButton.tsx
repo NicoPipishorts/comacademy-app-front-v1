@@ -1,15 +1,19 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize16 } from "@/constants/fontsizes";
+import { FontSize22 } from "@/constants/fontsizes";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function UserResultsByCat() {
+interface Props {
+	image?: string;
+	content: string;
+	link: () => void;
+}
+
+export default function CardSimpleButton({ image, content, link }: Props) {
 	return (
 		<View style={styles.cardWrapper}>
 			<View style={styles.cardTextContainer}>
-				<Text style={styles.cardText}>
-					Découvre tes résultats selon les catégories
-				</Text>
-				<TouchableOpacity style={styles.buttonBlack}>
+				<Text style={styles.cardText}>{content}</Text>
+				<TouchableOpacity style={styles.buttonBlack} onPress={link}>
 					<Text style={styles.buttonText}>Voir</Text>
 				</TouchableOpacity>
 			</View>
@@ -32,11 +36,12 @@ const styles = StyleSheet.create({
 		display: "flex",
 		flexDirection: "row",
 		justifyContent: "space-between",
+		alignItems: "center",
 		maxWidth: "100%",
 	},
 	cardText: {
 		width: "60%",
-		fontSize: FontSize16,
+		fontSize: FontSize22,
 		fontWeight: "bold",
 		flexGrow: 1,
 	},
