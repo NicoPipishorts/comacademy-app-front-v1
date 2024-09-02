@@ -79,7 +79,9 @@ const HomeScreen = () => {
 								/>
 							</View>
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.cardsButton}>
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("user")}>
 							<View style={styles.imageContainer}>
 								<Image
 									source={mesStats}
