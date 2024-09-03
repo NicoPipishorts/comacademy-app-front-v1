@@ -1,9 +1,8 @@
 import { colorBlack, colorDarkGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import usePasswordChange from "@/hooks/usePasswordChange";
+import useChangeUserInfo from "@/hooks/useChangeUserInfo";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
 	StyleSheet,
@@ -20,39 +19,12 @@ export default function UserAccount() {
 	const { data: userData } = useGetUserInfo(userId);
 	const [formFirstName, setFormFirstName] = useState("");
 	const [formLastName, setFormLastName] = useState("");
-	const [currentPassword, setCurrentPassword] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-	const [showNewPassword, setShowNewPassword] = useState(false);
-	const [passwordConfirm, setPasswordConfirm] = useState("");
-	const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-
-	const changePassword = usePasswordChange();
-
-	const handleChangePassword = () => {
-		if (newPassword === passwordConfirm) {
-			if (newPassword !== currentPassword) {
-				changePassword.mutate({
-					currentPassword: currentPassword,
-					newPassword: passwordConfirm,
-				});
-			} else {
-				console.log("the new password is the same as the old");
-			}
-		} else {
-			console.log("the two passwords don't match");
-		}
-	};
-
-	const toggleShowPassword = (field: string) => {
-		if (field === "current") {
-			setShowCurrentPassword(!showCurrentPassword);
-		} else if (field === "new") {
-			setShowNewPassword(!showNewPassword);
-		} else if (field === "confirm") {
-			setShowPasswordConfirm(!showPasswordConfirm);
-		}
-	};
+	// const [currentPassword, setCurrentPassword] = useState("");
+	// const [newPassword, setNewPassword] = useState("");
+	// const [passwordConfirm, setPasswordConfirm] = useState("");
+	// const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+	// const [showNewPassword, setShowNewPassword] = useState(false);
+	// const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
 	useEffect(() => {
 		if (userData && userData.firstName) {
@@ -62,6 +34,42 @@ export default function UserAccount() {
 			setFormLastName(userData.lastName);
 		}
 	}, [userData]);
+
+	const changeInfo = useChangeUserInfo();
+	const handleChangeInfo = () => {
+		console.log("changing user info");
+		changeInfo.mutate({
+			userId,
+			firstName: formFirstName,
+			lastName: formLastName,
+		});
+	};
+
+	// const changePassword = usePasswordChange();
+	// const handleChangePassword = () => {
+	// 	if (newPassword === passwordConfirm) {
+	// 		if (newPassword !== currentPassword) {
+	// 			changePassword.mutate({
+	// 				currentPassword: currentPassword,
+	// 				newPassword: passwordConfirm,
+	// 			});
+	// 		} else {
+	// 			console.log("the new password is the same as the old");
+	// 		}
+	// 	} else {
+	// 		console.log("the two passwords don't match");
+	// 	}
+	// };
+
+	// const toggleShowPassword = (field: string) => {
+	// 	if (field === "current") {
+	// 		setShowCurrentPassword(!showCurrentPassword);
+	// 	} else if (field === "new") {
+	// 		setShowNewPassword(!showNewPassword);
+	// 	} else if (field === "confirm") {
+	// 		setShowPasswordConfirm(!showPasswordConfirm);
+	// 	}
+	// };
 
 	if (!userData) {
 		return <Loader />;
@@ -98,7 +106,9 @@ export default function UserAccount() {
 					</View>
 				</View>
 
-				<TouchableOpacity style={styles.buttons}>
+				<TouchableOpacity
+					style={styles.buttons}
+					onPress={() => handleChangeInfo()}>
 					<Text
 						style={{
 							color: colorWhite,
@@ -110,7 +120,7 @@ export default function UserAccount() {
 				</TouchableOpacity>
 			</View>
 
-			<View style={styles.passwordContainer}>
+			{/* <View style={styles.passwordContainer}>
 				<View style={{ paddingTop: 40, paddingBottom: 20 }}>
 					<Text style={{ fontSize: FontSize16 }}>
 						Modifie ton mot de passe.
@@ -173,7 +183,8 @@ export default function UserAccount() {
 
 				<TouchableOpacity
 					onPress={() => handleChangePassword()}
-					style={styles.buttons}>
+					style={styles.buttons}
+					disabled>
 					<Text
 						style={{
 							color: colorWhite,
@@ -183,7 +194,7 @@ export default function UserAccount() {
 						Valider
 					</Text>
 				</TouchableOpacity>
-			</View>
+			</View> */}
 		</>
 	);
 }
