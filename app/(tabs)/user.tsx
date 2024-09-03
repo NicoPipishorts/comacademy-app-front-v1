@@ -1,3 +1,4 @@
+import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import UserAccount from "@/components/user/userAccount";
@@ -15,6 +16,8 @@ import {
 	RefreshControl,
 	ScrollView,
 	StyleSheet,
+	Text,
+	TouchableOpacity,
 	View,
 } from "react-native";
 import UserStats from "../../components/user/userStats";
@@ -34,6 +37,7 @@ export default function User() {
 	const { data: answers, refetch } = useGetAllAnswers(userId, token); // Destructure refetch and isFetching from the hook
 	const [refreshing, setRefreshing] = useState(false);
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
+	const { logout } = useAuth();
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
@@ -106,6 +110,9 @@ export default function User() {
 			style={styles.wrapper}>
 			<View style={[styles.innerWrapper, { paddingBottom: dynamicPadding }]}>
 				<ScreenHeaders content={`Mon Profil ${keyboardVisible}`} />
+				<TouchableOpacity onPress={() => logout()}>
+					<Text>Logout</Text>
+				</TouchableOpacity>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={
