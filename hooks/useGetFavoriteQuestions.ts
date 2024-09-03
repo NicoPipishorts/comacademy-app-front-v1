@@ -8,7 +8,7 @@ const fetchFavoriteQuestions = async (
 ): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}?populate[questions][fields]=id`,
+			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions?filters[userId][$eq]=${userId}&populate[questions][fields]=id`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -27,7 +27,7 @@ const fetchFavoriteQuestions = async (
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching Fav Questions:", error);
 		throw error;
 	}
 };

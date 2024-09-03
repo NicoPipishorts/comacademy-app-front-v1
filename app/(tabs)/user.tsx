@@ -110,9 +110,6 @@ export default function User() {
 			style={styles.wrapper}>
 			<View style={[styles.innerWrapper, { paddingBottom: dynamicPadding }]}>
 				<ScreenHeaders content={`Mon Profil ${keyboardVisible}`} />
-				<TouchableOpacity onPress={() => logout()}>
-					<Text>Logout</Text>
-				</TouchableOpacity>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={
@@ -123,6 +120,10 @@ export default function User() {
 					<UserResultsByCat />
 
 					<UserAccount />
+
+					<TouchableOpacity onPress={() => logout()}>
+						<Text>Logout</Text>
+					</TouchableOpacity>
 				</ScrollView>
 			</View>
 		</KeyboardAvoidingView>

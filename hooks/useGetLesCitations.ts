@@ -23,7 +23,7 @@ const fetchCitations = async (token: string): Promise<any> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching Les Cistations:", error);
 		throw error;
 	}
 };
@@ -31,7 +31,7 @@ const fetchCitations = async (token: string): Promise<any> => {
 const useLesCitations = () => {
 	const { token } = useJwtToken();
 
-	return useQuery<LesCitationsPayload>({
+	return useQuery<any>({
 		queryKey: ["Citations"],
 		queryFn: () => fetchCitations(token),
 		enabled: !!token,

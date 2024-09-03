@@ -54,11 +54,12 @@ const Jeu = () => {
 	const insertPlayerAnswer = InsertAnswer();
 
 	useEffect(() => {
-		if (fqData) {
-			const initialFavQuestions = fqData.data.attributes.questions.data.map(
+		if (fqData !== undefined) {
+			const initialFavQuestions = fqData.data[0].attributes.questions.data.map(
 				(question) => question.id
 			);
 			setFavoriteQuestions(initialFavQuestions);
+		} else {
 		}
 	}, [fqData]);
 

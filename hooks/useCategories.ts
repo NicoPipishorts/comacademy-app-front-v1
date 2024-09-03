@@ -4,10 +4,10 @@ import useJwtToken from "@/hooks/useJwtToken";
 import { CategorieColors } from "@/types/categories";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCategories = async (token: string): Promise<any> => {
+const fetchCategories = async (token: string): Promise<CategorieColors> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/categories?fields[0]=backgroundColor&populate[smallIcon][fields][0]=url&sort=id:asc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/categories?fields[0]=backgroundColor&populate[smallIcon][fields][0]=url`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -26,7 +26,7 @@ const fetchCategories = async (token: string): Promise<any> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching  Categories by ID:", error);
 		throw error;
 	}
 };
