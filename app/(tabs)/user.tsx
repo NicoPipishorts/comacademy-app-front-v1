@@ -8,7 +8,15 @@ import useGetAllAnswers from "@/hooks/useGetAllAnswers";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import React, { useEffect, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import {
+	Keyboard,
+	KeyboardAvoidingView,
+	Platform,
+	RefreshControl,
+	ScrollView,
+	StyleSheet,
+	View,
+} from "react-native";
 import UserStats from "../../components/user/userStats";
 
 // Define the type for the accumulator object
@@ -25,6 +33,27 @@ export default function User() {
 	const { data: categories } = useCategories();
 	const { data: answers, refetch } = useGetAllAnswers(userId, token); // Destructure refetch and isFetching from the hook
 	const [refreshing, setRefreshing] = useState(false);
+	const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+	useEffect(() => {
+		const keyboardDidShowListener = Keyboard.addListener(
+			"keyboardDidShow",
+			() => {
+				setKeyboardVisible(true); // Set keyboardVisible to true when the keyboard is shown
+			}
+		);
+		const keyboardDidHideListener = Keyboard.addListener(
+			"keyboardDidHide",
+			() => {
+				setKeyboardVisible(false); // Set keyboardVisible to false when the keyboard is hidden
+			}
+		);
+
+		return () => {
+			keyboardDidHideListener.remove();
+			keyboardDidShowListener.remove();
+		};
+	}, []);
 
 	const onRefresh = () => {
 		setRefreshing(true);
@@ -65,29 +94,39 @@ export default function User() {
 		return acc;
 	}, {});
 
+	const dynamicPadding = keyboardVisible ? 10 : 100;
+
 	if (!categories || !answers || !result) {
 		return <Loader />; // Show Loader while fetching data
 	}
 
 	return (
-		<View style={styles.wrapper}>
-			<ScreenHeaders content='Mon Profil' />
-			<ScrollView
-				showsVerticalScrollIndicator={false}
-				refreshControl={
-					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-				}>
-				<UserStats categories={categories} result={result} />
+		<KeyboardAvoidingView
+			behavior={Platform.OS === "ios" ? "padding" : "height"}
+			style={styles.wrapper}>
+			<View style={[styles.innerWrapper, { paddingBottom: dynamicPadding }]}>
+				<ScreenHeaders content={`Mon Profil ${keyboardVisible}`} />
+				<ScrollView
+					showsVerticalScrollIndicator={false}
+					refreshControl={
+						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+					}>
+					<UserStats categories={categories} result={result} />
 
-				<UserResultsByCat />
-				<UserAccount />
-			</ScrollView>
-		</View>
+					<UserResultsByCat />
+
+					<UserAccount />
+				</ScrollView>
+			</View>
+		</KeyboardAvoidingView>
 	);
 }
 
 const styles = StyleSheet.create({
 	wrapper: {
+		flex: 1,
+	},
+	innerWrapper: {
 		flex: 1,
 		padding: 30,
 		paddingTop: 80,
