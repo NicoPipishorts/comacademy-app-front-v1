@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 113,
+		bottom: 110,
 		elevation: 5,
 		zIndex: 1,
 	},

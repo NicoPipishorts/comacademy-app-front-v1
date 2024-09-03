@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, {
 	Dispatch,
 	SetStateAction,
+	useCallback,
 	useEffect,
 	useRef,
 	useState,
@@ -41,48 +42,42 @@ const DicoList = ({
 	const [groupedData, setGroupedData] = useState<{
 		[key: string]: DicoSelected[];
 	}>({});
+	const [searchQuery, setSearchQuery] = useState(""); // State to store the search query
+	const [filteredData, setFilteredData] = useState<DicoSelected[]>([]); // State to store the filtered results
+
+	console.log(filterByCat);
 
 	useEffect(() => {
 		if (data && data.data) {
 			const mappedData = data.data
-				.map((item) => {
-					return {
-						...item.attributes,
-						id: item.id,
-					};
-				})
+				.map((item) => ({
+					...item.attributes,
+					id: item.id,
+				}))
 				.filter((item) => item.Word && item.Word !== "-"); // Filter out invalid entries
 			const grouped = groupDataByFirstLetter(mappedData, "Word");
 			setGroupedData(grouped);
+			setFilteredData(mappedData); // Initialize filtered data with all items
 		}
 	}, [data]);
 
 	const alphabet = Object.keys(groupedData).sort();
-
 	function groupDataByFirstLetter(
 		items: DicoSelected[],
 		property: keyof DicoSelected
 	) {
-		// Normalize the string and remove accents
 		const normalizeString = (str: string) =>
 			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-		// Sort items alphabetically based on the normalized property
-		items.sort((a, b) => {
-			const propA = a[property];
-			const propB = b[property];
-
-			if (typeof propA === "string" && typeof propB === "string") {
-				return normalizeString(propA).localeCompare(normalizeString(propB));
-			}
-			return 0;
-		});
 
 		const groups: { [key: string]: DicoSelected[] } = {};
 		items.forEach((item) => {
 			const propValue = item[property];
 			if (typeof propValue === "string") {
-				const letter = normalizeString(propValue).charAt(0).toUpperCase();
+				const firstChar = normalizeString(propValue).charAt(0).toUpperCase();
+
+				// Check if the first character is a letter
+				const letter = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
+
 				if (!groups[letter]) {
 					groups[letter] = [];
 				}
@@ -110,14 +105,57 @@ const DicoList = ({
 		}
 	};
 
+	const handleSearch = useCallback(
+		(query: string) => {
+			setSearchQuery(query);
+			if (query) {
+				const normalizedQuery = query
+					.normalize("NFD")
+					.replace(/[\u0300-\u036f]/g, "")
+					.toLowerCase();
+
+				const filteredResults = data.data
+					.map((item) => ({
+						id: item.id, // Ensure that id is included
+						Word: item.attributes.Word,
+						// Include any other properties that are part of DicoSelected
+					}))
+					.filter(
+						(item) =>
+							item.Word &&
+							item.Word.normalize("NFD")
+								.replace(/[\u0300-\u036f]/g, "")
+								.toLowerCase()
+								.includes(normalizedQuery)
+					);
+
+				setFilteredData(filteredResults as DicoSelected[]); // Ensure the type matches
+			} else {
+				// Reset to the original data if the search query is empty
+				setFilteredData(
+					data.data.map((item) => ({
+						id: item.id,
+						Word: item.attributes.Word,
+						// Include any other properties that are part of DicoSelected
+					}))
+				);
+			}
+		},
+		[data]
+	);
+
 	if (!data) return null;
+
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
-				<Searchbar placeholder='Rechercher' />
+				<Searchbar
+					placeholder='Rechercher'
+					onChangeText={handleSearch} // Pass the handleSearch function to the Searchbar
+				/>
 			</View>
 
-			{data.data.length <= 0 && (
+			{filteredData.length <= 0 && (
 				<View style={styles.noDataContainer}>
 					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
 					<Text>Sélectionnez une autre catégorie.</Text>
@@ -130,6 +168,7 @@ const DicoList = ({
 					style={styles.listWrapper}
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
+					{/* If search query is active, render filtered data, else render grouped data */}
 					{filterByCat && (
 						<View style={styles.filterCWrapper}>
 							<Text>Filtre: </Text>
@@ -147,36 +186,47 @@ const DicoList = ({
 							</TouchableOpacity>
 						</View>
 					)}
-
-					{alphabet.map((letter) => (
-						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
-							<Text style={styles.listHeader}>{letter}</Text>
-							{groupedData[letter]?.map((item, index) => {
-								return (
-									<Text
-										key={index}
-										style={styles.listItem}
-										onPress={() => {
-											setSelectedItem(item);
-											setShowDetails(true);
-										}}>
-										{item.Word}
-									</Text>
-								);
-							})}
-						</View>
-					))}
+					{searchQuery
+						? filteredData.map((item, index) => (
+								<Text
+									key={index}
+									style={styles.listItem}
+									onPress={() => {
+										setSelectedItem(item);
+										setShowDetails(true);
+									}}>
+									{item.Word}
+								</Text>
+						  ))
+						: alphabet.map((letter) => (
+								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
+									<Text style={styles.listHeader}>{letter}</Text>
+									{groupedData[letter]?.map((item, index) => (
+										<Text
+											key={index}
+											style={styles.listItem}
+											onPress={() => {
+												setSelectedItem(item);
+												setShowDetails(true);
+											}}>
+											{item.Word}
+										</Text>
+									))}
+								</View>
+						  ))}
 				</ScrollView>
 
-				<View style={styles.sidebar}>
-					{alphabet.map((letter) => (
-						<TouchableOpacity
-							key={letter}
-							onPress={() => scrollToSection(letter)}>
-							<Text style={styles.sidebarText}>{letter}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
+				{!searchQuery && (
+					<View style={styles.sidebar}>
+						{alphabet.map((letter) => (
+							<TouchableOpacity
+								key={letter}
+								onPress={() => scrollToSection(letter)}>
+								<Text style={styles.sidebarText}>{letter}</Text>
+							</TouchableOpacity>
+						))}
+					</View>
+				)}
 			</View>
 		</>
 	);

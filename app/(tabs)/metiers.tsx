@@ -96,16 +96,12 @@ const styles = StyleSheet.create({
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {
-		backgroundColor: "transparent",
-		flexDirection: "row",
-		justifyContent: "center",
-		alignItems: "center",
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 113,
-		elevation: 5,
-		zIndex: 1,
+		bottom: 110, // Adjust this value based on your design
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });
 

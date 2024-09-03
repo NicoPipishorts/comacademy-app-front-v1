@@ -2,10 +2,10 @@ import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, {
 	Dispatch,
 	SetStateAction,
+	useCallback,
 	useEffect,
 	useRef,
 	useState,
@@ -41,31 +41,30 @@ const MetierList = ({
 	const [groupedData, setGroupedData] = useState<{
 		[key: string]: SelectedMetier[];
 	}>({});
+	const [searchQuery, setSearchQuery] = useState(""); // State to store the search query
+	const [filteredData, setFilteredData] = useState<SelectedMetier[]>([]); // State to store the filtered results
 
 	useEffect(() => {
 		if (data && data.data) {
-			const mappedData = data.data.map((item) => {
-				return {
-					...item.attributes,
-					id: item.id,
-				};
-			});
+			const mappedData = data.data.map((item) => ({
+				...item.attributes,
+				id: item.id,
+			}));
 			const grouped = groupDataByFirstLetter(mappedData, "METIER");
 			setGroupedData(grouped);
+			setFilteredData(mappedData); // Initialize filtered data with all items
 		}
 	}, [data]);
 
-	const alphabet = Object.keys(groupedData).sort();
+	const alphabet = ["#", ...Object.keys(groupedData).sort()];
 
 	function groupDataByFirstLetter(
 		items: SelectedMetier[],
 		property: keyof SelectedMetier
 	) {
-		// Normalize the string and remove accents
 		const normalizeString = (str: string) =>
 			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-		// Sort items alphabetically based on the normalized property
 		items.sort((a, b) => {
 			const propA = a[property];
 			const propB = b[property];
@@ -80,7 +79,11 @@ const MetierList = ({
 		items.forEach((item) => {
 			const propValue = item[property];
 			if (typeof propValue === "string") {
-				const letter = normalizeString(propValue).charAt(0).toUpperCase();
+				const firstChar = normalizeString(propValue).charAt(0).toUpperCase();
+
+				// Group numbers and special characters under '#'
+				const letter = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
+
 				if (!groups[letter]) {
 					groups[letter] = [];
 				}
@@ -108,14 +111,56 @@ const MetierList = ({
 		}
 	};
 
+	const handleSearch = useCallback(
+		(query: string) => {
+			setSearchQuery(query);
+			if (query) {
+				const normalizedQuery = query
+					.normalize("NFD")
+					.replace(/[\u0300-\u036f]/g, "")
+					.toLowerCase();
+
+				const filteredResults = data.data
+					.map((item) => ({
+						id: item.id, // Ensure that id is included
+						METIER: item.attributes.METIER,
+						// Include any other properties that are part of SelectedMetier
+					}))
+					.filter(
+						(item) =>
+							item.METIER &&
+							item.METIER.normalize("NFD")
+								.replace(/[\u0300-\u036f]/g, "")
+								.toLowerCase()
+								.includes(normalizedQuery)
+					);
+
+				setFilteredData(filteredResults as SelectedMetier[]); // Ensure the type matches
+			} else {
+				// Reset to the original data if the search query is empty
+				setFilteredData(
+					data.data.map((item) => ({
+						id: item.id,
+						METIER: item.attributes.METIER,
+						// Include any other properties that are part of SelectedMetier
+					}))
+				);
+			}
+		},
+		[data]
+	);
+
 	if (!data) return null;
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
-				<Searchbar placeholder='Rechercher' />
+				<Searchbar
+					placeholder='Rechercher'
+					onChangeText={handleSearch} // Pass the handleSearch function to the Searchbar
+				/>
 			</View>
 
-			{data.data.length <= 0 && (
+			{filteredData.length <= 0 && (
 				<View style={styles.noDataContainer}>
 					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
 					<Text>Sélectionnez une autre catégorie.</Text>
@@ -128,53 +173,48 @@ const MetierList = ({
 					style={styles.listWrapper}
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
-					{filterByCat && (
-						<View style={styles.filterCWrapper}>
-							<Text>Filtre: </Text>
-							<TouchableOpacity
-								style={styles.filterContainer}
-								onPress={() => setFilterByCat(null)}>
-								<Text style={styles.filterText}>
-									{categories.data[filterByCat]?.attributes.Title}
+					{/* If search query is active, render filtered data, else render grouped data */}
+					{searchQuery
+						? filteredData.map((item, index) => (
+								<Text
+									key={index}
+									style={styles.listItem}
+									onPress={() => {
+										setSelectedItem(item);
+										setShowDetails(true);
+									}}>
+									{item.METIER}
 								</Text>
-								<MaterialCommunityIcons
-									name='close-circle-outline'
-									size={24}
-									color={colorBlack}
-								/>
-							</TouchableOpacity>
-						</View>
-					)}
-
-					{alphabet.map((letter) => (
-						<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
-							<Text style={styles.listHeader}>{letter}</Text>
-							{groupedData[letter]?.map((item, index) => {
-								return (
-									<Text
-										key={index}
-										style={styles.listItem}
-										onPress={() => {
-											setSelectedItem(item);
-											setShowDetails(true);
-										}}>
-										{item.METIER}
-									</Text>
-								);
-							})}
-						</View>
-					))}
+						  ))
+						: alphabet.map((letter) => (
+								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
+									<Text style={styles.listHeader}>{letter}</Text>
+									{groupedData[letter]?.map((item, index) => (
+										<Text
+											key={index}
+											style={styles.listItem}
+											onPress={() => {
+												setSelectedItem(item);
+												setShowDetails(true);
+											}}>
+											{item.METIER}
+										</Text>
+									))}
+								</View>
+						  ))}
 				</ScrollView>
 
-				<View style={styles.sidebar}>
-					{alphabet.map((letter) => (
-						<TouchableOpacity
-							key={letter}
-							onPress={() => scrollToSection(letter)}>
-							<Text style={styles.sidebarText}>{letter}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
+				{!searchQuery && (
+					<View style={styles.sidebar}>
+						{alphabet.map((letter) => (
+							<TouchableOpacity
+								key={letter}
+								onPress={() => scrollToSection(letter)}>
+								<Text style={styles.sidebarText}>{letter}</Text>
+							</TouchableOpacity>
+						))}
+					</View>
+				)}
 			</View>
 		</>
 	);
