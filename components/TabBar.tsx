@@ -33,7 +33,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 	const customLabels: { [key: string]: string } = {
 		leJeu: "Le Jeu",
 		metiers: "Métiers",
-		dico: "Dictionnaire",
+		dico: "Dico",
 		playlists: "Playlists",
 		index: "Accueil",
 	};
