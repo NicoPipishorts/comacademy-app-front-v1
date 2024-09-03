@@ -1,11 +1,11 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import { DicoLists, DicoPayload } from "@/types/dico";
+import { MetierPayload, MetiersList } from "@/types/metiers";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchDicoById = async (token: string, id: number): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos/${id}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/metiers/${id}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -24,31 +24,31 @@ const fetchDicoById = async (token: string, id: number): Promise<any> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching Dico by Id:", error);
+		console.error("Error fetching Metier by ID:", error);
 		throw error;
 	}
 };
 
-const useDicoById = (id: number) => {
+const useGetMetierById = (id: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<DicoPayload>({
-		queryKey: ["Dico"],
+	return useQuery<MetierPayload>({
+		queryKey: ["Metier"],
 		queryFn: () => fetchDicoById(token, id),
 		enabled: !!token,
 	});
 };
 
-const fetchDicoIds = async (
+const fetchMetiers = async (
 	token: string,
 	filterByCat: number | null
 ): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos?${
+			`${process.env.EXPO_PUBLIC_API_URL}/metiers?${
 				filterByCat === null
-					? "fields[0]=Word&_fields=id,Word&pagination[limit]=2500"
-					: `fields[0]=Word&_fields=id,Word&pagination[limit]=2500&filters[Categories][$contains]=${filterByCat}`
+					? "fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500"
+					: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[CATEGORIE][$contains]=${filterByCat}`
 			}`,
 			{
 				headers: {
@@ -68,19 +68,19 @@ const fetchDicoIds = async (
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching Dicos:", error);
+		console.error("Error fetching Metiers:", error);
 		throw error;
 	}
 };
 
-const useDicoIds = (filterByCat: number | null) => {
+const useGetMetiers = (filterByCat: number | null) => {
 	const { token } = useJwtToken();
 
-	return useQuery<DicoLists>({
-		queryKey: ["DicoIds", filterByCat],
-		queryFn: () => fetchDicoIds(token, filterByCat),
+	return useQuery<MetiersList>({
+		queryKey: ["metiersList", filterByCat],
+		queryFn: () => fetchMetiers(token, filterByCat),
 		enabled: !!token,
 	});
 };
 
-export { useDicoById, useDicoIds };
+export { useGetMetierById, useGetMetiers };

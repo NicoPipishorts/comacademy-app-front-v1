@@ -13,7 +13,7 @@ type Props = {
 	dataCategory: CategoriePayload;
 };
 
-const MetierCategories = ({ setFilterByCat, dataCategory }: Props) => {
+const CategoriesCards = ({ setFilterByCat, dataCategory }: Props) => {
 	return (
 		<>
 			<View style={styles.cardContainer}>
@@ -62,6 +62,14 @@ const styles = StyleSheet.create({
 		justifyContent: "flex-start",
 		borderRadius: 10,
 		padding: 5,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 6,
+		elevation: 5,
 	},
 	icon: {
 		width: 55,
@@ -76,4 +84,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default MetierCategories;
+export default CategoriesCards;

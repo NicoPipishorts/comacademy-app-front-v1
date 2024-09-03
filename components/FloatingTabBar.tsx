@@ -8,7 +8,7 @@ import { FontSizeH4 } from "@/constants/fontsizes";
 import React, { Dispatch, SetStateAction } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-type Prpos = {
+type Props = {
 	selectedTab?: boolean;
 	setSelectedTab: Dispatch<SetStateAction<boolean>>;
 	values: {
@@ -17,7 +17,7 @@ type Prpos = {
 	};
 };
 
-const FloatingTabBar = ({ selectedTab, setSelectedTab, values }: Prpos) => {
+const FloatingTabBar = ({ selectedTab, setSelectedTab, values }: Props) => {
 	return (
 		<View style={styles.container}>
 			<TouchableOpacity
@@ -51,9 +51,9 @@ const styles = StyleSheet.create({
 			height: 2,
 		},
 		shadowOpacity: 0.35,
-		shadowRadius: 13,
+		shadowRadius: 10,
 		elevation: 5,
-		zIndex: 1,
+		zIndex: 1000, // High zIndex to ensure it stays on top
 	},
 	buttonWhite: {
 		paddingHorizontal: 20,

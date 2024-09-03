@@ -3,7 +3,7 @@ import dico from "@/assets/imgs/icons/dico.png";
 import le_jeu from "@/assets/imgs/icons/le_jeu.png";
 import metiers from "@/assets/imgs/icons/metiers.png";
 import playlists from "@/assets/imgs/icons/playlists.png";
-import { colorBlack, primaryBackground } from "@/constants/colors";
+import { colorBlack } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		width: "100%",
 		alignItems: "center",
-		backgroundColor: primaryBackground,
+		// backgroundColor: primaryBackground,
 	},
 	tabbar: {
 		flexDirection: "row",

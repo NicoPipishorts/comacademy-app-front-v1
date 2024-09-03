@@ -5,9 +5,10 @@ import { StyleSheet, TextInput, View } from "react-native";
 
 type Props = {
 	placeholder: string;
+	onChangeText: (text: string) => void; // Update the type to accept a string argument
 };
 
-const Searchbar = ({ placeholder }: Props) => {
+const Searchbar = ({ placeholder, onChangeText }: Props) => {
 	return (
 		<View style={styles.container}>
 			<FontAwesome5 name='search' size={20} color={colorDarkGrey} />
@@ -15,6 +16,7 @@ const Searchbar = ({ placeholder }: Props) => {
 				style={styles.input}
 				placeholder={placeholder}
 				clearButtonMode='always'
+				onChangeText={onChangeText} // Pass the function directly
 			/>
 		</View>
 	);

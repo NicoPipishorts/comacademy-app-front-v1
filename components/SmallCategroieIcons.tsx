@@ -4,14 +4,6 @@ import Cat3 from "@/assets/imgs/icons/cat_3.png";
 import Cat4 from "@/assets/imgs/icons/cat_4.png";
 import Cat5 from "@/assets/imgs/icons/cat_5.png";
 import Cat6 from "@/assets/imgs/icons/cat_6.png";
-import {
-	colorBlue,
-	colorGreen,
-	colorOrange,
-	colorPurple,
-	colorTurquoise,
-	colorYellow,
-} from "@/constants/colors";
 import { Image, ImageStyle, StyleSheet } from "react-native";
 
 type SmallCategroieIconsProps = {
@@ -26,7 +18,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 					<Image
 						source={Cat1}
 						style={[
-							{ backgroundColor: colorYellow },
+							{ backgroundColor: "#FFBC09" },
 							styles.catIcons as ImageStyle,
 						]}
 						resizeMode='contain'
@@ -37,7 +29,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 					<Image
 						source={Cat2}
 						style={[
-							{ backgroundColor: colorOrange },
+							{ backgroundColor: "#EE7424" },
 							styles.catIcons as ImageStyle,
 						]}
 						resizeMode='contain'
@@ -48,7 +40,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 					<Image
 						source={Cat3}
 						style={[
-							{ backgroundColor: colorBlue },
+							{ backgroundColor: "#1B75BB" },
 							styles.catIcons as ImageStyle,
 						]}
 						resizeMode='contain'
@@ -59,7 +51,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 					<Image
 						source={Cat4}
 						style={[
-							{ backgroundColor: colorTurquoise },
+							{ backgroundColor: "#CC398C" },
 							styles.catIcons as ImageStyle,
 						]}
 						resizeMode='contain'
@@ -70,7 +62,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 					<Image
 						source={Cat5}
 						style={[
-							{ backgroundColor: colorGreen },
+							{ backgroundColor: "#4AADA8" },
 							styles.catIcons as ImageStyle,
 						]}
 						resizeMode='contain'
@@ -81,7 +73,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 					<Image
 						source={Cat6}
 						style={[
-							{ backgroundColor: colorPurple },
+							{ backgroundColor: "#8BC63F" },
 							styles.catIcons as ImageStyle,
 						]}
 						resizeMode='contain'
