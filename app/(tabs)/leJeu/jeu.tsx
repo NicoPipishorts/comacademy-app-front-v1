@@ -1,18 +1,14 @@
+import { FinishGameSession } from "@/api/finishSession";
 import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
-import {
-	colorGreen,
-	colorPink,
-	colorWhite,
-	colorYellow,
-	primaryBackground,
-} from "@/constants/colors";
+import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useGetGameScore from "@/hooks/useGetScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -34,7 +30,14 @@ const Jeu = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
-	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
+	const {
+		dataGame,
+		setDataGame,
+		sessionId,
+		setSessionsId,
+		questionsLeft,
+		setQuestionsLeft,
+	} = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
@@ -48,10 +51,40 @@ const Jeu = () => {
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
 	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
+	useEffect(() => {
+		setQuestionsLeft(dataGame?.length);
+	}, [dataGame, setQuestionsLeft]);
+
+	const handleError = (error: any) => {
+		console.error(error);
+	};
+
+	const finishGameSession = FinishGameSession(handleError);
+
+	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
 	const insertPlayerAnswer = InsertAnswer();
+
+	useEffect(() => {
+		if (gameScore && token && sessionId) {
+			console.log(gameScore);
+			// finishGameSession.mutate({
+			// 	score: gameScore.percentage,
+			// 	token,
+			// 	sessionId,
+			// });
+		}
+	}, [sessionId, token, gameScore, finishGameSession]);
+
+	const handleFinishGame = () => {
+		finishGameSession.mutate({
+			score: gameScore.percentage,
+			token,
+			sessionId,
+		});
+	};
 
 	useEffect(() => {
 		if (fqData !== undefined) {
@@ -71,7 +104,6 @@ const Jeu = () => {
 	// Map dataGame to the cards array
 
 	const cards = dataGame;
-
 	const handleFeedbackMessage = (message: Answer, cardData: GameData) => {
 		setFeedbackMessage(message);
 		setCurrentCardData(cardData);
@@ -88,6 +120,7 @@ const Jeu = () => {
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		}
+		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
 			userId: userId,
@@ -105,6 +138,7 @@ const Jeu = () => {
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		}
+		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
 			userId: userId,
@@ -130,32 +164,28 @@ const Jeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			<Swiper
-				ref={swiperRef}
-				cards={cards}
-				renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
-				verticalSwipe={false}
-				onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
-				onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
-				backgroundColor={"transparent"}
-				cardVerticalMargin={120}
-				cardHorizontalMargin={30}
-				stackSize={5}
-				stackScale={5}
-				stackSeparation={24}
-			/>
-			{feedbackMessage && (
-				<View
-					style={[
-						{
-							backgroundColor: `${
-								feedbackMessage === Answer.true ? colorGreen : colorPink
-							}`,
-						},
-						styles.feedbackContainer,
-					]}>
-					<Text style={styles.feedbackText}>{feedbackMessage}</Text>
+			{!isModalVisible && questionsLeft <= 0 && (
+				<View>
+					<Text>Finished the game</Text>
 				</View>
+			)}
+			{questionsLeft > 0 && (
+				<>
+					<Swiper
+						ref={swiperRef}
+						cards={cards}
+						renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
+						verticalSwipe={false}
+						onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
+						onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
+						backgroundColor={"transparent"}
+						cardVerticalMargin={120}
+						cardHorizontalMargin={30}
+						stackSize={5}
+						stackScale={5}
+						stackSeparation={24}
+					/>
+				</>
 			)}
 			<AnswerModal
 				visible={isModalVisible}
@@ -166,9 +196,19 @@ const Jeu = () => {
 				setFavoriteQuestions={setFavoriteQuestions}
 			/>
 			<View style={styles.containerBackButton}>
-				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-					<Text style={styles.textBackButton}>Quitter</Text>
-				</TouchableOpacity>
+				{questionsLeft <= 0 && (
+					<TouchableOpacity
+						onPress={handleFinishGame}
+						style={styles.backButton}>
+						<Text style={styles.textBackButton}>Finir</Text>
+					</TouchableOpacity>
+				)}
+
+				{questionsLeft > 0 && (
+					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+						<Text style={styles.textBackButton}>Quitter</Text>
+					</TouchableOpacity>
+				)}
 			</View>
 		</View>
 	);

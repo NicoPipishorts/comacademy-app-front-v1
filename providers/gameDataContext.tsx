@@ -12,6 +12,8 @@ interface GameContextType {
 	setSessionsId: React.Dispatch<React.SetStateAction<number>>;
 	dataGame: GameData[];
 	setDataGame: React.Dispatch<React.SetStateAction<GameData[]>>;
+	questionsLeft: number;
+	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // Create the context
@@ -21,10 +23,18 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [dataGame, setDataGame] = useState<GameData[]>(null);
 	const [sessionId, setSessionsId] = useState<number>(null);
+	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
 
 	return (
 		<GameContext.Provider
-			value={{ sessionId, setSessionsId, dataGame, setDataGame }}>
+			value={{
+				sessionId,
+				setSessionsId,
+				dataGame,
+				setDataGame,
+				questionsLeft,
+				setQuestionsLeft,
+			}}>
 			{children}
 		</GameContext.Provider>
 	);

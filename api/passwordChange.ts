@@ -1,7 +1,7 @@
 // src/hooks/usePasswordChange.ts
 import { useAuth } from "@/auth/AuthContext";
+import useJwtToken from "@/hooks/useJwtToken";
 import { useMutation } from "@tanstack/react-query";
-import useJwtToken from "./useJwtToken";
 
 interface PasswordChangeVariables {
 	currentPassword: string;

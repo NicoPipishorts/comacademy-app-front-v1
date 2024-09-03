@@ -1,5 +1,6 @@
 import {
 	colorBlack,
+	colorDarkGrey,
 	colorWhite,
 	colorYellow,
 	primaryBackground,
@@ -24,12 +25,12 @@ import Answers from "./answers";
 import LetsPlay from "./play";
 
 const LeJeu = () => {
+	const navigation = useNavigation<NavigationType>();
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
 
-	const navigation = useNavigation<NavigationType>();
 	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
@@ -105,34 +106,36 @@ const LeJeu = () => {
 	};
 
 	return (
-		<View style={styles.wrapper}>
-			<View style={styles.containerHeader}>
-				<View style={styles.header}>
-					<Text style={styles.headerMainText}>Le Jeu</Text>
+		<>
+			<View style={styles.wrapper}>
+				<View style={styles.containerHeader}>
+					<View style={styles.header}>
+						<Text style={styles.headerMainText}>Le Jeu</Text>
+					</View>
+					<View style={styles.containerSwitch}>
+						<Text style={styles.textJouer}>Jouer</Text>
+						<Switch
+							trackColor={{ false: colorBlack, true: colorYellow }}
+							ios_backgroundColor={colorBlack}
+							thumbColor={colorWhite}
+							onValueChange={toggleSwitch}
+							value={isEnabled}
+						/>
+						<Text style={styles.textReponses}>Réponses</Text>
+					</View>
 				</View>
-				<View style={styles.containerSwitch}>
-					<Text style={styles.textJouer}>Jouer</Text>
-					<Switch
-						trackColor={{ false: colorBlack, true: colorYellow }}
-						ios_backgroundColor={colorBlack}
-						thumbColor={colorWhite}
-						onValueChange={toggleSwitch}
-						value={isEnabled}
+
+				{!isEnabled && (
+					<LetsPlay
+						setSelectedTab={setSelectedTab}
+						selectedTab={selectedTab}
+						handlePressPlay={handlePressPlay}
 					/>
-					<Text style={styles.textReponses}>Réponses</Text>
-				</View>
+				)}
+
+				{isEnabled && <Answers />}
 			</View>
-
-			{!isEnabled && (
-				<LetsPlay
-					setSelectedTab={setSelectedTab}
-					selectedTab={selectedTab}
-					handlePressPlay={handlePressPlay}
-				/>
-			)}
-
-			{isEnabled && <Answers />}
-		</View>
+		</>
 	);
 };
 
@@ -166,6 +169,18 @@ const styles = StyleSheet.create({
 	},
 	textReponses: {
 		paddingLeft: 8,
+		fontWeight: "bold",
+	},
+	finishedModal: {
+		position: "absolute",
+		backgroundColor: colorDarkGrey,
+		width: "90%",
+		height: "90%",
+		zIndex: 20,
+	},
+	feedbackText: {
+		fontSize: 100,
+		color: colorWhite,
 		fontWeight: "bold",
 	},
 });
