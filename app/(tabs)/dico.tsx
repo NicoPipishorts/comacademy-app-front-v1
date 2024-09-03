@@ -3,9 +3,9 @@ import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
+import CategoriesCards from "@/screens/CategoriesCards";
 import DicoDetails from "@/screens/DicoDetails";
 import DicoList from "@/screens/DicoList";
-import MetierCategories from "@/screens/MetierCategories";
 import { DicoSelected } from "@/types/dico";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
@@ -20,7 +20,7 @@ const Dico = () => {
 	const [selectedItem, setSelectedItem] = useState<DicoSelected | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const { data: dataDico } = useDicoIds(filterByCat);
+	const { data: dataDico, isLoading: isLoadingData } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
 	useEffect(() => {
@@ -32,6 +32,10 @@ const Dico = () => {
 		return (
 			<DicoDetails item={selectedItem} onGoBack={() => setShowDetails(false)} />
 		);
+	}
+
+	if (!dataDico && isLoadingData) {
+		return <Loader />;
 	}
 	return (
 		<View style={styles.wrapper}>
@@ -50,7 +54,7 @@ const Dico = () => {
 			)}
 
 			{selectedTab && (
-				<MetierCategories
+				<CategoriesCards
 					setFilterByCat={setFilterByCat}
 					dataCategory={dataCat}
 				/>
@@ -82,7 +86,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 113,
+		bottom: 110,
 		elevation: 5,
 		zIndex: 1,
 	},

@@ -42,7 +42,7 @@
 		"screen/metiers.jsx",
 		"app/playlist.jsx",
 		"app/(tabs)/metiers.jsx",
-		"screens/MetierCategories.jsx",
+		"screens/CategoriesCards.jsx",
 		"components/user"
 	],
 	"exclude": [

@@ -96,7 +96,6 @@ const LeJeu = () => {
 		setDataGame, // Added this dependency
 	]);
 
-	console.log(isCurrentSession);
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });

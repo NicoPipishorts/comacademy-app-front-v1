@@ -23,8 +23,7 @@ import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
-import { MetierPayload } from "@/types/metiers";
-import { useQuery } from "@tanstack/react-query";
+import { useGetMetierById } from "@/hooks/useGetMetiers";
 import GradientContainer from "../components/GradientContainer";
 import UnorderedList from "../components/UnorderedList";
 import { colorWhite } from "../constants/colors";
@@ -40,13 +39,7 @@ type Props = {
 const EDGE_DISTANCE = 30;
 
 function DetailsScreen({ item, onGoBack }: Props) {
-	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-
-	const { data } = useQuery<MetierPayload>({
-		queryKey: ["metiersDetails"],
-		queryFn: () =>
-			fetch(`${apiUrl}/metiers/${item.id}`).then((res) => res.json()),
-	});
+	const { data } = useGetMetierById(item.id);
 
 	const panResponder: PanResponderInstance = useRef(
 		PanResponder.create({
