@@ -1,3 +1,4 @@
+import { GameScore } from "@/hooks/useGetScore";
 import { GameData } from "@/types/game";
 import React, {
 	createContext,
@@ -14,6 +15,8 @@ interface GameContextType {
 	setDataGame: React.Dispatch<React.SetStateAction<GameData[]>>;
 	questionsLeft: number;
 	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
+	score: GameScore;
+	setScore: React.Dispatch<React.SetStateAction<GameScore>>;
 }
 
 // Create the context
@@ -24,6 +27,7 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [dataGame, setDataGame] = useState<GameData[]>(null);
 	const [sessionId, setSessionsId] = useState<number>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
+	const [score, setScore] = useState<GameScore | null>(null);
 
 	return (
 		<GameContext.Provider
@@ -34,6 +38,8 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 				setDataGame,
 				questionsLeft,
 				setQuestionsLeft,
+				score,
+				setScore,
 			}}>
 			{children}
 		</GameContext.Provider>

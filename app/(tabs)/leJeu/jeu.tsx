@@ -19,6 +19,7 @@ import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
+import FinishedSession from "./finished";
 
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<GameData>>(null);
@@ -37,6 +38,7 @@ const Jeu = () => {
 		setSessionsId,
 		questionsLeft,
 		setQuestionsLeft,
+		setScore,
 	} = useGameContext();
 
 	const handlePress = () => {
@@ -65,19 +67,13 @@ const Jeu = () => {
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
-	const insertPlayerAnswer = InsertAnswer();
-
 	useEffect(() => {
-		if (gameScore && token && sessionId) {
-			console.log(gameScore);
-			// finishGameSession.mutate({
-			// 	score: gameScore.percentage,
-			// 	token,
-			// 	sessionId,
-			// });
+		if (gameScore || gameScore !== undefined) {
+			setScore(gameScore);
 		}
-	}, [sessionId, token, gameScore, finishGameSession]);
+	});
 
+	const insertPlayerAnswer = InsertAnswer();
 	const handleFinishGame = () => {
 		finishGameSession.mutate({
 			score: gameScore.percentage,
@@ -164,11 +160,7 @@ const Jeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			{!isModalVisible && questionsLeft <= 0 && (
-				<View>
-					<Text>Finished the game</Text>
-				</View>
-			)}
+			{!isModalVisible && questionsLeft <= 0 && <FinishedSession />}
 			{questionsLeft > 0 && (
 				<>
 					<Swiper
