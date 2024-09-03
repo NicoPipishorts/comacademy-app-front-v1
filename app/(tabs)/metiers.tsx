@@ -2,43 +2,26 @@ import Loader from "@/components/experience/loader";
 import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
+import { useGetMetiers } from "@/hooks/useGetMetiers";
 import { SelectedMetier } from "@/types/metiers";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import FloatingTabBar from "../../components/FloatingTabBar";
 import ScreenHeaders from "../../components/ScreenHeaders";
-import MetierCategories from "../../screens/MetierCategories";
+import CategoriesCards from "../../screens/CategoriesCards";
 import MetierDetails from "../../screens/MetierDetails";
 import MetierList from "../../screens/MetierList";
 
 const Metier = () => {
-	const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 	const queryClient = useQueryClient();
 	const { selectedTab, setSelectedTab } = useTab();
 	const [showDetails, setShowDetails] = useState<boolean>(false);
 	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const fetchMetiers = async (filterByCat: number | null) => {
-		const url = `${apiUrl}/metiers?${
-			filterByCat === null
-				? "fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500"
-				: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[CATEGORIE][$contains]=${filterByCat}`
-		}`;
-		const response = await fetch(url);
-		if (!response.ok) {
-			throw new Error("Network response was not ok");
-		}
-		return response.json();
-	};
-
-	const { data: dataMetier } = useQuery({
-		queryKey: ["metiersList"],
-		queryFn: () => fetchMetiers(filterByCat),
-	});
-
-	const { data: dataCategory, isLoading: isLoading } = useCategoriesFull();
+	const { data: dataMetier, isLoading } = useGetMetiers(filterByCat);
+	const { data: dataCategory } = useCategoriesFull();
 
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
@@ -54,12 +37,14 @@ const Metier = () => {
 		);
 	}
 
+	if (isLoading && !dataMetier && !dataCategory) {
+		return <Loader />;
+	}
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Métiers' />
-			{isLoading && <Loader />}
 
-			{!selectedTab && !isLoading && (
+			{!selectedTab && (
 				<MetierList
 					data={dataMetier}
 					categories={dataCategory}
@@ -71,7 +56,7 @@ const Metier = () => {
 			)}
 
 			{selectedTab && (
-				<MetierCategories
+				<CategoriesCards
 					setFilterByCat={setFilterByCat}
 					dataCategory={dataCategory}
 				/>

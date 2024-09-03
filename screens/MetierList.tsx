@@ -1,8 +1,8 @@
+import FilteredByCat from "@/components/filters/filteredByCat";
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, {
 	Dispatch,
 	SetStateAction,
@@ -57,8 +57,7 @@ const MetierList = ({
 		}
 	}, [data]);
 
-	const alphabet = ["#", ...Object.keys(groupedData).sort()];
-
+	const alphabet = Object.keys(groupedData).sort();
 	function groupDataByFirstLetter(
 		items: SelectedMetier[],
 		property: keyof SelectedMetier
@@ -175,21 +174,11 @@ const MetierList = ({
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
 					{filterByCat && (
-						<View style={styles.filterCWrapper}>
-							<Text>Filtre: </Text>
-							<TouchableOpacity
-								style={styles.filterContainer}
-								onPress={() => setFilterByCat(null)}>
-								<Text style={styles.filterText}>
-									{categories.data[filterByCat]?.attributes.Title}
-								</Text>
-								<MaterialCommunityIcons
-									name='close-circle-outline'
-									size={24}
-									color={colorBlack}
-								/>
-							</TouchableOpacity>
-						</View>
+						<FilteredByCat
+							categories={categories}
+							filterByCat={filterByCat}
+							setFilterByCat={setFilterByCat}
+						/>
 					)}
 
 					{/* If search query is active, render filtered data, else render grouped data */}

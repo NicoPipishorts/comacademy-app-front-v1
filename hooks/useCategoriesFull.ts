@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchCategories = async (token: string): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*`,
+			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*&sort=id:asc`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

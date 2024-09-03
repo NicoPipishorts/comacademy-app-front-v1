@@ -1,8 +1,9 @@
-import { colorBlack, colorGrey } from "@/constants/colors";
+import Loader from "@/components/experience/loader";
+import FilteredByCat from "@/components/filters/filteredByCat";
+import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
 import { DicoLists, DicoSelected } from "@/types/dico";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, {
 	Dispatch,
 	SetStateAction,
@@ -44,8 +45,6 @@ const DicoList = ({
 	}>({});
 	const [searchQuery, setSearchQuery] = useState(""); // State to store the search query
 	const [filteredData, setFilteredData] = useState<DicoSelected[]>([]); // State to store the filtered results
-
-	console.log(filterByCat);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -144,7 +143,9 @@ const DicoList = ({
 		[data]
 	);
 
-	if (!data) return null;
+	if (!data) {
+		return <Loader />;
+	}
 
 	return (
 		<>
@@ -168,24 +169,15 @@ const DicoList = ({
 					style={styles.listWrapper}
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
-					{/* If search query is active, render filtered data, else render grouped data */}
 					{filterByCat && (
-						<View style={styles.filterCWrapper}>
-							<Text>Filtre: </Text>
-							<TouchableOpacity
-								style={styles.filterContainer}
-								onPress={() => setFilterByCat(null)}>
-								<Text style={styles.filterText}>
-									{categories.data[filterByCat]?.attributes.Title}
-								</Text>
-								<MaterialCommunityIcons
-									name='close-circle-outline'
-									size={24}
-									color={colorBlack}
-								/>
-							</TouchableOpacity>
-						</View>
+						<FilteredByCat
+							categories={categories}
+							filterByCat={filterByCat}
+							setFilterByCat={setFilterByCat}
+						/>
 					)}
+
+					{/* If search query is active, render filtered data, else render grouped data */}
 					{searchQuery
 						? filteredData.map((item, index) => (
 								<Text
@@ -238,24 +230,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		marginTop: 20,
 		marginBottom: 80,
-	},
-	filterCWrapper: {
-		flexDirection: "row",
-		alignItems: "center",
-		alignSelf: "flex-start",
-	},
-	filterContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-		alignSelf: "flex-start",
-		paddingVertical: 5,
-		paddingHorizontal: 10,
-		borderRadius: 50,
-		backgroundColor: colorGrey,
-	},
-	filterText: {
-		fontWeight: "bold",
-		paddingRight: 10,
 	},
 	listWrapper: {
 		flex: 1,
