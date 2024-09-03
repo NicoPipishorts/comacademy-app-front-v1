@@ -1,10 +1,17 @@
-import { colorBlack, colorDarkGrey } from "@/constants/colors";
+import { colorBlack, colorDarkGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import usePasswordChange from "@/hooks/usePasswordChange";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import {
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import Loader from "../experience/loader";
 import ScreenHeaders from "../ScreenHeaders";
 
@@ -13,15 +20,36 @@ export default function UserAccount() {
 	const { data: userData } = useGetUserInfo(userId);
 	const [formFirstName, setFormFirstName] = useState("");
 	const [formLastName, setFormLastName] = useState("");
-	const [password, setPassword] = useState("");
-	const [showPassword, setShowPassword] = useState(false);
+	const [currentPassword, setCurrentPassword] = useState("");
+	const [newPassword, setNewPassword] = useState("");
+	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
 	const [passwordConfirm, setPasswordConfirm] = useState("");
 	const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-	const toggleShowPassword = (which: string | null) => {
-		if (!which) {
-			setShowPassword(!showPassword);
+	const changePassword = usePasswordChange();
+
+	const handleChangePassword = () => {
+		if (newPassword === passwordConfirm) {
+			if (newPassword !== currentPassword) {
+				changePassword.mutate({
+					currentPassword: currentPassword,
+					newPassword: passwordConfirm,
+				});
+			} else {
+				console.log("the new password is the same as the old");
+			}
 		} else {
+			console.log("the two passwords don't match");
+		}
+	};
+
+	const toggleShowPassword = (field: string) => {
+		if (field === "current") {
+			setShowCurrentPassword(!showCurrentPassword);
+		} else if (field === "new") {
+			setShowNewPassword(!showNewPassword);
+		} else if (field === "confirm") {
 			setShowPasswordConfirm(!showPasswordConfirm);
 		}
 	};
@@ -40,21 +68,17 @@ export default function UserAccount() {
 	}
 	return (
 		<>
-			<ScreenHeaders content='Mon Compte' />
-			<View style={{ paddingBottom: 20 }}>
-				<Text style={{ fontSize: FontSize16 }}>Modifie tes information.</Text>
-			</View>
-			<View>
-				<View
-					style={{
-						display: "flex",
-						flexDirection: "row",
-						justifyContent: "space-between",
-						width: "100%",
-					}}>
+			<ScreenHeaders content='Mon Compte' type='h2' />
+
+			<View style={styles.passwordContainer}>
+				<View style={{ paddingBottom: 20 }}>
+					<Text style={{ fontSize: FontSize16 }}>Modifie tes information.</Text>
+				</View>
+
+				<View>
 					<View style={styles.passwordInputContainer}>
 						<TextInput
-							style={[styles.input, { width: "48%" }]}
+							style={[styles.input, { width: "100%" }]}
 							onChangeText={setFormFirstName}
 							value={formFirstName}
 							placeholder={formFirstName ? "" : "Prénom"} // Conditionally render placeholder
@@ -64,7 +88,7 @@ export default function UserAccount() {
 					</View>
 					<View style={styles.passwordInputContainer}>
 						<TextInput
-							style={[styles.input, { width: "48%" }]}
+							style={[styles.input, { width: "100%" }]}
 							onChangeText={setFormLastName}
 							value={formLastName}
 							placeholder={formLastName ? formLastName : "Nom"}
@@ -74,30 +98,68 @@ export default function UserAccount() {
 					</View>
 				</View>
 
+				<TouchableOpacity style={styles.buttons}>
+					<Text
+						style={{
+							color: colorWhite,
+							fontSize: FontSize16,
+							fontWeight: "bold",
+						}}>
+						Valider
+					</Text>
+				</TouchableOpacity>
+			</View>
+
+			<View style={styles.passwordContainer}>
+				<View style={{ paddingTop: 40, paddingBottom: 20 }}>
+					<Text style={{ fontSize: FontSize16 }}>
+						Modifie ton mot de passe.
+					</Text>
+				</View>
+
 				<View style={styles.passwordInputContainer}>
 					<TextInput
-						secureTextEntry={!showPassword} // Bind to showPassword state
-						value={password}
-						onChangeText={setPassword}
+						secureTextEntry={!showCurrentPassword} // Bind to showCurrentPassword state
+						value={currentPassword}
+						onChangeText={setCurrentPassword}
 						style={styles.input}
-						placeholder='Mot de Passe'
+						placeholder='Ancien Mot de Passe'
 						placeholderTextColor={colorBlack}
 					/>
 					<MaterialCommunityIcons
-						name={showPassword ? "eye-off" : "eye"}
+						name={showCurrentPassword ? "eye-off" : "eye"}
 						size={24}
 						color={colorBlack}
 						style={styles.eyeIcon}
-						onPress={() => toggleShowPassword(null)}
+						onPress={() => toggleShowPassword("current")}
 					/>
 				</View>
+
+				<View style={styles.passwordInputContainer}>
+					<TextInput
+						secureTextEntry={!showNewPassword} // Bind to showNewPassword state
+						value={newPassword}
+						onChangeText={setNewPassword}
+						style={styles.input}
+						placeholder='Nouveau Mot de Passe'
+						placeholderTextColor={colorBlack}
+					/>
+					<MaterialCommunityIcons
+						name={showNewPassword ? "eye-off" : "eye"}
+						size={24}
+						color={colorBlack}
+						style={styles.eyeIcon}
+						onPress={() => toggleShowPassword("new")}
+					/>
+				</View>
+
 				<View style={styles.passwordInputContainer}>
 					<TextInput
 						secureTextEntry={!showPasswordConfirm} // Bind to showPasswordConfirm state
 						value={passwordConfirm}
 						onChangeText={setPasswordConfirm}
 						style={styles.input}
-						placeholder='Confirmer Mot de Passe'
+						placeholder='Confirmer le Mot de Passe'
 						placeholderTextColor={colorBlack}
 					/>
 					<MaterialCommunityIcons
@@ -108,12 +170,30 @@ export default function UserAccount() {
 						onPress={() => toggleShowPassword("confirm")}
 					/>
 				</View>
+
+				<TouchableOpacity
+					onPress={() => handleChangePassword()}
+					style={styles.buttons}>
+					<Text
+						style={{
+							color: colorWhite,
+							fontSize: FontSize16,
+							fontWeight: "bold",
+						}}>
+						Valider
+					</Text>
+				</TouchableOpacity>
 			</View>
 		</>
 	);
 }
 
 const styles = StyleSheet.create({
+	passwordContainer: {
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "flex-start",
+	},
 	passwordInputContainer: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -123,6 +203,13 @@ const styles = StyleSheet.create({
 		paddingBottom: 16,
 		borderBottomWidth: 2,
 		borderBottomColor: colorDarkGrey,
+	},
+	buttons: {
+		backgroundColor: colorBlack,
+		marginBottom: 20,
+		paddingHorizontal: 30,
+		paddingVertical: 10,
+		borderRadius: 50,
 	},
 	input: {
 		flexGrow: 1,

@@ -2,8 +2,8 @@ import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import UserAccount from "@/components/user/userAccount";
-import UserResultsByCat from "@/components/user/userResultsByCat";
-import { primaryBackground } from "@/constants/colors";
+import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { FontSize16 } from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
 import useGetAllAnswers from "@/hooks/useGetAllAnswers";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -98,7 +98,7 @@ export default function User() {
 		return acc;
 	}, {});
 
-	const dynamicPadding = keyboardVisible ? 10 : 100;
+	const dynamicPadding = keyboardVisible ? 30 : 100;
 
 	if (!categories || !answers || !result) {
 		return <Loader />; // Show Loader while fetching data
@@ -109,7 +109,7 @@ export default function User() {
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 			style={styles.wrapper}>
 			<View style={[styles.innerWrapper, { paddingBottom: dynamicPadding }]}>
-				<ScreenHeaders content={`Mon Profil ${keyboardVisible}`} />
+				<ScreenHeaders content='Mon Profil' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={
@@ -117,13 +117,24 @@ export default function User() {
 					}>
 					<UserStats categories={categories} result={result} />
 
-					<UserResultsByCat />
+					{/* <UserResultsByCat /> */}
 
 					<UserAccount />
 
-					<TouchableOpacity onPress={() => logout()}>
-						<Text>Logout</Text>
-					</TouchableOpacity>
+					<View style={styles.logoutContainer}>
+						<TouchableOpacity
+							onPress={() => logout()}
+							style={styles.logoutButton}>
+							<Text
+								style={{
+									color: colorWhite,
+									fontSize: FontSize16,
+									fontWeight: "bold",
+								}}>
+								Déconnexion
+							</Text>
+						</TouchableOpacity>
+					</View>
 				</ScrollView>
 			</View>
 		</KeyboardAvoidingView>
@@ -140,5 +151,19 @@ const styles = StyleSheet.create({
 		paddingTop: 80,
 		paddingBottom: 100,
 		backgroundColor: primaryBackground,
+	},
+	logoutContainer: {
+		display: "flex",
+		marginTop: 100,
+		marginBottom: 30,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	logoutButton: {
+		backgroundColor: colorBlack,
+		marginBottom: 20,
+		paddingHorizontal: 30,
+		paddingVertical: 10,
+		borderRadius: 50,
 	},
 });

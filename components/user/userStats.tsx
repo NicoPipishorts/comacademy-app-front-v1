@@ -13,7 +13,7 @@ interface Props {
 export default function UserStats({ categories, result }: Props) {
 	return (
 		<>
-			<ScreenHeaders content='Mes Stats' />
+			<ScreenHeaders content='Mes Stats' type='h2' />
 			<View style={styles.cardWrapper}>
 				<View>
 					<Text style={{ fontSize: FontSize16, fontWeight: "bold" }}>

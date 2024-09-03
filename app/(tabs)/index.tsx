@@ -14,6 +14,9 @@ import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
 import avatar from "../../assets/imgs/avatar/avatar.png";
 
+import Loader from "@/components/experience/loader";
+import useGetUserInfo from "@/hooks/userUserInfo";
+import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import secrets from "../../assets/imgs/cards/home_3_secrets.png";
@@ -25,11 +28,16 @@ import mesStats from "../../assets/imgs/cards/home_mes_stats.png";
 
 const HomeScreen = () => {
 	const navigation = useNavigation<NavigationType>();
+	const { userId } = useUserId();
+	const { data: userData } = useGetUserInfo(userId);
 
+	if (!userData) {
+		return <Loader />;
+	}
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.header}>
-				<Text style={styles.headerText}>Hello Arnaud</Text>
+				<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 				<TouchableOpacity onPress={() => navigation.navigate("user")}>
 					<Image source={avatar} style={styles.profileImage} />
 				</TouchableOpacity>
