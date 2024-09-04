@@ -8,7 +8,7 @@ export type GameAttributes = {
 	ANSWER: boolean;
 	REPONSE: string;
 	ACTIVE: boolean;
-	COEF: string | null;
+	COEF: number;
 	SENSIBILITE: string | null;
 	favorite_questions: [];
 };
