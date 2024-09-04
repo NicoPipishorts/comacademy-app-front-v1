@@ -38,13 +38,16 @@ const LeJeu = () => {
 		setShowFinishedModal,
 		setIsCurrentSession,
 		questionsLeft,
+		firstQuestionsInstance,
+		setFirstQuestionsInstance,
+		showFinishedModal,
 	} = useGameContext();
 
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
 	// Always call the hooks
-	const { data: gameSessions } = useGameSessions(userId);
+	const { data: gameSessions, isFetching } = useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
 	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
 
@@ -64,16 +67,15 @@ const LeJeu = () => {
 
 	// Determine if a session is in progress
 	useEffect(() => {
-		if (gameSessions?.data[0]?.attributes) {
+		if (gameSessions?.data[0]?.id) {
 			setSessionsId(gameSessions.data[0].id);
 			setIsCurrentSession(true);
+			setShowFinishedModal(false);
+			setFirstQuestionsInstance(false);
 			const sessionQuestionsPool =
 				gameSessions.data[0].attributes.questionsPool;
 
-			if (
-				currentQuestion?.meta.pagination.total ||
-				typeof currentQuestion?.meta.pagination.total === "number"
-			) {
+			if (currentQuestion?.meta.pagination.total) {
 				const currentOrder = currentQuestion?.meta.pagination.total;
 
 				// Filter out questions that have been answered
@@ -83,11 +85,15 @@ const LeJeu = () => {
 						: sessionQuestionsPool;
 
 				// Update the session data with the filtered questions
-				setSessionsId(gameSessions.data[0].id);
 				setDataGame(filteredQuestionsPool);
+			} else {
+				setDataGame(gameSessions.data[0].attributes.questionsPool);
 			}
 		} else {
+			console.log("should be fetching and setting new data");
+			setFirstQuestionsInstance(true);
 			setIsCurrentSession(false);
+			setShowFinishedModal(false);
 			setDataGame(
 				fetchedDataGame
 					? Object.keys(fetchedDataGame.data).map(
@@ -99,28 +105,19 @@ const LeJeu = () => {
 	}, [
 		gameSessions,
 		fetchedDataGame,
-		currentQuestion, // Added this dependency
-		setSessionsId, // Added this dependency
-		setIsCurrentSession, // Added this dependency
-		setDataGame, // Added this dependency
+		currentQuestion,
+		setSessionsId,
+		setIsCurrentSession,
+		setDataGame,
+		setShowFinishedModal,
+		setFirstQuestionsInstance,
 	]);
 
+	console.log(" | sessionId ", sessionId);
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {
-			console.log(
-				"in the game index. No Current sessions. ",
-				isCurrentSession,
-				questionsLeft
-			);
-			setShowFinishedModal(false);
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });
 		} else {
-			console.log(
-				"in the game index. Their is a Current sessions. ",
-				isCurrentSession,
-				questionsLeft
-			);
-			setShowFinishedModal(false);
 			navigation.navigate("jeu");
 		}
 	};

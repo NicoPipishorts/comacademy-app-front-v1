@@ -1,8 +1,9 @@
+import { queryClient } from "@/hooks/reactQueryConfig";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
-interface AddFavoriteQuestionPayload {
+interface FinishSessionPayload {
 	sessionId: number;
 	score: number;
 	token: string; // Include token in the payload
@@ -13,13 +14,12 @@ interface SuccessPayload {
 }
 
 // Custom hook to add favorite question
-export const FinishGameSession = (onError: (error: AxiosError) => void) => {
-	return useMutation<SuccessPayload, AxiosError, AddFavoriteQuestionPayload>({
-		mutationFn: async ({
-			sessionId,
-			score,
-			token,
-		}: AddFavoriteQuestionPayload) => {
+export const FinishGameSession = (
+	onSuccess: (data: any) => void,
+	onError: (error: AxiosError) => void
+) => {
+	return useMutation<SuccessPayload, AxiosError, FinishSessionPayload>({
+		mutationFn: async ({ sessionId, score, token }: FinishSessionPayload) => {
 			const payload = {
 				data: {
 					score,
@@ -47,6 +47,12 @@ export const FinishGameSession = (onError: (error: AxiosError) => void) => {
 					throw new Error("An unexpected error occurred");
 				}
 			}
+		},
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({
+				queryKey: ["GameSession"],
+			});
+			onSuccess(data); // Call the original onSuccess callback
 		},
 		onError: (error) => {
 			if (error.response) {

@@ -13,7 +13,6 @@ import {
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useGetGameScore from "@/hooks/useGetScore";
@@ -48,13 +47,18 @@ const Jeu = () => {
 		setQuestionsLeft,
 		setScore,
 		showFinishedModal,
+		setShowFinishedModal,
+		isCurrentSession,
 		setIsCurrentSession,
+		firstQuestionsInstance,
+		setFirstQuestionsInstance,
 	} = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
 		setDataGame(null);
 		setSessionsId(null);
+		setDataGame(null);
 		navigation.navigate("index");
 	};
 
@@ -65,13 +69,37 @@ const Jeu = () => {
 
 	useEffect(() => {
 		setQuestionsLeft(dataGame?.length);
-	}, [dataGame, setQuestionsLeft]);
+	}, []);
+
+	useEffect(() => {
+		if (isCurrentSession && questionsLeft <= 0 && !firstQuestionsInstance) {
+			setShowFinishedModal(true);
+		} else {
+			setShowFinishedModal(false);
+		}
+	}, [
+		firstQuestionsInstance,
+		isCurrentSession,
+		questionsLeft,
+		setShowFinishedModal,
+	]);
 
 	const handleError = (error: any) => {
 		console.error(error);
 	};
 
-	const finishGameSession = FinishGameSession(handleError);
+	const handleSuccessFinish = (data: any) => {
+		console.log("Successfull mutation : ", data);
+		if (!data.data.attributes.inProgress) {
+			setSessionsId(null);
+			setDataGame(null);
+			setIsCurrentSession(false);
+			setShowFinishedModal(false);
+			navigation.popToTop("leJeu");
+		}
+	};
+
+	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
 
 	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
 	const { data: catData } = useCategories();
@@ -91,10 +119,6 @@ const Jeu = () => {
 			token,
 			sessionId,
 		});
-		queryClient.invalidateQueries({ queryKey: ["GameSessionr"] });
-		setIsCurrentSession(false);
-		setIsModalVisible(true);
-		navigation.popToTop("leJeu");
 	};
 
 	useEffect(() => {
@@ -114,7 +138,6 @@ const Jeu = () => {
 
 	// Map dataGame to the cards array
 
-	const cards = dataGame;
 	const handleFeedbackMessage = (message: Answer, cardData: GameData) => {
 		setFeedbackMessage(message);
 		setCurrentCardData(cardData);
@@ -160,8 +183,7 @@ const Jeu = () => {
 		});
 	};
 
-	console.log(questionsLeft);
-
+	const cards = dataGame;
 	const renderCard = (card: GameData, cardIndex: number) => {
 		return (
 			<Card
@@ -174,6 +196,8 @@ const Jeu = () => {
 			/>
 		);
 	};
+
+	console.log(questionsLeft);
 
 	return (
 		<View style={styles.wrapper}>
