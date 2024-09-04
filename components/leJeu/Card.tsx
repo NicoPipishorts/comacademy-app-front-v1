@@ -2,7 +2,7 @@ import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Assets
 import { CategorieColors } from "@/types/categories";
@@ -76,8 +76,8 @@ const Card = ({ data, catColors }: CardProps) => {
 				{
 					// TODO Works on buttons for swiping
 				}
-				{/* <View style={styles.containerCardIcons}>
-					<TouchableOpacity onPress={() => onSwipeLeft(cardIndex)}>
+				<View style={styles.containerCardIcons}>
+					<TouchableOpacity>
 						<MaterialCommunityIcons
 							name='thumb-down-outline'
 							size={30}
@@ -85,7 +85,7 @@ const Card = ({ data, catColors }: CardProps) => {
 							style={styles.cardIcon}
 						/>
 					</TouchableOpacity>
-					<TouchableOpacity onPress={testPress}>
+					<TouchableOpacity>
 						<MaterialCommunityIcons
 							name='thumb-up-outline'
 							size={30}
@@ -93,7 +93,7 @@ const Card = ({ data, catColors }: CardProps) => {
 							style={styles.cardIcon}
 						/>
 					</TouchableOpacity>
-				</View> */}
+				</View>
 			</View>
 		</View>
 	);

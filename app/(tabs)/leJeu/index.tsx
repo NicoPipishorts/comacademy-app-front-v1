@@ -37,17 +37,14 @@ const LeJeu = () => {
 		isCurrentSession,
 		setShowFinishedModal,
 		setIsCurrentSession,
-		questionsLeft,
-		firstQuestionsInstance,
 		setFirstQuestionsInstance,
-		showFinishedModal,
 	} = useGameContext();
 
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
 	// Always call the hooks
-	const { data: gameSessions, isFetching } = useGameSessions(userId);
+	const { data: gameSessions } = useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
 	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
 

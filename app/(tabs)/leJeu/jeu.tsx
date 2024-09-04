@@ -51,7 +51,6 @@ const Jeu = () => {
 		isCurrentSession,
 		setIsCurrentSession,
 		firstQuestionsInstance,
-		setFirstQuestionsInstance,
 	} = useGameContext();
 
 	const handlePress = () => {
@@ -144,7 +143,7 @@ const Jeu = () => {
 		setTimeout(() => {
 			setFeedbackMessage(null);
 			setIsModalVisible(true);
-		}, 500);
+		}, 2000);
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {

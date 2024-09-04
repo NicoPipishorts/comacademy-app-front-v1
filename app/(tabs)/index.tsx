@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		paddingTop: 100,
+		paddingBottom: 20,
 		backgroundColor: primaryBackground,
 	},
 	header: {
