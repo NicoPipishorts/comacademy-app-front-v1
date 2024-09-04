@@ -150,7 +150,7 @@ const AnswerModal = ({
 						<>
 							<View style={styles.headerContainer}>
 								<Text style={styles.headerMainText}>
-									{truncateString(currentCardData.attributes.QUESTION, 54)}
+									{truncateString(currentCardData.attributes.QUESTION, 56)}
 								</Text>
 							</View>
 							<View style={styles.wrapperIcons}>
@@ -226,14 +226,14 @@ const styles = StyleSheet.create({
 		height: "90%",
 		backgroundColor: primaryBackground,
 		padding: 20,
-		paddingTop: 50,
+		paddingTop: 40,
 		borderTopLeftRadius: 10,
 		borderTopRightRadius: 10,
 		alignItems: "center",
 	},
 	headerContainer: {
 		width: "100%",
-		paddingHorizontal: 20,
+		paddingHorizontal: 10,
 		marginBottom: 30,
 	},
 	headerMainText: {
@@ -261,8 +261,7 @@ const styles = StyleSheet.create({
 		width: "100%",
 		backgroundColor: colorWhite,
 		borderRadius: 15,
-		height: "54%",
-		maxHeight: "54%",
+		maxHeight: "52%",
 	},
 	containerAnswer: {
 		flexGrow: 0,

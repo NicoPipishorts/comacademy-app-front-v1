@@ -35,7 +35,9 @@ const LeJeu = () => {
 		sessionId,
 		setSessionsId,
 		isCurrentSession,
+		setShowFinishedModal,
 		setIsCurrentSession,
+		questionsLeft,
 	} = useGameContext();
 
 	const { userId } = useUserId();
@@ -105,13 +107,20 @@ const LeJeu = () => {
 
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {
-			console.log("in the game index. No Current sessions. ", isCurrentSession);
+			console.log(
+				"in the game index. No Current sessions. ",
+				isCurrentSession,
+				questionsLeft
+			);
+			setShowFinishedModal(false);
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });
 		} else {
 			console.log(
 				"in the game index. Their is a Current sessions. ",
-				isCurrentSession
+				isCurrentSession,
+				questionsLeft
 			);
+			setShowFinishedModal(false);
 			navigation.navigate("jeu");
 		}
 	};

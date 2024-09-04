@@ -3,7 +3,14 @@ import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
-import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
+import {
+	colorBlack,
+	colorGreen,
+	colorPink,
+	colorWhite,
+	colorYellow,
+	primaryBackground,
+} from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -40,7 +47,7 @@ const Jeu = () => {
 		questionsLeft,
 		setQuestionsLeft,
 		setScore,
-		isCurrentSession,
+		showFinishedModal,
 		setIsCurrentSession,
 	} = useGameContext();
 
@@ -114,7 +121,7 @@ const Jeu = () => {
 		setTimeout(() => {
 			setFeedbackMessage(null);
 			setIsModalVisible(true);
-		}, 1000);
+		}, 500);
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {
@@ -153,6 +160,8 @@ const Jeu = () => {
 		});
 	};
 
+	console.log(questionsLeft);
+
 	const renderCard = (card: GameData, cardIndex: number) => {
 		return (
 			<Card
@@ -168,8 +177,8 @@ const Jeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			{questionsLeft <= 0 && isCurrentSession && <FinishedSession />}
-			{questionsLeft > 0 && (
+			{showFinishedModal && <FinishedSession />}
+			{!showFinishedModal && (
 				<>
 					<Swiper
 						ref={swiperRef}
@@ -187,6 +196,19 @@ const Jeu = () => {
 					/>
 				</>
 			)}
+			{feedbackMessage && (
+				<View
+					style={[
+						{
+							backgroundColor: `${
+								feedbackMessage === Answer.true ? colorGreen : colorPink
+							}`,
+						},
+						styles.feedbackContainer,
+					]}>
+					<Text style={styles.feedbackText}>{feedbackMessage}</Text>
+				</View>
+			)}
 			<AnswerModal
 				visible={isModalVisible}
 				feedbackMessage={feedbackMessage}
@@ -196,7 +218,7 @@ const Jeu = () => {
 				setFavoriteQuestions={setFavoriteQuestions}
 			/>
 			<View style={styles.containerBackButton}>
-				{questionsLeft <= 0 && (
+				{showFinishedModal && (
 					<TouchableOpacity
 						onPress={handleFinishGame}
 						style={styles.backButton}>
@@ -204,7 +226,7 @@ const Jeu = () => {
 					</TouchableOpacity>
 				)}
 
-				{questionsLeft > 0 && (
+				{!showFinishedModal && (
 					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 						<Text style={styles.textBackButton}>Quitter</Text>
 					</TouchableOpacity>
@@ -247,12 +269,13 @@ const styles = StyleSheet.create({
 		width: "100%",
 	},
 	backButton: {
-		paddingHorizontal: 50,
-		paddingVertical: 20,
+		paddingHorizontal: 40,
+		paddingVertical: 10,
 		borderRadius: 50,
-		backgroundColor: colorWhite,
+		backgroundColor: colorBlack,
 	},
 	textBackButton: {
+		color: colorWhite,
 		fontSize: FontSize20,
 		fontWeight: "bold",
 	},
