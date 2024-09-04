@@ -48,10 +48,10 @@ export default function Answers() {
 
 	return (
 		<View style={styles.wrapper}>
-			<Text style={styles.headerContainer}>
+			{/* <Text style={styles.headerContainer}>
 				Crée tes Playlists avec tes questions favorites et débloque en de
 				nouvelles réponses en jouant !
-			</Text>
+			</Text> */}
 
 			<View style={styles.cardContainer}>
 				<View style={styles.cardResults}>

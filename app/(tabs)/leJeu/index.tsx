@@ -37,17 +37,14 @@ const LeJeu = () => {
 		isCurrentSession,
 		setShowFinishedModal,
 		setIsCurrentSession,
-		questionsLeft,
-		firstQuestionsInstance,
 		setFirstQuestionsInstance,
-		showFinishedModal,
 	} = useGameContext();
 
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
 	// Always call the hooks
-	const { data: gameSessions, isFetching } = useGameSessions(userId);
+	const { data: gameSessions } = useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
 	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
 
@@ -90,7 +87,6 @@ const LeJeu = () => {
 				setDataGame(gameSessions.data[0].attributes.questionsPool);
 			}
 		} else {
-			console.log("should be fetching and setting new data");
 			setFirstQuestionsInstance(true);
 			setIsCurrentSession(false);
 			setShowFinishedModal(false);
@@ -113,7 +109,6 @@ const LeJeu = () => {
 		setFirstQuestionsInstance,
 	]);
 
-	console.log(" | sessionId ", sessionId);
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });

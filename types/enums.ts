@@ -1,4 +1,4 @@
 export enum Answer {
-	true = "VRAI",
-	false = "FAUX",
+	true = "BRAVO",
+	false = "RATÉ",
 }

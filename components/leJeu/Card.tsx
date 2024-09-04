@@ -30,7 +30,6 @@ const Card = ({ data, catColors }: CardProps) => {
 		return `#${colorItem?.attributes.backgroundColor}`;
 	};
 
-	// console.log(data);
 	return (
 		<View style={styles.cardsWrapper}>
 			<View
@@ -42,24 +41,15 @@ const Card = ({ data, catColors }: CardProps) => {
 				]}>
 				<View style={styles.containerTopRow}>
 					<View style={styles.containerStars}>
-						<MaterialCommunityIcons
-							name='star-outline'
-							size={30}
-							color={colorWhite}
-							style={styles.iconStars}
-						/>
-						<MaterialCommunityIcons
-							name='star-outline'
-							size={30}
-							color={colorWhite}
-							style={styles.iconStars}
-						/>
-						<MaterialCommunityIcons
-							name='star-outline'
-							size={30}
-							color={colorWhite}
-							style={styles.iconStars}
-						/>
+						{Array.from({ length: data.attributes.COEF }, (_, index) => (
+							<MaterialCommunityIcons
+								key={index}
+								name='star-outline'
+								size={30}
+								color={colorWhite}
+								style={styles.iconStars}
+							/>
+						))}
 					</View>
 					<View style={styles.containerCatIcon}>
 						<Image
