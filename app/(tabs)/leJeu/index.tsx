@@ -29,9 +29,15 @@ const LeJeu = () => {
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
-	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
+	const {
+		dataGame,
+		setDataGame,
+		sessionId,
+		setSessionsId,
+		isCurrentSession,
+		setIsCurrentSession,
+	} = useGameContext();
 
-	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
@@ -99,8 +105,13 @@ const LeJeu = () => {
 
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {
+			console.log("in the game index. No Current sessions. ", isCurrentSession);
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });
 		} else {
+			console.log(
+				"in the game index. Their is a Current sessions. ",
+				isCurrentSession
+			);
 			navigation.navigate("jeu");
 		}
 	};

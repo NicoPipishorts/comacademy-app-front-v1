@@ -37,7 +37,6 @@ export default function UserAccount() {
 
 	const changeInfo = useChangeUserInfo();
 	const handleChangeInfo = () => {
-		console.log("changing user info");
 		changeInfo.mutate({
 			userId,
 			firstName: formFirstName,

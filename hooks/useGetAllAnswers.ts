@@ -2,7 +2,7 @@ import { GameSessionQuestions } from "@/types/game"; // Assuming CategoryScore i
 import { useQuery } from "@tanstack/react-query";
 import { CategoryScore } from "./useGetScore";
 
-interface UserScoreByCategory {
+export interface UserScoreByCategory {
 	totalAnswersCount: number;
 	categoryScores: Record<number, CategoryScore>;
 }

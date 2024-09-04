@@ -17,6 +17,8 @@ interface GameContextType {
 	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
 	score: GameScore;
 	setScore: React.Dispatch<React.SetStateAction<GameScore>>;
+	isCurrentSession: boolean;
+	setIsCurrentSession: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Create the context
@@ -28,6 +30,7 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [sessionId, setSessionsId] = useState<number>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
 	const [score, setScore] = useState<GameScore | null>(null);
+	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
 
 	return (
 		<GameContext.Provider
@@ -40,6 +43,8 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 				setQuestionsLeft,
 				score,
 				setScore,
+				isCurrentSession,
+				setIsCurrentSession,
 			}}>
 			{children}
 		</GameContext.Provider>

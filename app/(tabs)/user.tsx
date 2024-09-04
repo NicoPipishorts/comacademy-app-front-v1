@@ -38,7 +38,6 @@ export default function User() {
 
 	const { data: answers, refetch } = useGetAllAnswers(userId, token); // Destructure refetch and isFetching from the hook
 
-	console.log(answers);
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
 			"keyboardDidShow",

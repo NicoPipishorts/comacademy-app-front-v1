@@ -1,6 +1,5 @@
-import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
-import { FontSize16, FontSize22 } from "@/constants/fontsizes";
+import { FontSize16 } from "@/constants/fontsizes";
 import { UserScoreByCategory } from "@/hooks/useGetAllAnswers";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import StatsBar from "../ProgressBar";
@@ -12,19 +11,12 @@ interface Props {
 export default function UserStats({ categoriesScore }: Props) {
 	return (
 		<>
-			<ScreenHeaders content='Mes Stats' type='h2' />
+			<StatsBar
+				categoriesScore={categoriesScore.categoryScores}
+				title='Mes Stats'
+				shadowOpacity={0}
+			/>
 			<View style={styles.cardWrapper}>
-				<View>
-					<Text style={{ fontSize: FontSize16, fontWeight: "bold" }}>
-						Stats
-					</Text>
-					<Text style={{ fontSize: FontSize22, fontWeight: "bold" }}>
-						Tes résultats par catégories
-					</Text>
-				</View>
-				<View style={styles.wrapperProgressBars}>
-					<StatsBar categoriesScore={categoriesScore.categoryScores} />
-				</View>
 				<View style={styles.cardTextContainer}>
 					<Text style={styles.cardText}>
 						Découvre tes résultats selon les catégories

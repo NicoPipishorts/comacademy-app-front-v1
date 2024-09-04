@@ -9,6 +9,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
+import { truncateString } from "@/helpers/truncateText";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
@@ -25,6 +26,7 @@ import {
 	Image,
 	ImageStyle,
 	Modal,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -148,17 +150,19 @@ const AnswerModal = ({
 						<>
 							<View style={styles.headerContainer}>
 								<Text style={styles.headerMainText}>
-									{currentCardData.attributes.QUESTION}
+									{truncateString(currentCardData.attributes.QUESTION, 54)}
 								</Text>
 							</View>
 							<View style={styles.wrapperIcons}>
 								<View style={styles.containerIcons}>
 									{currentCardData.attributes.CATEGORIE !== undefined &&
 									currentCardData.attributes.CATEGORIE !== null ? (
-										<SmallCategroieIcons
-											key={currentCardData.attributes.CATEGORIE}
-											cats={currentCardData.attributes.CATEGORIE}
-										/>
+										<View style={{ marginRight: 8 }}>
+											<SmallCategroieIcons
+												key={currentCardData.attributes.CATEGORIE}
+												cats={currentCardData.attributes.CATEGORIE}
+											/>
+										</View>
 									) : (
 										""
 									)}
@@ -178,10 +182,14 @@ const AnswerModal = ({
 									</TouchableOpacity>
 								</View>
 							</View>
-							<View style={styles.containerAnswer}>
-								<Text style={styles.textAnswer}>
-									{currentCardData.attributes.REPONSE}
-								</Text>
+							<View style={styles.wrapperAnswers}>
+								<ScrollView
+									style={styles.containerAnswer}
+									showsVerticalScrollIndicator={false}>
+									<Text style={styles.textAnswer}>
+										{currentCardData.attributes.REPONSE}
+									</Text>
+								</ScrollView>
 							</View>
 						</>
 					)}
@@ -248,11 +256,17 @@ const styles = StyleSheet.create({
 		aspectRatio: 1,
 		marginRight: 5,
 	},
-	containerAnswer: {
+	wrapperAnswers: {
+		padding: 20,
 		width: "100%",
 		backgroundColor: colorWhite,
-		padding: 20,
 		borderRadius: 15,
+		height: "54%",
+		maxHeight: "54%",
+	},
+	containerAnswer: {
+		flexGrow: 0,
+		width: "100%",
 	},
 	textAnswer: {
 		fontSize: FontSize16,

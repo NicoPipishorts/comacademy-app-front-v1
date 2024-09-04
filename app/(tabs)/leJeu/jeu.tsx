@@ -6,6 +6,7 @@ import Card from "@/components/leJeu/Card";
 import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useGetGameScore from "@/hooks/useGetScore";
@@ -39,6 +40,8 @@ const Jeu = () => {
 		questionsLeft,
 		setQuestionsLeft,
 		setScore,
+		isCurrentSession,
+		setIsCurrentSession,
 	} = useGameContext();
 
 	const handlePress = () => {
@@ -74,12 +77,17 @@ const Jeu = () => {
 	});
 
 	const insertPlayerAnswer = InsertAnswer();
+
 	const handleFinishGame = () => {
 		finishGameSession.mutate({
 			score: gameScore.percentage,
 			token,
 			sessionId,
 		});
+		queryClient.invalidateQueries({ queryKey: ["GameSessionr"] });
+		setIsCurrentSession(false);
+		setIsModalVisible(true);
+		navigation.popToTop("leJeu");
 	};
 
 	useEffect(() => {
@@ -160,7 +168,7 @@ const Jeu = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			{!isModalVisible && questionsLeft <= 0 && <FinishedSession />}
+			{questionsLeft <= 0 && isCurrentSession && <FinishedSession />}
 			{questionsLeft > 0 && (
 				<>
 					<Swiper
