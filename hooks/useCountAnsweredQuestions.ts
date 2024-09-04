@@ -12,7 +12,7 @@ const fetchAllQuestions = async (
 ): Promise<AnsweredQuestions> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields=id&pagination[limit]=10000&filters[userId][$eq]=${userId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&fields[1]=questionId&pagination[limit]=10000&filters[userId][$eq]=${userId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -30,8 +30,28 @@ const fetchAllQuestions = async (
 
 		const data = await response.json();
 
+		const removeDuplicatesAndCount = (questions) => {
+			const uniqueQuestions = new Map();
+
+			questions.forEach((question) => {
+				const questionId = question.attributes.questionId;
+				if (!uniqueQuestions.has(questionId)) {
+					uniqueQuestions.set(questionId, question);
+				}
+			});
+
+			// Optional: Convert the Map back to an array if you need the filtered questions
+			const uniqueQuestionsArray = Array.from(uniqueQuestions.values());
+
+			// Return the count of unique questions
+			return {
+				count: uniqueQuestions.size,
+				uniqueQuestionsArray, // Include this if you need the array of unique questions
+			};
+		};
+
 		// Return the count of questions
-		return { count: data.data.length };
+		return removeDuplicatesAndCount(data.data);
 	} catch (error) {
 		console.error("Error fetching the answered questions:", error);
 		throw error;

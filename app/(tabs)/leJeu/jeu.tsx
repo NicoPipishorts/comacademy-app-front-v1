@@ -51,7 +51,6 @@ const Jeu = () => {
 		isCurrentSession,
 		setIsCurrentSession,
 		firstQuestionsInstance,
-		setFirstQuestionsInstance,
 	} = useGameContext();
 
 	const handlePress = () => {
@@ -89,7 +88,6 @@ const Jeu = () => {
 	};
 
 	const handleSuccessFinish = (data: any) => {
-		console.log("Successfull mutation : ", data);
 		if (!data.data.attributes.inProgress) {
 			setSessionsId(null);
 			setDataGame(null);
@@ -196,8 +194,6 @@ const Jeu = () => {
 			/>
 		);
 	};
-
-	console.log(questionsLeft);
 
 	return (
 		<View style={styles.wrapper}>

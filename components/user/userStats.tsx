@@ -18,9 +18,7 @@ export default function UserStats({ categoriesScore }: Props) {
 			/>
 			<View style={styles.cardWrapper}>
 				<View style={styles.cardTextContainer}>
-					<Text style={styles.cardText}>
-						Découvre tes résultats selon les catégories
-					</Text>
+					<Text style={styles.cardText}>Découvre toutes tes réponses</Text>
 					<TouchableOpacity style={styles.buttonBlack}>
 						<Text style={styles.buttonText}>Voir</Text>
 					</TouchableOpacity>
