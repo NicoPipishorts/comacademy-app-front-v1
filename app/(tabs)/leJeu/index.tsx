@@ -1,5 +1,6 @@
 import {
 	colorBlack,
+	colorDarkGrey,
 	colorWhite,
 	colorYellow,
 	primaryBackground,
@@ -24,18 +25,29 @@ import Answers from "./answers";
 import LetsPlay from "./play";
 
 const LeJeu = () => {
+	const navigation = useNavigation<NavigationType>();
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
-	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
+	const {
+		dataGame,
+		setDataGame,
+		sessionId,
+		setSessionsId,
+		isCurrentSession,
+		setShowFinishedModal,
+		setIsCurrentSession,
+		questionsLeft,
+		firstQuestionsInstance,
+		setFirstQuestionsInstance,
+		showFinishedModal,
+	} = useGameContext();
 
-	const navigation = useNavigation<NavigationType>();
-	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
 	// Always call the hooks
-	const { data: gameSessions } = useGameSessions(userId);
+	const { data: gameSessions, isFetching } = useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
 	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
 
@@ -55,16 +67,15 @@ const LeJeu = () => {
 
 	// Determine if a session is in progress
 	useEffect(() => {
-		if (gameSessions?.data[0]?.attributes) {
+		if (gameSessions?.data[0]?.id) {
 			setSessionsId(gameSessions.data[0].id);
 			setIsCurrentSession(true);
+			setShowFinishedModal(false);
+			setFirstQuestionsInstance(false);
 			const sessionQuestionsPool =
 				gameSessions.data[0].attributes.questionsPool;
 
-			if (
-				currentQuestion?.meta.pagination.total ||
-				typeof currentQuestion?.meta.pagination.total === "number"
-			) {
+			if (currentQuestion?.meta.pagination.total) {
 				const currentOrder = currentQuestion?.meta.pagination.total;
 
 				// Filter out questions that have been answered
@@ -74,11 +85,15 @@ const LeJeu = () => {
 						: sessionQuestionsPool;
 
 				// Update the session data with the filtered questions
-				setSessionsId(gameSessions.data[0].id);
 				setDataGame(filteredQuestionsPool);
+			} else {
+				setDataGame(gameSessions.data[0].attributes.questionsPool);
 			}
 		} else {
+			console.log("should be fetching and setting new data");
+			setFirstQuestionsInstance(true);
 			setIsCurrentSession(false);
+			setShowFinishedModal(false);
 			setDataGame(
 				fetchedDataGame
 					? Object.keys(fetchedDataGame.data).map(
@@ -90,12 +105,15 @@ const LeJeu = () => {
 	}, [
 		gameSessions,
 		fetchedDataGame,
-		currentQuestion, // Added this dependency
-		setSessionsId, // Added this dependency
-		setIsCurrentSession, // Added this dependency
-		setDataGame, // Added this dependency
+		currentQuestion,
+		setSessionsId,
+		setIsCurrentSession,
+		setDataGame,
+		setShowFinishedModal,
+		setFirstQuestionsInstance,
 	]);
 
+	console.log(" | sessionId ", sessionId);
 	const handlePressPlay = () => {
 		if (!isCurrentSession) {
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });
@@ -105,34 +123,36 @@ const LeJeu = () => {
 	};
 
 	return (
-		<View style={styles.wrapper}>
-			<View style={styles.containerHeader}>
-				<View style={styles.header}>
-					<Text style={styles.headerMainText}>Le Jeu</Text>
+		<>
+			<View style={styles.wrapper}>
+				<View style={styles.containerHeader}>
+					<View style={styles.header}>
+						<Text style={styles.headerMainText}>Le Jeu</Text>
+					</View>
+					<View style={styles.containerSwitch}>
+						<Text style={styles.textJouer}>Jouer</Text>
+						<Switch
+							trackColor={{ false: colorBlack, true: colorYellow }}
+							ios_backgroundColor={colorBlack}
+							thumbColor={colorWhite}
+							onValueChange={toggleSwitch}
+							value={isEnabled}
+						/>
+						<Text style={styles.textReponses}>Réponses</Text>
+					</View>
 				</View>
-				<View style={styles.containerSwitch}>
-					<Text style={styles.textJouer}>Jouer</Text>
-					<Switch
-						trackColor={{ false: colorBlack, true: colorYellow }}
-						ios_backgroundColor={colorBlack}
-						thumbColor={colorWhite}
-						onValueChange={toggleSwitch}
-						value={isEnabled}
+
+				{!isEnabled && (
+					<LetsPlay
+						setSelectedTab={setSelectedTab}
+						selectedTab={selectedTab}
+						handlePressPlay={handlePressPlay}
 					/>
-					<Text style={styles.textReponses}>Réponses</Text>
-				</View>
+				)}
+
+				{isEnabled && <Answers />}
 			</View>
-
-			{!isEnabled && (
-				<LetsPlay
-					setSelectedTab={setSelectedTab}
-					selectedTab={selectedTab}
-					handlePressPlay={handlePressPlay}
-				/>
-			)}
-
-			{isEnabled && <Answers />}
-		</View>
+		</>
 	);
 };
 
@@ -166,6 +186,18 @@ const styles = StyleSheet.create({
 	},
 	textReponses: {
 		paddingLeft: 8,
+		fontWeight: "bold",
+	},
+	finishedModal: {
+		position: "absolute",
+		backgroundColor: colorDarkGrey,
+		width: "90%",
+		height: "90%",
+		zIndex: 20,
+	},
+	feedbackText: {
+		fontSize: 100,
+		color: colorWhite,
 		fontWeight: "bold",
 	},
 });

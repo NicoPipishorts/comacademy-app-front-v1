@@ -89,7 +89,12 @@ function DicoDetails({ item, onGoBack }: Props) {
 							? data.data.attributes.Categories.split(",").map((cat, index) => {
 									const categoryNumber = parseInt(cat, 10); // Convert string to number
 									return (
-										<SmallCategroieIcons key={index} cats={categoryNumber} />
+										<View style={{ marginRight: 8 }}>
+											<SmallCategroieIcons
+												key={categoryNumber}
+												cats={categoryNumber}
+											/>
+										</View>
 									);
 							  })
 							: ""}

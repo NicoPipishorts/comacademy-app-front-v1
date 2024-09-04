@@ -90,14 +90,12 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 const styles = StyleSheet.create({
 	containerIcons: {
 		flexDirection: "row",
-		marginBottom: 50,
 	},
 	catIcons: {
 		width: 30,
 		height: 30,
 		borderRadius: 15,
 		aspectRatio: 1,
-		marginRight: 8,
 		padding: 3,
 	},
 });

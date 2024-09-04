@@ -4,12 +4,14 @@ import { FontSizeScreenTitles } from "../constants/fontsizes";
 
 type Props = {
 	content: string | undefined;
+	type?: string;
 };
 
-const ScreenHeaders = ({ content }: Props) => {
+const ScreenHeaders = ({ content, type }: Props) => {
 	return (
 		<View style={styles.container}>
-			<Text style={styles.mainText}>{content}</Text>
+			{type === "h2" && <Text style={styles.h2text}>{content}</Text>}
+			{!type && <Text style={styles.mainText}>{content}</Text>}
 		</View>
 	);
 };
@@ -21,6 +23,10 @@ const styles = StyleSheet.create({
 	mainText: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
+	},
+	h2text: {
+		fontWeight: "bold",
+		fontSize: 26,
 	},
 });
 

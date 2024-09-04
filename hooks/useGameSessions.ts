@@ -31,7 +31,7 @@ const useGameSessions = (userId: number) => {
 	const { token, loading } = useJwtToken();
 
 	return useQuery<GameSession>({
-		queryKey: ["GameSession", userId],
+		queryKey: ["GameSession", { userId }],
 		queryFn: () => fetchCurrentSessions(token!, userId),
 		enabled: !loading && !!token && !!userId,
 	});

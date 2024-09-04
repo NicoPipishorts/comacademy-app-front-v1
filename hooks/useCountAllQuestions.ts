@@ -30,7 +30,7 @@ const fetchAllQuestions = async (token: string): Promise<QuestionsCount> => {
 		// Return the count of questions
 		return { count: data.data.length };
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching All Questions:", error);
 		throw error;
 	}
 };
