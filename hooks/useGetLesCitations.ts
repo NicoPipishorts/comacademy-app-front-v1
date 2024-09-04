@@ -1,7 +1,8 @@
 import useJwtToken from "@/hooks/useJwtToken";
+import { CitationData } from "@/types/lesCitations";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCitations = async (token: string): Promise<any> => {
+const fetchCitations = async (token: string): Promise<CitationData> => {
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/citations?random=true&pagination[limit]=30`,
@@ -23,7 +24,7 @@ const fetchCitations = async (token: string): Promise<any> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching Les Cistations:", error);
 		throw error;
 	}
 };
@@ -31,7 +32,7 @@ const fetchCitations = async (token: string): Promise<any> => {
 const useLesCitations = () => {
 	const { token } = useJwtToken();
 
-	return useQuery<LesCitationsPayload>({
+	return useQuery<CitationData>({
 		queryKey: ["Citations"],
 		queryFn: () => fetchCitations(token),
 		enabled: !!token,

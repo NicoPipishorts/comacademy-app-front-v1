@@ -26,7 +26,7 @@ const fetchCategories = async (token: string): Promise<any> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching categories Full:", error);
 		throw error;
 	}
 };

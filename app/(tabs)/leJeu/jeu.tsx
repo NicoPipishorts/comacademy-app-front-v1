@@ -1,8 +1,10 @@
+import { FinishGameSession } from "@/api/finishSession";
 import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
 import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
+	colorBlack,
 	colorGreen,
 	colorPink,
 	colorWhite,
@@ -13,6 +15,7 @@ import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useGetGameScore from "@/hooks/useGetScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -23,6 +26,7 @@ import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
+import FinishedSession from "./finished";
 
 const Jeu = () => {
 	const swiperRef = useRef<Swiper<GameData>>(null);
@@ -34,12 +38,27 @@ const Jeu = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
-	const { dataGame, setDataGame, sessionId, setSessionsId } = useGameContext();
+	const {
+		dataGame,
+		setDataGame,
+		sessionId,
+		setSessionsId,
+		questionsLeft,
+		setQuestionsLeft,
+		setScore,
+		showFinishedModal,
+		setShowFinishedModal,
+		isCurrentSession,
+		setIsCurrentSession,
+		firstQuestionsInstance,
+		setFirstQuestionsInstance,
+	} = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
 		setDataGame(null);
 		setSessionsId(null);
+		setDataGame(null);
 		navigation.navigate("index");
 	};
 
@@ -48,17 +67,67 @@ const Jeu = () => {
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
 	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
+	useEffect(() => {
+		setQuestionsLeft(dataGame?.length);
+	}, []);
+
+	useEffect(() => {
+		if (isCurrentSession && questionsLeft <= 0 && !firstQuestionsInstance) {
+			setShowFinishedModal(true);
+		} else {
+			setShowFinishedModal(false);
+		}
+	}, [
+		firstQuestionsInstance,
+		isCurrentSession,
+		questionsLeft,
+		setShowFinishedModal,
+	]);
+
+	const handleError = (error: any) => {
+		console.error(error);
+	};
+
+	const handleSuccessFinish = (data: any) => {
+		console.log("Successfull mutation : ", data);
+		if (!data.data.attributes.inProgress) {
+			setSessionsId(null);
+			setDataGame(null);
+			setIsCurrentSession(false);
+			setShowFinishedModal(false);
+			navigation.popToTop("leJeu");
+		}
+	};
+
+	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
+
+	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
+	useEffect(() => {
+		if (gameScore || gameScore !== undefined) {
+			setScore(gameScore);
+		}
+	});
+
 	const insertPlayerAnswer = InsertAnswer();
 
+	const handleFinishGame = () => {
+		finishGameSession.mutate({
+			score: gameScore.percentage,
+			token,
+			sessionId,
+		});
+	};
+
 	useEffect(() => {
-		if (fqData) {
-			const initialFavQuestions = fqData.data.attributes.questions.data.map(
+		if (fqData !== undefined) {
+			const initialFavQuestions = fqData.data[0].attributes.questions.data.map(
 				(question) => question.id
 			);
 			setFavoriteQuestions(initialFavQuestions);
+		} else {
 		}
 	}, [fqData]);
 
@@ -69,15 +138,13 @@ const Jeu = () => {
 
 	// Map dataGame to the cards array
 
-	const cards = dataGame;
-
 	const handleFeedbackMessage = (message: Answer, cardData: GameData) => {
 		setFeedbackMessage(message);
 		setCurrentCardData(cardData);
 		setTimeout(() => {
 			setFeedbackMessage(null);
 			setIsModalVisible(true);
-		}, 1000);
+		}, 500);
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {
@@ -87,6 +154,7 @@ const Jeu = () => {
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		}
+		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
 			userId: userId,
@@ -104,6 +172,7 @@ const Jeu = () => {
 		} else if (currentCard) {
 			handleFeedbackMessage(Answer.false, currentCard);
 		}
+		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
 			userId: userId,
@@ -114,6 +183,7 @@ const Jeu = () => {
 		});
 	};
 
+	const cards = dataGame;
 	const renderCard = (card: GameData, cardIndex: number) => {
 		return (
 			<Card
@@ -127,22 +197,29 @@ const Jeu = () => {
 		);
 	};
 
+	console.log(questionsLeft);
+
 	return (
 		<View style={styles.wrapper}>
-			<Swiper
-				ref={swiperRef}
-				cards={cards}
-				renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
-				verticalSwipe={false}
-				onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
-				onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
-				backgroundColor={"transparent"}
-				cardVerticalMargin={120}
-				cardHorizontalMargin={30}
-				stackSize={5}
-				stackScale={5}
-				stackSeparation={24}
-			/>
+			{showFinishedModal && <FinishedSession />}
+			{!showFinishedModal && (
+				<>
+					<Swiper
+						ref={swiperRef}
+						cards={cards}
+						renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
+						verticalSwipe={false}
+						onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
+						onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
+						backgroundColor={"transparent"}
+						cardVerticalMargin={120}
+						cardHorizontalMargin={30}
+						stackSize={5}
+						stackScale={5}
+						stackSeparation={24}
+					/>
+				</>
+			)}
 			{feedbackMessage && (
 				<View
 					style={[
@@ -165,9 +242,19 @@ const Jeu = () => {
 				setFavoriteQuestions={setFavoriteQuestions}
 			/>
 			<View style={styles.containerBackButton}>
-				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-					<Text style={styles.textBackButton}>Quitter</Text>
-				</TouchableOpacity>
+				{showFinishedModal && (
+					<TouchableOpacity
+						onPress={handleFinishGame}
+						style={styles.backButton}>
+						<Text style={styles.textBackButton}>Finir</Text>
+					</TouchableOpacity>
+				)}
+
+				{!showFinishedModal && (
+					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+						<Text style={styles.textBackButton}>Quitter</Text>
+					</TouchableOpacity>
+				)}
 			</View>
 		</View>
 	);
@@ -206,12 +293,13 @@ const styles = StyleSheet.create({
 		width: "100%",
 	},
 	backButton: {
-		paddingHorizontal: 50,
-		paddingVertical: 20,
+		paddingHorizontal: 40,
+		paddingVertical: 10,
 		borderRadius: 50,
-		backgroundColor: colorWhite,
+		backgroundColor: colorBlack,
 	},
 	textBackButton: {
+		color: colorWhite,
 		fontSize: FontSize20,
 		fontWeight: "bold",
 	},

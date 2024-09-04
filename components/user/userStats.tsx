@@ -1,54 +1,22 @@
-import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
-import { FontSize16, FontSize22 } from "@/constants/fontsizes";
-import { CategorieColors } from "@/types/categories";
+import { FontSize16 } from "@/constants/fontsizes";
+import { UserScoreByCategory } from "@/hooks/useGetAllAnswers";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ResultAccumulator } from "../../app/(tabs)/user";
+import StatsBar from "../ProgressBar";
 
 interface Props {
-	categories: CategorieColors;
-	result: ResultAccumulator;
+	categoriesScore: UserScoreByCategory;
 }
 
-export default function UserStats({ categories, result }: Props) {
+export default function UserStats({ categoriesScore }: Props) {
 	return (
 		<>
-			<ScreenHeaders content='Mes Stats' />
+			<StatsBar
+				categoriesScore={categoriesScore.categoryScores}
+				title='Mes Stats'
+				shadowOpacity={0}
+			/>
 			<View style={styles.cardWrapper}>
-				<View>
-					<Text style={{ fontSize: FontSize16, fontWeight: "bold" }}>
-						Stats
-					</Text>
-					<Text style={{ fontSize: FontSize22, fontWeight: "bold" }}>
-						Tes résultats par catégories
-					</Text>
-				</View>
-				<View style={styles.wrapperProgressBars}>
-					{categories.data.map((cat) => {
-						const barProgression = () => {
-							const categoryResult = result[cat.id];
-							if (!categoryResult || categoryResult.total === 0) {
-								return 0; // Return 0% if there's no result or if total is 0 to avoid division by zero
-							}
-							return (categoryResult.trueCount / categoryResult.total) * 100;
-						};
-
-						const progression = barProgression();
-						return (
-							<View key={cat.id} style={styles.wrapperProgressBar}>
-								<View
-									style={[
-										styles.contentProgressBar,
-										{
-											backgroundColor: `#${cat.attributes.backgroundColor}`,
-											height: `${progression}%`,
-										},
-									]}
-								/>
-							</View>
-						);
-					})}
-				</View>
 				<View style={styles.cardTextContainer}>
 					<Text style={styles.cardText}>
 						Découvre tes résultats selon les catégories

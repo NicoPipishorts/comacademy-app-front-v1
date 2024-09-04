@@ -95,10 +95,12 @@ function DetailsScreen({ item, onGoBack }: Props) {
 							? data.data.attributes.CATEGORIE.split(",").map((cat) => {
 									const categoryNumber = parseInt(cat, 10); // Convert string to number
 									return (
-										<SmallCategroieIcons
-											key={categoryNumber}
-											cats={categoryNumber}
-										/>
+										<View style={{ marginRight: 8 }}>
+											<SmallCategroieIcons
+												key={categoryNumber}
+												cats={categoryNumber}
+											/>
+										</View>
 									);
 							  })
 							: ""}

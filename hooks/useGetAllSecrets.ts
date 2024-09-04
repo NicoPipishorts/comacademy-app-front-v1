@@ -26,7 +26,7 @@ const fetchData = async (token: string): Promise<SecretsResponse> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories:", error);
+		console.error("Error fetching Amm Secrets:", error);
 		throw error;
 	}
 };

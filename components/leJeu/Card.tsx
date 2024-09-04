@@ -18,7 +18,7 @@ interface CardProps {
 }
 
 const Card = ({ data, catColors }: CardProps) => {
-	if (!catColors || !catColors.data[0]) {
+	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
 	const selectedCategory: number = data?.attributes.CATEGORIE;
@@ -29,6 +29,8 @@ const Card = ({ data, catColors }: CardProps) => {
 		);
 		return `#${colorItem?.attributes.backgroundColor}`;
 	};
+
+	// console.log(data);
 	return (
 		<View style={styles.cardsWrapper}>
 			<View
@@ -64,11 +66,12 @@ const Card = ({ data, catColors }: CardProps) => {
 							source={{
 								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[0].attributes.smallIcon.data.attributes.url}`,
 							}}
-							style={styles.catIcon}></Image>
+							style={styles.catIcon}
+						/>
 					</View>
 				</View>
 				<View style={styles.containerText}>
-					<Text style={styles.textText}>{data.attributes.QUESTION}</Text>
+					<Text style={styles.textText}>{data?.attributes.QUESTION}</Text>
 				</View>
 				{
 					// TODO Works on buttons for swiping
