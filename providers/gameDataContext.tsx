@@ -13,14 +13,12 @@ interface GameContextType {
 	setSessionsId: React.Dispatch<React.SetStateAction<number>>;
 	dataGame: GameData[];
 	setDataGame: React.Dispatch<React.SetStateAction<GameData[]>>;
-	firstQuestionsInstance: boolean;
-	setFirstQuestionsInstance: React.Dispatch<React.SetStateAction<boolean>>;
 	questionsLeft: number;
 	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
+	playing: boolean;
+	setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 	score: GameScore;
 	setScore: React.Dispatch<React.SetStateAction<GameScore>>;
-	isCurrentSession: boolean;
-	setIsCurrentSession: React.Dispatch<React.SetStateAction<boolean>>;
 	showFinishedModal: boolean;
 	setShowFinishedModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -34,10 +32,8 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [sessionId, setSessionsId] = useState<number>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
 	const [score, setScore] = useState<GameScore | null>(null);
-	const [isCurrentSession, setIsCurrentSession] = useState<boolean>(false);
 	const [showFinishedModal, setShowFinishedModal] = useState<boolean>(false);
-	const [firstQuestionsInstance, setFirstQuestionsInstance] =
-		useState<boolean>(false);
+	const [playing, setPlaying] = useState<boolean>(false);
 
 	return (
 		<GameContext.Provider
@@ -48,14 +44,12 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 				setDataGame,
 				questionsLeft,
 				setQuestionsLeft,
+				playing,
+				setPlaying,
 				score,
 				setScore,
-				isCurrentSession,
-				setIsCurrentSession,
 				showFinishedModal,
 				setShowFinishedModal,
-				firstQuestionsInstance,
-				setFirstQuestionsInstance,
 			}}>
 			{children}
 		</GameContext.Provider>

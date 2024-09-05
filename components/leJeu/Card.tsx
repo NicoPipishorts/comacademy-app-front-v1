@@ -17,7 +17,7 @@ interface CardProps {
 	cardIndex: number;
 }
 
-const Card = ({ data, catColors }: CardProps) => {
+const Card = ({ data, catColors, cardIndex }: CardProps) => {
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
@@ -54,7 +54,10 @@ const Card = ({ data, catColors }: CardProps) => {
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[0].attributes.smallIcon.data.attributes.url}`,
+								uri: `${process.env.EXPO_PUBLIC_URL}${
+									catColors.data[selectedCategory[0] - 1].attributes.smallIcon
+										.data.attributes.url
+								}`,
 							}}
 							style={styles.catIcon}
 						/>

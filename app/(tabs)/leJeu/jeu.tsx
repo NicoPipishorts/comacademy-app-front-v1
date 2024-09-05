@@ -15,7 +15,6 @@ import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
-import useGetGameScore from "@/hooks/useGetScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -45,20 +44,18 @@ const Jeu = () => {
 		setSessionsId,
 		questionsLeft,
 		setQuestionsLeft,
-		setScore,
+		score,
 		showFinishedModal,
 		setShowFinishedModal,
-		isCurrentSession,
-		setIsCurrentSession,
-		firstQuestionsInstance,
+		setPlaying,
 	} = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
-		setDataGame(null);
-		setSessionsId(null);
-		setDataGame(null);
-		navigation.navigate("index");
+		setPlaying(false);
+		setTimeout(() => {
+			navigation.navigate("index");
+		}, 100);
 	};
 
 	useEffect(() => {
@@ -67,21 +64,12 @@ const Jeu = () => {
 	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
 
 	useEffect(() => {
-		setQuestionsLeft(dataGame?.length);
-	}, []);
-
-	useEffect(() => {
-		if (isCurrentSession && questionsLeft <= 0 && !firstQuestionsInstance) {
+		if (sessionId && questionsLeft <= 0) {
 			setShowFinishedModal(true);
 		} else {
 			setShowFinishedModal(false);
 		}
-	}, [
-		firstQuestionsInstance,
-		isCurrentSession,
-		questionsLeft,
-		setShowFinishedModal,
-	]);
+	}, [sessionId, questionsLeft, setShowFinishedModal]);
 
 	const handleError = (error: any) => {
 		console.error(error);
@@ -91,7 +79,6 @@ const Jeu = () => {
 		if (!data.data.attributes.inProgress) {
 			setSessionsId(null);
 			setDataGame(null);
-			setIsCurrentSession(false);
 			setShowFinishedModal(false);
 			navigation.popToTop("leJeu");
 		}
@@ -99,21 +86,24 @@ const Jeu = () => {
 
 	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
 
-	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
-	useEffect(() => {
-		if (gameScore || gameScore !== undefined) {
-			setScore(gameScore);
-		}
-	});
+	// useEffect(() => {
+	// 	if (questionsLeft <= 0) {
+	// 		console.log("in the get score useEffect");
+	// 		queryClient.refetchQueries({
+	// 			queryKey: ["GameScore"],
+	// 		});
+	// 		setScore(gameScore);
+	// 	}
+	// }, [gameScore, questionsLeft, sessionId, setScore, userId]);
 
 	const insertPlayerAnswer = InsertAnswer();
 
 	const handleFinishGame = () => {
 		finishGameSession.mutate({
-			score: gameScore.percentage,
+			score: score.percentage,
 			token,
 			sessionId,
 		});

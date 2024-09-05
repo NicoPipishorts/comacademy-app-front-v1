@@ -1,9 +1,27 @@
+import Loader from "@/components/experience/loader";
 import StatsBar from "@/components/ProgressBar";
+import useGetGameScore from "@/hooks/useGetScore";
+import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function FinishedSession() {
-	const { score } = useGameContext();
+	const { userId } = useUserId();
+	const { setScore, score, sessionId, showFinishedModal } = useGameContext();
+
+	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
+
+	useEffect(() => {
+		if (gameScore) {
+			console.log("in the set score useEffect");
+			setScore(gameScore);
+		}
+	}, [setScore, gameScore]);
+
+	if (!gameScore || !score) {
+		return <Loader />;
+	}
 
 	return (
 		<View style={styles.wrapper}>
