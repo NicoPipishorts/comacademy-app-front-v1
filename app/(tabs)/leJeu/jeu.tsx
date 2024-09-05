@@ -177,8 +177,8 @@ const Jeu = () => {
 			title: "FAUX",
 			style: {
 				label: {
-					backgroundColor: colorPink,
-					borderColor: colorPink,
+					backgroundColor: colorBlack,
+					borderColor: colorBlack,
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
@@ -186,9 +186,9 @@ const Jeu = () => {
 				wrapper: {
 					flexDirection: "column",
 					alignItems: "flex-end",
-					justifyContent: "flex-start",
-					marginTop: 20,
-					marginLeft: -20,
+					justifyContent: "flex-end",
+					marginTop: -64,
+					marginLeft: -40,
 				},
 			},
 		},
@@ -196,8 +196,8 @@ const Jeu = () => {
 			title: "VRAIE",
 			style: {
 				label: {
-					backgroundColor: colorGreen,
-					borderColor: colorGreen,
+					backgroundColor: colorBlack,
+					borderColor: colorBlack,
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
@@ -205,9 +205,9 @@ const Jeu = () => {
 				wrapper: {
 					flexDirection: "column",
 					alignItems: "flex-start",
-					justifyContent: "flex-start",
-					marginTop: 20,
-					marginLeft: 20,
+					justifyContent: "flex-end",
+					marginTop: -64,
+					marginLeft: 40,
 				},
 			},
 		},
@@ -234,10 +234,7 @@ const Jeu = () => {
 				<Swiper
 					ref={swiperRef}
 					overlayLabels={overlayLabels}
-					inputOverlayLabelsOpacityRangeX={[-200, -100, 0, 100, 200]} // 5-value range
-					animateOverlayLabelsOpacity={true}
 					cards={cards}
-					animateCardOpacity={true}
 					renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
 					verticalSwipe={false}
 					onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
