@@ -136,6 +136,7 @@ const Jeu = () => {
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {
+		console.log("clicked on swipe left");
 		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === false) {
 			handleFeedbackMessage(Answer.true, currentCard);
@@ -171,6 +172,47 @@ const Jeu = () => {
 		});
 	};
 
+	const overlayLabels = {
+		left: {
+			title: "FAUX",
+			style: {
+				label: {
+					backgroundColor: colorPink,
+					borderColor: colorPink,
+					color: "white",
+					borderWidth: 1,
+					fontSize: 24,
+				},
+				wrapper: {
+					flexDirection: "column",
+					alignItems: "flex-end",
+					justifyContent: "flex-start",
+					marginTop: 20,
+					marginLeft: -20,
+				},
+			},
+		},
+		right: {
+			title: "VRAIE",
+			style: {
+				label: {
+					backgroundColor: colorGreen,
+					borderColor: colorGreen,
+					color: "white",
+					borderWidth: 1,
+					fontSize: 24,
+				},
+				wrapper: {
+					flexDirection: "column",
+					alignItems: "flex-start",
+					justifyContent: "flex-start",
+					marginTop: 20,
+					marginLeft: 20,
+				},
+			},
+		},
+	};
+
 	const cards = dataGame;
 	const renderCard = (card: GameData, cardIndex: number) => {
 		return (
@@ -189,22 +231,24 @@ const Jeu = () => {
 		<View style={styles.wrapper}>
 			{showFinishedModal && <FinishedSession />}
 			{!showFinishedModal && (
-				<>
-					<Swiper
-						ref={swiperRef}
-						cards={cards}
-						renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
-						verticalSwipe={false}
-						onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
-						onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
-						backgroundColor={"transparent"}
-						cardVerticalMargin={120}
-						cardHorizontalMargin={30}
-						stackSize={5}
-						stackScale={5}
-						stackSeparation={24}
-					/>
-				</>
+				<Swiper
+					ref={swiperRef}
+					overlayLabels={overlayLabels}
+					inputOverlayLabelsOpacityRangeX={[-200, -100, 0, 100, 200]} // 5-value range
+					animateOverlayLabelsOpacity={true}
+					cards={cards}
+					animateCardOpacity={true}
+					renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
+					verticalSwipe={false}
+					onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
+					onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
+					backgroundColor={"transparent"}
+					cardVerticalMargin={120}
+					cardHorizontalMargin={30}
+					stackSize={5}
+					stackScale={5}
+					stackSeparation={24}
+				/>
 			)}
 			{feedbackMessage && (
 				<View
