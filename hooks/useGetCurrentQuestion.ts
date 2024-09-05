@@ -27,7 +27,7 @@ const fetchCurrentQuestion = async (
 	return data;
 };
 
-const useGameSessionsQuesionts = (sessionId: number) => {
+const useGameSessionsQuesions = (sessionId: number) => {
 	const { token, loading } = useJwtToken();
 
 	return useQuery<GameSessionQuestions>({
@@ -37,4 +37,4 @@ const useGameSessionsQuesionts = (sessionId: number) => {
 	});
 };
 
-export default useGameSessionsQuesionts;
+export default useGameSessionsQuesions;

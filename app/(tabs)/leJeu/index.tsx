@@ -14,7 +14,7 @@ import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
 import useGameQuestions from "@/hooks/useGameQuestions";
 import useGameSessions from "@/hooks/useGameSessions";
-import useGameSessionsQuesionts from "@/hooks/useGetCurrentQuestion";
+import useGameSessionsQuesions from "@/hooks/useGetCurrentQuestion";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -28,25 +28,26 @@ const LeJeu = () => {
 	const navigation = useNavigation<NavigationType>();
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
+	const { userId } = useUserId();
+	const { token } = useJwtToken();
 	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 	const {
 		dataGame,
 		setDataGame,
 		sessionId,
 		setSessionsId,
-		isCurrentSession,
-		setShowFinishedModal,
-		setIsCurrentSession,
-		setFirstQuestionsInstance,
+		questionsLeft,
+		setQuestionsLeft,
+		playing,
+		setPlaying,
 	} = useGameContext();
 
-	const { userId } = useUserId();
-	const { token } = useJwtToken();
-
 	// Always call the hooks
-	const { data: gameSessions } = useGameSessions(userId);
+	const { data: gameSessions, isFetched: fetchedGameSessions } =
+		useGameSessions(userId);
 	const { data: fetchedDataGame } = useGameQuestions();
-	const { data: currentQuestion } = useGameSessionsQuesionts(sessionId);
+	const { data: currentQuestions, isFetched: fetchedCurrentQuestions } =
+		useGameSessionsQuesions(sessionId);
 
 	const handleSuccessNewGameSession = (data: any) => {
 		setSessionsId(data.data.id);
@@ -62,57 +63,75 @@ const LeJeu = () => {
 		handleError
 	);
 
-	// Determine if a session is in progress
 	useEffect(() => {
-		if (gameSessions?.data[0]?.id) {
-			setSessionsId(gameSessions.data[0].id);
-			setIsCurrentSession(true);
-			setShowFinishedModal(false);
-			setFirstQuestionsInstance(false);
-			const sessionQuestionsPool =
-				gameSessions.data[0].attributes.questionsPool;
+		if (fetchedGameSessions) {
+			if (gameSessions.data[0]?.attributes) {
+				setSessionsId(gameSessions.data[0]?.id);
+				const sessionQuestionsPool =
+					gameSessions.data[0]?.attributes.questionsPool;
 
-			if (currentQuestion?.meta.pagination.total) {
-				const currentOrder = currentQuestion?.meta.pagination.total;
-
-				// Filter out questions that have been answered
 				const filteredQuestionsPool =
-					currentOrder > 0
-						? sessionQuestionsPool.slice(currentOrder)
+					questionsLeft > 0
+						? sessionQuestionsPool.slice(30 - questionsLeft)
 						: sessionQuestionsPool;
 
-				// Update the session data with the filtered questions
-				setDataGame(filteredQuestionsPool);
+				if (!playing) setDataGame(filteredQuestionsPool);
 			} else {
-				setDataGame(gameSessions.data[0].attributes.questionsPool);
+				setQuestionsLeft(30);
+				setDataGame(
+					fetchedDataGame
+						? Object.keys(fetchedDataGame.data).map(
+								(key) => fetchedDataGame.data[key] as GameData
+						  )
+						: null
+				);
 			}
-		} else {
-			setFirstQuestionsInstance(true);
-			setIsCurrentSession(false);
-			setShowFinishedModal(false);
-			setDataGame(
-				fetchedDataGame
-					? Object.keys(fetchedDataGame.data).map(
-							(key) => fetchedDataGame.data[key] as GameData
-					  )
-					: null
-			);
 		}
 	}, [
-		gameSessions,
 		fetchedDataGame,
-		currentQuestion,
-		setSessionsId,
-		setIsCurrentSession,
+		fetchedGameSessions,
+		gameSessions?.data,
+		playing,
+		questionsLeft,
 		setDataGame,
-		setShowFinishedModal,
-		setFirstQuestionsInstance,
+		setQuestionsLeft,
+		setSessionsId,
+	]);
+
+	useEffect(() => {
+		if (sessionId && fetchedCurrentQuestions) {
+			if (currentQuestions.meta.pagination.total > 0) {
+				if (!questionsLeft && !playing) {
+					setQuestionsLeft(30 - currentQuestions.meta.pagination.total);
+				}
+			} else {
+				if (!questionsLeft) setQuestionsLeft(30);
+				setDataGame(
+					fetchedDataGame
+						? Object.keys(fetchedDataGame.data).map(
+								(key) => fetchedDataGame.data[key] as GameData
+						  )
+						: null
+				);
+			}
+		}
+	}, [
+		fetchedCurrentQuestions,
+		currentQuestions,
+		sessionId,
+		questionsLeft,
+		setQuestionsLeft,
+		setDataGame,
+		fetchedDataGame,
+		playing,
 	]);
 
 	const handlePressPlay = () => {
-		if (!isCurrentSession) {
+		if (!sessionId) {
+			setPlaying(true);
 			newGameSession.mutate({ userId, token, questionsPool: dataGame });
 		} else {
+			setPlaying(true);
 			navigation.navigate("jeu");
 		}
 	};

@@ -4,11 +4,32 @@ import useJwtToken from "@/hooks/useJwtToken";
 import { GameData, GameDataPayload } from "@/types/game";
 import { useQuery } from "@tanstack/react-query";
 
+function generateQueryString() {
+	const totalNumbers = 30;
+	const maxNumber = 3400;
+	let numbers = new Set();
+
+	// Generate 30 unique random numbers
+	while (numbers.size < totalNumbers) {
+		const randomNum = Math.floor(Math.random() * (maxNumber + 1)); // +1 because the upper limit is inclusive
+		numbers.add(randomNum);
+	}
+
+	// Convert the Set to an Array and then map to the desired string format
+	const queryString = Array.from(numbers)
+		.map((num, index) => `filters[id][$in][${index}]=${num}`)
+		.join("&");
+
+	return queryString;
+}
+
+// Example usage:
+const queryString = generateQueryString();
+
 const fetchGameQuestions = async (token: string) => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/questions?populate[favorite-questions][fields]=id&random=true&pagination[limit]=30`,
-			// `${process.env.EXPO_PUBLIC_API_URL}/questions?populate[favorite-questions][fields]=id&filters[id][$in]=20&filters[id][$in]=16&filters[id][$in]=17&filters[id][$in]=3&filters[id][$in]=2`,
+			`${process.env.EXPO_PUBLIC_API_URL}/questions?${queryString}&populate[favorite-questions][fields]=id`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

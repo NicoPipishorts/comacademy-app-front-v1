@@ -17,7 +17,7 @@ interface CardProps {
 	cardIndex: number;
 }
 
-const Card = ({ data, catColors }: CardProps) => {
+const Card = ({ data, catColors, cardIndex }: CardProps) => {
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
