@@ -17,12 +17,27 @@ interface CardProps {
 	cardIndex: number;
 }
 
-const Card = ({ data, catColors, cardIndex }: CardProps) => {
+const Card = ({
+	data,
+	catColors,
+	onSwipeLeft,
+	onSwipeRight,
+	cardIndex,
+}: CardProps) => {
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
-	const selectedCategory: number = data?.attributes.CATEGORIE;
 
+	const handlePress = (side: string) => {
+		console.log(side, cardIndex);
+		if (side === "left") {
+			onSwipeLeft(cardIndex);
+		} else {
+			onSwipeRight(cardIndex);
+		}
+	};
+
+	const selectedCategory: number = data?.attributes.CATEGORIE;
 	const backGroundColor = () => {
 		const colorItem = catColors.data.find(
 			(color) => color.id === selectedCategory[0]
@@ -70,7 +85,7 @@ const Card = ({ data, catColors, cardIndex }: CardProps) => {
 					// TODO Works on buttons for swiping
 				}
 				{/* <View style={styles.containerCardIcons}>
-					<TouchableOpacity onPress={() => onSwipeLeft(cardIndex)}>
+					<TouchableOpacity onPress={() => handlePress("left")}>
 						<MaterialCommunityIcons
 							name='thumb-down-outline'
 							size={30}
@@ -78,7 +93,7 @@ const Card = ({ data, catColors, cardIndex }: CardProps) => {
 							style={styles.cardIcon}
 						/>
 					</TouchableOpacity>
-					<TouchableOpacity onPress={testPress}>
+					<TouchableOpacity onPress={() => handlePress("right")}>
 						<MaterialCommunityIcons
 							name='thumb-up-outline'
 							size={30}
