@@ -4,7 +4,7 @@ import useJwtToken from "@/hooks/useJwtToken";
 import { CategoriePayload } from "@/types/categories";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCategories = async (token: string): Promise<any> => {
+const fetchCategories = async (token: string): Promise<CategoriePayload> => {
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*&sort=id:asc`,

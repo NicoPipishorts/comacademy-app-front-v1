@@ -4,7 +4,7 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import UserAccount from "@/components/user/userAccount";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import useGetAllAnswers from "@/hooks/useGetAllAnswers";
+import { useGetAllScores } from "@/hooks/useGetAllAnswers";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import React, { useEffect, useState } from "react";
@@ -36,7 +36,7 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { logout } = useAuth();
 
-	const { data: answers, refetch } = useGetAllAnswers(userId, token); // Destructure refetch and isFetching from the hook
+	const { data: answers, refetch } = useGetAllScores(userId, token); // Destructure refetch and isFetching from the hook
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(

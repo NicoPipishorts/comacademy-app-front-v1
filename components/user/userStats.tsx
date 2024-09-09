@@ -1,6 +1,8 @@
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { UserScoreByCategory } from "@/hooks/useGetAllAnswers";
+import { NavigationType } from "@/types/general";
+import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import StatsBar from "../ProgressBar";
 
@@ -9,6 +11,8 @@ interface Props {
 }
 
 export default function UserStats({ categoriesScore }: Props) {
+	const navigation = useNavigation<NavigationType>();
+
 	return (
 		<>
 			<StatsBar
@@ -19,7 +23,9 @@ export default function UserStats({ categoriesScore }: Props) {
 			<View style={styles.cardWrapper}>
 				<View style={styles.cardTextContainer}>
 					<Text style={styles.cardText}>Découvre toutes tes réponses</Text>
-					<TouchableOpacity style={styles.buttonBlack}>
+					<TouchableOpacity
+						style={styles.buttonBlack}
+						onPress={() => navigation.navigate("userAnswers")}>
 						<Text style={styles.buttonText}>Voir</Text>
 					</TouchableOpacity>
 				</View>
