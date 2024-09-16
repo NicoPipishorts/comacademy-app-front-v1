@@ -1,5 +1,4 @@
 import Loader from "@/components/experience/loader";
-import UserAnswerDetails from "@/components/user/useAnswerDetails";
 import { primaryBackground } from "@/constants/colors";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useGetAllAnswer } from "@/hooks/useGetAllAnswers";
@@ -21,17 +20,7 @@ export default function UserAnswersList() {
 		<>
 			<View style={styles.wrapper}>
 				<ScreenHeaders content='Mes Réponses' />
-				<ScrollView>
-					{allAnswers.data.map((answer) => {
-						return (
-							<UserAnswerDetails
-								key={answer.id}
-								categories={categories}
-								answer={answer}
-							/>
-						);
-					})}
-				</ScrollView>
+				<ScrollView showsVerticalScrollIndicator={false}></ScrollView>
 			</View>
 		</>
 	);
@@ -42,6 +31,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		padding: 30,
 		paddingTop: 100,
+		paddingBottom: 100,
 		backgroundColor: primaryBackground,
 	},
 });

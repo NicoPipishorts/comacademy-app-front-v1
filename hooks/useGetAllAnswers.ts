@@ -36,7 +36,7 @@ export const useGetAllAnswer = (userId: number, token: string) => {
 	return useQuery<GameSessionQuestions>({
 		queryKey: ["AllAnswers", userId],
 		queryFn: () => fetchPayload(token, userId),
-		enabled: !!token,
+		enabled: !!token && !!userId,
 	});
 };
 
