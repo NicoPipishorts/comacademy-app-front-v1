@@ -1,42 +1,24 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 // Assets
 import { CategorieColors } from "@/types/categories";
 import { GameData } from "@/types/game";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
 
 interface CardProps {
 	data: GameData;
 	catColors: CategorieColors;
-	onSwipeLeft: (cardIndex: number) => void;
-	onSwipeRight: (cardIndex: number) => void;
-	cardIndex: number;
 }
 
-const Card = ({
-	data,
-	catColors,
-	onSwipeLeft,
-	onSwipeRight,
-	cardIndex,
-}: CardProps) => {
+const Card = ({ data, catColors }: CardProps) => {
+	const insets = useSafeAreaInsets();
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
-
-	const handlePress = (side: string) => {
-		console.log(side, cardIndex);
-		if (side === "left") {
-			onSwipeLeft(cardIndex);
-		} else {
-			onSwipeRight(cardIndex);
-		}
-	};
-
 	const selectedCategory: number = data?.attributes.CATEGORIE;
 	const backGroundColor = () => {
 		const colorItem = catColors.data.find(
@@ -46,7 +28,7 @@ const Card = ({
 	};
 
 	return (
-		<View style={styles.cardsWrapper}>
+		<View style={[styles.cardsWrapper, { paddingTop: insets.top }]}>
 			<View
 				style={[
 					{
@@ -55,17 +37,6 @@ const Card = ({
 					styles.cardContainer,
 				]}>
 				<View style={styles.containerTopRow}>
-					<View style={styles.containerStars}>
-						{Array.from({ length: data.attributes.COEF }, (_, index) => (
-							<MaterialCommunityIcons
-								key={index}
-								name='star-outline'
-								size={30}
-								color={colorWhite}
-								style={styles.iconStars}
-							/>
-						))}
-					</View>
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
@@ -81,27 +52,6 @@ const Card = ({
 				<View style={styles.containerText}>
 					<Text style={styles.textText}>{data?.attributes.QUESTION}</Text>
 				</View>
-				{
-					// TODO Works on buttons for swiping
-				}
-				{/* <View style={styles.containerCardIcons}>
-					<TouchableOpacity onPress={() => handlePress("left")}>
-						<MaterialCommunityIcons
-							name='thumb-down-outline'
-							size={30}
-							color={colorWhite}
-							style={styles.cardIcon}
-						/>
-					</TouchableOpacity>
-					<TouchableOpacity onPress={() => handlePress("right")}>
-						<MaterialCommunityIcons
-							name='thumb-up-outline'
-							size={30}
-							color={colorWhite}
-							style={styles.cardIcon}
-						/>
-					</TouchableOpacity>
-				</View> */}
 			</View>
 		</View>
 	);
@@ -109,12 +59,12 @@ const Card = ({
 
 const styles = StyleSheet.create({
 	cardsWrapper: {
-		paddingTop: "25%",
+		// paddingTop: "15%",
 		justifyContent: "flex-start",
 		alignItems: "center",
 	},
 	cardContainer: {
-		minHeight: "65%",
+		minHeight: "75%",
 		minWidth: "100%",
 		padding: 20,
 		paddingTop: 0,
@@ -125,24 +75,15 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
-		elevation: 5, // Elevation for Android shadow
+		elevation: 5,
 	},
 	containerTopRow: {
 		width: "100%",
 		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "flex-start",
-	},
-	containerStars: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		paddingVertical: 20,
-	},
-	iconStars: {
-		paddingRight: 2,
+		justifyContent: "flex-end",
 	},
 	containerCatIcon: {
-		paddingVertical: 10,
+		paddingVertical: 15,
 	},
 	catIcon: {
 		width: 55,

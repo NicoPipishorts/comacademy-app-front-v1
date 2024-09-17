@@ -46,9 +46,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		width: "100%",
 		alignItems: "center",
-		justifyContent: "flex-start",
-		marginBottom: 83,
-		paddingTop: "35%",
+		justifyContent: "center",
+		paddingBottom: 90,
+		marginBottom: 103,
 	},
 	centerTitle: {
 		fontSize: FontSizeScreenTitles,

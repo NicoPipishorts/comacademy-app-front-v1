@@ -21,13 +21,16 @@ import { useGameContext } from "@/providers/gameDataContext";
 import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
+import * as Device from "expo-device";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FinishedSession from "./finished";
 
 const Jeu = () => {
+	const insets = useSafeAreaInsets();
 	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
@@ -207,22 +210,15 @@ const Jeu = () => {
 		},
 	};
 
+	console.log(Device.manufacturer, " : ", Device.modelName);
+
 	const cards = dataGame;
 	const renderCard = (card: GameSessionQuestionData, cardIndex: number) => {
-		return (
-			<Card
-				key={card?.id}
-				catColors={catData}
-				data={card}
-				onSwipeLeft={onSwipeLeft}
-				onSwipeRight={onSwipeRight}
-				cardIndex={cardIndex}
-			/>
-		);
+		return <Card key={card?.id} catColors={catData} data={card} />;
 	};
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			{showFinishedModal && <FinishedSession />}
 			{!showFinishedModal && (
 				<Swiper
@@ -285,7 +281,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
-		paddingTop: 100,
+		// paddingTop: 100,
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
 		alignItems: "center",
