@@ -1,4 +1,5 @@
 import Loader from "@/components/experience/loader";
+import AnswersCard from "@/components/leJeu/answers/AnswersCard";
 import {
 	colorBlack,
 	colorTurquoise,
@@ -6,13 +7,14 @@ import {
 	colorWhite,
 	primaryBackground,
 } from "@/constants/colors";
-import { FontSize14, FontSize16, FontSize18 } from "@/constants/fontsizes";
+import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import useCountAllQuestions from "@/hooks/useCountAllQuestions";
 import useCountAnsweredQuestions from "@/hooks/useCountAnsweredQuestions";
+import { useGetAnaswersTrue } from "@/hooks/useGetAnswersTrue";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function Answers() {
 	const { token } = useJwtToken();
@@ -20,8 +22,9 @@ export default function Answers() {
 
 	const { data: all } = useCountAllQuestions(token);
 	const { data: answered } = useCountAnsweredQuestions(userId, token);
+	const { data: correctAnswers } = useGetAnaswersTrue(userId, token);
 
-	if (!userId) {
+	if (!userId || !all || !answered || !correctAnswers) {
 		return <Loader />;
 	}
 
@@ -47,12 +50,10 @@ export default function Answers() {
 	};
 
 	return (
-		<View style={styles.wrapper}>
-			{/* <Text style={styles.headerContainer}>
-				Crée tes Playlists avec tes questions favorites et débloque en de
-				nouvelles réponses en jouant !
-			</Text> */}
-
+		<ScrollView
+			showsVerticalScrollIndicator={false}
+			contentContainerStyle={[styles.wrapper, { paddingBottom: 100 }]}
+			style={{ flex: 1 }}>
 			<View style={styles.cardContainer}>
 				<View style={styles.cardResults}>
 					<Text style={styles.cardResultsLarge}>{answered?.count}</Text>
@@ -68,25 +69,25 @@ export default function Answers() {
 				</View>
 				<Text style={styles.cardUnlocked}>Réponses débloquées</Text>
 			</View>
-		</View>
+
+			<View style={{ paddingTop: 40 }}>
+				{correctAnswers.data.map((answer) => {
+					return <AnswersCard key={answer.id} data={answer} />;
+				})}
+			</View>
+		</ScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
 	wrapper: {
-		flex: 1,
-		paddingTop: 40,
+		paddingTop: 20,
+		paddingBottom: 100,
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
 		alignItems: "center",
 	},
-	headerContainer: {
-		width: "100%",
-		fontSize: FontSize18,
-		fontWeight: "bold",
-	},
 	cardContainer: {
-		marginTop: 40,
 		minWidth: "100%",
 		borderRadius: 18,
 		paddingHorizontal: 20,

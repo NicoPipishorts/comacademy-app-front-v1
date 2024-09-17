@@ -3,7 +3,7 @@ import dico from "@/assets/imgs/icons/dico.png";
 import le_jeu from "@/assets/imgs/icons/le_jeu.png";
 import metiers from "@/assets/imgs/icons/metiers.png";
 import playlists from "@/assets/imgs/icons/playlists.png";
-import { colorBlack } from "@/constants/colors";
+import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
@@ -37,6 +37,8 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 		playlists: "Playlists",
 		index: "Accueil",
 	};
+	// Used to apply the BG or not to the tab bar.
+	const currentRouteName = state.routes[state.index].name;
 
 	return (
 		<View style={styles.tabbarContainer}>
@@ -70,7 +72,10 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							accessibilityState={isFocused ? { selected: true } : {}}
 							testID={options.tabBarTestID}
 							onPress={onPress}
-							style={styles.tabbarItem}>
+							style={[
+								styles.tabbarItem,
+								currentRouteName === "leJeu" && styles.onTabBackground,
+							]}>
 							<Image
 								source={icons[route.name] || accueil}
 								style={styles.tabIcons}
@@ -92,7 +97,10 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		width: "100%",
 		alignItems: "center",
-		// backgroundColor: primaryBackground,
+	},
+	onTabBackground: {
+		paddingTop: 10,
+		backgroundColor: primaryBackground,
 	},
 	tabbar: {
 		flexDirection: "row",

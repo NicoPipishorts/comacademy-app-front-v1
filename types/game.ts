@@ -22,7 +22,31 @@ export type GameData = {
 	attributes: GameAttributes;
 };
 
-export type GameSession = {
+export type GameSessionAttributes = {
+	QUESTION: string;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt: string;
+	CATEGORIE: number;
+	TAG: string | null;
+	ANSWER: boolean;
+	REPONSE: string;
+	ACTIVE: boolean;
+	COEF: number;
+	SENSIBILITE: string | null;
+	favorite_questions: [];
+};
+
+export type GameSessionQuestionData = {
+	id: number;
+	attributes: GameSessionAttributes;
+};
+
+export type GameSessionPayload = {
+	data: Record<string, GameSessionQuestionData>;
+};
+
+export type GameSessionDetail = {
 	data: {
 		id: number;
 		attributes: {
@@ -30,7 +54,7 @@ export type GameSession = {
 			score: number;
 			inProgress: boolean;
 			abandoned: boolean;
-			questionsPool: GameData;
+			questionsPool: GameSessionPayload;
 			createdAt: string;
 			updatedAt: string;
 			publishedAt: string;
@@ -40,21 +64,32 @@ export type GameSession = {
 	meta: Record<string, unknown>;
 };
 
+export type GameSessionQuestionAttributes = {
+	gameId: number | string; // Adjusted to match the example payload ("1459" is a string)
+	questionId: {
+		data: GameSessionQuestionData;
+	};
+	answer: boolean;
+	order?: number;
+	categorie: number;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt: string;
+	userId: number | string; // Adjusted to match the example payload ("1" is a string)
+};
+
 export type GameSessionQuestion = {
 	id: number;
-	attributes: {
-		gameId: number;
-		questionId: number;
-		answer: boolean;
-		order: number;
-		categorie: number; // Assuming this is part of attributes
-	};
+	attributes: GameSessionQuestionAttributes;
 };
 
 export type GameSessionQuestions = {
-	data: GameSessionQuestion[]; // Updated to an array of GameSessionQuestion objects
+	data: GameSessionQuestion[]; // An array of GameSessionQuestion objects
 	meta: {
 		pagination: {
+			page: number;
+			pageSize: number;
+			pageCount: number;
 			total: number;
 		};
 	};

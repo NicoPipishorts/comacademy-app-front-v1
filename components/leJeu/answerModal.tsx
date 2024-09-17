@@ -13,7 +13,7 @@ import { truncateString } from "@/helpers/truncateText";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
-import { GameData } from "@/types/game";
+import { GameSessionQuestionData } from "@/types/game";
 import React, {
 	Dispatch,
 	SetStateAction,
@@ -39,7 +39,7 @@ type Props = {
 	visible: boolean;
 	feedbackMessage: Answer | null;
 	setIsModalVisible: Dispatch<SetStateAction<boolean>>;
-	currentCardData: GameData | null;
+	currentCardData: GameSessionQuestionData | null;
 	favoriteQuestions: number[];
 	setFavoriteQuestions: Dispatch<SetStateAction<number[]>>;
 };
@@ -78,8 +78,8 @@ const AnswerModal = ({
 
 	// Set favorite status based on the favoriteQuestions array when the modal becomes visible
 	useEffect(() => {
-		if (visible && currentCardData) {
-			setFavorite(favoriteQuestions.includes(currentCardData.id));
+		if (visible && currentCardData && favoriteQuestions !== undefined) {
+			setFavorite(favoriteQuestions.includes(currentCardData?.id));
 		}
 	}, [visible, currentCardData, favoriteQuestions]);
 

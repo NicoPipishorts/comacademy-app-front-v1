@@ -12,7 +12,7 @@ const fetchAllQuestions = async (
 ): Promise<AnsweredQuestions> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&fields[1]=questionId&pagination[limit]=10000&filters[userId][$eq]=${userId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&populate[questionId][fields][0]=id&filters[userId][$eq]=${userId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -22,10 +22,12 @@ const fetchAllQuestions = async (
 
 		if (!response.ok) {
 			console.error(
-				`HTTP error! status: ${response.status}`,
+				`HTTP error! Unable to get all the answers for the count: status:${response.status}`,
 				await response.text()
 			);
-			throw new Error(`HTTP error! status: ${response.status}`);
+			throw new Error(
+				`HTTP error! Unable to get all the answers for the count: status: ${response.status}`
+			);
 		}
 
 		const data = await response.json();
@@ -34,7 +36,7 @@ const fetchAllQuestions = async (
 			const uniqueQuestions = new Map();
 
 			questions.forEach((question) => {
-				const questionId = question.attributes.questionId;
+				const questionId = question.attributes.questionId.data.id;
 				if (!uniqueQuestions.has(questionId)) {
 					uniqueQuestions.set(questionId, question);
 				}
@@ -62,6 +64,7 @@ const useCountAnsweredQuestions = (userId: number, token: string) => {
 	return useQuery<AnsweredQuestions>({
 		queryKey: ["AnsweredQuestions"],
 		queryFn: () => fetchAllQuestions(userId, token),
+		staleTime: 5000,
 		enabled: !!token && !!userId,
 	});
 };

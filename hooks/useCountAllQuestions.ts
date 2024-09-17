@@ -19,10 +19,12 @@ const fetchAllQuestions = async (token: string): Promise<QuestionsCount> => {
 
 		if (!response.ok) {
 			console.error(
-				`HTTP error! status: ${response.status}`,
+				`HTTP error! Unable to get all the answers for the count: status: ${response.status}`,
 				await response.text()
 			);
-			throw new Error(`HTTP error! status: ${response.status}`);
+			throw new Error(
+				`HTTP error! Unable to get all the answers for the count: status: ${response.status}`
+			);
 		}
 
 		const data = await response.json();
