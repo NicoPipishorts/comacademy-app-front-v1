@@ -1,3 +1,27 @@
+export type GameAttributes = {
+	QUESTION: string;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt: string;
+	CATEGORIE: number;
+	TAG: string | null;
+	ANSWER: boolean;
+	REPONSE: string;
+	ACTIVE: boolean;
+	COEF: number;
+	SENSIBILITE: string | null;
+	favorite_questions: [];
+};
+
+export type GameDataPayload = {
+	data: Record<string, GameData>;
+};
+
+export type GameData = {
+	id: number;
+	attributes: GameAttributes;
+};
+
 export type GameSessionAttributes = {
 	QUESTION: string;
 	createdAt: string;

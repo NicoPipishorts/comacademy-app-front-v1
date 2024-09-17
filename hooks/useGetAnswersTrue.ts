@@ -6,7 +6,7 @@ const fetchPayload = async (
 	userId: number
 ): Promise<GameSessionQuestions> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?populate=*&filters[userId][$eq]=${userId}&filters[answer][$eq]=true&pagination[limit]=10000`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?sort[0]=createdAt:desc&populate=*&filters[userId][$eq]=${userId}&filters[answer][$eq]=true&pagination[limit]=10000`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,

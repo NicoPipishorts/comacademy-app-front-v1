@@ -45,7 +45,7 @@ const LeJeu = () => {
 	// Always call the hooks
 	const { data: gameSessions, isFetched: fetchedGameSessions } =
 		useGameSessions(userId);
-	const { data: fetchedDataGame } = useGameQuestions();
+	const { data: fetchedDataGame } = useGameQuestions(userId);
 	const { data: currentQuestions, isFetched: fetchedCurrentQuestions } =
 		useGameSessionsQuesions(sessionId);
 

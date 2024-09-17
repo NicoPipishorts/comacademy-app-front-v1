@@ -90,16 +90,6 @@ const Jeu = () => {
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
-	// useEffect(() => {
-	// 	if (questionsLeft <= 0) {
-	// 		console.log("in the get score useEffect");
-	// 		queryClient.refetchQueries({
-	// 			queryKey: ["GameScore"],
-	// 		});
-	// 		setScore(gameScore);
-	// 	}
-	// }, [gameScore, questionsLeft, sessionId, setScore, userId]);
-
 	const insertPlayerAnswer = InsertAnswer();
 
 	const handleFinishGame = () => {
@@ -197,7 +187,7 @@ const Jeu = () => {
 			},
 		},
 		right: {
-			title: "VRAIE",
+			title: "VRAI",
 			style: {
 				label: {
 					backgroundColor: colorBlack,
