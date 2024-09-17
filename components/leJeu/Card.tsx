@@ -4,6 +4,7 @@ import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 // Assets
+import useIsSpecificiPhoneModel from "@/helpers/devviceModel";
 import { CategorieColors } from "@/types/categories";
 import { GameData } from "@/types/game";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ interface CardProps {
 
 const Card = ({ data, catColors }: CardProps) => {
 	const insets = useSafeAreaInsets();
+	const isSpecificiPhoneModel = useIsSpecificiPhoneModel();
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
@@ -33,6 +35,7 @@ const Card = ({ data, catColors }: CardProps) => {
 				style={[
 					{
 						backgroundColor: `${backGroundColor()}`,
+						minHeight: isSpecificiPhoneModel ? "85%" : "65%",
 					},
 					styles.cardContainer,
 				]}>
@@ -64,7 +67,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	cardContainer: {
-		minHeight: "75%",
 		minWidth: "100%",
 		padding: 20,
 		paddingTop: 0,
