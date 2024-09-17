@@ -1,10 +1,11 @@
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
+import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ScreenHeaders from "../../components/ScreenHeaders";
+import ScreenHeaders from "../../../components/ScreenHeaders";
 
 const Playlist = () => {
 	const insets = useSafeAreaInsets();
@@ -21,6 +22,12 @@ const Playlist = () => {
 					<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
 				</View>
 			</TouchableOpacity>
+
+			<CardFavoritesList
+				type='favorites'
+				title='Favorites'
+				destination='favorites'
+			/>
 		</View>
 	);
 };
