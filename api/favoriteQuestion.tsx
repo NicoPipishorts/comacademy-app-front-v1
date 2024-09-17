@@ -14,8 +14,7 @@ interface FavoriteQuestionResponse {
 
 // Custom hook to add favorite question
 export const useAddFavoriteQuestionMutation = (
-	onSuccess: (data: FavoriteQuestionResponse) => void,
-	onError: (error: AxiosError) => void
+	onSuccess: (data: FavoriteQuestionResponse) => void
 ) => {
 	return useMutation<
 		FavoriteQuestionResponse,
@@ -61,7 +60,6 @@ export const useAddFavoriteQuestionMutation = (
 			if (error.response) {
 				console.error("Error code:", error.response.status);
 			}
-			onError(error); // Call the original onError callback
 		},
 	});
 };

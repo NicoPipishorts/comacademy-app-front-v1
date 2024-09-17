@@ -70,11 +70,7 @@ const AnswerModal = ({
 		// setFavorite(true);
 	};
 
-	const handleError = (error: any) => {
-		console.error("Error adding favorite question", error);
-	};
-
-	const mutation = useAddFavoriteQuestionMutation(handleSuccess, handleError);
+	const mutation = useAddFavoriteQuestionMutation(handleSuccess);
 
 	// Set favorite status based on the favoriteQuestions array when the modal becomes visible
 	useEffect(() => {
