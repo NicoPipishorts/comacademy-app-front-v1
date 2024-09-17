@@ -21,6 +21,7 @@ export default function AnswersDetails() {
 	if (!data || !category) {
 		return <Loader />;
 	}
+
 	return (
 		<View style={styles.wrapper}>
 			<View
@@ -33,7 +34,7 @@ export default function AnswersDetails() {
 					},
 				]}>
 				<Text style={styles.headerContainerText}>
-					{data.data.attributes.ANSWER ? "Vrai" : "Faux"} : {data.data.id}
+					{data.data.attributes.ANSWER ? "Vrai" : "Faux"}
 				</Text>
 			</View>
 
@@ -41,10 +42,10 @@ export default function AnswersDetails() {
 				<View style={styles.containerIcons}>
 					{data.data.attributes.CATEGORIE !== undefined &&
 					data.data.attributes.CATEGORIE !== null
-						? data.data.attributes.CATEGORIE.split(",").map((cat) => {
+						? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
 								const categoryNumber = parseInt(cat, 10);
 								return (
-									<View style={{ marginRight: 8 }}>
+									<View style={{ marginRight: 8 }} key={index}>
 										<SmallCategroieIcons
 											key={categoryNumber}
 											cats={categoryNumber}
