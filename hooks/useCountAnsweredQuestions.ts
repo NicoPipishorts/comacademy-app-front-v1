@@ -12,7 +12,7 @@ const fetchAllQuestions = async (
 ): Promise<AnsweredQuestions> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&populate[questionId][fields][0]=id&filters[userId][$eq]=${userId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&populate[questionId][fields][0]=id&filters[userId][$eq]=${userId}&filters[answer][$eq]=true`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

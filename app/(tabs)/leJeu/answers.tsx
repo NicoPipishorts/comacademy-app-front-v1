@@ -28,6 +28,26 @@ export default function Answers() {
 		return <Loader />;
 	}
 
+	const removeDuplicateAnswers = () => {
+		// Step 1: Remove duplicates based on questionId.data.id
+		const uniqueAnswers = correctAnswers.data.filter(
+			(answer, index, self) =>
+				index ===
+				self.findIndex(
+					(t) =>
+						t.attributes.questionId.data.id ===
+						answer.attributes.questionId.data.id
+				)
+		);
+
+		// Step 2: Sort the unique answers by questionId.data.id in descending order
+		const sortedAnswers = uniqueAnswers.sort((a, b) => {
+			return b.id - a.id; // Descending order
+		});
+
+		return sortedAnswers;
+	};
+
 	const progressBarProgressions = () => {
 		if (
 			!all ||
@@ -54,13 +74,6 @@ export default function Answers() {
 			showsVerticalScrollIndicator={false}
 			contentContainerStyle={[styles.wrapper, { paddingBottom: 100 }]}
 			style={{ flex: 1 }}>
-			{/* {correctAnswers.data.map((test) => {
-				return (
-					<Text>
-						{test.id} : {test.attributes.questionId.data.id}
-					</Text>
-				);
-			})} */}
 			<View style={styles.cardContainer}>
 				<View style={styles.cardResults}>
 					<Text style={styles.cardResultsLarge}>{answered?.count}</Text>
@@ -78,7 +91,7 @@ export default function Answers() {
 			</View>
 
 			<View style={{ paddingTop: 40 }}>
-				{correctAnswers.data.map((answer) => {
+				{removeDuplicateAnswers().map((answer) => {
 					return (
 						<AnswersCard
 							key={answer.attributes.questionId.data.id}
