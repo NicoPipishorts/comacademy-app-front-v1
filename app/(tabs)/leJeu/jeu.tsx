@@ -19,7 +19,7 @@ import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { Answer } from "@/types/enums";
-import { GameData } from "@/types/game";
+import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -28,11 +28,12 @@ import Swiper from "react-native-deck-swiper";
 import FinishedSession from "./finished";
 
 const Jeu = () => {
-	const swiperRef = useRef<Swiper<GameData>>(null);
+	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
 	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-	const [currentCardData, setCurrentCardData] = useState<GameData | null>(null);
+	const [currentCardData, setCurrentCardData] =
+		useState<GameSessionQuestionData | null>(null);
 	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
@@ -89,16 +90,6 @@ const Jeu = () => {
 	const { data: catData } = useCategories();
 	const { data: fqData } = useGetFavoriteQuestions(userId);
 
-	// useEffect(() => {
-	// 	if (questionsLeft <= 0) {
-	// 		console.log("in the get score useEffect");
-	// 		queryClient.refetchQueries({
-	// 			queryKey: ["GameScore"],
-	// 		});
-	// 		setScore(gameScore);
-	// 	}
-	// }, [gameScore, questionsLeft, sessionId, setScore, userId]);
-
 	const insertPlayerAnswer = InsertAnswer();
 
 	const handleFinishGame = () => {
@@ -111,7 +102,7 @@ const Jeu = () => {
 
 	useEffect(() => {
 		if (fqData !== undefined) {
-			const initialFavQuestions = fqData.data[0].attributes.questions.data.map(
+			const initialFavQuestions = fqData.data[0]?.attributes.questions.data.map(
 				(question) => question.id
 			);
 			setFavoriteQuestions(initialFavQuestions);
@@ -126,7 +117,10 @@ const Jeu = () => {
 
 	// Map dataGame to the cards array
 
-	const handleFeedbackMessage = (message: Answer, cardData: GameData) => {
+	const handleFeedbackMessage = (
+		message: Answer,
+		cardData: GameSessionQuestionData
+	) => {
 		setFeedbackMessage(message);
 		setCurrentCardData(cardData);
 		setTimeout(() => {
@@ -193,7 +187,7 @@ const Jeu = () => {
 			},
 		},
 		right: {
-			title: "VRAIE",
+			title: "VRAI",
 			style: {
 				label: {
 					backgroundColor: colorBlack,
@@ -214,7 +208,7 @@ const Jeu = () => {
 	};
 
 	const cards = dataGame;
-	const renderCard = (card: GameData, cardIndex: number) => {
+	const renderCard = (card: GameSessionQuestionData, cardIndex: number) => {
 		return (
 			<Card
 				key={card?.id}

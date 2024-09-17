@@ -26,10 +26,12 @@ function generateQueryString() {
 // Example usage:
 const queryString = generateQueryString();
 
-const fetchGameQuestions = async (token: string) => {
+const fetchGameQuestions = async (token: string, userId: number) => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/questions?${queryString}&populate[favorite-questions][fields]=id`,
+			// `${process.env.EXPO_PUBLIC_API_URL}/questions?${queryString}&populate[favorite-questions][fields]=id`,
+
+			`${process.env.EXPO_PUBLIC_API_URL}questions?populate=*&pagination[limit]=30&filters[$or][0][game_session_questions][answer][$ne]=true&filters[$or][1][game_session_questions][id][$null]=true&filters[$or][2][game_session_questions][userId][$eq]=${userId}&filters[$or][3][game_session_questions][userId][$null]=true`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -86,13 +88,13 @@ const fetchGameQuestions = async (token: string) => {
 	}
 };
 
-const useGameQuestions = () => {
+const useGameQuestions = (userId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<GameDataPayload>({
 		queryKey: ["GameQuestions"],
-		queryFn: () => fetchGameQuestions(token),
-		enabled: !!token,
+		queryFn: () => fetchGameQuestions(token, userId),
+		enabled: !!token && !!userId,
 	});
 };
 

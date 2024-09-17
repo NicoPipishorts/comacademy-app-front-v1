@@ -22,6 +22,15 @@ const LeJeuLayout = () => {
 						animation: "slide_from_bottom",
 					}}
 				/>
+				<Stack.Screen
+					name='answersDetails'
+					options={{
+						headerShown: false,
+						gestureEnabled: true,
+						presentation: "modal",
+						animation: "slide_from_bottom",
+					}}
+				/>
 			</Stack>
 		</GameProvider>
 	);

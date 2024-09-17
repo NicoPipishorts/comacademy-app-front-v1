@@ -1,13 +1,16 @@
-// src/hooks/useCategories.ts
+// src/hooks/useGameQuestions.ts
 
 import useJwtToken from "@/hooks/useJwtToken";
-import { CategoriePayload } from "@/types/categories";
+import { QuestionById } from "@/types/question";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCategories = async (token: string): Promise<CategoriePayload> => {
+const fetchDicoById = async (
+	token: string,
+	id: number
+): Promise<QuestionById> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*&sort=id:asc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/questions/${id}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -26,19 +29,20 @@ const fetchCategories = async (token: string): Promise<CategoriePayload> => {
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching categories Full:", error);
+		console.error("Error fetching Question by Id:", error);
 		throw error;
 	}
 };
 
-const useCategoriesFull = () => {
+const useQuestionById = (id: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<CategoriePayload>({
-		queryKey: ["CategoriesFull"],
-		queryFn: () => fetchCategories(token),
-		enabled: !!token,
+	return useQuery<QuestionById>({
+		queryKey: ["Question", id],
+		queryFn: () => fetchDicoById(token, id),
+		staleTime: 5000,
+		enabled: !!token && !!id,
 	});
 };
 
-export default useCategoriesFull;
+export default useQuestionById;

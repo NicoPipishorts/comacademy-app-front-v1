@@ -12,7 +12,7 @@ const fetchPayload = async (
 	userId: number
 ): Promise<GameSessionQuestions> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[userId][$eq]=${userId}`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?populate=*&filters[userId][$eq]=${userId}&pagination[limit]=10000`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -32,7 +32,15 @@ const fetchPayload = async (
 	return data;
 };
 
-const useGetAllAnswers = (userId: number, token: string) => {
+export const useGetAllAnswer = (userId: number, token: string) => {
+	return useQuery<GameSessionQuestions>({
+		queryKey: ["AllAnswers", userId],
+		queryFn: () => fetchPayload(token, userId),
+		enabled: !!token && !!userId,
+	});
+};
+
+export const useGetAllScores = (userId: number, token: string) => {
 	return useQuery<UserScoreByCategory>({
 		queryKey: ["GameSessionQuestions", userId],
 		queryFn: async () => {
@@ -84,5 +92,3 @@ const useGetAllAnswers = (userId: number, token: string) => {
 		enabled: !!token && !!userId,
 	});
 };
-
-export default useGetAllAnswers;

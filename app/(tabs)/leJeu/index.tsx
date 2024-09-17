@@ -18,7 +18,7 @@ import useGameSessionsQuesions from "@/hooks/useGetCurrentQuestion";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
-import { GameData } from "@/types/game";
+import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import Answers from "./answers";
@@ -45,7 +45,7 @@ const LeJeu = () => {
 	// Always call the hooks
 	const { data: gameSessions, isFetched: fetchedGameSessions } =
 		useGameSessions(userId);
-	const { data: fetchedDataGame } = useGameQuestions();
+	const { data: fetchedDataGame } = useGameQuestions(userId);
 	const { data: currentQuestions, isFetched: fetchedCurrentQuestions } =
 		useGameSessionsQuesions(sessionId);
 
@@ -81,7 +81,7 @@ const LeJeu = () => {
 				setDataGame(
 					fetchedDataGame
 						? Object.keys(fetchedDataGame.data).map(
-								(key) => fetchedDataGame.data[key] as GameData
+								(key) => fetchedDataGame.data[key] as GameSessionQuestionData
 						  )
 						: null
 				);
@@ -109,7 +109,7 @@ const LeJeu = () => {
 				setDataGame(
 					fetchedDataGame
 						? Object.keys(fetchedDataGame.data).map(
-								(key) => fetchedDataGame.data[key] as GameData
+								(key) => fetchedDataGame.data[key] as GameSessionQuestionData
 						  )
 						: null
 				);
