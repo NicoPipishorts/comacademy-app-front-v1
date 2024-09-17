@@ -1,7 +1,6 @@
 import { FinishGameSession } from "@/api/finishSession";
 import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
-import AnswerModal from "@/components/leJeu/answerModal";
 import Card from "@/components/leJeu/Card";
 import {
 	colorBlack,
@@ -25,16 +24,14 @@ import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FinishedSession from "./finished";
 
 const Jeu = () => {
+	const insets = useSafeAreaInsets();
 	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
-	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-	const [currentCardData, setCurrentCardData] =
-		useState<GameSessionQuestionData | null>(null);
-	const [favoriteQuestions, setFavoriteQuestions] = useState<number[]>([]);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
@@ -100,16 +97,6 @@ const Jeu = () => {
 		});
 	};
 
-	useEffect(() => {
-		if (fqData !== undefined) {
-			const initialFavQuestions = fqData.data[0]?.attributes.questions.data.map(
-				(question) => question.id
-			);
-			setFavoriteQuestions(initialFavQuestions);
-		} else {
-		}
-	}, [fqData]);
-
 	// If dataGame is not yet available, show a loading indicator
 	if (!dataGame || !catData || !fqData) {
 		return <Loader />;
@@ -117,25 +104,19 @@ const Jeu = () => {
 
 	// Map dataGame to the cards array
 
-	const handleFeedbackMessage = (
-		message: Answer,
-		cardData: GameSessionQuestionData
-	) => {
+	const handleFeedbackMessage = (message: Answer) => {
 		setFeedbackMessage(message);
-		setCurrentCardData(cardData);
 		setTimeout(() => {
 			setFeedbackMessage(null);
-			setIsModalVisible(true);
-		}, 500);
+		}, 800);
 	};
 
 	const onSwipeLeft = (cardIndex: number) => {
-		console.log("clicked on swipe left");
 		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === false) {
-			handleFeedbackMessage(Answer.true, currentCard);
+			handleFeedbackMessage(Answer.true);
 		} else if (currentCard) {
-			handleFeedbackMessage(Answer.false, currentCard);
+			handleFeedbackMessage(Answer.false);
 		}
 		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
@@ -151,9 +132,9 @@ const Jeu = () => {
 	const onSwipeRight = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === true) {
-			handleFeedbackMessage(Answer.true, currentCard);
+			handleFeedbackMessage(Answer.true);
 		} else if (currentCard) {
-			handleFeedbackMessage(Answer.false, currentCard);
+			handleFeedbackMessage(Answer.false);
 		}
 		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
@@ -209,20 +190,11 @@ const Jeu = () => {
 
 	const cards = dataGame;
 	const renderCard = (card: GameSessionQuestionData, cardIndex: number) => {
-		return (
-			<Card
-				key={card?.id}
-				catColors={catData}
-				data={card}
-				onSwipeLeft={onSwipeLeft}
-				onSwipeRight={onSwipeRight}
-				cardIndex={cardIndex}
-			/>
-		);
+		return <Card key={card?.id} catColors={catData} data={card} />;
 	};
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			{showFinishedModal && <FinishedSession />}
 			{!showFinishedModal && (
 				<Swiper
@@ -254,14 +226,6 @@ const Jeu = () => {
 					<Text style={styles.feedbackText}>{feedbackMessage}</Text>
 				</View>
 			)}
-			<AnswerModal
-				visible={isModalVisible}
-				feedbackMessage={feedbackMessage}
-				setIsModalVisible={setIsModalVisible}
-				currentCardData={currentCardData}
-				favoriteQuestions={favoriteQuestions}
-				setFavoriteQuestions={setFavoriteQuestions}
-			/>
 			<View style={styles.containerBackButton}>
 				{showFinishedModal && (
 					<TouchableOpacity
@@ -285,7 +249,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
-		paddingTop: 100,
+		// paddingTop: 100,
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
 		alignItems: "center",

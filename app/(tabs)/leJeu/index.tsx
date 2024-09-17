@@ -21,10 +21,12 @@ import { useGameContext } from "@/providers/gameDataContext";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
 const LeJeu = () => {
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
@@ -138,7 +140,7 @@ const LeJeu = () => {
 
 	return (
 		<>
-			<View style={styles.wrapper}>
+			<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
 				<View style={styles.containerHeader}>
 					<View style={styles.header}>
 						<Text style={styles.headerMainText}>Le Jeu</Text>
@@ -174,7 +176,6 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
-		paddingTop: 100,
 		backgroundColor: primaryBackground,
 	},
 	containerHeader: {

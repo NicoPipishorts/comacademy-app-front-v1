@@ -8,7 +8,7 @@ const fetchFavoriteQuestions = async (
 ): Promise<any> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions?filters[userId][$eq]=${userId}&populate[questions][fields]=id`,
+			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}?populate[questions][fields]=id`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -33,12 +33,12 @@ const fetchFavoriteQuestions = async (
 };
 
 const useGetFavoriteQuestions = (userId: number) => {
-	const { token, loading } = useJwtToken();
+	const { token } = useJwtToken();
 
 	return useQuery<FavoriteQuestionsPayload>({
 		queryKey: ["FavoriteQuestions", userId],
 		queryFn: () => fetchFavoriteQuestions(token!, userId), // Ensure token is not null
-		enabled: !loading && !!token && !!userId, // Ensure the query is enabled only when token and userId are available
+		enabled: !!token && !!userId, // Ensure the query is enabled only when token and userId are available
 	});
 };
 
