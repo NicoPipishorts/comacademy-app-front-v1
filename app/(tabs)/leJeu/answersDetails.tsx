@@ -50,8 +50,14 @@ export default function AnswersDetails() {
 	// Handle Add Favorite question
 	const idArray = favorites.map((favorite) => favorite.id);
 	const handleAddFavorite = () => {
-		const updatedFavoriteQuestions = [...idArray, questionId];
-		mutation.mutate({ userId, updatedFavoriteQuestions, token });
+		if (filterIfFavoriteExists) {
+			const updatedIdArray = idArray.filter((id) => id !== questionId);
+			const updatedFavoriteQuestions = [...updatedIdArray];
+			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+		} else {
+			const updatedFavoriteQuestions = [...idArray, questionId];
+			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+		}
 	};
 
 	return (
