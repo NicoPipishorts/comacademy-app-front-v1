@@ -54,6 +54,13 @@ export default function Answers() {
 			showsVerticalScrollIndicator={false}
 			contentContainerStyle={[styles.wrapper, { paddingBottom: 100 }]}
 			style={{ flex: 1 }}>
+			{/* {correctAnswers.data.map((test) => {
+				return (
+					<Text>
+						{test.id} : {test.attributes.questionId.data.id}
+					</Text>
+				);
+			})} */}
 			<View style={styles.cardContainer}>
 				<View style={styles.cardResults}>
 					<Text style={styles.cardResultsLarge}>{answered?.count}</Text>
@@ -72,7 +79,13 @@ export default function Answers() {
 
 			<View style={{ paddingTop: 40 }}>
 				{correctAnswers.data.map((answer) => {
-					return <AnswersCard key={answer.id} data={answer} />;
+					return (
+						<AnswersCard
+							key={answer.attributes.questionId.data.id}
+							id={answer.attributes.questionId.data.id}
+							data={answer.attributes.questionId.data.attributes}
+						/>
+					);
 				})}
 			</View>
 		</ScrollView>

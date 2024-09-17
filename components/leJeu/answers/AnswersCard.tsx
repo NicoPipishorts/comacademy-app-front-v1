@@ -4,23 +4,24 @@ import {
 	colorPink,
 	colorWhite,
 } from "@/constants/colors";
-import { GameSessionQuestion } from "@/types/game";
+import { GameAttributes } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 interface Props {
-	data: GameSessionQuestion;
+	id: number;
+	data: GameAttributes;
 }
 
-export default function AnswersCard({ data }: Props) {
+export default function AnswersCard({ id, data }: Props) {
 	// Use the router object to navigate
 	const navigation = useNavigation<NavigationType>();
 
 	// Navigate to the answersDetails screen
 	const handlePress = () => {
 		navigation.navigate("answersDetails", {
-			questionId: data.id,
+			questionId: id,
 		});
 	};
 
@@ -29,14 +30,12 @@ export default function AnswersCard({ data }: Props) {
 			style={[
 				styles.cardWrapper,
 				{
-					borderColor: data.attributes.questionId.data.attributes.ANSWER
-						? colorGreen
-						: colorPink,
+					borderColor: data.ANSWER ? colorGreen : colorPink,
 				},
 			]}
 			onPress={handlePress} // Attach the handler here
 		>
-			<Text>{data.attributes.questionId.data.attributes.QUESTION}</Text>
+			<Text>{data.QUESTION}</Text>
 		</TouchableOpacity>
 	);
 }
