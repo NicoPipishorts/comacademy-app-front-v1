@@ -1,13 +1,8 @@
 import { primaryBackground } from "@/constants/colors";
-import React, { Dispatch, SetStateAction, useRef } from "react";
+import React from "react";
 import {
-	Dimensions,
-	GestureResponderEvent,
 	Image,
 	ImageStyle,
-	PanResponder,
-	PanResponderGestureState,
-	PanResponderInstance,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -22,70 +17,52 @@ import {
 	FontSizeH2,
 } from "../../../constants/fontsizes";
 // Icons
-import Chevron from "@/assets/imgs/icons/chevron.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
+import { useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import GradientContainer from "../../../components/GradientContainer";
 import UnorderedList from "../../../components/UnorderedList";
 import { colorWhite } from "../../../constants/colors";
 
-type Props = {
-	item: {
-		METIER: string;
-		id: number;
-	};
-	onGoBack: Dispatch<SetStateAction<boolean>>;
-};
+function DetailsScreen() {
+	const insets = useSafeAreaInsets();
+	const { id } = useLocalSearchParams();
+	const { data } = useGetMetierById(Number(id));
 
-const EDGE_DISTANCE = 30;
-
-function DetailsScreen({ item, onGoBack }: Props) {
-	const { data } = useGetMetierById(item.id);
-
-	const panResponder: PanResponderInstance = useRef(
-		PanResponder.create({
-			onStartShouldSetPanResponder: (evt: GestureResponderEvent) => {
-				return (
-					evt.nativeEvent.locationX < EDGE_DISTANCE ||
-					evt.nativeEvent.locationX >
-						Dimensions.get("window").width - EDGE_DISTANCE
-				);
-			},
-			onMoveShouldSetPanResponder: (_, gestureState) => {
-				return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-			},
-			onPanResponderRelease: (
-				evt: GestureResponderEvent,
-				gestureState: PanResponderGestureState
-			) => {
-				if (gestureState.dx > 50) {
-					onGoBack(false);
-				}
-			},
-		})
-	).current;
+	// const panResponder: PanResponderInstance = useRef(
+	// 	PanResponder.create({
+	// 		onStartShouldSetPanResponder: (evt: GestureResponderEvent) => {
+	// 			return (
+	// 				evt.nativeEvent.locationX < EDGE_DISTANCE ||
+	// 				evt.nativeEvent.locationX >
+	// 					Dimensions.get("window").width - EDGE_DISTANCE
+	// 			);
+	// 		},
+	// 		onMoveShouldSetPanResponder: (_, gestureState) => {
+	// 			return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+	// 		},
+	// 		onPanResponderRelease: (
+	// 			evt: GestureResponderEvent,
+	// 			gestureState: PanResponderGestureState
+	// 		) => {
+	// 			if (gestureState.dx > 50) {
+	// 				onGoBack(false);
+	// 			}
+	// 		},
+	// 	})
+	// ).current;
 
 	if (!data) {
 		return <Loader />;
 	}
 	return (
-		<View style={styles.wrapper} {...panResponder.panHandlers}>
+		<View style={styles.wrapper}>
 			<View style={styles.headerContainer}>
-				<View style={styles.backBtnContainer}>
-					<TouchableOpacity
-						style={styles.backButton}
-						onPress={() => onGoBack(false)}>
-						<Image
-							source={Chevron}
-							style={styles.backBtnIcon as ImageStyle}
-							resizeMode='contain'
-						/>
-						<Text style={styles.backBtnText}>Retour</Text>
-					</TouchableOpacity>
-				</View>
+				<View style={styles.backBtnContainer}></View>
 				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 
@@ -96,10 +73,10 @@ function DetailsScreen({ item, onGoBack }: Props) {
 					<View style={styles.containerIcons}>
 						{data.data.attributes.CATEGORIE !== undefined &&
 						data.data.attributes.CATEGORIE !== null
-							? data.data.attributes.CATEGORIE.split(",").map((cat) => {
+							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
 									const categoryNumber = parseInt(cat, 10); // Convert string to number
 									return (
-										<View style={{ marginRight: 8 }}>
+										<View key={index} style={{ marginRight: 8 }}>
 											<SmallCategroieIcons
 												key={categoryNumber}
 												cats={categoryNumber}
@@ -226,7 +203,7 @@ function DetailsScreen({ item, onGoBack }: Props) {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingTop: 100,
+		paddingTop: 30,
 		backgroundColor: primaryBackground,
 	},
 	headerContainer: {
@@ -250,7 +227,7 @@ const styles = StyleSheet.create({
 		marginRight: 3,
 	},
 	contentContainer: {
-		marginBottom: 100,
+		marginBottom: 50,
 	},
 	wrapperIcons: {
 		flexDirection: "row",

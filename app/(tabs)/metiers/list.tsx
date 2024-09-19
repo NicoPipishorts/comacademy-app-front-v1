@@ -3,7 +3,9 @@ import Searchbar from "@/components/Searchbar";
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
+import { NavigationType } from "@/types/general";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
+import { useNavigation } from "expo-router";
 import React, {
 	Dispatch,
 	SetStateAction,
@@ -37,6 +39,7 @@ const MetierList = ({
 	filterByCat,
 	setFilterByCat,
 }: Props) => {
+	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
 	const sectionRefs = useRef<{ [key: string]: View | null }>({}).current;
 	const [groupedData, setGroupedData] = useState<{
@@ -150,6 +153,10 @@ const MetierList = ({
 		[data]
 	);
 
+	const handlePress = (id: number) => {
+		navigation.navigate("metierDetails", { id });
+	};
+
 	if (!data) return null;
 	return (
 		<>
@@ -198,15 +205,11 @@ const MetierList = ({
 								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 									<Text style={styles.listHeader}>{letter}</Text>
 									{groupedData[letter]?.map((item, index) => (
-										<Text
+										<TouchableOpacity
 											key={index}
-											style={styles.listItem}
-											onPress={() => {
-												setSelectedItem(item);
-												setShowDetails(true);
-											}}>
-											{item.METIER}
-										</Text>
+											onPress={() => handlePress(item.id)}>
+											<Text style={styles.listItem}>{item.METIER}</Text>
+										</TouchableOpacity>
 									))}
 								</View>
 						  ))}
@@ -214,9 +217,9 @@ const MetierList = ({
 
 				{!searchQuery && (
 					<View style={styles.sidebar}>
-						{alphabet.map((letter) => (
+						{alphabet.map((letter, index) => (
 							<TouchableOpacity
-								key={letter}
+								key={index}
 								onPress={() => scrollToSection(letter)}>
 								<Text style={styles.sidebarText}>{letter}</Text>
 							</TouchableOpacity>
