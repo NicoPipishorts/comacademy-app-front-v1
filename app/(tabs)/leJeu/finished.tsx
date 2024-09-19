@@ -8,13 +8,12 @@ import { StyleSheet, View } from "react-native";
 
 export default function FinishedSession() {
 	const { userId } = useUserId();
-	const { setScore, score, sessionId, showFinishedModal } = useGameContext();
+	const { setScore, score, sessionId } = useGameContext();
 
 	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
 
 	useEffect(() => {
 		if (gameScore) {
-			console.log("in the set score useEffect");
 			setScore(gameScore);
 		}
 	}, [setScore, gameScore]);
