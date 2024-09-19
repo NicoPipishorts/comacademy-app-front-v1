@@ -1,6 +1,6 @@
 import { QuestionAttributes } from "./question";
 
-export type FavoriteQuestionsPayloadFull = {
+export interface FavoriteQuestionsPayloadFull {
 	data: {
 		id: number;
 		attributes: {
@@ -17,9 +17,9 @@ export type FavoriteQuestionsPayloadFull = {
 		};
 	};
 	meta: Record<string, unknown>;
-};
+}
 
-export type FavoriteQuestionsPayloadShort = {
+export interface FavoriteQuestionsPayloadShort {
 	data: {
 		id: number;
 		attributes: {
@@ -36,4 +36,4 @@ export type FavoriteQuestionsPayloadShort = {
 		};
 	};
 	meta: Record<string, unknown>;
-};
+}

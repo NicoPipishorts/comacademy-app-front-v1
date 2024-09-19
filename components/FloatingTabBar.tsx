@@ -5,31 +5,30 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSizeH4 } from "@/constants/fontsizes";
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
 	selectedTab?: boolean;
-	setSelectedTab: Dispatch<SetStateAction<boolean>>;
+	handlePress: () => void;
 	values: {
 		btn1: string;
 		btn2: string;
 	};
 };
 
-const FloatingTabBar = ({ selectedTab, setSelectedTab, values }: Props) => {
+const FloatingTabBar = ({ selectedTab, handlePress, values }: Props) => {
 	return (
 		<View style={styles.container}>
 			<TouchableOpacity
-				style={!selectedTab ? styles.buttonBlack : styles.buttonWhite}
-				onPress={() => setSelectedTab(false)}>
+				style={!selectedTab ? styles.buttonBlack : styles.buttonWhite}>
 				<Text style={!selectedTab ? styles.textBlack : styles.textWhite}>
 					{values.btn1}
 				</Text>
 			</TouchableOpacity>
 			<TouchableOpacity
 				style={selectedTab ? styles.buttonBlack : styles.buttonWhite}
-				onPress={() => setSelectedTab(true)}>
+				onPress={() => handlePress()}>
 				<Text style={selectedTab ? styles.textBlack : styles.textWhite}>
 					{values.btn2}
 				</Text>

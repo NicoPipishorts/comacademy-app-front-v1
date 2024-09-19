@@ -1,87 +1,117 @@
 import { primaryBackground } from "@/constants/colors";
-import React, { Dispatch, SetStateAction, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
-	Dimensions,
-	GestureResponderEvent,
 	Image,
 	ImageStyle,
-	PanResponder,
-	PanResponderGestureState,
-	PanResponderInstance,
 	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
-import HR from "../components/HR";
-import ScreenHeaders from "../components/ScreenHeaders";
-import { FontSize12, FontSize16, FontSizeH2 } from "../constants/fontsizes";
+import HR from "../../../components/HR";
+import ScreenHeaders from "../../../components/ScreenHeaders";
+import {
+	FontSize12,
+	FontSize16,
+	FontSizeH2,
+} from "../../../constants/fontsizes";
 // Icons
+import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
 import Chevron from "@/assets/imgs/icons/chevron.png";
+import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
-import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import { queryClient } from "@/hooks/reactQueryConfig";
+import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
-import GradientContainer from "../components/GradientContainer";
-import UnorderedList from "../components/UnorderedList";
-import { colorWhite } from "../constants/colors";
+import useJwtToken from "@/hooks/useJwtToken";
+import useUserId from "@/hooks/useUserId";
+import { NavigationType } from "@/types/general";
+import { FavoriteMetier } from "@/types/metiers";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import GradientContainer from "../../../components/GradientContainer";
+import UnorderedList from "../../../components/UnorderedList";
+import { colorWhite } from "../../../constants/colors";
 
-type Props = {
-	item: {
-		METIER: string;
-		id: number;
+interface Props {
+	metierId: number;
+}
+export default function MetierDetails({ metierId: paramsMetierId }: Props) {
+	const navigation = useNavigation<NavigationType>();
+	const { userId } = useUserId();
+	const { token } = useJwtToken();
+	const { id } = useLocalSearchParams();
+
+	// Parse the 'id' to a number if it exists
+	const metierId = paramsMetierId ? paramsMetierId : Number(id);
+	const { isAndroid } = useDeviceTypeCheckers();
+
+	const { data } = useGetMetierById(metierId);
+	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(userId);
+
+	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
+		useState<boolean>(null);
+
+	const handleSuccess = () => {
+		queryClient.refetchQueries({ queryKey: ["FavoriteMetiers"] });
 	};
-	onGoBack: Dispatch<SetStateAction<boolean>>;
-};
 
-const EDGE_DISTANCE = 30;
+	const mutation = useAddFavoritesMetierMutation(handleSuccess);
 
-function DetailsScreen({ item, onGoBack }: Props) {
-	const { data } = useGetMetierById(item.id);
+	// Check if the metier has already been added to the favorites list.
+	const favorites: FavoriteMetier[] =
+		dataFavoritesMetier.data[0].attributes.metiers.data;
 
-	const panResponder: PanResponderInstance = useRef(
-		PanResponder.create({
-			onStartShouldSetPanResponder: (evt: GestureResponderEvent) => {
-				return (
-					evt.nativeEvent.locationX < EDGE_DISTANCE ||
-					evt.nativeEvent.locationX >
-						Dimensions.get("window").width - EDGE_DISTANCE
-				);
-			},
-			onMoveShouldSetPanResponder: (_, gestureState) => {
-				return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-			},
-			onPanResponderRelease: (
-				evt: GestureResponderEvent,
-				gestureState: PanResponderGestureState
-			) => {
-				if (gestureState.dx > 50) {
-					onGoBack(false);
-				}
-			},
-		})
-	).current;
+	useEffect(() => {
+		if (favorites) {
+			const exists = favorites.some((favorite) => favorite.id === metierId);
+			setFilterIfFavoriteExists(exists);
+		}
+	}, [favorites, metierId]);
 
-	if (!data) {
+	if (!data || !dataFavoritesMetier) {
 		return <Loader />;
 	}
+
+	const idArray = favorites.map((favorite) => favorite.id);
+	const handleAddFavorite = () => {
+		if (filterIfFavoriteExists) {
+			const updatedIdArray = idArray.filter((id) => id !== metierId);
+			const updatedFavoriteMetiers = [...updatedIdArray];
+			mutation.mutate({ userId, updatedFavoriteMetiers, token });
+		} else {
+			const updatedFavoriteMetiers = [...idArray, metierId];
+			mutation.mutate({ userId, updatedFavoriteMetiers, token });
+		}
+	};
+
 	return (
-		<View style={styles.wrapper} {...panResponder.panHandlers}>
+		<View
+			style={[
+				styles.wrapper,
+				{
+					paddingTop: isAndroid ? 70 : 20,
+					paddingBottom: isAndroid ? 70 : 20,
+				},
+			]}>
 			<View style={styles.headerContainer}>
-				<View style={styles.backBtnContainer}>
-					<TouchableOpacity
-						style={styles.backButton}
-						onPress={() => onGoBack(false)}>
-						<Image
-							source={Chevron}
-							style={styles.backBtnIcon as ImageStyle}
-							resizeMode='contain'
-						/>
-						<Text style={styles.backBtnText}>Retour</Text>
-					</TouchableOpacity>
-				</View>
+				{isAndroid && (
+					<View style={styles.backBtnContainer}>
+						<TouchableOpacity
+							style={styles.backButton}
+							onPress={() => navigation.navigate("index")}>
+							<Image
+								source={Chevron}
+								style={styles.backBtnIcon as ImageStyle}
+								resizeMode='contain'
+							/>
+							<Text style={styles.backBtnText}>Retour</Text>
+						</TouchableOpacity>
+					</View>
+				)}
 				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 
@@ -92,10 +122,10 @@ function DetailsScreen({ item, onGoBack }: Props) {
 					<View style={styles.containerIcons}>
 						{data.data.attributes.CATEGORIE !== undefined &&
 						data.data.attributes.CATEGORIE !== null
-							? data.data.attributes.CATEGORIE.split(",").map((cat) => {
-									const categoryNumber = parseInt(cat, 10); // Convert string to number
+							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
+									const categoryNumber = parseInt(cat, 10);
 									return (
-										<View style={{ marginRight: 8 }}>
+										<View key={index} style={{ marginRight: 8 }}>
 											<SmallCategroieIcons
 												key={categoryNumber}
 												cats={categoryNumber}
@@ -106,16 +136,18 @@ function DetailsScreen({ item, onGoBack }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						<Image
+						{/* <Image
 							source={Plus}
 							style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
 							resizeMode='contain'
-						/>
-						<Image
-							source={Heart}
-							style={styles.catIcons as ImageStyle}
-							resizeMode='contain'
-						/>
+						/> */}
+						<TouchableOpacity onPress={() => handleAddFavorite()}>
+							<Image
+								source={filterIfFavoriteExists ? HeartFull : Heart}
+								style={styles.catIcons as ImageStyle}
+								resizeMode='contain'
+							/>
+						</TouchableOpacity>
 					</View>
 				</View>
 
@@ -222,7 +254,7 @@ function DetailsScreen({ item, onGoBack }: Props) {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingTop: 100,
+		paddingTop: 30,
 		backgroundColor: primaryBackground,
 	},
 	headerContainer: {
@@ -246,7 +278,7 @@ const styles = StyleSheet.create({
 		marginRight: 3,
 	},
 	contentContainer: {
-		marginBottom: 100,
+		marginBottom: 50,
 	},
 	wrapperIcons: {
 		flexDirection: "row",
@@ -304,5 +336,3 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 });
-
-export default DetailsScreen;

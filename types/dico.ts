@@ -1,13 +1,13 @@
-export type DicoPayload = {
+export interface DicoPayload {
 	data: DicoDataItem;
-};
+}
 
-export type DicoDataItem = {
+export interface DicoDataItem {
 	id: number;
 	attributes: DicoAttributes;
-};
+}
 
-export type DicoAttributes = {
+export interface DicoAttributes {
 	Categories: string;
 	Tags: string;
 	Word: string;
@@ -15,18 +15,18 @@ export type DicoAttributes = {
 	isActive: boolean;
 	createdAt: string;
 	updatedAt: string;
-};
+}
 
-export type DicoSelected = {
+export interface DicoSelected {
 	id: number;
 	Word: string;
-};
+}
 
-export type DicoLists = {
+export interface DicoLists {
 	data: {
 		id: number;
 		attributes: {
 			Word: string;
 		};
 	}[];
-};
+}

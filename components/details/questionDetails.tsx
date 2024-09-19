@@ -25,7 +25,7 @@ interface Props {
 	refetch: string;
 }
 
-export default function QuestionDetails({ questionId, refetch }: Props) {
+export default function QuestionDetails({ questionId }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
@@ -68,6 +68,7 @@ export default function QuestionDetails({ questionId, refetch }: Props) {
 			mutation.mutate({ userId, updatedFavoriteQuestions, token });
 		}
 	};
+
 	return (
 		<View style={styles.wrapper}>
 			<View

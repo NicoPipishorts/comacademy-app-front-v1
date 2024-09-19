@@ -19,7 +19,7 @@ export default function CardFavoritesList({ title, type }: Props) {
 				break;
 
 			case "metiers":
-				navigation.navigate("metiersFavorites");
+				navigation.navigate("metiersFavoritesList");
 				break;
 
 			case "dico":

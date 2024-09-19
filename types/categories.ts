@@ -1,11 +1,11 @@
-export type CategoriePayload = {
+export interface CategoriePayload {
 	data: {
 		id: number;
 		attributes: CategoriesAttributes;
 	}[];
-};
+}
 
-export type CategoriesAttributes = {
+export interface CategoriesAttributes {
 	Name: string;
 	Description: string | null;
 	createdAt: string;
@@ -15,16 +15,16 @@ export type CategoriesAttributes = {
 	backgroundColor: string;
 	smallIcon: CategoriesIcon;
 	bigIcon: CategoriesIcon;
-};
+}
 
-export type CategoriesIcon = {
+export interface CategoriesIcon {
 	data: {
 		id: number;
 		attributes: CategoriesIconAttributes;
 	};
-};
+}
 
-export type CategoriesIconAttributes = {
+export interface CategoriesIconAttributes {
 	name: string;
 	alternativeText: string | null;
 	caption: string | null;
@@ -41,9 +41,9 @@ export type CategoriesIconAttributes = {
 	provider_metadata: any | null;
 	createdAt: string;
 	updatedAt: string;
-};
+}
 
-export type CategoriesFormats = {
+export interface CategoriesFormats {
 	thumbnail?: {
 		ext: string;
 		url: string;
@@ -56,17 +56,17 @@ export type CategoriesFormats = {
 		height: number;
 		sizeInBytes: number;
 	};
-};
+}
 
-export type CategroiesMenu = {
+export interface CategroiesMenu {
 	data: {
 		id: number;
 		Title: string;
 		url: string;
 	}[];
-};
+}
 
-export type CategorieColors = {
+export interface CategorieColors {
 	data: {
 		id: number;
 		attributes: {
@@ -74,4 +74,4 @@ export type CategorieColors = {
 			smallIcon: CategoriesIcon;
 		};
 	}[];
-};
+}
