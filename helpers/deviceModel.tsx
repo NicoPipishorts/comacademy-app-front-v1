@@ -1,13 +1,23 @@
 import * as Device from "expo-device";
 import { useEffect, useState } from "react";
 
-const useIsSpecificiPhoneModel = () => {
+const useDeviceTypeCheckers = () => {
 	const [isHomeButtonModel, setIsHomeButtonModel] = useState(false);
+	const [isAndroid, setIsAndroid] = useState(false);
 
 	useEffect(() => {
 		const checkDeviceModel = async () => {
+			const osName = Device.osName;
+
+			// Check if the device is Android
+			if (osName !== "iOS") {
+				setIsAndroid(true);
+			} else {
+				setIsAndroid(false);
+			}
+
 			// Ensure that this check runs only on iOS devices
-			if (Device.osName === "iOS") {
+			if (osName === "iOS") {
 				const modelName = Device.modelName;
 
 				// List of iPhone models that have a physical home button (non-plus)
@@ -42,7 +52,7 @@ const useIsSpecificiPhoneModel = () => {
 		checkDeviceModel();
 	}, []);
 
-	return isHomeButtonModel;
+	return { isHomeButtonModel, isAndroid };
 };
 
-export default useIsSpecificiPhoneModel;
+export default useDeviceTypeCheckers;

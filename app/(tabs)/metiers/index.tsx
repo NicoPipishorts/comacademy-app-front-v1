@@ -25,8 +25,9 @@ const Metier = () => {
 	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const { data: dataMetier, isLoading } = useGetMetiers(filterByCat);
-	const { data: dataCategory } = useCategoriesFull();
+	const { data: dataMetier, isLoading: isLoadingMetier } =
+		useGetMetiers(filterByCat);
+	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
 
 	useEffect(() => {
 		queryClient.refetchQueries({ queryKey: ["metiersList"] });
@@ -42,21 +43,16 @@ const Metier = () => {
 	}, [filter, filterByCat]);
 
 	if (showDetails && selectedItem) {
-		return (
-			<MetierDetails
-				item={selectedItem}
-				onGoBack={() => setShowDetails(false)}
-			/>
-		);
-	}
-
-	if (isLoading && !dataMetier && !dataCategory) {
-		return <Loader />;
+		return <MetierDetails />;
 	}
 
 	const handlePress = () => {
 		navigation.navigate("categories");
 	};
+
+	if (isLoadingMetier || isLoadingCats || !dataMetier || !dataCategory) {
+		return <Loader />;
+	}
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>

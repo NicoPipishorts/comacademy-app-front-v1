@@ -17,52 +17,52 @@ import {
 	FontSizeH2,
 } from "../../../constants/fontsizes";
 // Icons
+import Chevron from "@/assets/imgs/icons/chevron.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
-import { useLocalSearchParams } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { NavigationType } from "@/types/general";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import GradientContainer from "../../../components/GradientContainer";
 import UnorderedList from "../../../components/UnorderedList";
 import { colorWhite } from "../../../constants/colors";
 
 function DetailsScreen() {
-	const insets = useSafeAreaInsets();
+	const navigation = useNavigation<NavigationType>();
 	const { id } = useLocalSearchParams();
 	const { data } = useGetMetierById(Number(id));
-
-	// const panResponder: PanResponderInstance = useRef(
-	// 	PanResponder.create({
-	// 		onStartShouldSetPanResponder: (evt: GestureResponderEvent) => {
-	// 			return (
-	// 				evt.nativeEvent.locationX < EDGE_DISTANCE ||
-	// 				evt.nativeEvent.locationX >
-	// 					Dimensions.get("window").width - EDGE_DISTANCE
-	// 			);
-	// 		},
-	// 		onMoveShouldSetPanResponder: (_, gestureState) => {
-	// 			return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-	// 		},
-	// 		onPanResponderRelease: (
-	// 			evt: GestureResponderEvent,
-	// 			gestureState: PanResponderGestureState
-	// 		) => {
-	// 			if (gestureState.dx > 50) {
-	// 				onGoBack(false);
-	// 			}
-	// 		},
-	// 	})
-	// ).current;
+	const { isAndroid } = useDeviceTypeCheckers();
 
 	if (!data) {
 		return <Loader />;
 	}
 	return (
-		<View style={styles.wrapper}>
+		<View
+			style={[
+				styles.wrapper,
+				{
+					paddingTop: isAndroid ? 70 : 0,
+					paddingBottom: isAndroid ? 70 : 0,
+				},
+			]}>
 			<View style={styles.headerContainer}>
-				<View style={styles.backBtnContainer}></View>
+				{isAndroid && (
+					<View style={styles.backBtnContainer}>
+						<TouchableOpacity
+							style={styles.backButton}
+							onPress={() => navigation.navigate("index")}>
+							<Image
+								source={Chevron}
+								style={styles.backBtnIcon as ImageStyle}
+								resizeMode='contain'
+							/>
+							<Text style={styles.backBtnText}>Retour</Text>
+						</TouchableOpacity>
+					</View>
+				)}
 				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 
@@ -74,7 +74,7 @@ function DetailsScreen() {
 						{data.data.attributes.CATEGORIE !== undefined &&
 						data.data.attributes.CATEGORIE !== null
 							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
-									const categoryNumber = parseInt(cat, 10); // Convert string to number
+									const categoryNumber = parseInt(cat, 10);
 									return (
 										<View key={index} style={{ marginRight: 8 }}>
 											<SmallCategroieIcons
