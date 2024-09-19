@@ -49,7 +49,7 @@ export default function CardFavoriteQuestion({
 					<TouchableOpacity
 						style={styles.button}
 						onPress={() => {
-							navigation.navigate("favoriteDetails", {
+							navigation.navigate("favoriteQuestionDetails", {
 								questionId: data.id,
 							});
 						}}>
