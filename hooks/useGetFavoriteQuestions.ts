@@ -1,14 +1,14 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import { FavoriteQuestionsPayload } from "@/types/favoriteQuestions";
+import { FavoriteQuestionsPayloadFull } from "@/types/favoriteQuestions";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchFavoriteQuestions = async (
 	token: string,
 	userId: number
-): Promise<any> => {
+): Promise<FavoriteQuestionsPayloadFull> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}?populate[questions][fields]=id`,
+			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}?populate=*`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -35,7 +35,7 @@ const fetchFavoriteQuestions = async (
 const useGetFavoriteQuestions = (userId: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<FavoriteQuestionsPayload>({
+	return useQuery<FavoriteQuestionsPayloadFull>({
 		queryKey: ["FavoriteQuestions", userId],
 		queryFn: () => fetchFavoriteQuestions(token!, userId), // Ensure token is not null
 		enabled: !!token && !!userId, // Ensure the query is enabled only when token and userId are available

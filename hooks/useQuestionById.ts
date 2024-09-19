@@ -1,16 +1,14 @@
-// src/hooks/useGameQuestions.ts
-
 import useJwtToken from "@/hooks/useJwtToken";
 import { QuestionById } from "@/types/question";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchDicoById = async (
 	token: string,
-	id: number
+	questionId: number
 ): Promise<QuestionById> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/questions/${id}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/questions/${questionId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -34,14 +32,14 @@ const fetchDicoById = async (
 	}
 };
 
-const useQuestionById = (id: number) => {
+const useQuestionById = (questionId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<QuestionById>({
-		queryKey: ["Question", id],
-		queryFn: () => fetchDicoById(token, id),
+		queryKey: ["Question", questionId],
+		queryFn: () => fetchDicoById(token, questionId),
 		staleTime: 5000,
-		enabled: !!token && !!id,
+		enabled: !!token && !!questionId,
 	});
 };
 
