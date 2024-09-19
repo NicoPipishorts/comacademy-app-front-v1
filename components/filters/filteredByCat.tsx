@@ -1,6 +1,8 @@
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { CategoriePayload } from "@/types/categories";
+import { NavigationType } from "@/types/general";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 import { Dispatch, SetStateAction } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -10,11 +12,8 @@ interface Props {
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 }
 
-export default function FilteredByCat({
-	categories,
-	setFilterByCat,
-	filterByCat,
-}: Props) {
+export default function FilteredByCat({ categories, filterByCat }: Props) {
+	const navigation = useNavigation<NavigationType>();
 	const categoriesArray = categories.data; // The original array of categories
 
 	// Transform the array into an object indexed by 'id'
@@ -23,12 +22,15 @@ export default function FilteredByCat({
 		return acc;
 	}, {});
 
+	const onPress = () => {
+		navigation.navigate("index", { filter: null });
+	};
+
 	return (
 		<View style={styles.filterCWrapper}>
-			<Text>Filtre: </Text>
 			<TouchableOpacity
 				style={styles.filterContainer}
-				onPress={() => setFilterByCat(null)}>
+				onPress={() => onPress()}>
 				<Text style={styles.filterText}>
 					{categoriesById[filterByCat]?.attributes.Title}
 				</Text>

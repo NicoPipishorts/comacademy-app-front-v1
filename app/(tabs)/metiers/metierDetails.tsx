@@ -14,9 +14,13 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import HR from "../components/HR";
-import ScreenHeaders from "../components/ScreenHeaders";
-import { FontSize12, FontSize16, FontSizeH2 } from "../constants/fontsizes";
+import HR from "../../../components/HR";
+import ScreenHeaders from "../../../components/ScreenHeaders";
+import {
+	FontSize12,
+	FontSize16,
+	FontSizeH2,
+} from "../../../constants/fontsizes";
 // Icons
 import Chevron from "@/assets/imgs/icons/chevron.png";
 import Heart from "@/assets/imgs/icons/heart.png";
@@ -24,9 +28,9 @@ import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
-import GradientContainer from "../components/GradientContainer";
-import UnorderedList from "../components/UnorderedList";
-import { colorWhite } from "../constants/colors";
+import GradientContainer from "../../../components/GradientContainer";
+import UnorderedList from "../../../components/UnorderedList";
+import { colorWhite } from "../../../constants/colors";
 
 type Props = {
 	item: {
