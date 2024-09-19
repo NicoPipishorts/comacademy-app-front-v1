@@ -1,21 +1,19 @@
 import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
-import CardFavoriteQuestion from "@/components/cards/CardFavoriteQuestion";
+import CardFavoriteMetier from "@/components/cards/CardFavoriteMetier";
 import Loader from "@/components/experience/loader";
 import { FontSize12, FontSizeScreenTitles } from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
-import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
+import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import useUserId from "@/hooks/useUserId";
-import { FavoriteQuestionsPayloadFull } from "@/types/favoriteQuestions";
+import { FavoriteMetiers } from "@/types/metiers";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function QuestionsFavoritesList() {
 	const { userId } = useUserId();
-	const [favoriteData, setFavoriteData] =
-		useState<FavoriteQuestionsPayloadFull>(null);
+	const [favoriteData, setFavoriteData] = useState<FavoriteMetiers>(null);
 
-	const { data: favoriteResponse, isFetching } =
-		useGetFavoriteQuestions(userId);
+	const { data: favoriteResponse, isFetching } = useGetFavoriteMetiers(userId);
 	const { data: categories } = useCategories();
 
 	useEffect(() => {
@@ -46,16 +44,16 @@ export default function QuestionsFavoritesList() {
 				<Image source={FavoritesIcon} style={styles.headerIcon} />
 				<View style={{ flexDirection: "column" }}>
 					<Text style={styles.headerSubText}>Playlist</Text>
-					<Text style={styles.headerText}>Questions</Text>
+					<Text style={styles.headerText}>Les Metiers</Text>
 				</View>
 			</View>
 
 			<View>
 				{favoriteResponse &&
-					favoriteResponse.data.attributes.questions.data.map((question) => (
-						<CardFavoriteQuestion
-							key={question.id}
-							data={question}
+					favoriteResponse.data[0].attributes.metiers.data.map((metier) => (
+						<CardFavoriteMetier
+							key={metier.id}
+							data={metier}
 							categoriesColors={categoriesColors}
 							categoriesIcons={categoriesIcons}
 						/>

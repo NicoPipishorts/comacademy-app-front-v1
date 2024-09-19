@@ -36,14 +36,17 @@ import GradientContainer from "../../../components/GradientContainer";
 import UnorderedList from "../../../components/UnorderedList";
 import { colorWhite } from "../../../constants/colors";
 
-export default function DetailsScreen() {
+interface Props {
+	metierId: number;
+}
+export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
 
 	// Parse the 'id' to a number if it exists
-	const metierId = Number(id);
+	const metierId = paramsMetierId ? paramsMetierId : Number(id);
 	const { isAndroid } = useDeviceTypeCheckers();
 
 	const { data } = useGetMetierById(metierId);

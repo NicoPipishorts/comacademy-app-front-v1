@@ -1,4 +1,4 @@
-import { GameSessionQuestionAttributes } from "./game";
+import { QuestionAttributes } from "./question";
 
 export interface FavoriteQuestionsPayloadFull {
 	data: {
@@ -11,7 +11,7 @@ export interface FavoriteQuestionsPayloadFull {
 			questions: {
 				data: {
 					id: number;
-					attributes: GameSessionQuestionAttributes;
+					attributes: QuestionAttributes;
 				}[];
 			};
 		};

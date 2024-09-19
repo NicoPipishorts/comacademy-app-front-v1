@@ -17,7 +17,15 @@ const LeJeuLayout = () => {
 					name='questionsFavoritesList'
 					options={{
 						headerShown: false,
-						headerTitle: "List",
+						headerTitle: "Favorite Questions List",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
+					name='metiersFavoritesList'
+					options={{
+						headerShown: false,
+						headerTitle: "Favorite Metiers List",
 						presentation: "modal",
 					}}
 				/>
@@ -26,6 +34,14 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						headerTitle: "Favorite Details",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
+					name='favoriteMetierDetails'
+					options={{
+						headerShown: false,
+						headerTitle: "Favorite Metier Details",
 						presentation: "modal",
 					}}
 				/>
