@@ -11,10 +11,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
 import MetierDetails from "./metierDetails";
 
 const Metier = () => {
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
@@ -32,7 +34,6 @@ const Metier = () => {
 	}, [filterByCat, queryClient, setSelectedTab]);
 
 	useEffect(() => {
-		console.log("in the useEffect : ", filter, filterByCat);
 		if (filter === "null") {
 			setFilterByCat(null);
 		} else {
@@ -58,7 +59,7 @@ const Metier = () => {
 	};
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
 
 			{!selectedTab && (
@@ -87,14 +88,13 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
-		paddingTop: 80,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 110, // Adjust this value based on your design
+		bottom: 120, // Adjust this value based on your design
 		justifyContent: "center",
 		alignItems: "center",
 	},

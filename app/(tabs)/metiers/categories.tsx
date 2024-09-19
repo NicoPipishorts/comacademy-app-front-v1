@@ -1,3 +1,4 @@
+import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
@@ -16,6 +17,10 @@ const CategoriesCards = () => {
 	return (
 		<>
 			<View style={styles.wrapper}>
+				<ScreenHeaders content='Catégories' />
+				<Text style={{ fontWeight: "bold", paddingTop: 20, paddingBottom: 10 }}>
+					Choisis une catégorie:
+				</Text>
 				<View style={styles.cardContainer}>
 					{dataCategory.data.map((cat) => {
 						return (
@@ -45,10 +50,10 @@ const CategoriesCards = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
+		justifyContent: "flex-start",
+		alignItems: "flex-start",
 		padding: 30,
-		paddingTop: 100,
+		paddingTop: 40,
 		backgroundColor: primaryBackground,
 	},
 	cardContainer: {

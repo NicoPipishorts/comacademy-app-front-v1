@@ -18,7 +18,15 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						headerTitle: "Les Categories",
-						presentation: "fullScreenModal",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
+					name='metierDetails'
+					options={{
+						headerShown: false,
+						headerTitle: "Les Détails",
+						presentation: "modal",
 					}}
 				/>
 			</Stack>
