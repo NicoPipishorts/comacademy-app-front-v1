@@ -1,4 +1,4 @@
-export type GameAttributes = {
+export interface GameAttributes {
 	QUESTION: string;
 	createdAt: string;
 	updatedAt: string;
@@ -11,18 +11,18 @@ export type GameAttributes = {
 	COEF: number;
 	SENSIBILITE: string | null;
 	favorite_questions: [];
-};
+}
 
-export type GameDataPayload = {
+export interface GameDataPayload {
 	data: Record<string, GameData>;
-};
+}
 
-export type GameData = {
+export interface GameData {
 	id: number;
 	attributes: GameAttributes;
-};
+}
 
-export type GameSessionAttributes = {
+export interface GameSessionAttributes {
 	QUESTION: string;
 	createdAt: string;
 	updatedAt: string;
@@ -35,18 +35,18 @@ export type GameSessionAttributes = {
 	COEF: number;
 	SENSIBILITE: string | null;
 	favorite_questions: [];
-};
+}
 
-export type GameSessionQuestionData = {
+export interface GameSessionQuestionData {
 	id: number;
 	attributes: GameSessionAttributes;
-};
+}
 
-export type GameSessionPayload = {
+export interface GameSessionPayload {
 	data: Record<string, GameSessionQuestionData>;
-};
+}
 
-export type GameSessionDetail = {
+export interface GameSessionDetail {
 	data: {
 		id: number;
 		attributes: {
@@ -62,9 +62,9 @@ export type GameSessionDetail = {
 		};
 	};
 	meta: Record<string, unknown>;
-};
+}
 
-export type GameSessionQuestionAttributes = {
+export interface GameSessionQuestionAttributes {
 	gameId: number | string; // Adjusted to match the example payload ("1459" is a string)
 	questionId: {
 		data: GameSessionQuestionData;
@@ -76,14 +76,14 @@ export type GameSessionQuestionAttributes = {
 	updatedAt: string;
 	publishedAt: string;
 	userId: number | string; // Adjusted to match the example payload ("1" is a string)
-};
+}
 
-export type GameSessionQuestion = {
+export interface GameSessionQuestion {
 	id: number;
 	attributes: GameSessionQuestionAttributes;
-};
+}
 
-export type GameSessionQuestions = {
+export interface GameSessionQuestions {
 	data: GameSessionQuestion[]; // An array of GameSessionQuestion objects
 	meta: {
 		pagination: {
@@ -93,4 +93,4 @@ export type GameSessionQuestions = {
 			total: number;
 		};
 	};
-};
+}

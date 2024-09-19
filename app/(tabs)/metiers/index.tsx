@@ -4,7 +4,9 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
+import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
+import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { SelectedMetier } from "@/types/metiers";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +19,7 @@ import MetierDetails from "./metierDetails";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
+	const { userId } = useUserId();
 	const navigation = useNavigation<NavigationType>();
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
@@ -28,6 +31,7 @@ const Metier = () => {
 	const { data: dataMetier, isLoading: isLoadingMetier } =
 		useGetMetiers(filterByCat);
 	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
+	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(userId);
 
 	useEffect(() => {
 		queryClient.refetchQueries({ queryKey: ["metiersList"] });
@@ -50,7 +54,13 @@ const Metier = () => {
 		navigation.navigate("categories");
 	};
 
-	if (isLoadingMetier || isLoadingCats || !dataMetier || !dataCategory) {
+	if (
+		isLoadingMetier ||
+		isLoadingCats ||
+		!dataMetier ||
+		!dataCategory ||
+		!dataFavoritesMetier
+	) {
 		return <Loader />;
 	}
 

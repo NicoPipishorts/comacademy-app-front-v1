@@ -1,6 +1,6 @@
-import { QuestionAttributes } from "./question";
+import { GameSessionQuestionAttributes } from "./game";
 
-export type FavoriteQuestionsPayloadFull = {
+export interface FavoriteQuestionsPayloadFull {
 	data: {
 		id: number;
 		attributes: {
@@ -11,15 +11,15 @@ export type FavoriteQuestionsPayloadFull = {
 			questions: {
 				data: {
 					id: number;
-					attributes: QuestionAttributes;
+					attributes: GameSessionQuestionAttributes;
 				}[];
 			};
 		};
 	};
 	meta: Record<string, unknown>;
-};
+}
 
-export type FavoriteQuestionsPayloadShort = {
+export interface FavoriteQuestionsPayloadShort {
 	data: {
 		id: number;
 		attributes: {
@@ -36,4 +36,4 @@ export type FavoriteQuestionsPayloadShort = {
 		};
 	};
 	meta: Record<string, unknown>;
-};
+}

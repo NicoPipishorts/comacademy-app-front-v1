@@ -45,8 +45,8 @@ const MetierList = ({
 	const [groupedData, setGroupedData] = useState<{
 		[key: string]: SelectedMetier[];
 	}>({});
-	const [searchQuery, setSearchQuery] = useState(""); // State to store the search query
-	const [filteredData, setFilteredData] = useState<SelectedMetier[]>([]); // State to store the filtered results
+	const [searchQuery, setSearchQuery] = useState("");
+	const [filteredData, setFilteredData] = useState<SelectedMetier[]>([]);
 
 	useEffect(() => {
 		if (data && data.data) {

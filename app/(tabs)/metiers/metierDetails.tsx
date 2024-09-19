@@ -1,5 +1,5 @@
 import { primaryBackground } from "@/constants/colors";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
@@ -17,35 +17,81 @@ import {
 	FontSizeH2,
 } from "../../../constants/fontsizes";
 // Icons
+import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
 import Chevron from "@/assets/imgs/icons/chevron.png";
+import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
-import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import { queryClient } from "@/hooks/reactQueryConfig";
+import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
+import useJwtToken from "@/hooks/useJwtToken";
+import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
+import { FavoriteMetier } from "@/types/metiers";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import GradientContainer from "../../../components/GradientContainer";
 import UnorderedList from "../../../components/UnorderedList";
 import { colorWhite } from "../../../constants/colors";
 
-function DetailsScreen() {
+export default function DetailsScreen() {
 	const navigation = useNavigation<NavigationType>();
+	const { userId } = useUserId();
+	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
-	const { data } = useGetMetierById(Number(id));
+
+	// Parse the 'id' to a number if it exists
+	const metierId = Number(id);
 	const { isAndroid } = useDeviceTypeCheckers();
 
-	if (!data) {
+	const { data } = useGetMetierById(metierId);
+	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(userId);
+
+	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
+		useState<boolean>(null);
+
+	const handleSuccess = () => {
+		queryClient.refetchQueries({ queryKey: ["FavoriteMetiers"] });
+	};
+
+	const mutation = useAddFavoritesMetierMutation(handleSuccess);
+
+	// Check if the metier has already been added to the favorites list.
+	const favorites: FavoriteMetier[] =
+		dataFavoritesMetier.data[0].attributes.metiers.data;
+
+	useEffect(() => {
+		if (favorites) {
+			const exists = favorites.some((favorite) => favorite.id === metierId);
+			setFilterIfFavoriteExists(exists);
+		}
+	}, [favorites, metierId]);
+
+	if (!data || !dataFavoritesMetier) {
 		return <Loader />;
 	}
+
+	const idArray = favorites.map((favorite) => favorite.id);
+	const handleAddFavorite = () => {
+		if (filterIfFavoriteExists) {
+			const updatedIdArray = idArray.filter((id) => id !== metierId);
+			const updatedFavoriteMetiers = [...updatedIdArray];
+			mutation.mutate({ userId, updatedFavoriteMetiers, token });
+		} else {
+			const updatedFavoriteMetiers = [...idArray, metierId];
+			mutation.mutate({ userId, updatedFavoriteMetiers, token });
+		}
+	};
+
 	return (
 		<View
 			style={[
 				styles.wrapper,
 				{
-					paddingTop: isAndroid ? 70 : 0,
-					paddingBottom: isAndroid ? 70 : 0,
+					paddingTop: isAndroid ? 70 : 20,
+					paddingBottom: isAndroid ? 70 : 20,
 				},
 			]}>
 			<View style={styles.headerContainer}>
@@ -87,16 +133,18 @@ function DetailsScreen() {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						<Image
+						{/* <Image
 							source={Plus}
 							style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
 							resizeMode='contain'
-						/>
-						<Image
-							source={Heart}
-							style={styles.catIcons as ImageStyle}
-							resizeMode='contain'
-						/>
+						/> */}
+						<TouchableOpacity onPress={() => handleAddFavorite()}>
+							<Image
+								source={filterIfFavoriteExists ? HeartFull : Heart}
+								style={styles.catIcons as ImageStyle}
+								resizeMode='contain'
+							/>
+						</TouchableOpacity>
 					</View>
 				</View>
 
@@ -285,5 +333,3 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 });
-
-export default DetailsScreen;
