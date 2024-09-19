@@ -14,10 +14,18 @@ const LeJeuLayout = () => {
 					}}
 				/>
 				<Stack.Screen
-					name='playlistContent'
+					name='questionsFavoritesList'
 					options={{
 						headerShown: false,
 						headerTitle: "List",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
+					name='favoriteQuestionDetails'
+					options={{
+						headerShown: false,
+						headerTitle: "Favorite Details",
 						presentation: "modal",
 					}}
 				/>

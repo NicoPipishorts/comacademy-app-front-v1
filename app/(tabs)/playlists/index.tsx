@@ -1,9 +1,7 @@
-import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import { primaryBackground } from "@/constants/colors";
-import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ScreenHeaders from "../../../components/ScreenHeaders";
 
@@ -11,9 +9,9 @@ const Playlist = () => {
 	const insets = useSafeAreaInsets();
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<ScreenHeaders content='Playlist' />
+			<ScreenHeaders content='Playlists' />
 
-			<TouchableOpacity style={styles.addPlaylistContainer}>
+			{/* <TouchableOpacity style={styles.addPlaylistContainer}>
 				<Image source={AddPlaylist} style={styles.addPlaylistImage} />
 				<View style={{ flexDirection: "column" }}>
 					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
@@ -21,13 +19,11 @@ const Playlist = () => {
 					</Text>
 					<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
 				</View>
-			</TouchableOpacity>
+			</TouchableOpacity> */}
 
-			<CardFavoritesList
-				type='favorites'
-				title='Favorites'
-				destination='favorites'
-			/>
+			<CardFavoritesList type='favorites' title='Questions ' />
+			{/* <CardFavoritesList type='metiers' title='Metiers ' />
+			<CardFavoritesList type='dico' title='Dico ' /> */}
 		</View>
 	);
 };

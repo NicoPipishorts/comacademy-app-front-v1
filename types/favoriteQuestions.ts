@@ -31,7 +31,7 @@ export type FavoriteQuestionsPayloadShort = {
 				data: {
 					id: number;
 					attributes: {};
-				};
+				}[];
 			};
 		};
 	};

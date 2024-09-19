@@ -1,28 +1,33 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { truncateString } from "@/helpers/truncateText";
-import { QuestionAttributes } from "@/types/question";
+import { NavigationType } from "@/types/general";
+import { QuestionSolo } from "@/types/question";
+import { useNavigation } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Loader from "../experience/loader";
 
 interface Props {
-	data: QuestionAttributes;
+	data: QuestionSolo;
 	categoriesColors: { [key: number]: string };
 	categoriesIcons: { [key: number]: string };
 }
 
-export default function CardFavoritesItem({
+export default function CardFavoriteQuestion({
 	data,
 	categoriesColors,
 	categoriesIcons,
 }: Props) {
-	const elementCats = () => {
-		return data.CATEGORIE.split(",");
-	};
+	const navigation = useNavigation<NavigationType>();
+
+	if (!data) {
+		return <Loader />;
+	}
 
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.cardContainer}>
 				<View style={styles.cardIcons}>
-					{elementCats().map((cat, index) => {
+					{data.attributes.CATEGORIE?.split(",").map((cat, index) => {
 						return (
 							<Image
 								key={index}
@@ -39,9 +44,15 @@ export default function CardFavoritesItem({
 				</View>
 				<View style={styles.cardRowContent}>
 					<View style={{ flexShrink: 1 }}>
-						<Text>{truncateString(data.QUESTION, 70)}</Text>
+						<Text>{truncateString(data.attributes.QUESTION, 70)}</Text>
 					</View>
-					<TouchableOpacity style={styles.button}>
+					<TouchableOpacity
+						style={styles.button}
+						onPress={() => {
+							navigation.navigate("favoriteDetails", {
+								questionId: data.id,
+							});
+						}}>
 						<Text style={{ color: colorWhite }}>Voir</Text>
 					</TouchableOpacity>
 				</View>

@@ -1,34 +1,32 @@
-import PlaylistIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
-import CardFavoritesItem from "@/components/cards/CardFavoritesItem";
+import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
+import CardFavoriteQuestion from "@/components/cards/CardFavoriteQuestion";
 import Loader from "@/components/experience/loader";
 import { FontSize12, FontSizeScreenTitles } from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
-import useGetFavoriteQuestionsFull from "@/hooks/useGetFavoriteQuestionsFull";
+import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
-import { useLocalSearchParams } from "expo-router";
+import { FavoriteQuestionsPayloadFull } from "@/types/favoriteQuestions";
+import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
-export default function PlaylistContent() {
+export default function QuestionsFavoritesList() {
 	const { userId } = useUserId();
-	const { destination } = useLocalSearchParams();
-	const { data: favoriteData } = useGetFavoriteQuestionsFull(userId);
+	const [favoriteData, setFavoriteData] =
+		useState<FavoriteQuestionsPayloadFull>(null);
+
+	const { data: favoriteResponse, isFetching } =
+		useGetFavoriteQuestions(userId);
 	const { data: categories } = useCategories();
 
-	if (!favoriteData || !categories) {
+	useEffect(() => {
+		if (favoriteResponse) {
+			setFavoriteData(favoriteResponse);
+		}
+	}, [favoriteResponse]);
+
+	if (!favoriteData || !categories || isFetching) {
 		return <Loader />;
 	}
-
-	// Transform the useSearchLocal param from potential Array to string
-	const content = Array.isArray(destination)
-		? destination.join(", ")
-		: destination;
-
-	//Define the icon to show
-	const icon = () => {
-		if (content === "favorites") {
-			return PlaylistIcon;
-		}
-	};
 
 	// Convert categories.data into a single color array
 	const categoriesColors = categories.data.reduce((acc, category) => {
@@ -45,23 +43,22 @@ export default function PlaylistContent() {
 	return (
 		<ScrollView contentContainerStyle={styles.wrapper}>
 			<View style={styles.headerContainer}>
-				<Image source={icon()} style={styles.headerIcon} />
+				<Image source={FavoritesIcon} style={styles.headerIcon} />
 				<View style={{ flexDirection: "column" }}>
 					<Text style={styles.headerSubText}>Playlist</Text>
-					<Text style={styles.headerText}>{content}</Text>
+					<Text style={styles.headerText}>Questions</Text>
 				</View>
 			</View>
 
 			<View>
-				{favoriteData.data.attributes.questions.data.map((question) => {
-					return (
-						<CardFavoritesItem
-							data={question.attributes}
-							categoriesColors={categoriesColors}
-							categoriesIcons={categoriesIcons}
-						/>
-					);
-				})}
+				{favoriteResponse.data.attributes.questions.data.map((question) => (
+					<CardFavoriteQuestion
+						key={question.id}
+						data={question}
+						categoriesColors={categoriesColors}
+						categoriesIcons={categoriesIcons}
+					/>
+				))}
 			</View>
 		</ScrollView>
 	);
