@@ -22,8 +22,8 @@ const Playlist = () => {
 			</TouchableOpacity> */}
 
 			<CardFavoritesList type='favorites' title='Questions ' />
-			{/* <CardFavoritesList type='metiers' title='Metiers ' />
-			<CardFavoritesList type='dico' title='Dico ' /> */}
+			<CardFavoritesList type='metiers' title='Les Metiers ' />
+			{/* <CardFavoritesList type='dico' title='Dico ' /> */}
 		</View>
 	);
 };

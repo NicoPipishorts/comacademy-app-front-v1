@@ -1,4 +1,4 @@
-export type SecretAttributes = {
+export interface SecretAttributes {
 	Brand: string;
 	Title: string;
 	Key1: string;
@@ -8,13 +8,13 @@ export type SecretAttributes = {
 	createdAt: string; // ISO 8601 format date string
 	updatedAt: string; // ISO 8601 format date string
 	publishedAt: string; // ISO 8601 format date string
-};
+}
 
-export type SecretsData = {
+export interface SecretsData {
 	id: number;
 	attributes: SecretAttributes;
-};
+}
 
-export type SecretsResponse = {
+export interface SecretsResponse {
 	data: SecretsData[];
-};
+}

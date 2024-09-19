@@ -1,18 +1,19 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
+import { FontSizeH3 } from "@/constants/fontsizes";
 import { truncateString } from "@/helpers/truncateText";
 import { NavigationType } from "@/types/general";
-import { QuestionSolo } from "@/types/question";
+import { FavoriteMetier } from "@/types/metiers";
 import { useNavigation } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Loader from "../experience/loader";
 
 interface Props {
-	data: QuestionSolo;
+	data: FavoriteMetier;
 	categoriesColors: { [key: number]: string };
 	categoriesIcons: { [key: number]: string };
 }
 
-export default function CardFavoriteQuestion({
+export default function CardFavoriteMetier({
 	data,
 	categoriesColors,
 	categoriesIcons,
@@ -44,13 +45,15 @@ export default function CardFavoriteQuestion({
 				</View>
 				<View style={styles.cardRowContent}>
 					<View style={{ flexShrink: 1 }}>
-						<Text>{truncateString(data.attributes.QUESTION, 70)}</Text>
+						<Text style={{ fontSize: FontSizeH3, fontWeight: "bold" }}>
+							{truncateString(data.attributes.METIER, 70)}
+						</Text>
 					</View>
 					<TouchableOpacity
 						style={styles.button}
 						onPress={() => {
-							navigation.navigate("favoriteQuestionDetails", {
-								questionId: data.id,
+							navigation.navigate("favoriteMetierDetails", {
+								metierId: data.id,
 							});
 						}}>
 						<Text style={{ color: colorWhite }}>Voir</Text>

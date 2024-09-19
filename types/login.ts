@@ -1,4 +1,4 @@
-export type LoginUser = {
+export interface LoginUser {
 	id: number;
 	username: string;
 	email: string;
@@ -9,9 +9,9 @@ export type LoginUser = {
 	updatedAt: string;
 	firstName: string;
 	lastName: string;
-};
+}
 
-export type LoginPayload = {
+export interface LoginPayload {
 	jwt: string;
 	user: LoginUser;
-};
+}
