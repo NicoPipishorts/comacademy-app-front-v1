@@ -1,8 +1,8 @@
+import PlayButton from "@/assets/imgs/BigPlayButton.png";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import React, { Dispatch, SetStateAction } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import PlayButton from "../../../assets/imgs/BigPlayButton.png";
 
 interface Props {
 	handlePressPlay: () => void;

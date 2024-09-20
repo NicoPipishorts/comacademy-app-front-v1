@@ -22,10 +22,10 @@ export default function UserStats({ categoriesScore }: Props) {
 			/>
 			<View style={styles.cardWrapper}>
 				<View style={styles.cardTextContainer}>
-					<Text style={styles.cardText}>Découvre toutes tes réponses</Text>
+					<Text style={styles.cardText}>Découvre le classement générale</Text>
 					<TouchableOpacity
 						style={styles.buttonBlack}
-						onPress={() => navigation.navigate("userAnswers")}>
+						onPress={() => navigation.navigate("leaderBoard")}>
 						<Text style={styles.buttonText}>Voir</Text>
 					</TouchableOpacity>
 				</View>
@@ -52,7 +52,8 @@ const styles = StyleSheet.create({
 		maxWidth: "100%",
 	},
 	cardText: {
-		width: "60%",
+		flexShrink: 1,
+		marginRight: 20,
 		fontSize: FontSize16,
 		fontWeight: "bold",
 		flexGrow: 1,

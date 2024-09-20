@@ -5,9 +5,9 @@ import {
 	TabBarVisibilityProvider,
 	useTabBarVisibility,
 } from "@/context/TabBarVisibilityContext";
+import LoginScreen from "@/screens/LoginScreen";
 import { Tabs } from "expo-router";
 import React from "react";
-import LoginScreen from "../../screens/LoginScreen";
 
 const CustomTabBar: React.FC<any> = (props) => {
 	const { isTabBarVisible } = useTabBarVisibility();
@@ -81,13 +81,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "3 Secrets",
 						headerShown: false,
-					}}
-				/>
-				<Tabs.Screen
-					name='userAnswers'
-					options={{
-						headerShown: false,
-						headerTitle: "User Answers",
 					}}
 				/>
 			</Tabs>

@@ -1,9 +1,9 @@
+import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import { primaryBackground } from "@/constants/colors";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ScreenHeaders from "../../../components/ScreenHeaders";
 
 const Playlist = () => {
 	const insets = useSafeAreaInsets();

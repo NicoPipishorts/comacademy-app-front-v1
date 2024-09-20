@@ -1,4 +1,7 @@
+import HR from "@/components/HR";
+import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
+import { FontSize12, FontSize16, FontSizeH2 } from "@/constants/fontsizes";
 import React, { useEffect, useState } from "react";
 import {
 	Image,
@@ -9,20 +12,16 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import HR from "../../../components/HR";
-import ScreenHeaders from "../../../components/ScreenHeaders";
-import {
-	FontSize12,
-	FontSize16,
-	FontSizeH2,
-} from "../../../constants/fontsizes";
 // Icons
 import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
 import Chevron from "@/assets/imgs/icons/chevron.png";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Loader from "@/components/experience/loader";
+import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
+import UnorderedList from "@/components/UnorderedList";
+import { colorWhite } from "@/constants/colors";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
@@ -32,9 +31,6 @@ import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { FavoriteMetier } from "@/types/metiers";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import GradientContainer from "../../../components/GradientContainer";
-import UnorderedList from "../../../components/UnorderedList";
-import { colorWhite } from "../../../constants/colors";
 
 interface Props {
 	metierId: number;
