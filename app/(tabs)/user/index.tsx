@@ -36,19 +36,19 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { logout } = useAuth();
 
-	const { data: answers, refetch } = useGetAllScores(userId, token); // Destructure refetch and isFetching from the hook
+	const { data: answers, refetch } = useGetAllScores(userId, token);
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
 			"keyboardDidShow",
 			() => {
-				setKeyboardVisible(true); // Set keyboardVisible to true when the keyboard is shown
+				setKeyboardVisible(true);
 			}
 		);
 		const keyboardDidHideListener = Keyboard.addListener(
 			"keyboardDidHide",
 			() => {
-				setKeyboardVisible(false); // Set keyboardVisible to false when the keyboard is hidden
+				setKeyboardVisible(false);
 			}
 		);
 

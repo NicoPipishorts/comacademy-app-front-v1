@@ -1,40 +1,87 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchPayload = async (token: string): Promise<any> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[answer][$eq]=true&fields[0]=answer&fields[1]=userId`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+// TypeScript Definitions
+export interface GameQuestionPayload {
+	data: {
+		id: number;
+		attributes: {
+			answer: boolean;
+			userId: string;
+		};
+	}[];
+}
 
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
+export interface TransformedUserScore {
+	userId: string;
+	totalTrueValues: number;
+	count: number;
+}
+
+export type TransformedUserScores = TransformedUserScore[];
+
+// Fetch function
+const fetchPayload = async (token: string): Promise<GameQuestionPayload> => {
+	const response = await fetch(
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[answer][$eq]=true&fields[1]=userId`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
 		}
+	);
 
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error fetching Fav Questions:", error);
-		throw error;
+	if (!response.ok) {
+		console.error(
+			`HTTP error! status: ${response.status}`,
+			await response.text()
+		);
+		throw new Error(`HTTP error! status: ${response.status}`);
 	}
+
+	const data = await response.json();
+	return data; // Return the untransformed payload
 };
 
+// Transform function
+const transformResponse = (
+	response: GameQuestionPayload
+): TransformedUserScores => {
+	const result: Record<
+		string,
+		{ userId: string; totalTrueValues: number; count: number }
+	> = {};
+
+	response.data.forEach((item) => {
+		const { userId, answer } = item.attributes;
+
+		if (!result[userId]) {
+			result[userId] = {
+				userId,
+				totalTrueValues: 0,
+				count: 0,
+			};
+		}
+
+		result[userId].count++;
+
+		if (answer) {
+			result[userId].totalTrueValues++;
+		}
+	});
+
+	return Object.values(result);
+};
+
+// Hook with query
 const useGetUsersScore = () => {
 	const { token } = useJwtToken();
 
-	return useQuery<any>({
+	return useQuery<GameQuestionPayload, Error, TransformedUserScores>({
 		queryKey: ["UsersScore"],
-		queryFn: () => fetchPayload(token!),
+		queryFn: () => fetchPayload(token!), // fetches GameQuestionPayload
 		enabled: !!token,
+		select: (data) => transformResponse(data), // Transforms to TransformedUserScores
 	});
 };
 

@@ -90,5 +90,6 @@ export const useGetAllScores = (userId: number, token: string) => {
 			};
 		},
 		enabled: !!token && !!userId,
+		staleTime: 5000,
 	});
 };
