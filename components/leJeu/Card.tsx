@@ -4,7 +4,7 @@ import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 // Assets
-import useIsSpecificiPhoneModel from "@/helpers/deviceModel";
+import { default as useDeviceTypeCheckers } from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
 import { GameData } from "@/types/game";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,8 +16,8 @@ interface CardProps {
 }
 
 const Card = ({ data, catColors }: CardProps) => {
+	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const insets = useSafeAreaInsets();
-	const isSpecificiPhoneModel = useIsSpecificiPhoneModel();
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
@@ -35,7 +35,7 @@ const Card = ({ data, catColors }: CardProps) => {
 				style={[
 					{
 						backgroundColor: `${backGroundColor()}`,
-						minHeight: isSpecificiPhoneModel ? "85%" : "65%",
+						minHeight: isHomeButtonModel ? "85%" : "65%",
 					},
 					styles.cardContainer,
 				]}>

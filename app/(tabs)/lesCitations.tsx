@@ -1,5 +1,6 @@
 import BackgroundImg from "@/assets/imgs/cards/citationsBg.png";
 import Loader from "@/components/experience/loader";
+import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import useGetLesCitations from "@/hooks/useGetLesCitations";
@@ -11,7 +12,6 @@ import {
 	Text,
 	View,
 } from "react-native";
-import ScreenHeaders from "../../components/ScreenHeaders";
 
 const LesCitations = () => {
 	const { data, isLoading } = useGetLesCitations();
