@@ -2,6 +2,7 @@ import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import UserAccount from "@/components/user/userAccount";
+import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { useGetAllScores } from "@/hooks/useGetAllAnswers";
@@ -19,7 +20,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import UserStats from "../../components/user/userStats";
 
 // Define the type for the accumulator object
 interface CategoryResult {

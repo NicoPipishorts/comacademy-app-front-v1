@@ -1,4 +1,6 @@
 import Loader from "@/components/experience/loader";
+import FloatingTabBar from "@/components/FloatingTabBar";
+import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
@@ -10,8 +12,6 @@ import { DicoSelected } from "@/types/dico";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import FloatingTabBar from "../../components/FloatingTabBar";
-import ScreenHeaders from "../../components/ScreenHeaders";
 
 const Dico = () => {
 	const queryClient = useQueryClient();

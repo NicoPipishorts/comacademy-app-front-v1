@@ -1,3 +1,4 @@
+import ALaUne from "@/components/ALaUne";
 import React from "react";
 import {
 	Image,
@@ -7,24 +8,23 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import ALaUne from "../../components/ALaUne";
 
 // Custom images
+import avatar from "@/assets/imgs/avatar/avatar.png";
 import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
-import avatar from "../../assets/imgs/avatar/avatar.png";
 
+import secrets from "@/assets/imgs/cards/home_3_secrets.png";
+import homeActusDis from "@/assets/imgs/cards/home_actus_dis.png";
+import lesCitations from "@/assets/imgs/cards/home_citations.png";
+import homeFlopsDis from "@/assets/imgs/cards/home_flops_dis.png";
+import homeJouer from "@/assets/imgs/cards/home_jouer.png";
+import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import Loader from "@/components/experience/loader";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
-import secrets from "../../assets/imgs/cards/home_3_secrets.png";
-import homeActusDis from "../../assets/imgs/cards/home_actus_dis.png";
-import lesCitations from "../../assets/imgs/cards/home_citations.png";
-import homeFlopsDis from "../../assets/imgs/cards/home_flops_dis.png";
-import homeJouer from "../../assets/imgs/cards/home_jouer.png";
-import mesStats from "../../assets/imgs/cards/home_mes_stats.png";
 
 const HomeScreen = () => {
 	const navigation = useNavigation<NavigationType>();
