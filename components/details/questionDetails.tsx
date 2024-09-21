@@ -8,7 +8,7 @@ import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
 import useUserId from "@/hooks/useUserId";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
@@ -31,10 +31,13 @@ export default function QuestionDetails({ questionId }: Props) {
 
 	const { data } = useQuestionById(questionId);
 	const { data: category } = useCategories();
-	const { data: userFavoritQuestions } = useGetFavoriteQuestions(userId);
+	const { data: userFavoriteQuestions, isFetched: userFavoriteIsFetched } =
+		useGetFavoriteQuestions(userId);
 
 	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
 		useState<boolean>(null);
+	const [idArray, setIdArray] = useState<number[]>([]);
+	const [dataId, setDataId] = useState<number>(null);
 
 	const handleSuccess = () => {
 		queryClient.refetchQueries({ queryKey: ["FavoriteQuestions", userId] });
@@ -42,32 +45,59 @@ export default function QuestionDetails({ questionId }: Props) {
 
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess);
 
-	// Check if the question has already been added to the favorites list.
-	const favorites = userFavoritQuestions?.data.attributes.questions.data;
+	useEffect(() => {
+		if (userFavoriteQuestions?.data[0]) {
+			const newArray =
+				userFavoriteQuestions?.data[0].attributes.questions.data.map(
+					(item) => item.id
+				);
+			setIdArray(newArray);
+		}
+	}, [userFavoriteQuestions?.data]);
 
 	useEffect(() => {
-		if (favorites) {
-			const exists = favorites.some((favorite) => favorite.id === questionId);
-			setFilterIfFavoriteExists(exists);
+		if (idArray) {
+			const doesItExist = idArray.some((id) => id === questionId);
+			if (doesItExist) {
+				setFilterIfFavoriteExists(true);
+			} else {
+				setFilterIfFavoriteExists(false);
+			}
 		}
-	}, [favorites, questionId]);
+	}, [idArray, questionId]);
 
-	if (!data || !category || !userFavoritQuestions) {
-		return <Loader />;
-	}
+	useEffect(() => {
+		if (userFavoriteIsFetched && userFavoriteQuestions.data[0]) {
+			setDataId(userFavoriteQuestions.data[0].id);
+		}
+	}, [userFavoriteIsFetched, userFavoriteQuestions]);
 
-	// Handle Add Favorite question
-	const idArray = favorites.map((favorite) => favorite.id);
-	const handleAddFavorite = () => {
+	const handleAddFavorite = useCallback(() => {
 		if (filterIfFavoriteExists) {
 			const updatedIdArray = idArray.filter((id) => id !== questionId);
 			const updatedFavoriteQuestions = [...updatedIdArray];
-			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+			mutation.mutate({ dataId, updatedFavoriteQuestions, token });
 		} else {
 			const updatedFavoriteQuestions = [...idArray, questionId];
-			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+			if (!dataId) {
+				mutation.mutate({ userId, updatedFavoriteQuestions, token });
+			} else {
+				mutation.mutate({ dataId, updatedFavoriteQuestions, token });
+			}
 		}
-	};
+	}, [
+		dataId,
+		filterIfFavoriteExists,
+		idArray,
+		mutation,
+		questionId,
+		token,
+		userId,
+	]);
+
+	if (!data || !category || !userFavoriteIsFetched) {
+		return <Loader />;
+	}
 
 	return (
 		<View style={styles.wrapper}>

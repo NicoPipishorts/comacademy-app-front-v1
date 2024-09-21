@@ -27,7 +27,7 @@ const fetchFavoriteQuestions = async (
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching Fav Questions:", error);
+		console.error("Error fetching Fav Metiers:", error);
 		throw error;
 	}
 };

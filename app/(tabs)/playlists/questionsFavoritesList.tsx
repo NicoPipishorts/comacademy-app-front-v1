@@ -14,7 +14,7 @@ export default function QuestionsFavoritesList() {
 	const [favoriteData, setFavoriteData] =
 		useState<FavoriteQuestionsPayloadFull>(null);
 
-	const { data: favoriteResponse, isFetching } =
+	const { data: favoriteResponse, isFetched: favoriteIsFetched } =
 		useGetFavoriteQuestions(userId);
 	const { data: categories } = useCategories();
 
@@ -24,7 +24,7 @@ export default function QuestionsFavoritesList() {
 		}
 	}, [favoriteResponse]);
 
-	if (!favoriteData || !categories || isFetching) {
+	if (!categories || !favoriteIsFetched) {
 		return <Loader />;
 	}
 

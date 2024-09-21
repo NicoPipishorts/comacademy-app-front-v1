@@ -1,5 +1,4 @@
 import PlayButton from "@/assets/imgs/BigPlayButton.png";
-import FloatingTabBar from "@/components/FloatingTabBar";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import React, { Dispatch, SetStateAction } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -10,11 +9,7 @@ interface Props {
 	setSelectedTab: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function LetsPlay({
-	handlePressPlay,
-	selectedTab,
-	setSelectedTab,
-}: Props) {
+export default function LetsPlay({ handlePressPlay }: Props) {
 	return (
 		<View style={styles.wrapperCenter}>
 			<View>
@@ -30,13 +25,13 @@ export default function LetsPlay({
 				</TouchableOpacity>
 			</View>
 
-			<View style={styles.floatingTabbarContainer}>
+			{/* <View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
 					selectedTab={selectedTab}
 					setSelectedTab={setSelectedTab}
 					values={{ btn1: "Aléatoire", btn2: "Catégories" }}
 				/>
-			</View>
+			</View> */}
 		</View>
 	);
 }
