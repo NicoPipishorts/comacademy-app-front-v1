@@ -1,3 +1,4 @@
+import { queryClient } from "@/hooks/reactQueryConfig";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
@@ -59,14 +60,10 @@ export const InsertAnswer = () =>
 					}
 				}
 			},
-			// onSuccess: (data) => {
-			// 	onSuccess(data); // Call the original onSuccess callback
-			// },
-			// onError: (error) => {
-			// 	if (error.response) {
-			// 		console.error("Error code:", error.response.status);
-			// 	}
-			// 	onError(error); // Call the original onError callback
-			// },
+			onSuccess: (userId) => {
+				queryClient.refetchQueries({
+					queryKey: ["GameSessionQuestions", { userId }],
+				});
+			},
 		});
 	};

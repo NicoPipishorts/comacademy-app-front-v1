@@ -19,7 +19,7 @@ export default function StatsBar({
 	const { data: categories } = useCategoriesFull();
 
 	if (!categories || !categories.data) {
-		return null; // Handle the case where categories are not loaded
+		return null;
 	}
 
 	return (
