@@ -28,12 +28,15 @@ import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 
-function DicoDetails() {
+interface Props {
+	dicoId: number;
+}
+function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
-	const dicoId = Number(id);
+	const dicoId = paramsDicoId ? paramsDicoId : Number(id);
 
 	const { isAndroid } = useDeviceTypeCheckers();
 
