@@ -1,7 +1,11 @@
 import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
 import CardFavoriteQuestion from "@/components/cards/CardFavoriteQuestion";
 import Loader from "@/components/experience/loader";
-import { FontSize12, FontSizeScreenTitles } from "@/constants/fontsizes";
+import {
+	FontSize12,
+	FontSizeH3,
+	FontSizeScreenTitles,
+} from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
@@ -51,7 +55,7 @@ export default function QuestionsFavoritesList() {
 			</View>
 
 			<View>
-				{favoriteResponse &&
+				{favoriteResponse.data[0] &&
 					favoriteResponse.data.attributes.questions.data.map((question) => (
 						<CardFavoriteQuestion
 							key={question.id}
@@ -60,6 +64,23 @@ export default function QuestionsFavoritesList() {
 							categoriesIcons={categoriesIcons}
 						/>
 					))}
+				{!favoriteResponse.data[0] && (
+					<View
+						style={{
+							marginTop: 50,
+							paddingHorizontal: 10,
+							alignItems: "center",
+						}}>
+						<Text
+							style={{
+								fontSize: FontSizeH3,
+								fontWeight: "bold",
+								textAlign: "center",
+							}}>
+							Tu n'a pas encore de questions favorites d'ajouté.
+						</Text>
+					</View>
+				)}
 			</View>
 		</ScrollView>
 	);

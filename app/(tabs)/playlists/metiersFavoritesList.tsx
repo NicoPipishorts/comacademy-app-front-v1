@@ -1,7 +1,11 @@
 import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
 import CardFavoriteMetier from "@/components/cards/CardFavoriteMetier";
 import Loader from "@/components/experience/loader";
-import { FontSize12, FontSizeScreenTitles } from "@/constants/fontsizes";
+import {
+	FontSize12,
+	FontSizeH3,
+	FontSizeScreenTitles,
+} from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import useUserId from "@/hooks/useUserId";
@@ -13,7 +17,7 @@ export default function QuestionsFavoritesList() {
 	const { userId } = useUserId();
 	const [favoriteData, setFavoriteData] = useState<FavoriteMetiers>(null);
 
-	const { data: favoriteResponse, isFetching } = useGetFavoriteMetiers(userId);
+	const { data: favoriteResponse, isFetched } = useGetFavoriteMetiers(userId);
 	const { data: categories } = useCategories();
 
 	useEffect(() => {
@@ -22,7 +26,7 @@ export default function QuestionsFavoritesList() {
 		}
 	}, [favoriteResponse]);
 
-	if (!favoriteData || !categories || isFetching) {
+	if (!favoriteData || !categories || !isFetched) {
 		return <Loader />;
 	}
 
@@ -49,7 +53,7 @@ export default function QuestionsFavoritesList() {
 			</View>
 
 			<View>
-				{favoriteResponse &&
+				{favoriteResponse.data[0] &&
 					favoriteResponse.data[0].attributes.metiers.data.map((metier) => (
 						<CardFavoriteMetier
 							key={metier.id}
@@ -58,6 +62,23 @@ export default function QuestionsFavoritesList() {
 							categoriesIcons={categoriesIcons}
 						/>
 					))}
+				{!favoriteResponse.data[0] && (
+					<View
+						style={{
+							marginTop: 50,
+							paddingHorizontal: 10,
+							alignItems: "center",
+						}}>
+						<Text
+							style={{
+								fontSize: FontSizeH3,
+								fontWeight: "bold",
+								textAlign: "center",
+							}}>
+							Tu n'a pas encore de metiers favorits d'ajouté.
+						</Text>
+					</View>
+				)}
 			</View>
 		</ScrollView>
 	);
