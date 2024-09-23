@@ -15,6 +15,7 @@ export default function Secrets() {
 	if (!secrets) {
 		return <Loader />;
 	}
+
 	return (
 		<View style={styles.wrapper}>
 			<View
@@ -38,6 +39,12 @@ export default function Secrets() {
 						return (
 							<CardSimpleButton
 								key={secret.id}
+								image={
+									secret.attributes.headerImage.data
+										? secret.attributes.headerImage.data.attributes.formats
+												.medium.url
+										: null
+								}
 								content={secret.attributes.Brand}
 								link={() => setSecretData(secret.attributes)}
 							/>
