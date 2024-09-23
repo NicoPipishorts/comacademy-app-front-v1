@@ -2,7 +2,7 @@ import HR from "@/components/HR";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH2 } from "@/constants/fontsizes";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
@@ -29,7 +29,6 @@ import { useGetMetierById } from "@/hooks/useGetMetiers";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
-import { FavoriteMetier } from "@/types/metiers";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 
 interface Props {
@@ -46,10 +45,13 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const { isAndroid } = useDeviceTypeCheckers();
 
 	const { data } = useGetMetierById(metierId);
-	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(userId);
+	const { data: dataFavoritesMetier, isFetched: isFetchFavoritesMetier } =
+		useGetFavoriteMetiers(userId);
 
 	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
 		useState<boolean>(null);
+	const [idArray, setIdArray] = useState<number[]>([]);
+	const [dataId, setDataId] = useState<number>(null);
 
 	const handleSuccess = () => {
 		queryClient.refetchQueries({ queryKey: ["FavoriteMetiers"] });
@@ -57,32 +59,58 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 	const mutation = useAddFavoritesMetierMutation(handleSuccess);
 
-	// Check if the metier has already been added to the favorites list.
-	const favorites: FavoriteMetier[] =
-		dataFavoritesMetier.data[0].attributes.metiers.data;
+	useEffect(() => {
+		if (dataFavoritesMetier?.data[0]) {
+			const newArray = dataFavoritesMetier?.data[0].attributes.metiers.data.map(
+				(item) => item.id
+			);
+			setIdArray(newArray);
+		}
+	}, [dataFavoritesMetier?.data]);
 
 	useEffect(() => {
-		if (favorites) {
-			const exists = favorites.some((favorite) => favorite.id === metierId);
-			setFilterIfFavoriteExists(exists);
+		if (idArray) {
+			const doesItExist = idArray.some((id) => id === metierId);
+			if (doesItExist) {
+				setFilterIfFavoriteExists(true);
+			} else {
+				setFilterIfFavoriteExists(false);
+			}
 		}
-	}, [favorites, metierId]);
+	}, [idArray, metierId]);
 
-	if (!data || !dataFavoritesMetier) {
-		return <Loader />;
-	}
+	useEffect(() => {
+		if (isFetchFavoritesMetier && dataFavoritesMetier.data[0]) {
+			setDataId(dataFavoritesMetier.data[0].id);
+		}
+	}, [isFetchFavoritesMetier, dataFavoritesMetier]);
 
-	const idArray = favorites.map((favorite) => favorite.id);
-	const handleAddFavorite = () => {
+	const handleAddFavorite = useCallback(() => {
 		if (filterIfFavoriteExists) {
 			const updatedIdArray = idArray.filter((id) => id !== metierId);
 			const updatedFavoriteMetiers = [...updatedIdArray];
-			mutation.mutate({ userId, updatedFavoriteMetiers, token });
+			mutation.mutate({ dataId, updatedFavoriteMetiers, token });
 		} else {
 			const updatedFavoriteMetiers = [...idArray, metierId];
-			mutation.mutate({ userId, updatedFavoriteMetiers, token });
+			if (!dataId) {
+				mutation.mutate({ userId, updatedFavoriteMetiers, token });
+			} else {
+				mutation.mutate({ dataId, updatedFavoriteMetiers, token });
+			}
 		}
-	};
+	}, [
+		dataId,
+		filterIfFavoriteExists,
+		idArray,
+		metierId,
+		mutation,
+		token,
+		userId,
+	]);
+
+	if (!data || !dataFavoritesMetier || !isFetchFavoritesMetier) {
+		return <Loader />;
+	}
 
 	return (
 		<View

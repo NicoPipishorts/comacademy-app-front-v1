@@ -85,7 +85,7 @@ const Jeu = () => {
 	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
 
 	const { data: catData } = useCategories();
-	const { data: fqData } = useGetFavoriteQuestions(userId);
+	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
 
 	const insertPlayerAnswer = InsertAnswer();
 
@@ -98,7 +98,7 @@ const Jeu = () => {
 	};
 
 	// If dataGame is not yet available, show a loading indicator
-	if (!dataGame || !catData || !fqData) {
+	if (!dataGame || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
 

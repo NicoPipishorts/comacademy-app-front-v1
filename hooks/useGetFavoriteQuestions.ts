@@ -5,10 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 const fetchFavoriteQuestions = async (
 	token: string,
 	userId: number
-): Promise<FavoriteQuestionsPayloadFull> => {
+): Promise<FavoriteQuestionsPayloadFull | null> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}?populate=*`,
+			`${process.env.EXPO_PUBLIC_API_URL}/favorite-questions?filters[userId][$eq]=${userId}&populate=*`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -17,6 +17,11 @@ const fetchFavoriteQuestions = async (
 		);
 
 		if (!response.ok) {
+			// Check if it's a 404 error and handle it gracefully
+			if (response.status === 404) {
+				return null;
+			}
+
 			console.error(
 				`HTTP error! status: ${response.status}`,
 				await response.text()
@@ -35,10 +40,10 @@ const fetchFavoriteQuestions = async (
 const useGetFavoriteQuestions = (userId: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<FavoriteQuestionsPayloadFull>({
+	return useQuery<FavoriteQuestionsPayloadFull | null>({
 		queryKey: ["FavoriteQuestions", userId],
-		queryFn: () => fetchFavoriteQuestions(token!, userId), // Ensure token is not null
-		enabled: !!token && !!userId, // Ensure the query is enabled only when token and userId are available
+		queryFn: () => fetchFavoriteQuestions(token!, userId),
+		enabled: !!token && !!userId,
 	});
 };
 

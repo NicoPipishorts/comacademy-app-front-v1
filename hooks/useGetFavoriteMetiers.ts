@@ -17,6 +17,11 @@ const fetchFavoriteQuestions = async (
 		);
 
 		if (!response.ok) {
+			// Check if it's a 404 error and handle it gracefully
+			if (response.status === 404) {
+				return null;
+			}
+
 			console.error(
 				`HTTP error! status: ${response.status}`,
 				await response.text()
@@ -27,7 +32,7 @@ const fetchFavoriteQuestions = async (
 		const data = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching Fav Questions:", error);
+		console.error("Error fetching Fav Metiers:", error);
 		throw error;
 	}
 };
