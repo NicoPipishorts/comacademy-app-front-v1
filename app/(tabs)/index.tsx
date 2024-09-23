@@ -14,12 +14,16 @@ import avatar from "@/assets/imgs/avatar/avatar.png";
 import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
 
+import commandements from "@/assets/imgs/cards/home_10_commandements.png";
 import secrets from "@/assets/imgs/cards/home_3_secrets.png";
 import homeActusDis from "@/assets/imgs/cards/home_actus_dis.png";
 import lesCitations from "@/assets/imgs/cards/home_citations.png";
+import dico from "@/assets/imgs/cards/home_dico.png";
 import homeFlopsDis from "@/assets/imgs/cards/home_flops_dis.png";
+import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
+import metiers from "@/assets/imgs/cards/home_metiers.png";
 import Loader from "@/components/experience/loader";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
@@ -47,7 +51,7 @@ const HomeScreen = () => {
 				style={styles.contentContainer}
 				showsVerticalScrollIndicator={false}>
 				<View style={styles.header}>
-					<Text style={styles.headerShortcuts}>Let's Go</Text>
+					<Text style={styles.headerShortcuts}>Accès rapide</Text>
 				</View>
 				<ScrollView
 					style={styles.shortcutsContainer}
@@ -65,6 +69,50 @@ const HomeScreen = () => {
 								/>
 							</View>
 						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("dico")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={dico}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("user")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={mesStats}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("metiers")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={metiers}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
+						</TouchableOpacity>
+					</View>
+				</ScrollView>
+
+				<View style={styles.header}>
+					<Text style={styles.headerShortcuts}>Découvrir</Text>
+				</View>
+				<ScrollView
+					style={styles.shortcutsContainer}
+					horizontal={true}
+					showsHorizontalScrollIndicator={false}>
+					<View style={styles.shortcuts}>
 						<TouchableOpacity
 							style={styles.cardsButton}
 							onPress={() => navigation.navigate("lesCitations")}>
@@ -89,10 +137,23 @@ const HomeScreen = () => {
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
-							onPress={() => navigation.navigate("user")}>
+							// onPress={() => navigation.navigate("secrets")}
+						>
 							<View style={styles.imageContainer}>
 								<Image
-									source={mesStats}
+									source={commandements}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.cardsButton}
+							// onPress={() => navigation.navigate("secrets")}
+						>
+							<View style={styles.imageContainer}>
+								<Image
+									source={histoires}
 									style={styles.shortcutsCards}
 									resizeMode='contain'
 								/>
@@ -122,15 +183,12 @@ const HomeScreen = () => {
 				<View style={styles.header}>
 					<Text style={styles.headerShortcuts}>A la une</Text>
 				</View>
-				<ScrollView
-					style={styles.alLaUneContainer}
-					horizontal={true}
-					showsHorizontalScrollIndicator={false}>
+				<View style={styles.alLaUneContainer}>
 					<View style={styles.alLaUne}>
 						<ALaUne content='Notre 10 000eme Utilisateur' />
-						<ALaUne content='Notre 10 000eme Utilisateur' />
+						{/* <ALaUne content='Notre 10 000eme Utilisateur' /> */}
 					</View>
-				</ScrollView>
+				</View>
 			</ScrollView>
 		</View>
 	);
@@ -147,7 +205,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 30,
+		marginBottom: 10,
 		paddingHorizontal: 20,
 	},
 	headerText: {
