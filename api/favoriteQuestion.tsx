@@ -3,13 +3,14 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
 interface AddFavoriteQuestionPayload {
-	userId: number;
+	dataId?: number;
+	userId?: number;
 	updatedFavoriteQuestions: number[];
-	token: string; // Include token in the payload
+	token: string;
 }
 
 interface FavoriteQuestionResponse {
-	data: any; // Adjust based on your response structure
+	data: any;
 }
 
 // Custom hook to add favorite question
@@ -23,20 +24,38 @@ export const useAddFavoriteQuestionMutation = (
 	>({
 		mutationFn: async ({
 			userId,
+			dataId,
 			updatedFavoriteQuestions,
 			token,
 		}: AddFavoriteQuestionPayload) => {
-			const payload = {
-				data: {
-					questions: updatedFavoriteQuestions,
-				},
-			};
+			// Check if the user already has favorite questions
 
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${userId}`;
+			// Decide between POST or PUT
+			let method: string;
+			let url: string;
+			let payload: { data: { questions: number[]; userId?: number } };
+			if (!dataId) {
+				method = "POST";
+				url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/`;
+				payload = {
+					data: {
+						questions: updatedFavoriteQuestions,
+						userId,
+					},
+				};
+			} else {
+				method = "PUT";
+				url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-questions/${dataId}`;
+				payload = {
+					data: {
+						questions: updatedFavoriteQuestions,
+					},
+				};
+			}
 
 			try {
 				const response: AxiosResponse<FavoriteQuestionResponse> = await axios({
-					method: "PUT",
+					method: method,
 					url: url,
 					data: payload,
 					headers: {
@@ -58,7 +77,10 @@ export const useAddFavoriteQuestionMutation = (
 		},
 		onError: (error) => {
 			if (error.response) {
-				console.error("Error code:", error.response.status);
+				console.error(
+					"Error code of something going wrong:",
+					error.response.status
+				);
 			}
 		},
 	});

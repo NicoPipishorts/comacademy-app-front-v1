@@ -2,41 +2,53 @@ import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
-interface AddFavoriteQuestionPayload {
-	userId: number;
+interface AddFavoriteMetiers {
+	dataId?: number;
+	userId?: number;
 	updatedFavoriteMetiers: number[];
-	token: string; // Include token in the payload
+	token: string;
 }
 
 interface FavoritesMetierResponse {
-	data: any; // Adjust based on your response structure
+	data: any;
 }
 
 // Custom hook to add favorite question
 export const useAddFavoritesMetierMutation = (
 	onSuccess: (data: FavoritesMetierResponse) => void
 ) => {
-	return useMutation<
-		FavoritesMetierResponse,
-		AxiosError,
-		AddFavoriteQuestionPayload
-	>({
+	return useMutation<FavoritesMetierResponse, AxiosError, AddFavoriteMetiers>({
 		mutationFn: async ({
 			userId,
+			dataId,
 			updatedFavoriteMetiers,
 			token,
-		}: AddFavoriteQuestionPayload) => {
-			const payload = {
-				data: {
-					metiers: updatedFavoriteMetiers,
-				},
-			};
-
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-metiers/${userId}`;
+		}: AddFavoriteMetiers) => {
+			let method: string;
+			let url: string;
+			let payload: { data: { metiers: number[]; userId?: number } };
+			if (!dataId) {
+				method = "POST";
+				url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-metiers/`;
+				payload = {
+					data: {
+						metiers: updatedFavoriteMetiers,
+						userId,
+					},
+				};
+			} else {
+				method = "PUT";
+				url = `${process.env.EXPO_PUBLIC_API_URL}/favorite-metiers/${dataId}`;
+				payload = {
+					data: {
+						metiers: updatedFavoriteMetiers,
+					},
+				};
+			}
 
 			try {
 				const response: AxiosResponse<FavoritesMetierResponse> = await axios({
-					method: "PUT",
+					method: method,
 					url: url,
 					data: payload,
 					headers: {

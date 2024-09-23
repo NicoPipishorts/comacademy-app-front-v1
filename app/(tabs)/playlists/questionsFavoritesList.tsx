@@ -1,30 +1,42 @@
 import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
 import CardFavoriteQuestion from "@/components/cards/CardFavoriteQuestion";
 import Loader from "@/components/experience/loader";
-import { FontSize12, FontSizeScreenTitles } from "@/constants/fontsizes";
+import {
+	FontSize12,
+	FontSizeH3,
+	FontSizeScreenTitles,
+} from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
-import { FavoriteQuestionsPayloadFull } from "@/types/favoriteQuestions";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function QuestionsFavoritesList() {
 	const { userId } = useUserId();
-	const [favoriteData, setFavoriteData] =
-		useState<FavoriteQuestionsPayloadFull>(null);
 
-	const { data: favoriteResponse, isFetching } =
-		useGetFavoriteQuestions(userId);
+	const { data: favoriteResponse, isFetched } = useGetFavoriteQuestions(userId);
 	const { data: categories } = useCategories();
 
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
 	useEffect(() => {
-		if (favoriteResponse) {
-			setFavoriteData(favoriteResponse);
+		if (isFetched) {
+			if (
+				favoriteResponse.data[0]?.attributes.questions.data.length <= 0 ||
+				!favoriteResponse.data[0]?.attributes.questions.data
+			) {
+				setIsEmptyArray(true);
+			} else {
+				setIsEmptyArray(false);
+			}
 		}
-	}, [favoriteResponse]);
+	}, [favoriteResponse, isFetched]);
 
-	if (!favoriteData || !categories || isFetching) {
+	if (!categories || !isFetched) {
+		return <Loader />;
+	}
+
+	if (!categories || !isFetched) {
 		return <Loader />;
 	}
 
@@ -51,8 +63,8 @@ export default function QuestionsFavoritesList() {
 			</View>
 
 			<View>
-				{favoriteResponse &&
-					favoriteResponse.data.attributes.questions.data.map((question) => (
+				{!isEmptyArray &&
+					favoriteResponse.data[0].attributes.questions.data.map((question) => (
 						<CardFavoriteQuestion
 							key={question.id}
 							data={question}
@@ -60,6 +72,23 @@ export default function QuestionsFavoritesList() {
 							categoriesIcons={categoriesIcons}
 						/>
 					))}
+				{isEmptyArray && (
+					<View
+						style={{
+							marginTop: 50,
+							paddingHorizontal: 10,
+							alignItems: "center",
+						}}>
+						<Text
+							style={{
+								fontSize: FontSizeH3,
+								fontWeight: "bold",
+								textAlign: "center",
+							}}>
+							Tu n'a pas encore de questions favorites d'ajouté.
+						</Text>
+					</View>
+				)}
 			</View>
 		</ScrollView>
 	);
