@@ -23,7 +23,7 @@ const Playlist = () => {
 
 			<CardFavoritesList type='favorites' title='Questions ' />
 			<CardFavoritesList type='metiers' title='Les Metiers ' />
-			{/* <CardFavoritesList type='dico' title='Dico ' /> */}
+			<CardFavoritesList type='dicos' title='Dico ' />
 		</View>
 	);
 };

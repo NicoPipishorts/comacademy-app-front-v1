@@ -129,6 +129,7 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		paddingHorizontal: 5,
 		marginBottom: 5,
+		marginTop: 5,
 	},
 	resultsText: {
 		fontSize: FontSize16,

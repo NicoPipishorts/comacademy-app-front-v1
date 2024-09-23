@@ -33,7 +33,7 @@ const useDicoById = (id: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<DicoPayload>({
-		queryKey: ["Dico"],
+		queryKey: ["Dico", id],
 		queryFn: () => fetchDicoById(token, id),
 		enabled: !!token,
 	});

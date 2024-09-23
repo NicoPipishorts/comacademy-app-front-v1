@@ -25,8 +25,6 @@ import {
 type Props = {
 	data: MetiersList;
 	categories: CategoriePayload;
-	setShowDetails: Dispatch<SetStateAction<boolean>>;
-	setSelectedItem: Dispatch<SetStateAction<SelectedMetier | null>>;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 };
@@ -34,8 +32,6 @@ type Props = {
 const MetierList = ({
 	data,
 	categories,
-	setShowDetails,
-	setSelectedItem,
 	filterByCat,
 	setFilterByCat,
 }: Props) => {
@@ -182,6 +178,7 @@ const MetierList = ({
 					showsVerticalScrollIndicator={false}>
 					{filterByCat && (
 						<FilteredByCat
+							count={data.data.length}
 							categories={categories}
 							filterByCat={filterByCat}
 							setFilterByCat={setFilterByCat}
@@ -191,15 +188,11 @@ const MetierList = ({
 					{/* If search query is active, render filtered data, else render grouped data */}
 					{searchQuery
 						? filteredData.map((item, index) => (
-								<Text
+								<TouchableOpacity
 									key={index}
-									style={styles.listItem}
-									onPress={() => {
-										setSelectedItem(item);
-										setShowDetails(true);
-									}}>
-									{item.METIER}
-								</Text>
+									onPress={() => handlePress(item.id)}>
+									<Text style={styles.listItem}>{item.METIER}</Text>
+								</TouchableOpacity>
 						  ))
 						: alphabet.map((letter) => (
 								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>

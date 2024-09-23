@@ -30,6 +30,14 @@ const LeJeuLayout = () => {
 					}}
 				/>
 				<Stack.Screen
+					name='dicosFavoritesList'
+					options={{
+						headerShown: false,
+						headerTitle: "Favorite Dico List",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
 					name='favoriteQuestionDetails'
 					options={{
 						headerShown: false,
@@ -42,6 +50,14 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						headerTitle: "Favorite Metier Details",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
+					name='favoriteDicoDetails'
+					options={{
+						headerShown: false,
+						headerTitle: "Favorite Dico Details",
 						presentation: "modal",
 					}}
 				/>

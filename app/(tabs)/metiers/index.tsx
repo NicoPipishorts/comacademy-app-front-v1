@@ -2,30 +2,24 @@ import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
-import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
-import { SelectedMetier } from "@/types/metiers";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
-import MetierDetails from "./metierDetails";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
 	const navigation = useNavigation<NavigationType>();
+	const { userId } = useUserId();
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
-	const { selectedTab, setSelectedTab } = useTab();
-	const [showDetails, setShowDetails] = useState<boolean>(false);
-	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
 	const { data: dataMetier, isLoading: isLoadingMetier } =
@@ -35,8 +29,7 @@ const Metier = () => {
 
 	useEffect(() => {
 		queryClient.refetchQueries({ queryKey: ["metiersList"] });
-		setSelectedTab(false);
-	}, [filterByCat, queryClient, setSelectedTab]);
+	}, [filterByCat, queryClient]);
 
 	useEffect(() => {
 		if (filter === "null") {
@@ -45,10 +38,6 @@ const Metier = () => {
 			if (Number(filter)) setFilterByCat(Number(filter));
 		}
 	}, [filter, filterByCat]);
-
-	if (showDetails && selectedItem) {
-		return <MetierDetails />;
-	}
 
 	const handlePress = () => {
 		navigation.navigate("categories");
@@ -68,20 +57,15 @@ const Metier = () => {
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
 
-			{!selectedTab && (
-				<MetierList
-					data={dataMetier}
-					categories={dataCategory}
-					setShowDetails={setShowDetails}
-					setSelectedItem={setSelectedItem}
-					filterByCat={filterByCat}
-					setFilterByCat={setFilterByCat}
-				/>
-			)}
+			<MetierList
+				data={dataMetier}
+				categories={dataCategory}
+				filterByCat={filterByCat}
+				setFilterByCat={setFilterByCat}
+			/>
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
-					selectedTab={selectedTab}
 					handlePress={handlePress}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
