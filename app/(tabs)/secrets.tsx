@@ -36,15 +36,14 @@ export default function Secrets() {
 						paddingHorizontal: 20,
 					}}>
 					{secrets.data.map((secret) => {
+						const imageUrl =
+							secret.attributes.headerImage?.data?.attributes?.formats?.medium
+								?.url ?? "/uploads/small_3secrets_placeholder_e0a32b6000.png";
+
 						return (
 							<CardSimpleButton
 								key={secret.id}
-								image={
-									secret.attributes.headerImage.data
-										? secret.attributes.headerImage.data.attributes.formats
-												.medium.url
-										: null
-								}
+								image={imageUrl} // Pass the image URL or null
 								content={secret.attributes.Brand}
 								link={() => setSecretData(secret.attributes)}
 							/>
