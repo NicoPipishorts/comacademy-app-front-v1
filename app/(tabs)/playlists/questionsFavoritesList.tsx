@@ -9,26 +9,34 @@ import {
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
-import { FavoriteQuestionsPayloadFull } from "@/types/favoriteQuestions";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function QuestionsFavoritesList() {
 	const { userId } = useUserId();
-	const [favoriteData, setFavoriteData] =
-		useState<FavoriteQuestionsPayloadFull>(null);
 
-	const { data: favoriteResponse, isFetched: favoriteIsFetched } =
-		useGetFavoriteQuestions(userId);
+	const { data: favoriteResponse, isFetched } = useGetFavoriteQuestions(userId);
 	const { data: categories } = useCategories();
 
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
 	useEffect(() => {
-		if (favoriteResponse) {
-			setFavoriteData(favoriteResponse);
+		if (isFetched) {
+			if (
+				favoriteResponse.data[0]?.attributes.questions.data.length <= 0 ||
+				!favoriteResponse.data[0]?.attributes.questions.data
+			) {
+				setIsEmptyArray(true);
+			} else {
+				setIsEmptyArray(false);
+			}
 		}
-	}, [favoriteResponse]);
+	}, [favoriteResponse, isFetched]);
 
-	if (!categories || !favoriteIsFetched) {
+	if (!categories || !isFetched) {
+		return <Loader />;
+	}
+
+	if (!categories || !isFetched) {
 		return <Loader />;
 	}
 
@@ -55,8 +63,8 @@ export default function QuestionsFavoritesList() {
 			</View>
 
 			<View>
-				{favoriteResponse.data[0] &&
-					favoriteResponse.data.attributes.questions.data.map((question) => (
+				{!isEmptyArray &&
+					favoriteResponse.data[0].attributes.questions.data.map((question) => (
 						<CardFavoriteQuestion
 							key={question.id}
 							data={question}
@@ -64,7 +72,7 @@ export default function QuestionsFavoritesList() {
 							categoriesIcons={categoriesIcons}
 						/>
 					))}
-				{!favoriteResponse.data[0] && (
+				{isEmptyArray && (
 					<View
 						style={{
 							marginTop: 50,

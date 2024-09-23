@@ -9,24 +9,30 @@ import {
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import useUserId from "@/hooks/useUserId";
-import { FavoriteMetiers } from "@/types/metiers";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function QuestionsFavoritesList() {
 	const { userId } = useUserId();
-	const [favoriteData, setFavoriteData] = useState<FavoriteMetiers>(null);
 
 	const { data: favoriteResponse, isFetched } = useGetFavoriteMetiers(userId);
 	const { data: categories } = useCategories();
 
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
 	useEffect(() => {
-		if (favoriteResponse) {
-			setFavoriteData(favoriteResponse);
+		if (isFetched) {
+			if (
+				favoriteResponse.data[0]?.attributes.metiers.data.length <= 0 ||
+				!favoriteResponse.data[0]?.attributes.metiers.data
+			) {
+				setIsEmptyArray(true);
+			} else {
+				setIsEmptyArray(false);
+			}
 		}
-	}, [favoriteResponse]);
+	}, [favoriteResponse, isFetched]);
 
-	if (!favoriteData || !categories || !isFetched) {
+	if (!categories || !isFetched) {
 		return <Loader />;
 	}
 
@@ -40,7 +46,7 @@ export default function QuestionsFavoritesList() {
 	const categoriesIcons = categories.data.reduce((acc, category) => {
 		acc[category.id] = category.attributes.smallIcon.data.attributes.url;
 		return acc;
-	}, {} as { [key: number]: string }); // TypeScript typing
+	}, {} as { [key: number]: string });
 
 	return (
 		<ScrollView contentContainerStyle={styles.wrapper}>
@@ -53,7 +59,7 @@ export default function QuestionsFavoritesList() {
 			</View>
 
 			<View>
-				{favoriteResponse.data[0] &&
+				{!isEmptyArray &&
 					favoriteResponse.data[0].attributes.metiers.data.map((metier) => (
 						<CardFavoriteMetier
 							key={metier.id}
@@ -62,7 +68,7 @@ export default function QuestionsFavoritesList() {
 							categoriesIcons={categoriesIcons}
 						/>
 					))}
-				{!favoriteResponse.data[0] && (
+				{isEmptyArray && (
 					<View
 						style={{
 							marginTop: 50,
