@@ -70,7 +70,8 @@ const transformResponse = (
 		}
 	});
 
-	return Object.values(result);
+	// Convert the object to an array and sort it by count in descending order
+	return Object.values(result).sort((a, b) => b.count - a.count);
 };
 
 // Hook with query
