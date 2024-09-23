@@ -34,28 +34,34 @@ export default function SecretsDetails({ data, setSecretData }: Props) {
 					<Text style={styles.titleCardText}>{data.Title}</Text>
 				</View>
 				{/* Additional Cards */}
-				{Array.from({ length: 3 }).map((_, i) => (
-					<LinearGradient
-						key={i}
-						colors={["#CA87E9", "#F0ADAE"]} // Adjust these colors to match your gradient
-						style={[styles.keyCardWrapper, { width: cardWidth }]}
-						start={{ x: 0, y: 0 }}
-						end={{ x: 1, y: 1 }}>
-						<Text style={styles.keyCardTitle}>Innovation :</Text>
-						<View style={{ marginTop: 20 }}>
-							<Text style={styles.keyCardText}>{data[`Key${i + 1}`]}</Text>
-						</View>
-						<View
-							style={{
-								marginTop: 20,
-								position: "absolute",
-								bottom: 10,
-								left: 30,
-							}}>
-							<Text style={styles.keyCardNum}>{i + 1}</Text>
-						</View>
-					</LinearGradient>
-				))}
+				{Array.from({ length: 3 }).map((_, i) => {
+					const a = data[`Key${i + 1}`].split(":");
+					const title = a[0];
+					const text = a[1];
+
+					return (
+						<LinearGradient
+							key={i}
+							colors={["#CA87E9", "#F0ADAE"]} // Adjust these colors to match your gradient
+							style={[styles.keyCardWrapper, { width: cardWidth }]}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}>
+							<Text style={styles.keyCardTitle}>{title} :</Text>
+							<View style={{ marginTop: 20 }}>
+								<Text style={styles.keyCardText}>{text}</Text>
+							</View>
+							<View
+								style={{
+									marginTop: 20,
+									position: "absolute",
+									bottom: 10,
+									left: 30,
+								}}>
+								<Text style={styles.keyCardNum}>{i + 1}</Text>
+							</View>
+						</LinearGradient>
+					);
+				})}
 			</ScrollView>
 
 			<TouchableOpacity
