@@ -34,8 +34,6 @@ type Props = {
 const MetierList = ({
 	data,
 	categories,
-	setShowDetails,
-	setSelectedItem,
 	filterByCat,
 	setFilterByCat,
 }: Props) => {
@@ -191,15 +189,11 @@ const MetierList = ({
 					{/* If search query is active, render filtered data, else render grouped data */}
 					{searchQuery
 						? filteredData.map((item, index) => (
-								<Text
+								<TouchableOpacity
 									key={index}
-									style={styles.listItem}
-									onPress={() => {
-										setSelectedItem(item);
-										setShowDetails(true);
-									}}>
-									{item.METIER}
-								</Text>
+									onPress={() => handlePress(item.id)}>
+									<Text style={styles.listItem}>{item.METIER}</Text>
+								</TouchableOpacity>
 						  ))
 						: alphabet.map((letter) => (
 								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>

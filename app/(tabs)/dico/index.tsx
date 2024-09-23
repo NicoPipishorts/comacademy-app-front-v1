@@ -63,7 +63,7 @@ const Dico = () => {
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
 					selectedTab={selectedTab}
-					setSelectedTab={setSelectedTab}
+					handlePress={handlePress}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>

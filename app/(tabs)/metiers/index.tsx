@@ -8,14 +8,12 @@ import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
-import { SelectedMetier } from "@/types/metiers";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
-import MetierDetails from "./metierDetails";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
@@ -24,8 +22,6 @@ const Metier = () => {
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
 	const { selectedTab, setSelectedTab } = useTab();
-	const [showDetails, setShowDetails] = useState<boolean>(false);
-	const [selectedItem, setSelectedItem] = useState<SelectedMetier | null>(null);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
 	const { data: dataMetier, isLoading: isLoadingMetier } =
@@ -45,10 +41,6 @@ const Metier = () => {
 			if (Number(filter)) setFilterByCat(Number(filter));
 		}
 	}, [filter, filterByCat]);
-
-	if (showDetails && selectedItem) {
-		return <MetierDetails />;
-	}
 
 	const handlePress = () => {
 		navigation.navigate("categories");
@@ -72,8 +64,6 @@ const Metier = () => {
 				<MetierList
 					data={dataMetier}
 					categories={dataCategory}
-					setShowDetails={setShowDetails}
-					setSelectedItem={setSelectedItem}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
 				/>
