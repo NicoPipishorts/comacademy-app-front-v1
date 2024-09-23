@@ -1,9 +1,16 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+	ImageBackground,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 interface Props {
-	image?: string;
+	image: string;
 	content: string;
 	link: () => void;
 }
@@ -11,12 +18,26 @@ interface Props {
 export default function CardSimpleButton({ image, content, link }: Props) {
 	return (
 		<View style={styles.cardWrapper}>
-			<View style={styles.cardTextContainer}>
-				<Text style={styles.cardText}>{content}</Text>
-				<TouchableOpacity style={styles.buttonBlack} onPress={link}>
-					<Text style={styles.buttonText}>Voir</Text>
-				</TouchableOpacity>
-			</View>
+			<ImageBackground
+				source={{
+					uri: `${process.env.EXPO_PUBLIC_URL}${image}`,
+				}}
+				style={styles.cardBackgroundImage}
+				resizeMode='cover'>
+				<LinearGradient
+					colors={["transparent", colorWhite]}
+					start={{ x: 0.5, y: 0.15 }}
+					end={{ x: 0.5, y: 1 }}
+					locations={[0, 0.68]} // Make the white part start at 80% of the height
+					style={{ flex: 1, width: "100%" }}>
+					<View style={styles.cardTextContainer}>
+						<Text style={styles.cardText}>{content}</Text>
+						<TouchableOpacity style={styles.buttonBlack} onPress={link}>
+							<Text style={styles.buttonText}>Voir</Text>
+						</TouchableOpacity>
+					</View>
+				</LinearGradient>
+			</ImageBackground>
 		</View>
 	);
 }
@@ -28,16 +49,23 @@ const styles = StyleSheet.create({
 		marginBottom: 40,
 		width: "100%",
 		borderRadius: 25,
-		paddingHorizontal: 20,
-		paddingVertical: 30,
+		overflow: "hidden",
 		backgroundColor: colorWhite,
+	},
+	cardBackgroundImage: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	cardTextContainer: {
 		display: "flex",
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "center",
+		alignItems: "flex-end",
 		maxWidth: "100%",
+		paddingHorizontal: 30,
+		paddingBottom: 21,
+		height: 275,
 	},
 	cardText: {
 		width: "60%",

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchData = async (token: string): Promise<SecretsResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/secrets?sort=Brand:asc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/secrets?sort=Brand:asc&populate=*`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
