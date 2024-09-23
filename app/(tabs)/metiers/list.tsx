@@ -25,8 +25,6 @@ import {
 type Props = {
 	data: MetiersList;
 	categories: CategoriePayload;
-	setShowDetails: Dispatch<SetStateAction<boolean>>;
-	setSelectedItem: Dispatch<SetStateAction<SelectedMetier | null>>;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 };

@@ -10,7 +10,23 @@ const LeJeuLayout = () => {
 					name='index'
 					options={{
 						headerShown: false,
-						headerTitle: "Le Dic",
+						headerTitle: "Le Dico",
+					}}
+				/>
+				<Stack.Screen
+					name='dicoDetails'
+					options={{
+						headerShown: false,
+						headerTitle: "Le Dico Details",
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
+					name='categories'
+					options={{
+						headerShown: false,
+						headerTitle: "Le Dico Categories",
+						presentation: "modal",
 					}}
 				/>
 			</Stack>

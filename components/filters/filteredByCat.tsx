@@ -7,12 +7,17 @@ import { Dispatch, SetStateAction } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
+	count: number;
 	categories: CategoriePayload;
 	filterByCat: number;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 }
 
-export default function FilteredByCat({ categories, filterByCat }: Props) {
+export default function FilteredByCat({
+	categories,
+	filterByCat,
+	count,
+}: Props) {
 	const navigation = useNavigation<NavigationType>();
 	const categoriesArray = categories.data; // The original array of categories
 
@@ -32,7 +37,7 @@ export default function FilteredByCat({ categories, filterByCat }: Props) {
 				style={styles.filterContainer}
 				onPress={() => onPress()}>
 				<Text style={styles.filterText}>
-					{categoriesById[filterByCat]?.attributes.Title}
+					{categoriesById[filterByCat]?.attributes.Title}: {count}
 				</Text>
 				<MaterialCommunityIcons
 					name='close-circle-outline'

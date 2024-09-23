@@ -2,7 +2,6 @@ import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
-import { useTab } from "@/context/floatingTabbarContext";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
@@ -17,11 +16,10 @@ import MetierList from "./list";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
 	const navigation = useNavigation<NavigationType>();
+	const { userId } = useUserId();
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
-	const { selectedTab, setSelectedTab } = useTab();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
 	const { data: dataMetier, isLoading: isLoadingMetier } =
@@ -31,8 +29,7 @@ const Metier = () => {
 
 	useEffect(() => {
 		queryClient.refetchQueries({ queryKey: ["metiersList"] });
-		setSelectedTab(false);
-	}, [filterByCat, queryClient, setSelectedTab]);
+	}, [filterByCat, queryClient]);
 
 	useEffect(() => {
 		if (filter === "null") {
@@ -60,18 +57,15 @@ const Metier = () => {
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
 
-			{!selectedTab && (
-				<MetierList
-					data={dataMetier}
-					categories={dataCategory}
-					filterByCat={filterByCat}
-					setFilterByCat={setFilterByCat}
-				/>
-			)}
+			<MetierList
+				data={dataMetier}
+				categories={dataCategory}
+				filterByCat={filterByCat}
+				setFilterByCat={setFilterByCat}
+			/>
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
-					selectedTab={selectedTab}
 					handlePress={handlePress}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
