@@ -178,6 +178,7 @@ const MetierList = ({
 					showsVerticalScrollIndicator={false}>
 					{filterByCat && (
 						<FilteredByCat
+							count={data.data.length}
 							categories={categories}
 							filterByCat={filterByCat}
 							setFilterByCat={setFilterByCat}

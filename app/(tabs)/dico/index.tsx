@@ -19,11 +19,7 @@ const Dico = () => {
 	const { selectedTab, setSelectedTab } = useTab();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const {
-		data: dataDico,
-		isLoading: isLoadingData,
-		isFetched,
-	} = useDicoIds(filterByCat);
+	const { data: dataDico, isLoading: isLoadingData } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
 	useEffect(() => {

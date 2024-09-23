@@ -172,7 +172,7 @@ function DicoDetails() {
 					</Text>
 				</View>
 
-				<View style={styles.containerSatisfaction}>
+				{/* <View style={styles.containerSatisfaction}>
 					<Text style={styles.ttlSatisfaction}>Cette fiche a été utile :</Text>
 					<TouchableOpacity style={styles.btnSatisfaction}>
 						<Text style={styles.textSatisfaction}>Yes</Text>
@@ -180,7 +180,7 @@ function DicoDetails() {
 					<TouchableOpacity style={styles.btnSatisfaction}>
 						<Text style={styles.textSatisfaction}>No</Text>
 					</TouchableOpacity>
-				</View>
+				</View> */}
 			</ScrollView>
 		</View>
 	);
