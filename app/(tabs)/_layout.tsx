@@ -83,6 +83,13 @@ const _layout: React.FC = () => {
 						headerShown: false,
 					}}
 				/>
+				<Tabs.Screen
+					name='commandements'
+					options={{
+						tabBarLabel: "10 Commandements",
+						headerShown: false,
+					}}
+				/>
 			</Tabs>
 		</TabBarVisibilityProvider>
 	);

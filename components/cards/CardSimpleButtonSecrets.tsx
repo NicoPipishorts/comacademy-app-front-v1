@@ -1,6 +1,8 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
+import { NavigationType } from "@/types/general";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "expo-router";
 import {
 	ImageBackground,
 	StyleSheet,
@@ -11,11 +13,17 @@ import {
 
 interface Props {
 	image: string;
+	itemId: number;
 	content: string;
-	link: () => void;
 }
 
-export default function CardSimpleButton({ image, content, link }: Props) {
+export default function CardSimpleButtonSecrets({
+	image,
+	itemId,
+	content,
+}: Props) {
+	const navigation = useNavigation<NavigationType>();
+
 	return (
 		<View style={styles.cardWrapper}>
 			<ImageBackground
@@ -32,7 +40,9 @@ export default function CardSimpleButton({ image, content, link }: Props) {
 					style={{ flex: 1, width: "100%" }}>
 					<View style={styles.cardTextContainer}>
 						<Text style={styles.cardText}>{content}</Text>
-						<TouchableOpacity style={styles.buttonBlack} onPress={link}>
+						<TouchableOpacity
+							style={styles.buttonBlack}
+							onPress={() => navigation.navigate("SecretsDetails", { itemId })}>
 							<Text style={styles.buttonText}>Voir</Text>
 						</TouchableOpacity>
 					</View>
