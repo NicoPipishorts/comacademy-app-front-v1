@@ -1,7 +1,7 @@
-import CardSimpleButton from "@/components/cards/CardSimpleButton";
+import CardSimpleButtonSecrets from "@/components/cards/CardSimpleButtonSecrets";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
-import SecretsDetails from "@/components/secrets/Details";
+import SecretsDetails from "@/components/secrets/SecretsDetails";
 import { primaryBackground } from "@/constants/colors";
 import useGetAllSecrets from "@/hooks/useGetAllSecrets";
 import { SecretAttributes } from "@/types/secrets";
@@ -41,7 +41,7 @@ export default function Secrets() {
 								?.url ?? "/uploads/small_3secrets_placeholder_e0a32b6000.png";
 
 						return (
-							<CardSimpleButton
+							<CardSimpleButtonSecrets
 								key={secret.id}
 								image={imageUrl} // Pass the image URL or null
 								content={secret.attributes.Brand}

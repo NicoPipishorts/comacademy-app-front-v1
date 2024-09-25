@@ -15,7 +15,11 @@ interface Props {
 	link: () => void;
 }
 
-export default function CardSimpleButton({ image, content, link }: Props) {
+export default function CardSimpleButtonSecrets({
+	image,
+	content,
+	link,
+}: Props) {
 	return (
 		<View style={styles.cardWrapper}>
 			<ImageBackground
