@@ -27,7 +27,7 @@ export default function Secrets() {
 				style={{
 					paddingHorizontal: 20,
 				}}>
-				<ScreenHeaders content='3 secrets du succès...' />
+				<ScreenHeaders content='3 secrets du succès' />
 			</View>
 
 			<ScrollView
