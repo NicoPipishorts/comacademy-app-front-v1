@@ -1,8 +1,13 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize14, FontSize16 } from "@/constants/fontsizes";
-import { SecretAttributes } from "@/types/secrets";
+import {
+	FontSize16,
+	FontSizeH1,
+	FontSizeScreenTitles,
+} from "@/constants/fontsizes";
+import { useSecrets } from "@/context/contextSecrets";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { LinearGradient } from "expo-linear-gradient";
-import { Dispatch, SetStateAction } from "react";
+import { useLocalSearchParams } from "expo-router";
 import {
 	Dimensions,
 	ScrollView,
@@ -12,17 +17,33 @@ import {
 	View,
 } from "react-native";
 
-interface Props {
-	data: SecretAttributes;
-	setSecretData: Dispatch<SetStateAction<SecretAttributes>>;
-}
-
-export default function SecretsDetails({ data, setSecretData }: Props) {
+export default function SecretsDetails() {
+	const { data } = useSecrets();
+	const { itemId } = useLocalSearchParams();
+	const { isAndroid } = useDeviceTypeCheckers();
 	const screenWidth = Dimensions.get("window").width;
-	const cardWidth = screenWidth * 0.8; // Each card takes 80% of screen width
+	const cardWidth = screenWidth * 0.8;
+	const secretsId = Number(itemId);
+
+	const secretsData = data.data[secretsId].attributes;
 
 	return (
-		<View style={styles.cardsWrapper}>
+		<View
+			style={[
+				styles.cardsWrapper,
+				{
+					paddingTop: isAndroid ? 40 : 20,
+				},
+			]}>
+			<View
+				style={{
+					padding: 30,
+					paddingBottom: 20,
+				}}>
+				<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
+					Les 3 Secrets
+				</Text>
+			</View>
 			<ScrollView
 				horizontal
 				decelerationRate='fast'
@@ -31,11 +52,10 @@ export default function SecretsDetails({ data, setSecretData }: Props) {
 				contentContainerStyle={styles.scrollViewWrapper}
 				showsHorizontalScrollIndicator={false}>
 				<View style={[styles.titleCardWrapper, { width: cardWidth }]}>
-					<Text style={styles.titleCardText}>{data.Title}</Text>
+					<Text style={styles.titleCardText}>{secretsData.Title}</Text>
 				</View>
-				{/* Additional Cards */}
 				{Array.from({ length: 3 }).map((_, i) => {
-					const a = data[`Key${i + 1}`].split(":");
+					const a = secretsData[`Key${i + 1}`].split(":");
 					const title = a[0];
 					const text = a[1];
 
@@ -64,31 +84,37 @@ export default function SecretsDetails({ data, setSecretData }: Props) {
 				})}
 			</ScrollView>
 
-			<TouchableOpacity
-				onPress={() => setSecretData(null)}
-				style={styles.backButton}>
-				<Text
-					style={{
-						color: colorWhite,
-						fontSize: FontSize16,
-						fontWeight: "bold",
-					}}>
-					Retour
-				</Text>
-			</TouchableOpacity>
+			{isAndroid && (
+				<TouchableOpacity
+					style={[
+						styles.backButton,
+						{
+							marginBottom: isAndroid ? 120 : 20,
+						},
+					]}>
+					<Text
+						style={{
+							color: colorWhite,
+							fontSize: FontSize16,
+							fontWeight: "bold",
+						}}>
+						Retour
+					</Text>
+				</TouchableOpacity>
+			)}
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	cardsWrapper: {
-		flex: 1,
+		flexShrink: 1,
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	scrollViewWrapper: {
 		alignItems: "center",
-		paddingHorizontal: 18, // Some padding around the scroll view
+		padding: 18,
 	},
 	titleCardWrapper: {
 		justifyContent: "center",
@@ -101,12 +127,11 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.55,
 		shadowRadius: 10.84,
-		marginHorizontal: 13, // Adds spacing between cards
+		marginHorizontal: 13,
 	},
 	keyCardWrapper: {
 		position: "relative",
 		justifyContent: "flex-start",
-		alignItems: "flex-start",
 		minHeight: "80%",
 		backgroundColor: colorBlack,
 		paddingHorizontal: 30,
@@ -116,22 +141,22 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.55,
 		shadowRadius: 10.84,
-		marginHorizontal: 13, // Adds spacing between cards
+		marginHorizontal: 13,
 	},
 	titleCardText: {
 		color: colorWhite,
-		fontSize: 42,
+		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
 		lineHeight: 44,
 	},
 	keyCardTitle: {
 		color: colorWhite,
-		fontSize: 36,
+		fontSize: FontSizeH1,
 		fontWeight: "bold",
 	},
 	keyCardText: {
 		color: colorWhite,
-		fontSize: FontSize14,
+		fontSize: FontSize16,
 		fontWeight: "bold",
 	},
 	keyCardNum: {
@@ -142,7 +167,6 @@ const styles = StyleSheet.create({
 	},
 	backButton: {
 		backgroundColor: colorBlack,
-		marginBottom: 20,
 		paddingHorizontal: 30,
 		paddingVertical: 10,
 		borderRadius: 50,
