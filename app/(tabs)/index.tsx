@@ -137,8 +137,7 @@ const HomeScreen = () => {
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
-							// onPress={() => navigation.navigate("secrets")}
-						>
+							onPress={() => navigation.navigate("commandements")}>
 							<View style={styles.imageContainer}>
 								<Image
 									source={commandements}
