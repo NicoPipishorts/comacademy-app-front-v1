@@ -23,18 +23,14 @@ export default function Secrets() {
 
 	return (
 		<View style={styles.wrapper}>
-			<View
-				style={{
-					paddingHorizontal: 20,
-				}}>
-				<ScreenHeaders content='3 secrets du succès...' />
-			</View>
+			<ScrollView showsVerticalScrollIndicator={false}>
+				<View
+					style={{
+						paddingHorizontal: 20,
+					}}>
+					<ScreenHeaders content='3 secrets du succès' />
+				</View>
 
-			<ScrollView
-				showsVerticalScrollIndicator={false}
-				style={{
-					paddingHorizontal: 20,
-				}}>
 				{secrets.data.map((secret) => {
 					const imageUrl =
 						secret.attributes.headerImage?.data?.attributes?.formats?.medium

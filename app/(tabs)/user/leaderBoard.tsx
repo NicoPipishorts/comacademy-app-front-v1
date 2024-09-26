@@ -24,21 +24,23 @@ export default function LeaderBoard() {
 
 	// Step 1: Extract users from allScores with count > 0, preserving the order
 	const usersWithScores = allScores
-		.filter((score) => score.count > 0) // Only users with count > 0
+		.filter((score) => score.count > 0)
 		.map((score) => ({
 			userId: score.userId,
-			...allUsers[score.userId], // Get the user data from allUsers
-			count: score.count, // Add the count to the user object
+			...allUsers[score.userId],
+			count: score.count,
+			points: score.totalCOEF,
 		}));
 
 	// Step 2: Get remaining users not included in allScores and sort them by userId
 	const remainingUsers = Object.entries(allUsers)
-		.filter(([userId]) => !allScores.some((score) => score.userId === userId)) // Exclude users with scores
-		.sort(([userIdA], [userIdB]) => Number(userIdA) - Number(userIdB)) // Sort by userId
+		.filter(([userId]) => !allScores.some((score) => score.userId === userId))
+		.sort(([userIdA], [userIdB]) => Number(userIdA) - Number(userIdB))
 		.map(([userId, userInfo]) => ({
 			userId,
 			...userInfo,
-			count: 0, // Default count to 0 for users without scores
+			count: 0,
+			points: 0,
 		}));
 
 	// Step 3: Combine the two lists, users with scores first, then the remaining users
@@ -87,7 +89,7 @@ export default function LeaderBoard() {
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
 											<Text style={[styles.resultsText, { color: colorWhite }]}>
-												{user.count}
+												{user.points}
 											</Text>
 										</View>
 									</LinearGradient>
@@ -99,7 +101,7 @@ export default function LeaderBoard() {
 											</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
-											<Text style={styles.resultsText}>{user.count}</Text>
+											<Text style={styles.resultsText}>{user.points}</Text>
 										</View>
 									</View>
 								)}

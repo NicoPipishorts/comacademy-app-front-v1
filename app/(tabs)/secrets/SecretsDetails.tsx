@@ -41,7 +41,7 @@ export default function SecretsDetails() {
 					paddingBottom: 20,
 				}}>
 				<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
-					Les 3 Secrets
+					3 Secrets du Succès
 				</Text>
 			</View>
 			<ScrollView

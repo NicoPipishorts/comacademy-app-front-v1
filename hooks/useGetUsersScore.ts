@@ -8,13 +8,21 @@ export interface GameQuestionPayload {
 		attributes: {
 			answer: boolean;
 			userId: string;
+			questionId: {
+				data: {
+					id: number;
+					attributes: {
+						COEF: number;
+					};
+				};
+			};
 		};
 	}[];
 }
 
 export interface TransformedUserScore {
 	userId: string;
-	totalTrueValues: number;
+	totalCOEF: number;
 	count: number;
 }
 
@@ -23,7 +31,7 @@ export type TransformedUserScores = TransformedUserScore[];
 // Fetch function
 const fetchPayload = async (token: string): Promise<GameQuestionPayload> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[answer][$eq]=true&fields[1]=userId`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[answer][$eq]=true&fields[1]=userId&populate[questionId][fields][0]=COEF`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -49,25 +57,25 @@ const transformResponse = (
 ): TransformedUserScores => {
 	const result: Record<
 		string,
-		{ userId: string; totalTrueValues: number; count: number }
+		{ userId: string; totalCOEF: number; count: number }
 	> = {};
 
 	response.data.forEach((item) => {
-		const { userId, answer } = item.attributes;
+		const { userId } = item.attributes;
+		const COEF = item.attributes.questionId?.data?.attributes?.COEF ?? 0; // Get COEF value (default to 0 if not available)
 
+		// Initialize the object for the user if it doesn't exist yet
 		if (!result[userId]) {
 			result[userId] = {
 				userId,
-				totalTrueValues: 0,
+				totalCOEF: 0,
 				count: 0,
 			};
 		}
 
+		// Increment the count and sum the COEF values
 		result[userId].count++;
-
-		if (answer) {
-			result[userId].totalTrueValues++;
-		}
+		result[userId].totalCOEF += COEF;
 	});
 
 	// Convert the object to an array and sort it by count in descending order

@@ -1,5 +1,5 @@
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
-import { FontSizeH1 } from "@/constants/fontsizes";
+import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { CategoryScore } from "@/hooks/useGetScore";
 import { StyleSheet, Text, View } from "react-native";
@@ -9,12 +9,14 @@ interface Props {
 	categoriesScore: Record<number, CategoryScore>;
 	title: string;
 	shadowOpacity: number;
+	totalPoints: number;
 }
 
 export default function StatsBar({
 	categoriesScore,
 	title,
 	shadowOpacity,
+	totalPoints,
 }: Props) {
 	const { data: categories } = useCategoriesFull();
 
@@ -30,8 +32,16 @@ export default function StatsBar({
 					shadowOpacity: shadowOpacity,
 				},
 			]}>
-			<View style={{ padding: 20, paddingBottom: 40 }}>
+			<View
+				style={{
+					flexDirection: "row",
+					justifyContent: "space-between",
+					alignItems: "flex-end",
+					padding: 20,
+					paddingBottom: 40,
+				}}>
 				<Text style={styles.headerText}>{title}</Text>
+				<Text style={styles.scoreText}>Ton score: {totalPoints}</Text>
 			</View>
 			<View style={styles.containerProgressBars}>
 				{categories.data.map((cat) => {
@@ -112,6 +122,10 @@ const styles = StyleSheet.create({
 	},
 	headerText: {
 		fontSize: FontSizeH1,
+		fontWeight: "bold",
+	},
+	scoreText: {
+		fontSize: FontSizeH3,
 		fontWeight: "bold",
 	},
 	containerProgressBars: {
