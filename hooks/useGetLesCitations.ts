@@ -1,8 +1,8 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import { CitationData } from "@/types/lesCitations";
+import { CitationResponse } from "@/types/lesCitations";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCitations = async (token: string): Promise<CitationData> => {
+const fetchCitations = async (token: string): Promise<CitationResponse> => {
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/citations?random=true&pagination[limit]=30`,
@@ -32,7 +32,7 @@ const fetchCitations = async (token: string): Promise<CitationData> => {
 const useLesCitations = () => {
 	const { token } = useJwtToken();
 
-	return useQuery<CitationData>({
+	return useQuery<CitationResponse>({
 		queryKey: ["Citations"],
 		queryFn: () => fetchCitations(token),
 		enabled: !!token,

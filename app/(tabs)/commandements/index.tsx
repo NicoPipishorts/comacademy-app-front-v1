@@ -27,9 +27,9 @@ export default function Secrets() {
 			<View
 				style={{
 					paddingHorizontal: 20,
-					paddingTop: insets.top,
+					paddingTop: insets.top + 20,
 				}}>
-				<ScreenHeaders content='10 Commandements...' />
+				<ScreenHeaders content='10 Commandements' />
 			</View>
 			<ScrollView
 				showsVerticalScrollIndicator={false}

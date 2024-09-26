@@ -4,7 +4,6 @@ import { NavigationType } from "@/types/general";
 import { Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Loader from "../experience/loader";
 
 interface Props {
 	content: string;
@@ -21,7 +20,7 @@ export default function CardSimpleButtonCommandements({
 	});
 
 	if (!fontsLoaded) {
-		return <Loader />;
+		return null;
 	}
 	return (
 		<View style={styles.cardWrapper}>

@@ -76,7 +76,7 @@ export default function User() {
 	const dynamicPadding = keyboardVisible ? 30 : 100;
 
 	if (!answers) {
-		return <Loader />; // Show Loader while fetching data
+		return <Loader />;
 	}
 
 	return (
