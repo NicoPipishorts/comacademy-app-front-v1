@@ -39,11 +39,17 @@ export default function FinishedSession() {
 			<View style={styles.containerResults}>
 				<View style={styles.scoreContainer}>
 					<View style={styles.scoreTextContainer}>
-						<Text style={styles.scoreText}>73</Text>
+						<Text style={styles.scoreText}>
+							{Math.round(
+								(score.trueAnswersCount / score.totalAnswersCount) * 100
+							)}
+						</Text>
 						<Text style={styles.scoreTextPercentage}>%</Text>
 					</View>
 					<View>
-						<Text style={styles.scoreFraction}>22/30</Text>
+						<Text style={styles.scoreFraction}>
+							{score.trueAnswersCount}/30
+						</Text>
 					</View>
 				</View>
 				<View style={styles.brogressbarContainer}>
@@ -65,7 +71,7 @@ export default function FinishedSession() {
 						<Text style={styles.endRowText}>De bonnes réponses</Text>
 					</View>
 					<View>
-						<Text style={styles.endRowText}>200 pts</Text>
+						<Text style={styles.endRowText}>{score.totalScore} pts</Text>
 					</View>
 				</View>
 			</View>
