@@ -30,6 +30,10 @@ export default function FinishedSession() {
 		return <Loader />;
 	}
 
+	const roundedScore = Math.round(
+		(score.trueAnswersCount / score.totalAnswersCount) * 100
+	);
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top + 30 }]}>
 			<View style={styles.headerTextContainer}>
@@ -39,11 +43,7 @@ export default function FinishedSession() {
 			<View style={styles.containerResults}>
 				<View style={styles.scoreContainer}>
 					<View style={styles.scoreTextContainer}>
-						<Text style={styles.scoreText}>
-							{Math.round(
-								(score.trueAnswersCount / score.totalAnswersCount) * 100
-							)}
-						</Text>
+						<Text style={styles.scoreText}>{roundedScore}</Text>
 						<Text style={styles.scoreTextPercentage}>%</Text>
 					</View>
 					<View>
@@ -54,13 +54,13 @@ export default function FinishedSession() {
 				</View>
 				<View style={styles.brogressbarContainer}>
 					<LinearGradient
-						colors={["rgba(12, 162, 204, 0.2)", "rgba(139, 246, 153, 0.2)"]}
+						colors={["rgba(139, 246, 153, 0.2)", "rgba(12, 162, 204, 0.2)"]}
 						style={[styles.brogressbarBG]}
 						start={{ x: 0, y: 0 }}
 						end={{ x: 1, y: 1 }}>
 						<LinearGradient
 							colors={["#FF207B", "#5974C9"]}
-							style={[styles.brogressbar]}
+							style={[styles.brogressbar, { width: `${roundedScore}%` }]}
 							start={{ x: 0, y: 0 }}
 							end={{ x: 1, y: 1 }}
 						/>
@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
 	},
 	brogressbar: {
 		backgroundColor: "#CC398C",
-		width: "33%",
 		height: 10,
 		borderRadius: 50,
 	},
