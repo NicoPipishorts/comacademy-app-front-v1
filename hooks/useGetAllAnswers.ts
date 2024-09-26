@@ -5,6 +5,7 @@ import { CategoryScore } from "./useGetScore";
 export interface UserScoreByCategory {
 	totalAnswersCount: number;
 	categoryScores: Record<number, CategoryScore>;
+	totalPoints: number;
 }
 
 const fetchPayload = async (
@@ -12,7 +13,7 @@ const fetchPayload = async (
 	userId: number
 ): Promise<GameSessionQuestions> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?populate=*&filters[userId][$eq]=${userId}&pagination[limit]=10000`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?populate[questionId][fields][0]=COEF&filters[userId][$eq]=${userId}&pagination[limit]=10000`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -49,9 +50,13 @@ export const useGetAllScores = (userId: number, token: string) => {
 			// Group the questions by category and calculate scores
 			const categoryScores: Record<number, CategoryScore> = {};
 
+			let totalPoints = 0; // Initialize total points
+
 			data.data.forEach((question) => {
 				const categoryId = question.attributes.categorie;
 				const isTrueAnswer = question.attributes.answer;
+				const COEF =
+					question.attributes.questionId?.data?.attributes?.COEF || 0; // Get the COEF value
 
 				if (!categoryScores[categoryId]) {
 					categoryScores[categoryId] = {
@@ -65,6 +70,7 @@ export const useGetAllScores = (userId: number, token: string) => {
 
 				if (isTrueAnswer) {
 					categoryScores[categoryId].trueAnswersCount += 1;
+					totalPoints += COEF; // Add COEF to totalPoints if the answer is true
 				}
 			});
 
@@ -82,11 +88,12 @@ export const useGetAllScores = (userId: number, token: string) => {
 						: 0;
 			});
 
-			// Return the results with category scores
+			// Return the results with category scores and totalPoints
 			const totalAnswersCount = data.data.length;
 			return {
 				totalAnswersCount,
 				categoryScores,
+				totalPoints, // Include totalPoints in the final result
 			};
 		},
 		enabled: !!token && !!userId,

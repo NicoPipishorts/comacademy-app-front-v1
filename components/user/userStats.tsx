@@ -14,11 +14,12 @@ export default function UserStats({ categoriesScore }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	return (
-		<>
+		<View style={{ marginTop: 20 }}>
 			<StatsBar
 				categoriesScore={categoriesScore.categoryScores}
 				title='Mes Stats'
 				shadowOpacity={0}
+				totalPoints={categoriesScore.totalPoints}
 			/>
 			<View style={styles.cardWrapper}>
 				<View style={styles.cardTextContainer}>
@@ -30,7 +31,7 @@ export default function UserStats({ categoriesScore }: Props) {
 					</TouchableOpacity>
 				</View>
 			</View>
-		</>
+		</View>
 	);
 }
 

@@ -4,6 +4,7 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useSecrets } from "@/context/contextSecrets";
 import useGetAllSecrets from "@/hooks/useGetAllSecrets";
+import { BlurView } from "expo-blur";
 import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -23,18 +24,16 @@ export default function Secrets() {
 
 	return (
 		<View style={styles.wrapper}>
-			<View
-				style={{
-					paddingHorizontal: 20,
-				}}>
-				<ScreenHeaders content='3 secrets du succès' />
-			</View>
+			<ScrollView showsVerticalScrollIndicator={false}>
+				<BlurView intensity={100}>
+					<View
+						style={{
+							paddingHorizontal: 20,
+						}}>
+						<ScreenHeaders content='3 secrets du succès' />
+					</View>
+				</BlurView>
 
-			<ScrollView
-				showsVerticalScrollIndicator={false}
-				style={{
-					paddingHorizontal: 20,
-				}}>
 				{secrets.data.map((secret) => {
 					const imageUrl =
 						secret.attributes.headerImage?.data?.attributes?.formats?.medium
