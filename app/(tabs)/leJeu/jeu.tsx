@@ -25,7 +25,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import FinishedSession from "./finished";
 
 const Jeu = () => {
 	const insets = useSafeAreaInsets();
@@ -55,6 +54,12 @@ const Jeu = () => {
 			navigation.navigate("index");
 		}, 100);
 	};
+
+	useEffect(() => {
+		if (showFinishedModal) {
+			navigation.navigate("finishedSession");
+		}
+	}, [navigation, showFinishedModal]);
 
 	useEffect(() => {
 		hideTabBar();
@@ -195,7 +200,7 @@ const Jeu = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			{showFinishedModal && <FinishedSession />}
+			{/* {showFinishedModal && <FinishedSession />} */}
 			{!showFinishedModal && (
 				<Swiper
 					ref={swiperRef}

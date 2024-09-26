@@ -23,6 +23,14 @@ const LeJeuLayout = () => {
 					}}
 				/>
 				<Stack.Screen
+					name='finishedSession'
+					options={{
+						headerShown: false,
+						gestureEnabled: true,
+						presentation: "fullScreenModal",
+					}}
+				/>
+				<Stack.Screen
 					name='answersDetails'
 					options={{
 						headerShown: false,
