@@ -12,9 +12,10 @@ import { StyleSheet, Text, TouchableOpacity } from "react-native";
 interface Props {
 	id: number;
 	data: GameAttributes;
+	postGame: boolean;
 }
 
-export default function AnswersCard({ id, data }: Props) {
+export default function AnswersCard({ id, data, postGame }: Props) {
 	// Use the router object to navigate
 	const navigation = useNavigation<NavigationType>();
 
@@ -22,6 +23,7 @@ export default function AnswersCard({ id, data }: Props) {
 	const handlePress = () => {
 		navigation.navigate("answersDetails", {
 			questionId: id,
+			postGame,
 		});
 	};
 
@@ -33,8 +35,7 @@ export default function AnswersCard({ id, data }: Props) {
 					borderColor: data.ANSWER ? colorGreen : colorPink,
 				},
 			]}
-			onPress={handlePress} // Attach the handler here
-		>
+			onPress={handlePress}>
 			<Text>{data.QUESTION}</Text>
 		</TouchableOpacity>
 	);
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
 	cardWrapper: {
 		display: "flex",
 		minWidth: "100%",
-		marginBottom: 20,
+		marginBottom: 30,
 		borderRadius: 15,
 		padding: 15,
 		backgroundColor: colorWhite,

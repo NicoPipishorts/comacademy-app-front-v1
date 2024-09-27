@@ -19,7 +19,6 @@ const LeJeuLayout = () => {
 						headerShown: false,
 						gestureEnabled: true,
 						presentation: "fullScreenModal",
-						animation: "slide_from_bottom",
 					}}
 				/>
 				<Stack.Screen
@@ -31,12 +30,19 @@ const LeJeuLayout = () => {
 					}}
 				/>
 				<Stack.Screen
+					name='answersPostGame'
+					options={{
+						headerShown: false,
+						gestureEnabled: true,
+						presentation: "modal",
+					}}
+				/>
+				<Stack.Screen
 					name='answersDetails'
 					options={{
 						headerShown: false,
 						gestureEnabled: true,
 						presentation: "modal",
-						animation: "slide_from_bottom",
 					}}
 				/>
 			</Stack>

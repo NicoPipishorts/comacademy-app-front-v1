@@ -1,4 +1,3 @@
-import { FinishGameSession } from "@/api/finishSession";
 import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
 import Card from "@/components/leJeu/Card";
@@ -74,33 +73,10 @@ const Jeu = () => {
 		}
 	}, [sessionId, questionsLeft, setShowFinishedModal]);
 
-	const handleError = (error: any) => {
-		console.error(error);
-	};
-
-	const handleSuccessFinish = (data: any) => {
-		if (!data.data.attributes.inProgress) {
-			setSessionsId(null);
-			setDataGame(null);
-			setShowFinishedModal(false);
-			navigation.popToTop("leJeu");
-		}
-	};
-
-	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
-
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
 
 	const insertPlayerAnswer = InsertAnswer();
-
-	const handleFinishGame = () => {
-		finishGameSession.mutate({
-			score: score.percentage,
-			token,
-			sessionId,
-		});
-	};
 
 	// If dataGame is not yet available, show a loading indicator
 	if (!dataGame || !catData || !fqIsFetched) {
@@ -232,19 +208,9 @@ const Jeu = () => {
 				</View>
 			)}
 			<View style={styles.containerBackButton}>
-				{showFinishedModal && (
-					<TouchableOpacity
-						onPress={handleFinishGame}
-						style={styles.backButton}>
-						<Text style={styles.textBackButton}>Finir</Text>
-					</TouchableOpacity>
-				)}
-
-				{!showFinishedModal && (
-					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Text style={styles.textBackButton}>Quitter</Text>
-					</TouchableOpacity>
-				)}
+				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+					<Text style={styles.textBackButton}>Quitter</Text>
+				</TouchableOpacity>
 			</View>
 		</View>
 	);

@@ -1,22 +1,36 @@
+import { FinishGameSession } from "@/api/finishSession";
 import Loader from "@/components/experience/loader";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import {
 	FontSize14,
+	FontSize16,
 	FontSize18,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 import useGetGameScore from "@/hooks/useGetScore";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
+import { NavigationType } from "@/types/general";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function FinishedSession() {
+	const navigation = useNavigation<NavigationType>();
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
-	const { setScore, score, sessionId } = useGameContext();
+	const { token } = useJwtToken();
+	const {
+		setScore,
+		score,
+		sessionId,
+		setSessionsId,
+		setDataGame,
+		setShowFinishedModal,
+	} = useGameContext();
 
 	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
 
@@ -25,6 +39,29 @@ export default function FinishedSession() {
 			setScore(gameScore);
 		}
 	}, [setScore, gameScore]);
+
+	const handleFinishGame = () => {
+		finishGameSession.mutate({
+			score: score.percentage,
+			token,
+			sessionId,
+		});
+	};
+
+	const handleError = (error: any) => {
+		console.error(error);
+	};
+
+	const handleSuccessFinish = (data: any) => {
+		if (!data.data.attributes.inProgress) {
+			setSessionsId(null);
+			setDataGame(null);
+			setShowFinishedModal(false);
+			navigation.popToTop("leJeu");
+		}
+	};
+
+	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
 
 	if (!gameScore || !score) {
 		return <Loader />;
@@ -76,8 +113,15 @@ export default function FinishedSession() {
 				</View>
 			</View>
 			<View style={styles.containerButton}>
-				<TouchableOpacity style={styles.buttonTouchable}>
+				<TouchableOpacity
+					style={styles.buttonTouchable}
+					onPress={() => navigation.navigate("answersPostGame")}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
+				</TouchableOpacity>
+			</View>
+			<View style={styles.containerBackButton}>
+				<TouchableOpacity onPress={handleFinishGame} style={styles.backButton}>
+					<Text style={styles.textBackButton}>Finir</Text>
 				</TouchableOpacity>
 			</View>
 		</View>
@@ -162,7 +206,7 @@ const styles = StyleSheet.create({
 	},
 	containerButton: {
 		position: "absolute",
-		bottom: 80,
+		bottom: 130,
 		left: 30,
 		width: "100%",
 		alignItems: "center",
@@ -174,7 +218,27 @@ const styles = StyleSheet.create({
 		paddingVertical: 14,
 	},
 	buttonText: {
+		fontSize: FontSize16,
 		color: colorWhite,
+		fontWeight: "bold",
+	},
+	containerBackButton: {
+		zIndex: 10,
+		position: "absolute",
+		bottom: 60,
+		justifyContent: "center",
+		alignItems: "center",
+		width: "100%",
+	},
+	backButton: {
+		paddingHorizontal: 40,
+		paddingVertical: 10,
+		borderRadius: 50,
+		backgroundColor: colorBlack,
+	},
+	textBackButton: {
+		color: colorWhite,
+		fontSize: FontSize16,
 		fontWeight: "bold",
 	},
 });
