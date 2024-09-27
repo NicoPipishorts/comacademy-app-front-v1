@@ -50,7 +50,7 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						gestureEnabled: true,
-						presentation: "modal",
+						presentation: "fullScreenModal",
 					}}
 				/>
 			</Stack>
