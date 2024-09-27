@@ -14,9 +14,9 @@ import {
 } from "react-native";
 // Icons
 import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
-import Chevron from "@/assets/imgs/icons/chevron.png";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
+import AndroidBackButton from "@/components/buttons/androidBack";
 import Loader from "@/components/experience/loader";
 import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
@@ -122,20 +122,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				},
 			]}>
 			<View style={styles.headerContainer}>
-				{isAndroid && (
-					<View style={styles.backBtnContainer}>
-						<TouchableOpacity
-							style={styles.backButton}
-							onPress={() => navigation.navigate("index")}>
-							<Image
-								source={Chevron}
-								style={styles.backBtnIcon as ImageStyle}
-								resizeMode='contain'
-							/>
-							<Text style={styles.backBtnText}>Retour</Text>
-						</TouchableOpacity>
-					</View>
-				)}
+				{isAndroid && <AndroidBackButton />}
 				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 

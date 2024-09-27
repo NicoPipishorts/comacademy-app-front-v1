@@ -12,6 +12,7 @@ export interface GameScore {
 	totalAnswersCount: number;
 	percentage: number;
 	categoryScores: Record<number, CategoryScore>;
+	totalScore: number; // Add totalScore key to the final object
 }
 
 interface Payload {
@@ -19,6 +20,13 @@ interface Payload {
 	attributes: {
 		answer: boolean;
 		categorie: number;
+		questionId: {
+			data: {
+				attributes: {
+					COEF: number; // Get the COEF value from questionId relation
+				};
+			};
+		};
 	};
 }
 
@@ -29,7 +37,7 @@ const fetchGameScore = async (
 ): Promise<GameScore> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&fields[1]=answer&fields[2]=categorie&filters[userId][$eq]=${userId}&filters[gameId][$eq]=${gameId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&fields[1]=answer&fields[2]=categorie&filters[userId][$eq]=${userId}&filters[gameId][$eq]=${gameId}&populate[questionId][fields][0]=COEF`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -57,14 +65,18 @@ const fetchGameScore = async (
 			6: { trueAnswersCount: 0, totalAnswersCount: 0, percentage: 0 },
 		};
 
+		let totalScore = 0; // Initialize total score based on COEF
+
 		// Aggregate the data by categories
 		data.data.forEach((question: Payload) => {
 			const category = question.attributes.categorie;
 			const isTrueAnswer = question.attributes.answer === true;
+			const COEF = question.attributes.questionId?.data?.attributes?.COEF || 0; // Get COEF value from questionId
 
 			categoryScores[category].totalAnswersCount++;
 			if (isTrueAnswer) {
 				categoryScores[category].trueAnswersCount++;
+				totalScore += COEF; // Add COEF to total score if answer is true
 			}
 		});
 
@@ -97,6 +109,7 @@ const fetchGameScore = async (
 			totalAnswersCount,
 			percentage,
 			categoryScores,
+			totalScore,
 		};
 	} catch (error) {
 		console.error("Error fetching the game score:", error);
