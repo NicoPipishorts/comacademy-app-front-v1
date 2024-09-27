@@ -23,7 +23,7 @@ import SmallCategroieIcons from "../SmallCategroieIcons";
 interface Props {
 	questionId: number;
 	refetch: string;
-	postGame?: boolean;
+	postGame: boolean;
 }
 
 export default function QuestionDetails({ questionId, postGame }: Props) {
@@ -114,7 +114,7 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 				</Text>
 			</View>
 
-			{!postGame && (
+			{postGame && (
 				<View style={styles.wrapperIcons}>
 					<View style={styles.containerIcons}>
 						{data.data.attributes.CATEGORIE !== undefined &&
@@ -133,11 +133,6 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						{/* <Image
-						source={Plus}
-						style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-						resizeMode='contain'
-					/> */}
 						<TouchableOpacity onPress={() => handleAddFavorite()}>
 							<Image
 								source={filterIfFavoriteExists ? HeartFull : Heart}
@@ -150,7 +145,7 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 			)}
 
 			<View
-				style={[styles.contentContainer, { paddingTop: postGame ? 40 : 0 }]}>
+				style={[styles.contentContainer, { paddingTop: postGame ? 0 : 40 }]}>
 				<Text style={{ fontSize: 16, fontWeight: "bold" }}>
 					{data.data.attributes.QUESTION}
 				</Text>

@@ -3,8 +3,6 @@ import Loader from "@/components/experience/loader";
 import Card from "@/components/leJeu/Card";
 import {
 	colorBlack,
-	colorGreen,
-	colorPink,
 	colorWhite,
 	colorYellow,
 	primaryBackground,
@@ -83,21 +81,18 @@ const Jeu = () => {
 		return <Loader />;
 	}
 
-	// Map dataGame to the cards array
-
-	const handleFeedbackMessage = (message: Answer) => {
-		setFeedbackMessage(message);
-		setTimeout(() => {
-			setFeedbackMessage(null);
-		}, 800);
-	};
-
 	const onSwipeLeft = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === false) {
-			handleFeedbackMessage(Answer.true);
+			navigation.navigate("feedbackMessage", {
+				answer: Answer.true,
+				questionId: currentCard.id,
+			});
 		} else if (currentCard) {
-			handleFeedbackMessage(Answer.false);
+			navigation.navigate("feedbackMessage", {
+				answer: Answer.false,
+				questionId: currentCard.id,
+			});
 		}
 		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
@@ -113,9 +108,15 @@ const Jeu = () => {
 	const onSwipeRight = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
 		if (currentCard && currentCard.attributes.ANSWER === true) {
-			handleFeedbackMessage(Answer.true);
+			navigation.navigate("feedbackMessage", {
+				answer: Answer.true,
+				questionId: currentCard.id,
+			});
 		} else if (currentCard) {
-			handleFeedbackMessage(Answer.false);
+			navigation.navigate("feedbackMessage", {
+				answer: Answer.false,
+				questionId: currentCard.id,
+			});
 		}
 		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
@@ -194,19 +195,6 @@ const Jeu = () => {
 					stackSeparation={24}
 				/>
 			)}
-			{feedbackMessage && (
-				<View
-					style={[
-						{
-							backgroundColor: `${
-								feedbackMessage === Answer.true ? colorGreen : colorPink
-							}`,
-						},
-						styles.feedbackContainer,
-					]}>
-					<Text style={styles.feedbackText}>{feedbackMessage}</Text>
-				</View>
-			)}
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
@@ -229,17 +217,17 @@ const styles = StyleSheet.create({
 		fontSize: FontSize20,
 		color: colorYellow,
 	},
-	feedbackContainer: {
-		...StyleSheet.absoluteFillObject,
-		justifyContent: "center",
-		alignItems: "center",
-		zIndex: 15,
-	},
-	feedbackText: {
-		fontSize: 100,
-		color: colorWhite,
-		fontWeight: "bold",
-	},
+	// feedbackContainer: {
+	// 	...StyleSheet.absoluteFillObject,
+	// 	justifyContent: "center",
+	// 	alignItems: "center",
+	// 	zIndex: 15,
+	// },
+	// feedbackText: {
+	// 	fontSize: 100,
+	// 	color: colorWhite,
+	// 	fontWeight: "bold",
+	// },
 	containerBackButton: {
 		zIndex: 10,
 		position: "absolute",
