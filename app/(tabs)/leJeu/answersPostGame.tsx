@@ -1,3 +1,4 @@
+import AndroidBackButton from "@/components/buttons/androidBack";
 import Loader from "@/components/experience/loader";
 import AnswersCard from "@/components/leJeu/answers/AnswersCard";
 import {
@@ -8,6 +9,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import useGetFinishedSessionAnswers from "@/hooks/useGetFinishedSessionAnswers";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -16,6 +18,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 export default function AnswersPostGame() {
 	const { userId } = useUserId();
 	const { sessionId: gameId } = useGameContext();
+	const { isAndroid } = useDeviceTypeCheckers();
 
 	const { data: allAnswerData } = useGetFinishedSessionAnswers(userId, gameId);
 
@@ -40,6 +43,8 @@ export default function AnswersPostGame() {
 
 	return (
 		<View style={styles.wrapper}>
+			{isAndroid && <AndroidBackButton />}
+
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={[styles.scrollWrapper, { paddingBottom: 100 }]}
