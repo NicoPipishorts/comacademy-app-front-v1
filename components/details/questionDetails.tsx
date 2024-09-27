@@ -23,9 +23,10 @@ import SmallCategroieIcons from "../SmallCategroieIcons";
 interface Props {
 	questionId: number;
 	refetch: string;
+	postGame?: boolean;
 }
 
-export default function QuestionDetails({ questionId }: Props) {
+export default function QuestionDetails({ questionId, postGame }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
@@ -101,54 +102,55 @@ export default function QuestionDetails({ questionId }: Props) {
 
 	return (
 		<View style={styles.wrapper}>
-			<View
-				style={[
-					styles.headerContainer,
-					{
-						backgroundColor: data.data.attributes.ANSWER
-							? colorGreen
-							: colorPink,
-					},
-				]}>
-				<Text style={styles.headerContainerText}>
+			<View style={[styles.headerContainer]}>
+				<Text
+					style={[
+						styles.headerContainerText,
+						{
+							color: data.data.attributes.ANSWER ? colorGreen : colorPink,
+						},
+					]}>
 					{data.data.attributes.ANSWER ? "Vrai" : "Faux"}
 				</Text>
 			</View>
 
-			<View style={styles.wrapperIcons}>
-				<View style={styles.containerIcons}>
-					{data.data.attributes.CATEGORIE !== undefined &&
-					data.data.attributes.CATEGORIE !== null
-						? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
-								const categoryNumber = parseInt(cat, 10);
-								return (
-									<View style={{ marginRight: 8 }} key={index}>
-										<SmallCategroieIcons
-											key={categoryNumber}
-											cats={categoryNumber}
-										/>
-									</View>
-								);
-						  })
-						: ""}
-				</View>
-				<View style={styles.containerIcons}>
-					{/* <Image
+			{!postGame && (
+				<View style={styles.wrapperIcons}>
+					<View style={styles.containerIcons}>
+						{data.data.attributes.CATEGORIE !== undefined &&
+						data.data.attributes.CATEGORIE !== null
+							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
+									const categoryNumber = parseInt(cat, 10);
+									return (
+										<View style={{ marginRight: 8 }} key={index}>
+											<SmallCategroieIcons
+												key={categoryNumber}
+												cats={categoryNumber}
+											/>
+										</View>
+									);
+							  })
+							: ""}
+					</View>
+					<View style={styles.containerIcons}>
+						{/* <Image
 						source={Plus}
 						style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
 						resizeMode='contain'
 					/> */}
-					<TouchableOpacity onPress={() => handleAddFavorite()}>
-						<Image
-							source={filterIfFavoriteExists ? HeartFull : Heart}
-							style={styles.catIcons as ImageStyle}
-							resizeMode='contain'
-						/>
-					</TouchableOpacity>
+						<TouchableOpacity onPress={() => handleAddFavorite()}>
+							<Image
+								source={filterIfFavoriteExists ? HeartFull : Heart}
+								style={styles.catIcons as ImageStyle}
+								resizeMode='contain'
+							/>
+						</TouchableOpacity>
+					</View>
 				</View>
-			</View>
+			)}
 
-			<View style={styles.contentContainer}>
+			<View
+				style={[styles.contentContainer, { paddingTop: postGame ? 40 : 0 }]}>
 				<Text style={{ fontSize: 16, fontWeight: "bold" }}>
 					{data.data.attributes.QUESTION}
 				</Text>
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
 		paddingVertical: 20,
 	},
 	headerContainerText: {
-		fontSize: 28,
+		fontSize: 88,
 		fontWeight: "bold",
 		color: colorWhite,
 		textTransform: "uppercase",

@@ -1,4 +1,3 @@
-import { FinishGameSession } from "@/api/finishSession";
 import { InsertAnswer } from "@/api/gameInsertAnswer";
 import Loader from "@/components/experience/loader";
 import Card from "@/components/leJeu/Card";
@@ -25,7 +24,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import FinishedSession from "./finished";
 
 const Jeu = () => {
 	const insets = useSafeAreaInsets();
@@ -57,6 +55,12 @@ const Jeu = () => {
 	};
 
 	useEffect(() => {
+		if (showFinishedModal) {
+			navigation.navigate("finishedSession");
+		}
+	}, [navigation, showFinishedModal]);
+
+	useEffect(() => {
 		hideTabBar();
 		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
 	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
@@ -69,33 +73,10 @@ const Jeu = () => {
 		}
 	}, [sessionId, questionsLeft, setShowFinishedModal]);
 
-	const handleError = (error: any) => {
-		console.error(error);
-	};
-
-	const handleSuccessFinish = (data: any) => {
-		if (!data.data.attributes.inProgress) {
-			setSessionsId(null);
-			setDataGame(null);
-			setShowFinishedModal(false);
-			navigation.popToTop("leJeu");
-		}
-	};
-
-	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
-
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
 
 	const insertPlayerAnswer = InsertAnswer();
-
-	const handleFinishGame = () => {
-		finishGameSession.mutate({
-			score: score.percentage,
-			token,
-			sessionId,
-		});
-	};
 
 	// If dataGame is not yet available, show a loading indicator
 	if (!dataGame || !catData || !fqIsFetched) {
@@ -195,7 +176,7 @@ const Jeu = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			{showFinishedModal && <FinishedSession />}
+			{/* {showFinishedModal && <FinishedSession />} */}
 			{!showFinishedModal && (
 				<Swiper
 					ref={swiperRef}
@@ -227,19 +208,9 @@ const Jeu = () => {
 				</View>
 			)}
 			<View style={styles.containerBackButton}>
-				{showFinishedModal && (
-					<TouchableOpacity
-						onPress={handleFinishGame}
-						style={styles.backButton}>
-						<Text style={styles.textBackButton}>Finir</Text>
-					</TouchableOpacity>
-				)}
-
-				{!showFinishedModal && (
-					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-						<Text style={styles.textBackButton}>Quitter</Text>
-					</TouchableOpacity>
-				)}
+				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+					<Text style={styles.textBackButton}>Quitter</Text>
+				</TouchableOpacity>
 			</View>
 		</View>
 	);

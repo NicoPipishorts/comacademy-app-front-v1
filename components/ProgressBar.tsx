@@ -9,7 +9,7 @@ interface Props {
 	categoriesScore: Record<number, CategoryScore>;
 	title: string;
 	shadowOpacity: number;
-	totalPoints: number;
+	totalPoints?: number;
 }
 
 export default function StatsBar({

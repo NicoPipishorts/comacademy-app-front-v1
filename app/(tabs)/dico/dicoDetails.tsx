@@ -13,9 +13,9 @@ import {
 } from "react-native";
 // Icons
 import { useAddFavoriteDico } from "@/api/favoriteDico";
-import Chevron from "@/assets/imgs/icons/chevron.png";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
+import AndroidBackButton from "@/components/buttons/androidBack";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/SmallCategroieIcons";
 import { colorWhite } from "@/constants/colors";
@@ -117,20 +117,7 @@ function DicoDetails({ dicoId: paramsDicoId }: Props) {
 				},
 			]}>
 			<View style={styles.headerContainer}>
-				{isAndroid && (
-					<View style={styles.backBtnContainer}>
-						<TouchableOpacity
-							style={styles.backButton}
-							onPress={() => navigation.navigate("index")}>
-							<Image
-								source={Chevron}
-								style={styles.backBtnIcon as ImageStyle}
-								resizeMode='contain'
-							/>
-							<Text style={styles.backBtnText}>Retour</Text>
-						</TouchableOpacity>
-					</View>
-				)}
+				{isAndroid && <AndroidBackButton />}
 				<ScreenHeaders content={data?.data.attributes.Word} />
 			</View>
 
@@ -196,23 +183,6 @@ const styles = StyleSheet.create({
 	},
 	headerContainer: {
 		paddingHorizontal: 25,
-	},
-	backBtnContainer: {
-		alignItems: "flex-start",
-	},
-	backButton: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	backBtnText: {
-		fontSize: FontSize12,
-		fontWeight: "bold",
-	},
-	backBtnIcon: {
-		width: 15,
-		height: 15,
-		aspectRatio: 1,
-		marginRight: 3,
 	},
 	contentContainer: {
 		marginBottom: 100,

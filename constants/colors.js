@@ -1,7 +1,7 @@
 export const colorBlack = "#272727";
 export const colorLightGrey = "#f5f5f5";
 export const colorBlue = "#1B75BB";
-export const colorGreen = "#8BC63F";
+export const colorGreen = "#79E9A1";
 export const colorOrange = "#EE7424";
 export const colorPink = "#CC398C";
 export const colorTurquoise = "#4AADA8";
