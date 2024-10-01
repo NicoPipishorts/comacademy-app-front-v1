@@ -19,9 +19,8 @@ export default function FilteredByCat({
 	count,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
-	const categoriesArray = categories.data; // The original array of categories
+	const categoriesArray = categories.data;
 
-	// Transform the array into an object indexed by 'id'
 	const categoriesById = categoriesArray.reduce((acc, category) => {
 		acc[category.id] = category;
 		return acc;
