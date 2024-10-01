@@ -1,8 +1,7 @@
 import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
-import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
+import { Dispatch, SetStateAction } from "react";
 import {
 	Image,
 	ScrollView,
@@ -12,12 +11,17 @@ import {
 	View,
 } from "react-native";
 
-const CategoriesCards = () => {
-	const navigation = useNavigation<NavigationType>();
+interface Props {
+	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+	setActiveTab: Dispatch<SetStateAction<number>>;
+}
+
+const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
 	const { data: dataCategory } = useCategoriesFull();
 
 	const onPress = (filter: number) => {
-		navigation.navigate("index", { filter });
+		setFilterByCat(filter);
+		setActiveTab(0);
 	};
 
 	return (

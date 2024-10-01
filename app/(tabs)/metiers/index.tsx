@@ -20,7 +20,7 @@ const Metier = () => {
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
-	const [activeTab, setActiveTab] = useState(0); // 0: MetierList, 1: CategoriesCards
+	const [activeTab, setActiveTab] = useState(0);
 
 	const { data: dataMetier, isLoading: isLoadingMetier } =
 		useGetMetiers(filterByCat);
@@ -30,14 +30,6 @@ const Metier = () => {
 	useEffect(() => {
 		queryClient.refetchQueries({ queryKey: ["metiersList"] });
 	}, [filterByCat, queryClient]);
-
-	useEffect(() => {
-		if (filter === "null") {
-			setFilterByCat(null);
-		} else {
-			if (Number(filter)) setFilterByCat(Number(filter));
-		}
-	}, [filter, filterByCat]);
 
 	if (
 		isLoadingMetier ||
@@ -65,11 +57,17 @@ const Metier = () => {
 				/>
 			)}
 
-			{activeTab === 1 && <CategoriesCards />}
+			{activeTab === 1 && (
+				<CategoriesCards
+					setFilterByCat={setFilterByCat}
+					setActiveTab={setActiveTab}
+				/>
+			)}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
-					selectedTab={activeTab === 1}
+					activeTab={activeTab}
+					setActiveTab={setActiveTab}
 					handlePress={() => toggleTab(activeTab === 0 ? 1 : 0)}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>

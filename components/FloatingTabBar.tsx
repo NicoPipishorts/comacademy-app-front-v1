@@ -1,6 +1,12 @@
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSizeH4 } from "@/constants/fontsizes";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	Animated,
 	StyleSheet,
@@ -10,7 +16,8 @@ import {
 } from "react-native";
 
 type Props = {
-	selectedTab?: boolean;
+	activeTab: number;
+	setActiveTab: Dispatch<SetStateAction<number>>;
 	handlePress: (tabIndex: number) => void;
 	values: {
 		btn1: string;
@@ -19,57 +26,53 @@ type Props = {
 };
 
 const FloatingTabBar = ({
-	selectedTab = false,
+	activeTab,
+	setActiveTab,
 	handlePress,
 	values,
 }: Props) => {
 	const translateX = useRef(new Animated.Value(0)).current;
-	const [activeTab, setActiveTab] = useState(selectedTab ? 1 : 0);
 	const [btn1Width, setBtn1Width] = useState(0);
 	const [btn2Width, setBtn2Width] = useState(0);
 
-	const btn1Ref = useRef(null);
-	const btn2Ref = useRef(null);
-
 	// Animate the slider position and width when the active tab changes
 	useEffect(() => {
-		Animated.spring(translateX, {
-			toValue: activeTab === 0 ? 0 : btn1Width, // Slide the slider based on the button widths
-			useNativeDriver: true,
-		}).start();
+		if (btn1Width > 0 && btn2Width > 0) {
+			Animated.spring(translateX, {
+				toValue: activeTab === 0 ? 0 : btn1Width,
+				useNativeDriver: true,
+			}).start();
+		}
 	}, [activeTab, btn1Width, btn2Width, translateX]);
 
 	const handleTabPress = (tabIndex: number) => {
 		setActiveTab(tabIndex);
-		handlePress(tabIndex); // Call parent function to handle tab change logic
+		handlePress(tabIndex);
 	};
 
-	// Measure the button widths dynamically
-	useEffect(() => {
-		if (btn1Ref.current && btn2Ref.current) {
-			btn1Ref.current.measure((x, y, width) => {
-				setBtn1Width(width);
-			});
-			btn2Ref.current.measure((x, y, width) => {
-				setBtn2Width(width);
-			});
-		}
-	}, []);
+	const onLayoutBtn1 = (event: any) => {
+		const { width } = event.nativeEvent.layout;
+		setBtn1Width(width);
+	};
 
-	console.log(activeTab);
+	const onLayoutBtn2 = (event: any) => {
+		const { width } = event.nativeEvent.layout;
+		setBtn2Width(width);
+	};
 
 	return (
 		<View style={styles.container}>
+			{/* Slider will always be rendered, but its width and position will be updated when the layout is ready */}
 			<Animated.View
 				style={[
 					styles.slider,
 					{
-						width: activeTab === 0 ? btn1Width : btn2Width, // Adjust slider width based on active tab
+						width: activeTab === 0 ? btn1Width : btn2Width,
 						transform: [{ translateX }],
 					},
 				]}
 			/>
-			<View ref={btn1Ref}>
+			<View onLayout={onLayoutBtn1}>
 				<TouchableOpacity
 					style={styles.button}
 					onPress={() => handleTabPress(0)}>
@@ -79,7 +82,7 @@ const FloatingTabBar = ({
 					</Text>
 				</TouchableOpacity>
 			</View>
-			<View ref={btn2Ref}>
+			<View onLayout={onLayoutBtn2}>
 				<TouchableOpacity
 					style={styles.button}
 					onPress={() => handleTabPress(1)}>
