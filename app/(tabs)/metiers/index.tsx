@@ -1,3 +1,4 @@
+import CategoriesCards from "@/components/categories/categories";
 import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
@@ -7,17 +8,14 @@ import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
 import useUserId from "@/hooks/useUserId";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import CategoriesCards from "./categories";
 import MetierList from "./list";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
-	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
