@@ -147,11 +147,6 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						{/* <Image
-							source={Plus}
-							style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-							resizeMode='contain'
-						/> */}
 						<TouchableOpacity onPress={() => handleAddFavorite()}>
 							<Image
 								source={filterIfFavoriteExists ? HeartFull : Heart}
@@ -161,6 +156,18 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 						</TouchableOpacity>
 					</View>
 				</View>
+
+				<View style={styles.containerTitles}>
+					<Text style={styles.textTitles}>Métiers Similaires</Text>
+				</View>
+
+				<View>
+					<Text style={styles.containerText}>
+						{data.data.attributes.METIERS_SIMILAIRES}
+					</Text>
+				</View>
+
+				<HR />
 
 				<View style={styles.containerTitles}>
 					<Text style={styles.textTitles}>Rôle et Mission</Text>
@@ -179,18 +186,6 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				</View>
 
 				<UnorderedList array={data.data.attributes.COMPETENCES} />
-
-				<HR />
-
-				<View style={styles.containerTitles}>
-					<Text style={styles.textTitles}>Métiers Similaires</Text>
-				</View>
-
-				<View>
-					<Text style={styles.containerText}>
-						{data.data.attributes.METIERS_SIMILAIRES}
-					</Text>
-				</View>
 
 				<GradientContainer
 					title='Notre Avis'

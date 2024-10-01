@@ -87,7 +87,13 @@ export default function Answers() {
 						]}
 					/>
 				</View>
-				<Text style={styles.cardUnlocked}>Réponses débloquées</Text>
+				<Text style={styles.cardUnlocked}>Bonnes réponses</Text>
+			</View>
+
+			<View style={{ paddingTop: 30 }}>
+				<Text style={{ fontSize: FontSize16, fontWeight: "bold" }}>
+					Joue et débloque en de nouvelles réponses en répondant correctement !
+				</Text>
 			</View>
 
 			<View style={{ paddingTop: 40 }}>
