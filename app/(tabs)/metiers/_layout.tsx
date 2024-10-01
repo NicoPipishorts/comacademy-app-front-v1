@@ -14,14 +14,6 @@ const LeJeuLayout = () => {
 					}}
 				/>
 				<Stack.Screen
-					name='categories'
-					options={{
-						headerShown: false,
-						headerTitle: "Les Categories",
-						presentation: "modal",
-					}}
-				/>
-				<Stack.Screen
 					name='metierDetails'
 					options={{
 						headerShown: false,

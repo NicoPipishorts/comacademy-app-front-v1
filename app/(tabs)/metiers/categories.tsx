@@ -1,10 +1,16 @@
-import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+	Image,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 const CategoriesCards = () => {
 	const navigation = useNavigation<NavigationType>();
@@ -16,11 +22,7 @@ const CategoriesCards = () => {
 
 	return (
 		<>
-			<View style={styles.wrapper}>
-				<ScreenHeaders content='Catégories' />
-				<Text style={{ fontWeight: "bold", paddingTop: 20, paddingBottom: 10 }}>
-					Choisis une catégorie:
-				</Text>
+			<ScrollView contentContainerStyle={styles.wrapper}>
 				<View style={styles.cardContainer}>
 					{dataCategory.data.map((cat) => {
 						return (
@@ -42,7 +44,7 @@ const CategoriesCards = () => {
 						);
 					})}
 				</View>
-			</View>
+			</ScrollView>
 		</>
 	);
 };
@@ -52,8 +54,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "flex-start",
 		alignItems: "flex-start",
-		padding: 30,
-		paddingTop: 40,
 		backgroundColor: primaryBackground,
 	},
 	cardContainer: {
@@ -89,6 +89,14 @@ const styles = StyleSheet.create({
 		fontSize: FontSize22,
 		fontWeight: "bold",
 		paddingHorizontal: 10,
+	},
+	floatingTabbarContainer: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 120, // Adjust this value based on your design
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });
 

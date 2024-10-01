@@ -7,7 +7,7 @@ import { Dispatch, SetStateAction } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
-	count: number;
+	count?: number;
 	categories: CategoriePayload;
 	filterByCat: number;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;

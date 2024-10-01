@@ -28,14 +28,12 @@ import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import { NavigationType } from "@/types/general";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 interface Props {
 	metierId: number;
 }
 export default function MetierDetails({ metierId: paramsMetierId }: Props) {
-	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();

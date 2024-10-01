@@ -6,21 +6,21 @@ import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
 import useUserId from "@/hooks/useUserId";
-import { NavigationType } from "@/types/general";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import CategoriesCards from "./categories";
 import MetierList from "./list";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
-	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { filter } = useLocalSearchParams();
 	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
+	const [activeTab, setActiveTab] = useState(0); // 0: MetierList, 1: CategoriesCards
 
 	const { data: dataMetier, isLoading: isLoadingMetier } =
 		useGetMetiers(filterByCat);
@@ -39,10 +39,6 @@ const Metier = () => {
 		}
 	}, [filter, filterByCat]);
 
-	const handlePress = () => {
-		navigation.navigate("categories");
-	};
-
 	if (
 		isLoadingMetier ||
 		isLoadingCats ||
@@ -53,20 +49,28 @@ const Metier = () => {
 		return <Loader />;
 	}
 
+	const toggleTab = (index: number) => {
+		setActiveTab(index);
+	};
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
+			{activeTab === 0 && (
+				<MetierList
+					data={dataMetier}
+					categories={dataCategory}
+					filterByCat={filterByCat}
+					setFilterByCat={setFilterByCat}
+				/>
+			)}
 
-			<MetierList
-				data={dataMetier}
-				categories={dataCategory}
-				filterByCat={filterByCat}
-				setFilterByCat={setFilterByCat}
-			/>
+			{activeTab === 1 && <CategoriesCards />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
-					handlePress={handlePress}
+					selectedTab={activeTab === 1}
+					handlePress={() => toggleTab(activeTab === 0 ? 1 : 0)}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>
