@@ -20,6 +20,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Define the type for the accumulator object
 interface CategoryResult {
@@ -30,6 +31,7 @@ interface CategoryResult {
 export type ResultAccumulator = Record<number, CategoryResult>;
 
 export default function User() {
+	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +85,11 @@ export default function User() {
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 			style={styles.wrapper}>
-			<View style={[styles.innerWrapper, { paddingBottom: dynamicPadding }]}>
+			<View
+				style={[
+					styles.innerWrapper,
+					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
+				]}>
 				<ScreenHeaders content='Mon Profil' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}

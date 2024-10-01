@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		paddingBottom: 15,
-		marginBottom: 10,
+		// marginBottom: 10,
 	},
 	tabbarText: {
 		fontSize: FontSizeTabbar,

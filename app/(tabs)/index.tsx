@@ -29,8 +29,10 @@ import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
@@ -39,7 +41,7 @@ const HomeScreen = () => {
 		return <Loader />;
 	}
 	return (
-		<View style={styles.wrapper}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 				<TouchableOpacity onPress={() => navigation.navigate("user")}>
@@ -196,7 +198,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingTop: 100,
 		paddingBottom: 20,
 		backgroundColor: primaryBackground,
 	},

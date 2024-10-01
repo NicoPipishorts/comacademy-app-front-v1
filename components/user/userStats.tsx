@@ -23,7 +23,7 @@ export default function UserStats({ categoriesScore }: Props) {
 			/>
 			<View style={styles.cardWrapper}>
 				<View style={styles.cardTextContainer}>
-					<Text style={styles.cardText}>Découvre le classement générale</Text>
+					<Text style={styles.cardText}>Découvre le classement général</Text>
 					<TouchableOpacity
 						style={styles.buttonBlack}
 						onPress={() => navigation.navigate("leaderBoard")}>

@@ -79,7 +79,9 @@ export default function UserAccount() {
 
 			<View style={styles.passwordContainer}>
 				<View style={{ paddingBottom: 20 }}>
-					<Text style={{ fontSize: FontSize16 }}>Modifie tes information.</Text>
+					<Text style={{ fontSize: FontSize16 }}>
+						Modifie tes informations.
+					</Text>
 				</View>
 
 				<View>
