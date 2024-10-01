@@ -16,6 +16,7 @@ interface Props {
 export default function FilteredByCat({
 	categories,
 	filterByCat,
+	setFilterByCat,
 	count,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
@@ -27,7 +28,8 @@ export default function FilteredByCat({
 	}, {});
 
 	const onPress = () => {
-		navigation.navigate("index", { filter: null });
+		setFilterByCat(null);
+		navigation.navigate("index");
 	};
 
 	return (

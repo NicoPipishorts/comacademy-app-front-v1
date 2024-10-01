@@ -5,7 +5,6 @@ import { primaryBackground } from "@/constants/colors";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import CategoriesCards from "../../../components/categories/categories";
@@ -13,7 +12,6 @@ import DicoList from "./list";
 
 const Dico = () => {
 	const queryClient = useQueryClient();
-	const { filter } = useLocalSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
@@ -23,14 +21,6 @@ const Dico = () => {
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
 	}, [filterByCat, queryClient]);
-
-	useEffect(() => {
-		if (filter === "null") {
-			setFilterByCat(null);
-		} else {
-			if (Number(filter)) setFilterByCat(Number(filter));
-		}
-	}, [filter, filterByCat]);
 
 	if (!dataDico || isLoadingData) {
 		return <Loader />;
