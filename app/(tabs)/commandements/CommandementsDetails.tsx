@@ -1,12 +1,9 @@
+import CommandementCard from "@/components/cards/CommandementCard";
+import CommandementTitleCard from "@/components/cards/CommandementTitle";
 import { colorBlack, colorWhite } from "@/constants/colors";
-import {
-	FontSize16,
-	FontSizeH1,
-	FontSizeScreenTitles,
-} from "@/constants/fontsizes";
+import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useCommandements } from "@/context/contextCommandements";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
 import {
@@ -84,33 +81,6 @@ export default function CommandementsDetails() {
 	);
 }
 
-// Commandement Title Card Component
-const CommandementTitleCard = ({ cardWidth, theme }) => (
-	<View style={[styles.titleCardWrapper, { width: cardWidth }]}>
-		<Text style={styles.titleCardText}>{theme}</Text>
-	</View>
-);
-
-// Commandement Card Component
-const CommandementCard = ({ title, text, index, cardWidth, cardMargin }) => (
-	<LinearGradient
-		colors={["#0CA2CC", "#8BF699"]}
-		style={[
-			styles.keyCardWrapper,
-			{ width: cardWidth, marginHorizontal: cardMargin / 2 },
-		]}
-		start={{ x: 0, y: 0 }}
-		end={{ x: 1, y: 1 }}>
-		<Text style={styles.keyCardTitle}>{title} :</Text>
-		<View style={styles.cardContent}>
-			<Text style={styles.keyCardText}>{text}</Text>
-		</View>
-		<View style={styles.cardNumberWrapper}>
-			<Text style={styles.keyCardNum}>{index + 1}</Text>
-		</View>
-	</LinearGradient>
-);
-
 // Styles
 const styles = StyleSheet.create({
 	cardsWrapper: {
@@ -129,63 +99,6 @@ const styles = StyleSheet.create({
 	scrollViewWrapper: {
 		alignItems: "center",
 		padding: 18,
-	},
-	titleCardWrapper: {
-		justifyContent: "center",
-		alignItems: "center",
-		minHeight: "80%",
-		backgroundColor: colorBlack,
-		paddingHorizontal: 24,
-		borderRadius: 25,
-		shadowColor: colorBlack,
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.55,
-		shadowRadius: 10.84,
-		marginHorizontal: 13,
-	},
-	titleCardText: {
-		color: colorWhite,
-		fontSize: FontSizeScreenTitles,
-		fontWeight: "bold",
-		lineHeight: 44,
-	},
-	keyCardWrapper: {
-		position: "relative",
-		justifyContent: "flex-start",
-		minHeight: "80%",
-		backgroundColor: colorBlack,
-		paddingHorizontal: 30,
-		paddingTop: 40,
-		borderRadius: 25,
-		shadowColor: colorBlack,
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.55,
-		shadowRadius: 10.84,
-	},
-	keyCardTitle: {
-		color: colorWhite,
-		fontSize: FontSizeH1,
-		fontWeight: "bold",
-	},
-	cardContent: {
-		marginTop: 20,
-	},
-	keyCardText: {
-		color: colorWhite,
-		fontSize: FontSize16,
-		fontWeight: "bold",
-	},
-	cardNumberWrapper: {
-		marginTop: 20,
-		position: "absolute",
-		bottom: 10,
-		left: 30,
-	},
-	keyCardNum: {
-		color: colorWhite,
-		fontSize: 148,
-		opacity: 0.2,
-		fontWeight: "bold",
 	},
 	backButton: {
 		backgroundColor: colorBlack,
