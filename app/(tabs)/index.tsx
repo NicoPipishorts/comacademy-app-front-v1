@@ -10,7 +10,6 @@ import {
 } from "react-native";
 
 // Custom images
-import avatar from "@/assets/imgs/avatar/avatar.png";
 import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
 
@@ -24,6 +23,7 @@ import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
+import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
@@ -40,13 +40,19 @@ const HomeScreen = () => {
 	if (!userData) {
 		return <Loader />;
 	}
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.header}>
-				<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 				<TouchableOpacity onPress={() => navigation.navigate("user")}>
-					<Image source={avatar} style={styles.profileImage} />
+					<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 				</TouchableOpacity>
+				<View style={{ marginTop: 10, marginRight: 10 }}>
+					<AvatarInitials
+						firstName={userData.firstName}
+						lastName={userData.lastName}
+					/>
+				</View>
 			</View>
 
 			<ScrollView

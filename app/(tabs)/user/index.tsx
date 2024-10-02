@@ -1,6 +1,7 @@
 import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
+import ChangeAvatar from "@/components/user/changeAvatar";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
@@ -99,6 +100,8 @@ export default function User() {
 					<UserStats categoriesScore={answers} />
 
 					{/* <UserResultsByCat /> */}
+
+					<ChangeAvatar />
 
 					<UserAccount />
 
