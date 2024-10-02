@@ -94,7 +94,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 const styles = StyleSheet.create({
 	tabbarContainer: {
 		position: "absolute",
-		bottom: 0,
+		bottom: 6,
 		width: "100%",
 		alignItems: "center",
 	},

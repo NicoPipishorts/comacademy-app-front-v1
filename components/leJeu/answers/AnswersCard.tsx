@@ -32,6 +32,7 @@ export default function AnswersCard({ id, data, postGame }: Props) {
 			style={[
 				styles.cardWrapper,
 				{
+					borderLeftWidth: postGame ? 0 : 10,
 					borderColor: data.ANSWER ? colorGreen : colorPink,
 				},
 			]}
@@ -49,7 +50,6 @@ const styles = StyleSheet.create({
 		borderRadius: 15,
 		padding: 15,
 		backgroundColor: colorWhite,
-		borderLeftWidth: 10,
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
