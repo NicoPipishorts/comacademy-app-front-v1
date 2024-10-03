@@ -1,11 +1,15 @@
+import { usePasswordChange } from "@/api/passwordChange";
 import { colorBlack, colorDarkGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import { useSnackbar } from "@/context/snackBar";
 import useChangeUserInfo from "@/hooks/useChangeUserInfo";
 import useJwtToken from "@/hooks/useJwtToken";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
+	Pressable,
 	StyleSheet,
 	Text,
 	TextInput,
@@ -27,6 +31,9 @@ export default function UserAccount() {
 	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
 	const [showNewPassword, setShowNewPassword] = useState(false);
 	const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+	const [passwordChanged, setPasswordChanged] = useState(false);
+
+	const showSnackbar = useSnackbar(); // Use the snackbar context
 
 	useEffect(() => {
 		if (userData && userData.firstName) {
@@ -46,39 +53,62 @@ export default function UserAccount() {
 		});
 	};
 
-	// const onPasswordChangeSuccess = () => {
-	// 	console.log("password changed");
-	// };
+	const onPasswordChangeSuccess = () => {
+		setCurrentPassword(null);
+		setNewPassword(null);
+		setPasswordConfirm(null);
+		setPasswordChanged(true);
+		showSnackbar("Mot de passe changé", "success");
+	};
 
-	// const changePassword = usePasswordChange(onPasswordChangeSuccess);
+	const onPasswordChangeError = (message: string) => {
+		showSnackbar(message, "error");
+	};
 
-	// const handleChangePassword = () => {
-	// 	console.log("clicking change password");
-	// 	if (newPassword === passwordConfirm) {
-	// 		if (newPassword !== currentPassword) {
-	// 			changePassword.mutate({
-	// 				currentPassword: currentPassword,
-	// 				password: newPassword,
-	// 				passwordConfirmation: passwordConfirm,
-	// 				token,
-	// 			});
-	// 		} else {
-	// 			console.log("the new password is the same as the old");
-	// 		}
-	// 	} else {
-	// 		console.log("the two passwords don't match");
-	// 	}
-	// };
+	useEffect(() => {
+		if (passwordChanged) {
+			const timer = setTimeout(() => {
+				setPasswordChanged(false);
+			}, 5000);
 
-	// const toggleShowPassword = (field: string) => {
-	// 	if (field === "current") {
-	// 		setShowCurrentPassword(!showCurrentPassword);
-	// 	} else if (field === "new") {
-	// 		setShowNewPassword(!showNewPassword);
-	// 	} else if (field === "confirm") {
-	// 		setShowPasswordConfirm(!showPasswordConfirm);
-	// 	}
-	// };
+			return () => clearTimeout(timer);
+		}
+
+		return undefined;
+	}, [passwordChanged]);
+
+	const changePassword = usePasswordChange(
+		onPasswordChangeSuccess,
+		onPasswordChangeError
+	);
+
+	const handleChangePassword = () => {
+		console.log("clicking change password");
+		if (newPassword === passwordConfirm) {
+			if (newPassword !== currentPassword) {
+				changePassword.mutate({
+					currentPassword: currentPassword,
+					password: newPassword,
+					passwordConfirmation: passwordConfirm,
+					token,
+				});
+			} else {
+				console.log("the new password is the same as the old");
+			}
+		} else {
+			console.log("the two passwords don't match");
+		}
+	};
+
+	const toggleShowPassword = (field) => {
+		if (field === "current") {
+			setShowCurrentPassword(!showCurrentPassword);
+		} else if (field === "new") {
+			setShowNewPassword(!showNewPassword);
+		} else if (field === "confirm") {
+			setShowPasswordConfirm(!showPasswordConfirm);
+		}
+	};
 
 	if (!userData) {
 		return <Loader />;
@@ -131,13 +161,33 @@ export default function UserAccount() {
 				</TouchableOpacity>
 			</View>
 
-			{/* <View style={styles.passwordContainer}>
+			<View style={styles.passwordContainer}>
 				<View style={{ paddingTop: 40, paddingBottom: 20 }}>
-					<Text style={{ fontSize: FontSize16 }}>
-						Modifie ton mot de passe.
-					</Text>
+					<Text style={{ fontSize: FontSize16 }}>Change ton mot de passe.</Text>
 				</View>
+				{/* {passwordChanged && (
+					<View
+						style={{
+							alignItems: "center",
+							borderColor: colorGreen,
+							borderWidth: 2,
+							padding: 20,
+							borderRadius: 15,
+						}}>
+						<Text
+							style={{
+								color: colorGreen,
+								fontSize: FontSizeH3,
+								fontWeight: "bold",
+								textTransform: "uppercase",
+							}}>
+							mot passe changé
+						</Text>
+					</View>
+				)} */}
 
+				{/* {!passwordChanged && (
+					<> */}
 				<View style={styles.passwordInputContainer}>
 					<TextInput
 						secureTextEntry={!showCurrentPassword} // Bind to showCurrentPassword state
@@ -204,7 +254,9 @@ export default function UserAccount() {
 						Modifier
 					</Text>
 				</Pressable>
-			</View> */}
+				{/* </>
+				)} */}
+			</View>
 		</>
 	);
 }
@@ -243,3 +295,6 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 	},
 });
+function showSnackbar(arg0: string) {
+	throw new Error("Function not implemented.");
+}
