@@ -28,7 +28,6 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
-import { LoginPayload } from "@/types/login";
 import Logo from "../assets/imgs/logos/Login.png";
 
 const LoginScreen = () => {
@@ -43,7 +42,7 @@ const LoginScreen = () => {
 		setShowPassword(!showPassword);
 	};
 
-	const onSuccess = (data: LoginPayload) => {
+	const onSuccess = (data) => {
 		login(data);
 		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
 	};
