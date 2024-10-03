@@ -7,13 +7,13 @@ import Cat6 from "@/assets/imgs/icons/cat_6.png";
 import { Image, ImageStyle, StyleSheet } from "react-native";
 
 type SmallCategroieIconsProps = {
-	cats: number;
+	cats: string;
 };
 
 const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 	const ShowProperIcon = () => {
 		switch (cats) {
-			case 1:
+			case "1":
 				return (
 					<Image
 						source={Cat1}
@@ -24,7 +24,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 						resizeMode='contain'
 					/>
 				);
-			case 2:
+			case "2":
 				return (
 					<Image
 						source={Cat2}
@@ -35,7 +35,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 						resizeMode='contain'
 					/>
 				);
-			case 3:
+			case "3":
 				return (
 					<Image
 						source={Cat3}
@@ -46,7 +46,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 						resizeMode='contain'
 					/>
 				);
-			case 4:
+			case "4":
 				return (
 					<Image
 						source={Cat4}
@@ -57,7 +57,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 						resizeMode='contain'
 					/>
 				);
-			case 5:
+			case "5":
 				return (
 					<Image
 						source={Cat5}
@@ -68,7 +68,7 @@ const SmallCategroieIcons: React.FC<SmallCategroieIconsProps> = ({ cats }) => {
 						resizeMode='contain'
 					/>
 				);
-			case 6:
+			case "6":
 				return (
 					<Image
 						source={Cat6}

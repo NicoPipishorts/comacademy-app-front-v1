@@ -1,6 +1,7 @@
 import { colorBlack, colorDarkGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useChangeUserInfo from "@/hooks/useChangeUserInfo";
+import useJwtToken from "@/hooks/useJwtToken";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { useEffect, useState } from "react";
@@ -15,16 +16,17 @@ import Loader from "../experience/loader";
 import ScreenHeaders from "../ScreenHeaders";
 
 export default function UserAccount() {
+	const { token } = useJwtToken();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
 	const [formFirstName, setFormFirstName] = useState("");
 	const [formLastName, setFormLastName] = useState("");
-	// const [currentPassword, setCurrentPassword] = useState("");
-	// const [newPassword, setNewPassword] = useState("");
-	// const [passwordConfirm, setPasswordConfirm] = useState("");
-	// const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-	// const [showNewPassword, setShowNewPassword] = useState(false);
-	// const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+	const [currentPassword, setCurrentPassword] = useState("");
+	const [newPassword, setNewPassword] = useState("");
+	const [passwordConfirm, setPasswordConfirm] = useState("");
+	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
+	const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
 	useEffect(() => {
 		if (userData && userData.firstName) {
@@ -44,13 +46,21 @@ export default function UserAccount() {
 		});
 	};
 
-	// const changePassword = usePasswordChange();
+	// const onPasswordChangeSuccess = () => {
+	// 	console.log("password changed");
+	// };
+
+	// const changePassword = usePasswordChange(onPasswordChangeSuccess);
+
 	// const handleChangePassword = () => {
+	// 	console.log("clicking change password");
 	// 	if (newPassword === passwordConfirm) {
 	// 		if (newPassword !== currentPassword) {
 	// 			changePassword.mutate({
 	// 				currentPassword: currentPassword,
-	// 				newPassword: passwordConfirm,
+	// 				password: newPassword,
+	// 				passwordConfirmation: passwordConfirm,
+	// 				token,
 	// 			});
 	// 		} else {
 	// 			console.log("the new password is the same as the old");
@@ -182,19 +192,18 @@ export default function UserAccount() {
 					/>
 				</View>
 
-				<TouchableOpacity
+				<Pressable
 					onPress={() => handleChangePassword()}
-					style={styles.buttons}
-					disabled>
+					style={styles.buttons}>
 					<Text
 						style={{
 							color: colorWhite,
 							fontSize: FontSize16,
 							fontWeight: "bold",
 						}}>
-						Valider
+						Modifier
 					</Text>
-				</TouchableOpacity>
+				</Pressable>
 			</View> */}
 		</>
 	);
