@@ -24,6 +24,7 @@ interface Payload {
 			data: {
 				attributes: {
 					COEF: number; // Get the COEF value from questionId relation
+					ANSWER: boolean;
 				};
 			};
 		};
@@ -37,7 +38,7 @@ const fetchGameScore = async (
 ): Promise<GameScore> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&fields[1]=answer&fields[2]=categorie&filters[userId][$eq]=${userId}&filters[gameId][$eq]=${gameId}&populate[questionId][fields][0]=COEF`,
+			`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=id&fields[1]=answer&fields[2]=categorie&filters[userId][$eq]=${userId}&filters[gameId][$eq]=${gameId}&populate[questionId][fields][0]=COEF&populate[questionId][fields][1]=ANSWER`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -70,7 +71,9 @@ const fetchGameScore = async (
 		// Aggregate the data by categories
 		data.data.forEach((question: Payload) => {
 			const category = question.attributes.categorie;
-			const isTrueAnswer = question.attributes.answer === true;
+			const isTrueAnswer =
+				question.attributes.answer ===
+				question.attributes.questionId?.data?.attributes?.ANSWER;
 			const COEF = question.attributes.questionId?.data?.attributes?.COEF || 0; // Get COEF value from questionId
 
 			categoryScores[category].totalAnswersCount++;
@@ -95,7 +98,9 @@ const fetchGameScore = async (
 		// Calculate overall score
 		const totalAnswersCount = data.data.length;
 		const trueAnswersCount = data.data.filter(
-			(question: Payload) => question.attributes.answer === true
+			(question: Payload) =>
+				question.attributes.answer ===
+				question.attributes.questionId?.data?.attributes?.ANSWER
 		).length;
 
 		let percentage =

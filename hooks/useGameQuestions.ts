@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchGameQuestions = async (token: string, userId: number) => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/questions?populate=*&pagination[limit]=30&filters[$or][0][game_session_questions][answer][$ne]=true&filters[$or][1][game_session_questions][id][$null]=true&filters[$or][2][game_session_questions][userId][$eq]=${userId}&filters[$or][3][game_session_questions][userId][$null]=true`,
+			`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&populate=*&pagination[limit]=30&filters[$or][0][game_session_questions][answer][$ne]=true&filters[$or][1][game_session_questions][id][$null]=true&filters[$or][2][game_session_questions][userId][$nq]=${userId}&filters[$or][3][game_session_questions][userId][$null]=true`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

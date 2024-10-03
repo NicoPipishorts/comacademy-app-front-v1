@@ -6,8 +6,10 @@ import { useSecrets } from "@/context/contextSecrets";
 import useGetAllSecrets from "@/hooks/useGetAllSecrets";
 import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Secrets() {
+	const insets = useSafeAreaInsets();
 	const { data: secrets, isFetched } = useGetAllSecrets();
 	const { setData } = useSecrets();
 
@@ -22,7 +24,7 @@ export default function Secrets() {
 	}
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScrollView showsVerticalScrollIndicator={false}>
 				<View
 					style={{
@@ -54,7 +56,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		paddingTop: 80,
-		paddingBottom: 110,
+		paddingBottom: 100,
 		backgroundColor: primaryBackground,
 	},
 });

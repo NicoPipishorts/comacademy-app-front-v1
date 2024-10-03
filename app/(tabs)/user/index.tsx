@@ -1,6 +1,7 @@
 import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
+import ChangeAvatar from "@/components/user/changeAvatar";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
@@ -20,6 +21,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Define the type for the accumulator object
 interface CategoryResult {
@@ -30,6 +32,7 @@ interface CategoryResult {
 export type ResultAccumulator = Record<number, CategoryResult>;
 
 export default function User() {
+	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +86,11 @@ export default function User() {
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 			style={styles.wrapper}>
-			<View style={[styles.innerWrapper, { paddingBottom: dynamicPadding }]}>
+			<View
+				style={[
+					styles.innerWrapper,
+					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
+				]}>
 				<ScreenHeaders content='Mon Profil' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}
@@ -93,6 +100,8 @@ export default function User() {
 					<UserStats categoriesScore={answers} />
 
 					{/* <UserResultsByCat /> */}
+
+					<ChangeAvatar />
 
 					<UserAccount />
 

@@ -25,59 +25,37 @@ export default function FeedbkacMessage() {
 					},
 					styles.feedbackContainer,
 				]}>
-				<Text style={styles.feedbackText}>{answer}</Text>
+				<View style={{ marginTop: "60%", marginBottom: "20%" }}>
+					<Text style={styles.feedbackText}>{answer}</Text>
+				</View>
 
-				<View
-					style={{
-						flexDirection: "row",
-						justifyContent: "center",
-						position: "absolute",
-						bottom: 150,
-						left: 0,
-						width: "100%",
-						alignItems: "center",
-					}}>
+				<View style={styles.buttonsContainer}>
 					<TouchableOpacity
-						style={{
-							borderColor: colorWhite,
-							backgroundColor: answer === Answer.true ? colorGreen : colorPink,
-							borderWidth: 2,
-							paddingHorizontal: 20,
-							paddingVertical: 8,
-							borderRadius: 50,
-							marginRight: 15,
-						}}
+						style={[
+							styles.buttons,
+							{
+								backgroundColor:
+									answer === Answer.true ? colorGreen : colorPink,
+							},
+						]}
 						onPress={() =>
 							navigation.navigate("answersDetails", {
 								questionId: questionId,
 								postGame: false,
 							})
 						}>
-						<Text
-							style={{
-								color: colorWhite,
-								fontSize: FontSize16,
-								fontWeight: "bold",
-							}}>
-							Réponse
-						</Text>
+						<Text style={styles.buttonsText}>Réponse</Text>
 					</TouchableOpacity>
 					<TouchableOpacity
-						style={{
-							borderColor: colorWhite,
-							borderWidth: 2,
-							backgroundColor: colorWhite,
-							paddingHorizontal: 20,
-							paddingVertical: 8,
-							borderRadius: 50,
-						}}
+						style={styles.buttons}
 						onPress={() => navigation.goBack()}>
 						<Text
-							style={{
-								color: answer === Answer.true ? colorGreen : colorPink,
-								fontSize: FontSize16,
-								fontWeight: "bold",
-							}}>
+							style={[
+								styles.buttonsText,
+								{
+									color: answer === Answer.true ? colorGreen : colorPink,
+								},
+							]}>
 							Poursuivre
 						</Text>
 					</TouchableOpacity>
@@ -90,13 +68,32 @@ export default function FeedbkacMessage() {
 const styles = StyleSheet.create({
 	feedbackContainer: {
 		...StyleSheet.absoluteFillObject,
-		justifyContent: "center",
+		justifyContent: "flex-start",
 		alignItems: "center",
 		zIndex: 15,
 	},
 	feedbackText: {
 		fontSize: 100,
 		color: colorWhite,
+		fontWeight: "bold",
+	},
+	buttonsContainer: {
+		flexDirection: "row",
+		justifyContent: "space-evenly",
+		left: 0,
+		width: "100%",
+	},
+	buttons: {
+		borderColor: colorWhite,
+		borderWidth: 2,
+		backgroundColor: colorWhite,
+		paddingHorizontal: 20,
+		paddingVertical: 8,
+		borderRadius: 50,
+	},
+	buttonsText: {
+		color: colorWhite,
+		fontSize: FontSize16,
 		fontWeight: "bold",
 	},
 });

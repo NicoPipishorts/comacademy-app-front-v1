@@ -9,8 +9,8 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import useCountAllQuestions from "@/hooks/useCountAllQuestions";
-import useCountAnsweredQuestions from "@/hooks/useCountAnsweredQuestions";
-import { useGetAnaswersTrue } from "@/hooks/useGetAnswersTrue";
+import { useGetAnswersTrue } from "@/hooks/useGetAnswersTrue";
+
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import React from "react";
@@ -21,49 +21,23 @@ export default function Answers() {
 	const { userId } = useUserId();
 
 	const { data: all } = useCountAllQuestions(token);
-	const { data: answered } = useCountAnsweredQuestions(userId, token);
-	const { data: correctAnswers } = useGetAnaswersTrue(userId, token);
+	const { data: correctAnswers } = useGetAnswersTrue(userId, token);
 
-	if (!userId || !all || !answered || !correctAnswers) {
+	if (!userId || !all || !correctAnswers) {
 		return <Loader />;
 	}
 
-	const removeDuplicateAnswers = () => {
-		// Step 1: Remove duplicates based on questionId.data.id
-		const uniqueAnswers = correctAnswers.data.filter(
-			(answer, index, self) =>
-				index ===
-				self.findIndex(
-					(t) =>
-						t.attributes.questionId.data.id ===
-						answer.attributes.questionId.data.id
-				)
-		);
-
-		// Step 2: Sort the unique answers by questionId.data.id in descending order
-		const sortedAnswers = uniqueAnswers.sort((a, b) => {
-			return b.id - a.id; // Descending order
-		});
-
-		return sortedAnswers;
-	};
-
 	const progressBarProgressions = () => {
-		if (
-			!all ||
-			!answered ||
-			typeof all.count !== "number" ||
-			typeof answered.count !== "number"
-		) {
+		if (!all || typeof all.count !== "number") {
 			return 0;
 		}
 
 		// Handle case where answered.count is 0 to avoid division by zero
-		if (answered.count === 0 || all.count === 0) {
+		if (correctAnswers.data.length === 0 || all.count === 0) {
 			return 0;
 		}
 
-		const progress = answered.count / all.count;
+		const progress = correctAnswers.data.length / all.count;
 
 		// Ensure progress is between 0 and 1 (or 0% to 100%)
 		return Math.min(Math.max(progress, 0), 1) * 100;
@@ -76,7 +50,9 @@ export default function Answers() {
 			style={{ flex: 1 }}>
 			<View style={styles.cardContainer}>
 				<View style={styles.cardResults}>
-					<Text style={styles.cardResultsLarge}>{answered?.count}</Text>
+					<Text style={styles.cardResultsLarge}>
+						{correctAnswers.data.length}
+					</Text>
 					<Text style={styles.cardResultsSmall}>/ {all?.count}</Text>
 				</View>
 				<View style={styles.cardProgressContainer}>
@@ -87,11 +63,17 @@ export default function Answers() {
 						]}
 					/>
 				</View>
-				<Text style={styles.cardUnlocked}>Réponses débloquées</Text>
+				<Text style={styles.cardUnlocked}>Bonnes réponses</Text>
+			</View>
+
+			<View style={{ paddingTop: 30 }}>
+				<Text style={{ fontSize: FontSize16, fontWeight: "bold" }}>
+					Joue et débloque en de nouvelles réponses en répondant correctement !
+				</Text>
 			</View>
 
 			<View style={{ paddingTop: 40 }}>
-				{removeDuplicateAnswers().map((answer) => {
+				{correctAnswers.data.map((answer) => {
 					return (
 						<AnswersCard
 							key={answer.attributes.questionId.data.id}

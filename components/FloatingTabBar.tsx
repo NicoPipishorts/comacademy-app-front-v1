@@ -1,38 +1,97 @@
-import {
-	colorBlack,
-	colorLightGrey,
-	colorWhite,
-	primaryBackground,
-} from "@/constants/colors";
+import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSizeH4 } from "@/constants/fontsizes";
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, {
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import {
+	Animated,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 type Props = {
-	selectedTab?: boolean;
-	handlePress: () => void;
+	activeTab: number;
+	setActiveTab: Dispatch<SetStateAction<number>>;
+	handlePress: (tabIndex: number) => void;
 	values: {
 		btn1: string;
 		btn2: string;
 	};
 };
 
-const FloatingTabBar = ({ selectedTab, handlePress, values }: Props) => {
+const FloatingTabBar = ({
+	activeTab,
+	setActiveTab,
+	handlePress,
+	values,
+}: Props) => {
+	const translateX = useRef(new Animated.Value(0)).current;
+	const [btn1Width, setBtn1Width] = useState(0);
+	const [btn2Width, setBtn2Width] = useState(0);
+
+	// Animate the slider position and width when the active tab changes
+	useEffect(() => {
+		if (btn1Width > 0 && btn2Width > 0) {
+			Animated.spring(translateX, {
+				toValue: activeTab === 0 ? 0 : btn1Width,
+				useNativeDriver: true,
+			}).start();
+		}
+	}, [activeTab, btn1Width, btn2Width, translateX]);
+
+	const handleTabPress = (tabIndex: number) => {
+		setActiveTab(tabIndex);
+		handlePress(tabIndex);
+	};
+
+	const onLayoutBtn1 = (event: any) => {
+		const { width } = event.nativeEvent.layout;
+		setBtn1Width(width);
+	};
+
+	const onLayoutBtn2 = (event: any) => {
+		const { width } = event.nativeEvent.layout;
+		setBtn2Width(width);
+	};
+
 	return (
 		<View style={styles.container}>
-			<TouchableOpacity
-				style={!selectedTab ? styles.buttonBlack : styles.buttonWhite}>
-				<Text style={!selectedTab ? styles.textBlack : styles.textWhite}>
-					{values.btn1}
-				</Text>
-			</TouchableOpacity>
-			<TouchableOpacity
-				style={selectedTab ? styles.buttonBlack : styles.buttonWhite}
-				onPress={() => handlePress()}>
-				<Text style={selectedTab ? styles.textBlack : styles.textWhite}>
-					{values.btn2}
-				</Text>
-			</TouchableOpacity>
+			{/* Slider will always be rendered, but its width and position will be updated when the layout is ready */}
+			<Animated.View
+				style={[
+					styles.slider,
+					{
+						width: activeTab === 0 ? btn1Width : btn2Width,
+						transform: [{ translateX }],
+					},
+				]}
+			/>
+			<View onLayout={onLayoutBtn1}>
+				<TouchableOpacity
+					style={styles.button}
+					onPress={() => handleTabPress(0)}>
+					<Text
+						style={activeTab === 0 ? styles.textActive : styles.textInactive}>
+						{values.btn1}
+					</Text>
+				</TouchableOpacity>
+			</View>
+			<View onLayout={onLayoutBtn2}>
+				<TouchableOpacity
+					style={styles.button}
+					onPress={() => handleTabPress(1)}>
+					<Text
+						style={activeTab === 1 ? styles.textActive : styles.textInactive}>
+						{values.btn2}
+					</Text>
+				</TouchableOpacity>
+			</View>
 		</View>
 	);
 };
@@ -41,7 +100,6 @@ const styles = StyleSheet.create({
 	container: {
 		backgroundColor: primaryBackground,
 		flexDirection: "row",
-		justifyContent: "center",
 		borderRadius: 50,
 		padding: 7,
 		shadowColor: "#000",
@@ -52,29 +110,33 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.35,
 		shadowRadius: 10,
 		elevation: 5,
-		zIndex: 1000, // High zIndex to ensure it stays on top
+		position: "relative",
+		alignSelf: "center",
 	},
-	buttonWhite: {
-		paddingHorizontal: 20,
+	button: {
 		paddingVertical: 10,
-		borderRadius: 50,
-		backgroundColor: colorLightGrey,
+		paddingHorizontal: 20,
+		alignItems: "center",
+		zIndex: 2,
 	},
-	buttonBlack: {
-		paddingHorizontal: 20,
-		paddingVertical: 10,
-		borderRadius: 50,
+	slider: {
+		position: "absolute",
+		height: "100%",
 		backgroundColor: colorBlack,
+		borderRadius: 50,
+		top: 7,
+		left: 7,
+		zIndex: -1,
 	},
-	textWhite: {
-		fontSize: FontSizeH4,
-		fontWeight: "bold",
-		color: colorBlack,
-	},
-	textBlack: {
-		fontSize: FontSizeH4,
-		fontWeight: "bold",
+	textActive: {
 		color: colorWhite,
+		fontSize: FontSizeH4,
+		fontWeight: "bold",
+	},
+	textInactive: {
+		color: colorBlack,
+		fontSize: FontSizeH4,
+		fontWeight: "bold",
 	},
 });
 

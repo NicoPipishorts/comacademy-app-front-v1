@@ -27,7 +27,7 @@ export default function Secrets() {
 			<View
 				style={{
 					paddingHorizontal: 20,
-					paddingTop: insets.top + 20,
+					paddingTop: insets.top,
 				}}>
 				<ScreenHeaders content='10 Commandements' />
 			</View>
@@ -54,7 +54,7 @@ export default function Secrets() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingBottom: 110,
+		paddingBottom: 100,
 		backgroundColor: primaryBackground,
 	},
 });

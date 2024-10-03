@@ -21,14 +21,6 @@ const LeJeuLayout = () => {
 						presentation: "modal",
 					}}
 				/>
-				<Stack.Screen
-					name='categories'
-					options={{
-						headerShown: false,
-						headerTitle: "Le Dico Categories",
-						presentation: "modal",
-					}}
-				/>
 			</Stack>
 		</GameProvider>
 	);
