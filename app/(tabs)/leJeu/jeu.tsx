@@ -9,6 +9,7 @@ import {
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -18,7 +19,7 @@ import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,7 +28,6 @@ const Jeu = () => {
 	const insets = useSafeAreaInsets();
 	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
-	const [feedbackMessage, setFeedbackMessage] = useState<Answer | null>(null);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
@@ -35,18 +35,19 @@ const Jeu = () => {
 		dataGame,
 		setDataGame,
 		sessionId,
-		setSessionsId,
 		questionsLeft,
 		setQuestionsLeft,
-		score,
 		showFinishedModal,
 		setShowFinishedModal,
 		setPlaying,
+		setCurrentCardId,
 	} = useGameContext();
 
 	const handlePress = () => {
 		showTabBar();
 		setPlaying(false);
+		setDataGame(null);
+		queryClient.removeQueries({ queryKey: ["GameQuestions"] });
 		setTimeout(() => {
 			navigation.navigate("index");
 		}, 100);
@@ -60,8 +61,8 @@ const Jeu = () => {
 
 	useEffect(() => {
 		hideTabBar();
-		return () => showTabBar(); // Ensure tab bar is shown again when component unmounts
-	}, [hideTabBar, showTabBar]); // Define onSuccess and onError handlers
+		return () => showTabBar();
+	}, [hideTabBar, showTabBar]);
 
 	useEffect(() => {
 		if (sessionId && questionsLeft <= 0) {
@@ -83,6 +84,7 @@ const Jeu = () => {
 
 	const onSwipeLeft = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
+		setCurrentCardId(currentCard.id);
 		if (currentCard && currentCard.attributes.ANSWER === false) {
 			navigation.navigate("feedbackMessage", {
 				answer: Answer.true,
@@ -99,7 +101,7 @@ const Jeu = () => {
 			gameId: sessionId,
 			userId: userId,
 			questionId: currentCard.id,
-			answer: currentCard.attributes.ANSWER === false,
+			answer: false,
 			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
@@ -107,6 +109,7 @@ const Jeu = () => {
 
 	const onSwipeRight = (cardIndex: number) => {
 		const currentCard = dataGame[cardIndex];
+		setCurrentCardId(currentCard.id);
 		if (currentCard && currentCard.attributes.ANSWER === true) {
 			navigation.navigate("feedbackMessage", {
 				answer: Answer.true,
@@ -123,7 +126,7 @@ const Jeu = () => {
 			gameId: sessionId,
 			userId: userId,
 			questionId: currentCard.id,
-			answer: currentCard.attributes.ANSWER === true,
+			answer: true,
 			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
@@ -177,7 +180,6 @@ const Jeu = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			{/* {showFinishedModal && <FinishedSession />} */}
 			{!showFinishedModal && (
 				<Swiper
 					ref={swiperRef}

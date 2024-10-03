@@ -43,7 +43,7 @@ const HomeScreen = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={styles.header}>
+			<View style={styles.screenHeader}>
 				<TouchableOpacity onPress={() => navigation.navigate("user")}>
 					<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 				</TouchableOpacity>
@@ -206,6 +206,13 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingBottom: 20,
 		backgroundColor: primaryBackground,
+	},
+	screenHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 30,
+		paddingHorizontal: 20,
 	},
 	header: {
 		flexDirection: "row",

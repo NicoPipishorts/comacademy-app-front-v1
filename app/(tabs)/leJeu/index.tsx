@@ -77,16 +77,20 @@ const LeJeu = () => {
 						? sessionQuestionsPool.slice(30 - questionsLeft)
 						: sessionQuestionsPool;
 
-				if (!playing) setDataGame(filteredQuestionsPool);
+				if (!playing) {
+					setDataGame(filteredQuestionsPool);
+				}
 			} else {
-				setQuestionsLeft(30);
-				setDataGame(
-					fetchedDataGame
-						? Object.keys(fetchedDataGame.data).map(
-								(key) => fetchedDataGame.data[key] as GameSessionQuestionData
-						  )
-						: null
-				);
+				if (!playing) {
+					setQuestionsLeft(30);
+					setDataGame(
+						fetchedDataGame
+							? Object.keys(fetchedDataGame.data).map(
+									(key) => fetchedDataGame.data[key] as GameSessionQuestionData
+							  )
+							: null
+					);
+				}
 			}
 		}
 	}, [
@@ -107,7 +111,9 @@ const LeJeu = () => {
 					setQuestionsLeft(30 - currentQuestions.meta.pagination.total);
 				}
 			} else {
-				if (!questionsLeft) setQuestionsLeft(30);
+				if (!questionsLeft) {
+					setQuestionsLeft(30);
+				}
 				setDataGame(
 					fetchedDataGame
 						? Object.keys(fetchedDataGame.data).map(

@@ -13,9 +13,10 @@ interface Props {
 	id: number;
 	data: GameAttributes;
 	postGame: boolean;
+	userAnswer?: boolean;
 }
 
-export default function AnswersCard({ id, data, postGame }: Props) {
+export default function AnswersCard({ id, data, postGame, userAnswer }: Props) {
 	// Use the router object to navigate
 	const navigation = useNavigation<NavigationType>();
 
@@ -33,7 +34,7 @@ export default function AnswersCard({ id, data, postGame }: Props) {
 				styles.cardWrapper,
 				{
 					borderLeftWidth: postGame ? 0 : 10,
-					borderColor: data.ANSWER ? colorGreen : colorPink,
+					borderColor: userAnswer ? colorGreen : colorPink,
 				},
 			]}
 			onPress={handlePress}>

@@ -15,6 +15,8 @@ interface GameContextType {
 	setDataGame: React.Dispatch<React.SetStateAction<GameData[]>>;
 	questionsLeft: number;
 	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
+	currentCardId: number;
+	setCurrentCardId: React.Dispatch<React.SetStateAction<number>>;
 	playing: boolean;
 	setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 	score: GameScore;
@@ -31,6 +33,7 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [dataGame, setDataGame] = useState<GameData[]>(null);
 	const [sessionId, setSessionsId] = useState<number>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
+	const [currentCardId, setCurrentCardId] = useState<number>(null);
 	const [score, setScore] = useState<GameScore | null>(null);
 	const [showFinishedModal, setShowFinishedModal] = useState<boolean>(false);
 	const [playing, setPlaying] = useState<boolean>(false);
@@ -50,6 +53,8 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 				setScore,
 				showFinishedModal,
 				setShowFinishedModal,
+				currentCardId,
+				setCurrentCardId,
 			}}>
 			{children}
 		</GameContext.Provider>

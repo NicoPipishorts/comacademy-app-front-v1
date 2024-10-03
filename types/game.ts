@@ -85,7 +85,7 @@ export interface GameSessionQuestion {
 
 export interface GameSessionQuestions {
 	data: GameSessionQuestion[]; // An array of GameSessionQuestion objects
-	meta: {
+	meta?: {
 		pagination: {
 			page: number;
 			pageSize: number;

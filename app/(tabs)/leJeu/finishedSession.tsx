@@ -7,6 +7,7 @@ import {
 	FontSize18,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
+import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetGameScore from "@/hooks/useGetScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -57,6 +58,7 @@ export default function FinishedSession() {
 			setSessionsId(null);
 			setDataGame(null);
 			setShowFinishedModal(false);
+			queryClient.removeQueries({ queryKey: ["GameQuestions"] });
 			navigation.popToTop("leJeu");
 		}
 	};
