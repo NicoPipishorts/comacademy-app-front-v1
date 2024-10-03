@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
-import SmallCategroieIcons from "../SmallCategroieIcons";
+import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 
 interface Props {
 	questionId: number;

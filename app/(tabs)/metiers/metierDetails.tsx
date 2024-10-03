@@ -19,7 +19,7 @@ import Heart from "@/assets/imgs/icons/heart.png";
 import AndroidBackButton from "@/components/buttons/androidBack";
 import Loader from "@/components/experience/loader";
 import GradientContainer from "@/components/GradientContainer";
-import SmallCategroieIcons from "@/components/SmallCategroieIcons";
+import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import UnorderedList from "@/components/UnorderedList";
 import { colorWhite } from "@/constants/colors";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";

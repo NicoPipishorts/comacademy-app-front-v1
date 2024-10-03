@@ -1,3 +1,54 @@
+export interface GameSessionQuestions {
+	data: GameSessionQuestion[];
+	meta?: {
+		pagination: {
+			page: number;
+			pageSize: number;
+			pageCount: number;
+			total: number;
+		};
+	};
+}
+
+export interface GameSessionQuestion {
+	id: number;
+	attributes: GameSessionQuestionAttributes;
+}
+
+export interface GameSessionQuestionAttributes {
+	gameId: number | string;
+	questionId: {
+		data: GameSessionQuestionData;
+	};
+	answer: boolean;
+	order?: number;
+	categorie: number;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt: string;
+	userId: number | string;
+}
+
+export interface GameSessionQuestionData {
+	id: number;
+	attributes: GameSessionAttributes;
+}
+
+export interface GameSessionAttributes {
+	QUESTION: string;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt: string;
+	CATEGORIE: string;
+	TAG: string | null;
+	ANSWER: boolean;
+	REPONSE: string;
+	ACTIVE: boolean;
+	COEF: number;
+	SENSIBILITE: string | null;
+	favorite_questions: [];
+}
+
 export interface GameAttributes {
 	QUESTION: string;
 	createdAt: string;
@@ -22,26 +73,6 @@ export interface GameData {
 	attributes: GameAttributes;
 }
 
-export interface GameSessionAttributes {
-	QUESTION: string;
-	createdAt: string;
-	updatedAt: string;
-	publishedAt: string;
-	CATEGORIE: number;
-	TAG: string | null;
-	ANSWER: boolean;
-	REPONSE: string;
-	ACTIVE: boolean;
-	COEF: number;
-	SENSIBILITE: string | null;
-	favorite_questions: [];
-}
-
-export interface GameSessionQuestionData {
-	id: number;
-	attributes: GameSessionAttributes;
-}
-
 export interface GameSessionPayload {
 	data: Record<string, GameSessionQuestionData>;
 }
@@ -62,35 +93,4 @@ export interface GameSessionDetail {
 		};
 	};
 	meta: Record<string, unknown>;
-}
-
-export interface GameSessionQuestionAttributes {
-	gameId: number | string; // Adjusted to match the example payload ("1459" is a string)
-	questionId: {
-		data: GameSessionQuestionData;
-	};
-	answer: boolean;
-	order?: number;
-	categorie: number;
-	createdAt: string;
-	updatedAt: string;
-	publishedAt: string;
-	userId: number | string; // Adjusted to match the example payload ("1" is a string)
-}
-
-export interface GameSessionQuestion {
-	id: number;
-	attributes: GameSessionQuestionAttributes;
-}
-
-export interface GameSessionQuestions {
-	data: GameSessionQuestion[]; // An array of GameSessionQuestion objects
-	meta?: {
-		pagination: {
-			page: number;
-			pageSize: number;
-			pageCount: number;
-			total: number;
-		};
-	};
 }

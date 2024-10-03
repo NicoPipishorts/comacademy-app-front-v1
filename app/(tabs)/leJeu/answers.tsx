@@ -9,7 +9,6 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import useCountAllQuestions from "@/hooks/useCountAllQuestions";
-import useCountAnsweredQuestions from "@/hooks/useCountAnsweredQuestions";
 import { useGetAnswersTrue } from "@/hooks/useGetAnswersTrue";
 
 import useJwtToken from "@/hooks/useJwtToken";
@@ -22,20 +21,14 @@ export default function Answers() {
 	const { userId } = useUserId();
 
 	const { data: all } = useCountAllQuestions(token);
-	const { data: answered } = useCountAnsweredQuestions(userId, token);
 	const { data: correctAnswers } = useGetAnswersTrue(userId, token);
 
-	if (!userId || !all || !answered || !correctAnswers) {
+	if (!userId || !all || !correctAnswers) {
 		return <Loader />;
 	}
 
 	const progressBarProgressions = () => {
-		if (
-			!all ||
-			!answered ||
-			typeof all.count !== "number" ||
-			typeof answered.count !== "number"
-		) {
+		if (!all || typeof all.count !== "number") {
 			return 0;
 		}
 
