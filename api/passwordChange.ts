@@ -1,63 +1,68 @@
-// src/hooks/usePasswordChange.ts
-import { useAuth } from "@/auth/AuthContext";
-import useJwtToken from "@/hooks/useJwtToken";
 import { useMutation } from "@tanstack/react-query";
+import axios, { AxiosError, AxiosResponse } from "axios";
 
+// Define the payload and response types
 interface PasswordChangeVariables {
-	currentPassword: string;
-	newPassword: string;
+	currentPassword: string | number;
+	password: string | number;
+	passwordConfirmation: string | number;
+	token: string;
 }
 
-const changePassword = async (
-	token: string,
-	{ currentPassword, newPassword }: PasswordChangeVariables
-): Promise<void> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/auth/password-change`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: JSON.stringify({
-					currentPassword,
-					newPassword,
-				}),
+interface FavoritesMetierResponse {
+	data: any;
+}
+
+// Custom hook to add favorite question
+export const usePasswordChange = (
+	onSuccess: (data: FavoritesMetierResponse) => void
+) => {
+	return useMutation<
+		FavoritesMetierResponse,
+		AxiosError,
+		PasswordChangeVariables
+	>({
+		mutationFn: async ({
+			currentPassword,
+			password,
+			passwordConfirmation,
+			token,
+		}: PasswordChangeVariables) => {
+			let url: string;
+			url = `${process.env.EXPO_PUBLIC_API_URL}/auth/password-change`;
+
+			try {
+				const response: AxiosResponse<FavoritesMetierResponse> = await axios({
+					method: "POST",
+					url: url,
+					data: {
+						data: {
+							currentPassword,
+							password,
+							passwordConfirmation,
+						},
+					},
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				});
+				return response.data;
+			} catch (error) {
+				if (axios.isAxiosError(error)) {
+					throw error;
+				} else {
+					throw new Error("An unexpected error occurred");
+				}
 			}
-		);
-
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error changing password:", error);
-		throw error;
-	}
-};
-
-const usePasswordChange = () => {
-	const { token } = useJwtToken();
-	const { logout } = useAuth();
-
-	return useMutation<void, Error, PasswordChangeVariables>({
-		mutationFn: (variables) => changePassword(token, variables),
-		onSuccess: () => {
-			console.log("Password changed successfully, logging out...");
-			logout();
+		},
+		onSuccess: (data) => {
+			onSuccess(data); // Call the original onSuccess callback
 		},
 		onError: (error) => {
-			console.error("Error changing password:", error);
+			if (error.response) {
+				console.error("Error code:", error.response.status);
+			}
 		},
 	});
 };
-
-export default usePasswordChange;
