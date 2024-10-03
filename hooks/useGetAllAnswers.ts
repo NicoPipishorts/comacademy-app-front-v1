@@ -13,7 +13,7 @@ const fetchPayload = async (
 	userId: number
 ): Promise<GameSessionQuestions> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?populate[questionId][fields][0]=COEF&filters[userId][$eq]=${userId}&pagination[limit]=10000`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?populate=*&filters[userId][$eq]=${userId}&pagination[limit]=10000`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -54,7 +54,9 @@ export const useGetAllScores = (userId: number, token: string) => {
 
 			data.data.forEach((question) => {
 				const categoryId = question.attributes.categorie;
-				const isTrueAnswer = question.attributes.answer;
+				const isTrueAnswer =
+					question.attributes.answer ===
+					question.attributes.questionId.data.attributes.ANSWER;
 				const COEF =
 					question.attributes.questionId?.data?.attributes?.COEF || 0; // Get the COEF value
 

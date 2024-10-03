@@ -27,8 +27,8 @@ export default function AvatarInitials({ firstName, lastName }: Props) {
 	}
 
 	const initials = () => {
-		const firstLetter = firstName.split("")[0];
-		const lastLetter = lastName.split("")[0];
+		const firstLetter = firstName?.split("")[0];
+		const lastLetter = lastName?.split("")[0];
 
 		return firstLetter + lastLetter;
 	};
