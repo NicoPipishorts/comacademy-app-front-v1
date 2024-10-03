@@ -13,6 +13,7 @@ export interface GameQuestionPayload {
 					id: number;
 					attributes: {
 						COEF: number;
+						ANSWER: boolean;
 					};
 				};
 			};
@@ -31,7 +32,7 @@ export type TransformedUserScores = TransformedUserScore[];
 // Fetch function
 const fetchPayload = async (token: string): Promise<GameQuestionPayload> => {
 	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?filters[answer][$eq]=true&fields[1]=userId&populate[questionId][fields][0]=COEF`,
+		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=answer&fields[1]=userId&populate[questionId][fields][0]=COEF&populate[questionId][fields][1]=ANSWER`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -61,8 +62,10 @@ const transformResponse = (
 	> = {};
 
 	response.data.forEach((item) => {
-		const { userId } = item.attributes;
-		const COEF = item.attributes.questionId?.data?.attributes?.COEF ?? 0; // Get COEF value (default to 0 if not available)
+		const { userId, answer } = item.attributes;
+		const questionAttributes = item.attributes.questionId?.data?.attributes;
+		const COEF = questionAttributes?.COEF ?? 0;
+		const correctAnswer = questionAttributes?.ANSWER;
 
 		// Initialize the object for the user if it doesn't exist yet
 		if (!result[userId]) {
@@ -73,9 +76,12 @@ const transformResponse = (
 			};
 		}
 
-		// Increment the count and sum the COEF values
-		result[userId].count++;
-		result[userId].totalCOEF += COEF;
+		// Add COEF only if the answer matches the correct answer
+		if (answer === correctAnswer) {
+			// Increment the count and sum the COEF values
+			result[userId].count++;
+			result[userId].totalCOEF += COEF;
+		}
 	});
 
 	// Convert the object to an array and sort it by count in descending order

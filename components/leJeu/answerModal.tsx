@@ -33,7 +33,7 @@ import {
 	View,
 } from "react-native";
 import * as Progress from "react-native-progress";
-import SmallCategroieIcons from "../SmallCategroieIcons";
+import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 
 type Props = {
 	visible: boolean;

@@ -22,6 +22,7 @@ export default function CardSimpleButtonCommandements({
 	if (!fontsLoaded) {
 		return null;
 	}
+
 	return (
 		<View style={styles.cardWrapper}>
 			<View style={styles.cardTextContainer}>

@@ -1,22 +1,23 @@
+import SmallCategroieIconsNoImage from "@/components/icons/SmallCategroieIconsNoImage";
 import {
 	colorBlack,
 	colorGreen,
 	colorPink,
 	colorWhite,
 } from "@/constants/colors";
-import { GameAttributes } from "@/types/game";
+import { GameSessionAttributes } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	id: number;
-	data: GameAttributes;
+	data: GameSessionAttributes;
 	postGame: boolean;
+	userAnswer?: boolean;
 }
 
-export default function AnswersCard({ id, data, postGame }: Props) {
-	// Use the router object to navigate
+export default function AnswersCard({ id, data, postGame, userAnswer }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	// Navigate to the answersDetails screen
@@ -32,11 +33,27 @@ export default function AnswersCard({ id, data, postGame }: Props) {
 			style={[
 				styles.cardWrapper,
 				{
-					borderColor: data.ANSWER ? colorGreen : colorPink,
+					borderLeftWidth: postGame ? 0 : 10,
+					borderColor: userAnswer ? colorGreen : colorPink,
 				},
 			]}
 			onPress={handlePress}>
 			<Text>{data.QUESTION}</Text>
+			<View style={styles.containerIcons}>
+				{data.CATEGORIE !== undefined && data.CATEGORIE !== null
+					? data.CATEGORIE.split(",").map((cat, index) => {
+							const categoryNumber = parseInt(cat, 10);
+							return (
+								<View key={index} style={{ marginRight: 8 }}>
+									<SmallCategroieIconsNoImage
+										key={categoryNumber}
+										cats={categoryNumber}
+									/>
+								</View>
+							);
+					  })
+					: ""}
+			</View>
 		</TouchableOpacity>
 	);
 }
@@ -49,7 +66,6 @@ const styles = StyleSheet.create({
 		borderRadius: 15,
 		padding: 15,
 		backgroundColor: colorWhite,
-		borderLeftWidth: 10,
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
@@ -58,5 +74,9 @@ const styles = StyleSheet.create({
 	cardContentWrapper: {
 		position: "relative",
 		flexDirection: "column",
+	},
+	containerIcons: {
+		flexDirection: "row",
+		marginTop: 15,
 	},
 });

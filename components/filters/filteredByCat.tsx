@@ -7,7 +7,7 @@ import { Dispatch, SetStateAction } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
-	count: number;
+	count?: number;
 	categories: CategoriePayload;
 	filterByCat: number;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
@@ -16,19 +16,20 @@ interface Props {
 export default function FilteredByCat({
 	categories,
 	filterByCat,
+	setFilterByCat,
 	count,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
-	const categoriesArray = categories.data; // The original array of categories
+	const categoriesArray = categories.data;
 
-	// Transform the array into an object indexed by 'id'
 	const categoriesById = categoriesArray.reduce((acc, category) => {
 		acc[category.id] = category;
 		return acc;
 	}, {});
 
 	const onPress = () => {
-		navigation.navigate("index", { filter: null });
+		setFilterByCat(null);
+		navigation.navigate("index");
 	};
 
 	return (

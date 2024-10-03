@@ -3,7 +3,7 @@ import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { CategoryScore } from "@/hooks/useGetScore";
 import { StyleSheet, Text, View } from "react-native";
-import SmallCategroieIcons from "./SmallCategroieIcons";
+import SmallCategroieIcons from "./icons/SmallCategroieIcons";
 
 interface Props {
 	categoriesScore: Record<number, CategoryScore>;

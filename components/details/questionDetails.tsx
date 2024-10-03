@@ -1,7 +1,7 @@
 import { useAddFavoriteQuestionMutation } from "@/api/favoriteQuestion";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
-import { colorGreen, colorPink, colorWhite } from "@/constants/colors";
+import { colorBlack, colorWhite } from "@/constants/colors";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
@@ -12,13 +12,15 @@ import { useCallback, useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
-import SmallCategroieIcons from "../SmallCategroieIcons";
+import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 
 interface Props {
 	questionId: number;
@@ -27,6 +29,7 @@ interface Props {
 }
 
 export default function QuestionDetails({ questionId, postGame }: Props) {
+	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
@@ -101,15 +104,16 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 	}
 
 	return (
-		<View style={styles.wrapper}>
+		<ScrollView
+			contentContainerStyle={[styles.wrapper, { paddingTop: insets.top }]}>
+			<View style={[styles.contentContainer]}>
+				<Text style={{ fontSize: 22, fontWeight: "bold" }}>
+					{data.data.attributes.QUESTION}
+				</Text>
+			</View>
+
 			<View style={[styles.headerContainer]}>
-				<Text
-					style={[
-						styles.headerContainerText,
-						{
-							color: data.data.attributes.ANSWER ? colorGreen : colorPink,
-						},
-					]}>
+				<Text style={[styles.headerContainerText]}>
 					{data.data.attributes.ANSWER ? "Vrai" : "Faux"}
 				</Text>
 			</View>
@@ -144,13 +148,6 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 				</View>
 			)}
 
-			<View
-				style={[styles.contentContainer, { paddingTop: postGame ? 0 : 40 }]}>
-				<Text style={{ fontSize: 16, fontWeight: "bold" }}>
-					{data.data.attributes.QUESTION}
-				</Text>
-			</View>
-
 			<View style={styles.answerContainer}>
 				<View style={{ paddingBottom: 20 }}>
 					<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
@@ -159,28 +156,34 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 					{data.data.attributes.REPONSE}
 				</Text>
 			</View>
-		</View>
+		</ScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
 	wrapper: {
+		alignItems: "center",
 		// padding: 20,
 	},
 	headerContainer: {
+		marginVertical: 30,
+		flexShrink: 1,
 		display: "flex",
 		alignItems: "center",
-		paddingVertical: 20,
+		paddingVertical: 10,
+		paddingHorizontal: 40,
+		backgroundColor: colorBlack,
+		borderRadius: 20,
 	},
 	headerContainerText: {
-		fontSize: 88,
+		fontSize: 50,
 		fontWeight: "bold",
 		color: colorWhite,
 		textTransform: "uppercase",
 	},
 	wrapperIcons: {
-		padding: 40,
-		paddingBottom: 60,
+		paddingHorizontal: 40,
+		marginBottom: 30,
 		width: "100%",
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -195,10 +198,11 @@ const styles = StyleSheet.create({
 		marginRight: 5,
 	},
 	contentContainer: {
-		paddingHorizontal: 40,
+		paddingHorizontal: 30,
 	},
 	answerContainer: {
 		margin: 30,
+		marginTop: 0,
 		padding: 20,
 		borderRadius: 15,
 		backgroundColor: colorWhite,

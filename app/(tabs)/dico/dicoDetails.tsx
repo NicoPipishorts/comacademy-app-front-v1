@@ -17,7 +17,7 @@ import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import AndroidBackButton from "@/components/buttons/androidBack";
 import Loader from "@/components/experience/loader";
-import SmallCategroieIcons from "@/components/SmallCategroieIcons";
+import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import { colorWhite } from "@/constants/colors";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -25,14 +25,12 @@ import { useDicoById } from "@/hooks/useGetDico";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import { NavigationType } from "@/types/general";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 interface Props {
 	dicoId: number;
 }
 function DicoDetails({ dicoId: paramsDicoId }: Props) {
-	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();

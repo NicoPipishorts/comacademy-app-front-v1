@@ -10,7 +10,6 @@ import {
 } from "react-native";
 
 // Custom images
-import avatar from "@/assets/imgs/avatar/avatar.png";
 import { primaryBackground } from "@/constants/colors";
 import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
 
@@ -24,13 +23,16 @@ import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
+import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
@@ -38,13 +40,19 @@ const HomeScreen = () => {
 	if (!userData) {
 		return <Loader />;
 	}
+
 	return (
-		<View style={styles.wrapper}>
-			<View style={styles.header}>
-				<Text style={styles.headerText}>Hello {userData.firstName}</Text>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+			<View style={styles.screenHeader}>
 				<TouchableOpacity onPress={() => navigation.navigate("user")}>
-					<Image source={avatar} style={styles.profileImage} />
+					<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 				</TouchableOpacity>
+				<View style={{ marginTop: 10, marginRight: 10 }}>
+					<AvatarInitials
+						firstName={userData.firstName}
+						lastName={userData.lastName}
+					/>
+				</View>
 			</View>
 
 			<ScrollView
@@ -196,9 +204,15 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingTop: 100,
 		paddingBottom: 20,
 		backgroundColor: primaryBackground,
+	},
+	screenHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 30,
+		paddingHorizontal: 20,
 	},
 	header: {
 		flexDirection: "row",
