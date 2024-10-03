@@ -1,4 +1,5 @@
 import { TabProvider } from "@/context/floatingTabbarContext";
+import { SnackbarProvider } from "@/context/snackBar";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { AuthProvider } from "../auth/AuthContext";
@@ -8,12 +9,14 @@ export default function RootLayout() {
 	return (
 		<AuthProvider>
 			<QueryClientProvider client={queryClient}>
-				<TabProvider>
-					<Stack>
-						<Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-						<Stack.Screen name='+not-found' />
-					</Stack>
-				</TabProvider>
+				<SnackbarProvider>
+					<TabProvider>
+						<Stack>
+							<Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+							<Stack.Screen name='+not-found' />
+						</Stack>
+					</TabProvider>
+				</SnackbarProvider>
 			</QueryClientProvider>
 		</AuthProvider>
 	);

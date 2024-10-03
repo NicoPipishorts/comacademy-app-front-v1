@@ -13,9 +13,10 @@ interface FavoritesMetierResponse {
 	data: any;
 }
 
-// Custom hook to add favorite question
+// Custom hook to handle password change
 export const usePasswordChange = (
-	onSuccess: (data: FavoritesMetierResponse) => void
+	onSuccess: (data: FavoritesMetierResponse) => void,
+	onError: (message: string) => void
 ) => {
 	return useMutation<
 		FavoritesMetierResponse,
@@ -28,19 +29,16 @@ export const usePasswordChange = (
 			passwordConfirmation,
 			token,
 		}: PasswordChangeVariables) => {
-			let url: string;
-			url = `${process.env.EXPO_PUBLIC_API_URL}/auth/password-change`;
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/auth/change-password`;
 
 			try {
 				const response: AxiosResponse<FavoritesMetierResponse> = await axios({
 					method: "POST",
 					url: url,
 					data: {
-						data: {
-							currentPassword,
-							password,
-							passwordConfirmation,
-						},
+						currentPassword,
+						password,
+						passwordConfirmation,
 					},
 					headers: {
 						"Content-Type": "application/json",
@@ -50,18 +48,22 @@ export const usePasswordChange = (
 				return response.data;
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
+					// Axios error handling
 					throw error;
+				} else if (error instanceof Error) {
+					// Non-Axios error handling (for any other error type)
+					throw new Error(error.message);
 				} else {
 					throw new Error("An unexpected error occurred");
 				}
 			}
 		},
 		onSuccess: (data) => {
-			onSuccess(data); // Call the original onSuccess callback
+			onSuccess(data); // Call the provided onSuccess callback
 		},
-		onError: (error) => {
-			if (error.response) {
-				console.error("Error code:", error.response.status);
+		onError: (error: AxiosError | Error) => {
+			if (axios.isAxiosError(error)) {
+				onError("Une erreur c'est produite. Re essaye plus tard.");
 			}
 		},
 	});
