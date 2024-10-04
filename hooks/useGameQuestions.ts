@@ -1,7 +1,7 @@
 // src/hooks/useGameQuestions.ts
 
 import useJwtToken from "@/hooks/useJwtToken";
-import { GameData, GameDataPayload } from "@/types/game";
+import { GameDataPayload } from "@/types/game";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchGameQuestions = async (token: string, userId: number) => {
@@ -54,7 +54,7 @@ const fetchGameQuestions = async (token: string, userId: number) => {
 				};
 
 				return acc;
-			}, {} as Record<string, GameData>),
+			}),
 		};
 
 		return transformedData;

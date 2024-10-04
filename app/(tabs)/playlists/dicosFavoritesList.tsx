@@ -60,7 +60,7 @@ export default function QuestionsFavoritesList() {
 
 			<View>
 				{!isEmptyArray &&
-					favoriteResponse.data[0].attributes.words.data.map((word) => (
+					favoriteResponse.data[0]?.attributes.words.data.map((word) => (
 						<CardFavoriteDico
 							key={word.id}
 							data={word}

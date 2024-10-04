@@ -6,12 +6,12 @@ import { Image, StyleSheet, Text, View } from "react-native";
 // Assets
 import { default as useDeviceTypeCheckers } from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
-import { GameData } from "@/types/game";
+import { GameSessionQuestionData } from "@/types/game";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
 
 interface CardProps {
-	data: GameData;
+	data: GameSessionQuestionData;
 	catColors: CategorieColors;
 }
 

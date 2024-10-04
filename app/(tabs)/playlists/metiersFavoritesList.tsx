@@ -9,6 +9,7 @@ import {
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import useUserId from "@/hooks/useUserId";
+import { FavoriteMetier } from "@/types/metiers";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -60,14 +61,16 @@ export default function QuestionsFavoritesList() {
 
 			<View>
 				{!isEmptyArray &&
-					favoriteResponse.data[0].attributes.metiers.data.map((metier) => (
-						<CardFavoriteMetier
-							key={metier.id}
-							data={metier}
-							categoriesColors={categoriesColors}
-							categoriesIcons={categoriesIcons}
-						/>
-					))}
+					favoriteResponse.data[0]?.attributes.metiers.data.map(
+						(metier: FavoriteMetier) => (
+							<CardFavoriteMetier
+								key={metier.id}
+								data={metier}
+								categoriesColors={categoriesColors}
+								categoriesIcons={categoriesIcons}
+							/>
+						)
+					)}
 				{isEmptyArray && (
 					<View
 						style={{

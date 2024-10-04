@@ -64,14 +64,16 @@ export default function QuestionsFavoritesList() {
 
 			<View>
 				{!isEmptyArray &&
-					favoriteResponse.data[0].attributes.questions.data.map((question) => (
-						<CardFavoriteQuestion
-							key={question.id}
-							data={question}
-							categoriesColors={categoriesColors}
-							categoriesIcons={categoriesIcons}
-						/>
-					))}
+					favoriteResponse.data[0]?.attributes.questions.data.map(
+						(question) => (
+							<CardFavoriteQuestion
+								key={question.id}
+								data={question}
+								categoriesColors={categoriesColors}
+								categoriesIcons={categoriesIcons}
+							/>
+						)
+					)}
 				{isEmptyArray && (
 					<View
 						style={{
