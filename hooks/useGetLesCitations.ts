@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchCitations = async (token: string): Promise<CitationResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/citations?random=true&pagination[limit]=30`,
+			`${process.env.EXPO_PUBLIC_API_URL}/citations?filters[VISIBLE][$eq]=true&sort=updatedAt:desc`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
