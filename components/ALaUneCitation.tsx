@@ -1,32 +1,50 @@
 import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
+import useGetLaCitation from "@/hooks/useGetLaCitation";
+import { NavigationType } from "@/types/general";
+import { useNavigation } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Loader from "./experience/loader";
 import StyledButton from "./StyledButton";
 
-type Props = {
-	content: string;
-	link?: string;
-};
+export default function ALaUneCitation() {
+	const navigation = useNavigation<NavigationType>();
+	const { data, isFetched } = useGetLaCitation();
 
-const ALaUne = ({ content, link }: Props) => {
+	if (!isFetched) {
+		return null;
+	}
+
+	const citation = data.data[0].attributes;
+
 	const handlePress = () => {
-		console.log("Button pressed!");
+		navigation.navigate("lesCitations");
 	};
 	return (
 		<TouchableOpacity style={styles.container}>
-			<Text style={styles.smallText}>A la une</Text>
+			<Text style={styles.smallText}>La dernière citation</Text>
 			<View style={styles.containerBis}>
-				<Text style={styles.mainText}>{content}</Text>
-				<StyledButton
-					title='Découvrir'
-					handlePress={handlePress}
-					variant='dark'
-				/>
+				{!isFetched && <Loader />}
+				{isFetched && (
+					<>
+						<Text
+							style={styles.mainText}
+							numberOfLines={2}
+							ellipsizeMode='tail'>
+							{citation.CITATION}
+						</Text>
+						<StyledButton
+							title='Découvrir'
+							handlePress={handlePress}
+							variant='dark'
+						/>
+					</>
+				)}
 			</View>
 		</TouchableOpacity>
 	);
-};
+}
 
 const styles = StyleSheet.create({
 	container: {
@@ -55,5 +73,3 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 });
-
-export default ALaUne;
