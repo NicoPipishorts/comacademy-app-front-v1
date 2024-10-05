@@ -11,6 +11,10 @@ export interface CitationData {
 	attributes: CitationAttributes;
 }
 
-export interface CitationResponse {
+export interface CitationsResponse {
 	data: CitationData[];
+}
+
+export interface CitationResponse {
+	data: CitationData;
 }
