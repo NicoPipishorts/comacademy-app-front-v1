@@ -7,7 +7,6 @@ import {
 	FontSize18,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
-import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetGameScore from "@/hooks/useGetScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -31,6 +30,7 @@ export default function FinishedSession() {
 		setSessionsId,
 		setDataGame,
 		setShowFinishedModal,
+		setPlaying,
 	} = useGameContext();
 
 	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
@@ -57,8 +57,8 @@ export default function FinishedSession() {
 		if (!data.data.attributes.inProgress) {
 			setSessionsId(null);
 			setDataGame(null);
+			setPlaying(false);
 			setShowFinishedModal(false);
-			queryClient.removeQueries({ queryKey: ["GameQuestions"] });
 			navigation.popToTop("leJeu");
 		}
 	};

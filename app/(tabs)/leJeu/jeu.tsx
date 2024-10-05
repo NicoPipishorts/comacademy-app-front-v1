@@ -39,6 +39,7 @@ const Jeu = () => {
 		setQuestionsLeft,
 		showFinishedModal,
 		setShowFinishedModal,
+		playing,
 		setPlaying,
 		setCurrentCardId,
 	} = useGameContext();
@@ -66,11 +67,13 @@ const Jeu = () => {
 
 	useEffect(() => {
 		if (sessionId && questionsLeft <= 0) {
-			setShowFinishedModal(true);
+			if (playing) {
+				setShowFinishedModal(true);
+			}
 		} else {
 			setShowFinishedModal(false);
 		}
-	}, [sessionId, questionsLeft, setShowFinishedModal]);
+	}, [sessionId, questionsLeft, setShowFinishedModal, playing]);
 
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);

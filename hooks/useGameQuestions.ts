@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchGameQuestions = async (token: string, userId: number) => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&populate=*&pagination[limit]=30&filters[$or][0][game_session_questions][answer][$ne]=true&filters[$or][1][game_session_questions][id][$null]=true&filters[$or][2][game_session_questions][userId][$nq]=${userId}&filters[$or][3][game_session_questions][userId][$null]=true`,
+			`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&populate=*&pagination[limit]=30&filters[$or][0][game_session_questions][answer][$ne]=true&filters[$or][2][game_session_questions][userId][$nq]=${userId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -34,27 +34,30 @@ const fetchGameQuestions = async (token: string, userId: number) => {
 				let categories = item.attributes.CATEGORIE.split(",").map(
 					(cat: string) => {
 						const parsed = parseInt(cat.trim(), 10);
-						return !isNaN(parsed) ? parsed : 1;
+						return !isNaN(parsed) ? parsed : 1; // Defaults to 1 if parsing fails
 					}
 				);
 
 				// If there is more than one category, pick one at random
 				if (categories.length > 1) {
 					const randomIndex = Math.floor(Math.random() * categories.length);
-					categories = [categories[randomIndex]]; // Only keep the randomly chosen category
+					categories = categories[randomIndex]; // Now this is a single number
+				} else {
+					// If it's just a single category, keep it as a number
+					categories = categories[0] || 1; // Handle edge cases where the array might be empty
 				}
 
-				// Assign the (possibly reduced) categories array back to the transformed data
+				// Assign the (possibly reduced) categories number back to the transformed data
 				acc[key] = {
 					...item,
 					attributes: {
 						...item.attributes,
-						CATEGORIE: categories,
+						CATEGORIE: categories, // Now CATEGORIE is a single number
 					},
 				};
 
 				return acc;
-			}),
+			}, {}),
 		};
 
 		return transformedData;
