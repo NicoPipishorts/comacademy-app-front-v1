@@ -3,6 +3,7 @@ import { FontSize12, FontSize20 } from "@/constants/fontsizes";
 import useGetLaCitation from "@/hooks/useGetLaCitation";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import moment from "moment";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Loader from "./experience/loader";
@@ -21,9 +22,12 @@ export default function ALaUneCitation() {
 	const handlePress = () => {
 		navigation.navigate("lesCitations");
 	};
+
 	return (
 		<TouchableOpacity style={styles.container}>
-			<Text style={styles.smallText}>La dernière citation</Text>
+			<Text style={styles.smallText}>
+				La dernière citation : {moment(citation.updatedAt).format("DD/MM/YYYY")}
+			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}
 				{isFetched && (
