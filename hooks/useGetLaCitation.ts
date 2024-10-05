@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchCitations = async (token: string): Promise<CitationsResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/citations?filters[VISIBLE][$eq]=true&sort=updatedAt:desc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/citations?filters[VISIBLE][$eq]=true&sort=updatedAt:desc&pagination[limit]=1`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -29,7 +29,7 @@ const fetchCitations = async (token: string): Promise<CitationsResponse> => {
 	}
 };
 
-const useLesCitations = () => {
+const useGetLaCitation = () => {
 	const { token } = useJwtToken();
 
 	return useQuery<CitationsResponse>({
@@ -40,4 +40,4 @@ const useLesCitations = () => {
 	});
 };
 
-export default useLesCitations;
+export default useGetLaCitation;

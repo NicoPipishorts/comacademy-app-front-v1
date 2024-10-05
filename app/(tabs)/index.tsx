@@ -1,4 +1,3 @@
-import ALaUne from "@/components/ALaUne";
 import React from "react";
 import {
 	Image,
@@ -23,6 +22,7 @@ import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
+import ALaUneCitation from "@/components/ALaUneCitation";
 import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import useGetUserInfo from "@/hooks/userUserInfo";
@@ -192,8 +192,7 @@ const HomeScreen = () => {
 				</View>
 				<View style={styles.alLaUneContainer}>
 					<View style={styles.alLaUne}>
-						<ALaUne content='Notre 10 000eme Utilisateur' />
-						{/* <ALaUne content='Notre 10 000eme Utilisateur' /> */}
+						<ALaUneCitation />
 					</View>
 				</View>
 			</ScrollView>
