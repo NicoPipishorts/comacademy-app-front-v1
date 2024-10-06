@@ -1,5 +1,5 @@
 import { GameScore } from "@/hooks/useGetScore";
-import { GameData } from "@/types/game";
+import { GameSessionQuestionData } from "@/types/game";
 import React, {
 	createContext,
 	PropsWithChildren,
@@ -11,8 +11,8 @@ import React, {
 interface GameContextType {
 	sessionId: number;
 	setSessionsId: React.Dispatch<React.SetStateAction<number>>;
-	dataGame: GameData[];
-	setDataGame: React.Dispatch<React.SetStateAction<GameData[]>>;
+	dataGame: GameSessionQuestionData[];
+	setDataGame: React.Dispatch<React.SetStateAction<GameSessionQuestionData[]>>;
 	questionsLeft: number;
 	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
 	currentCardId: number;
@@ -30,7 +30,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 // Define the provider using React.FC, which includes children by default
 export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
-	const [dataGame, setDataGame] = useState<GameData[]>(null);
+	const [dataGame, setDataGame] = useState<GameSessionQuestionData[]>(null);
 	const [sessionId, setSessionsId] = useState<number>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
 	const [currentCardId, setCurrentCardId] = useState<number>(null);

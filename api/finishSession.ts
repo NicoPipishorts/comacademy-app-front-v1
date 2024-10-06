@@ -49,10 +49,9 @@ export const FinishGameSession = (
 			}
 		},
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({
-				queryKey: ["GameSession"],
-			});
-			onSuccess(data); // Call the original onSuccess callback
+			queryClient.invalidateQueries({ queryKey: ["GameSession"] });
+			queryClient.invalidateQueries({ queryKey: ["GameQuestions"] });
+			onSuccess(data);
 		},
 		onError: (error) => {
 			if (error.response) {

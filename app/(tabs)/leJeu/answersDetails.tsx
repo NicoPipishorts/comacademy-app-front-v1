@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 export default function AnswersDetails() {
 	const params = useLocalSearchParams();
 	const questionId = Number(params?.questionId);
-	const postGame = params?.postGame === "true" ? true : false; // Explicitly handle the conversion
+	const postGame = params?.postGame === "true" ? true : false;
 
 	return (
 		<QuestionDetails

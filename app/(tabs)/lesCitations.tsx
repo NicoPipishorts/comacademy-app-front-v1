@@ -1,20 +1,16 @@
-import BackgroundImg from "@/assets/imgs/cards/citationsBg.png";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
-import { colorWhite, primaryBackground } from "@/constants/colors";
-import { FontSize16, FontSize22 } from "@/constants/fontsizes";
-import useGetLesCitations from "@/hooks/useGetLesCitations";
+import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { FontSize14, FontSize16, FontSize22 } from "@/constants/fontsizes";
+import useLesCitations from "@/hooks/useGetLesCitations";
+import useJwtToken from "@/hooks/useJwtToken";
+import moment from "moment";
 import React from "react";
-import {
-	ImageBackground,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const LesCitations = () => {
-	const { data, isLoading } = useGetLesCitations();
+	const { token } = useJwtToken();
+	const { data, isLoading } = useLesCitations(token);
 
 	if (isLoading) {
 		return <Loader />;
@@ -40,11 +36,19 @@ const LesCitations = () => {
 				<View style={styles.citationsContainer}>
 					{data.data.map((citation) => {
 						return (
-							<View key={citation.id} style={styles.cardContainer}>
-								<ImageBackground
-									source={BackgroundImg}
-									style={styles.cardBackgroundImage}
-									resizeMode='contain'>
+							<View key={citation.id} style={styles.cardWrapper}>
+								<View
+									style={{
+										paddingRight: 50,
+										paddingBottom: 5,
+										alignItems: "flex-end",
+									}}>
+									<Text style={{ fontSize: FontSize14, fontWeight: "bold" }}>
+										{" "}
+										{moment(citation.attributes.updatedAt).format("DD/MM/YYYY")}
+									</Text>
+								</View>
+								<View style={styles.cardContainer}>
 									<View style={styles.cardContent}>
 										<Text style={styles.cardTextCitation}>
 											{citation.attributes.CITATION}
@@ -55,7 +59,7 @@ const LesCitations = () => {
 											{citation.attributes.AUTEUR}
 										</Text>
 									</View>
-								</ImageBackground>
+								</View>
 							</View>
 						);
 					})}
@@ -87,26 +91,27 @@ const styles = StyleSheet.create({
 		minWidth: "100%",
 		marginBottom: 40,
 	},
+	cardWrapper: {
+		maxHeight: 350,
+	},
 	cardContainer: {
-		width: 350,
-		height: 330,
-		shadowColor: "#000",
+		flex: 1,
+		justifyContent: "center",
+		maxWidth: 350,
+		minHeight: 250,
+		shadowOpacity: 0.35,
+		shadowRadius: 15,
+		elevation: 5,
+		backgroundColor: colorBlack,
+		marginHorizontal: 20,
+		borderRadius: 20,
+		shadowColor: colorBlack,
 		shadowOffset: {
 			width: 0,
 			height: 2,
 		},
-		shadowOpacity: 0.35,
-		shadowRadius: 15,
-		elevation: 5,
-	},
-	cardBackgroundImage: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-		padding: 10,
 	},
 	cardContent: {
-		position: "relative",
 		padding: 20,
 		borderRadius: 10,
 	},
@@ -116,9 +121,10 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 	containerTextAuteur: {
-		position: "absolute",
-		bottom: 80,
-		left: 40,
+		width: "100%",
+		justifyContent: "flex-start",
+		paddingHorizontal: 20,
+		paddingBottom: 15,
 	},
 	cardTextAuteur: {
 		color: colorWhite,

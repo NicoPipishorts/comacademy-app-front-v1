@@ -19,6 +19,8 @@ export default function ALaUneCitation() {
 
 	const citation = data.data[0].attributes;
 
+	console.log("in the index citation card : ", data.data);
+
 	const handlePress = () => {
 		navigation.navigate("lesCitations");
 	};

@@ -51,6 +51,7 @@ export default function CardFavoriteQuestion({
 						onPress={() => {
 							navigation.navigate("favoriteQuestionDetails", {
 								questionId: data.id,
+								postGame: true,
 							});
 						}}>
 						<Text style={{ color: colorWhite }}>Voir</Text>

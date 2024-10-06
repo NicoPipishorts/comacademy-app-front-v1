@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
 	Image,
 	ScrollView,
@@ -25,6 +25,7 @@ import metiers from "@/assets/imgs/cards/home_metiers.png";
 import ALaUneCitation from "@/components/ALaUneCitation";
 import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
+import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
@@ -36,6 +37,10 @@ const HomeScreen = () => {
 	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
+
+	useEffect(() => {
+		queryClient.invalidateQueries({ queryKey: ["Citations"] });
+	}, []);
 
 	if (!userData) {
 		return <Loader />;
@@ -203,14 +208,13 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingBottom: 20,
 		backgroundColor: primaryBackground,
 	},
 	screenHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 30,
+		marginBottom: 10,
 		paddingHorizontal: 20,
 	},
 	header: {
@@ -231,6 +235,7 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		flex: 1,
+		paddingTop: 30,
 		marginBottom: 80,
 	},
 	headerShortcuts: {

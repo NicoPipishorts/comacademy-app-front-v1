@@ -66,6 +66,10 @@ const LeJeu = () => {
 	);
 
 	useEffect(() => {
+		if (!gameSessions?.data[0]?.id) setSessionsId(null);
+	}, [gameSessions?.data, setSessionsId]);
+
+	useEffect(() => {
 		if (fetchedGameSessions) {
 			if (gameSessions.data[0]?.attributes) {
 				setSessionsId(gameSessions.data[0]?.id);

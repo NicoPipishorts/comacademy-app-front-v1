@@ -1,4 +1,3 @@
-import useJwtToken from "@/hooks/useJwtToken";
 import { CitationsResponse } from "@/types/lesCitations";
 import { useQuery } from "@tanstack/react-query";
 
@@ -29,9 +28,7 @@ const fetchCitations = async (token: string): Promise<CitationsResponse> => {
 	}
 };
 
-const useLesCitations = () => {
-	const { token } = useJwtToken();
-
+const useLesCitations = (token: string) => {
 	return useQuery<CitationsResponse>({
 		queryKey: ["Citations"],
 		queryFn: () => fetchCitations(token),
