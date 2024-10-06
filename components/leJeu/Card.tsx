@@ -6,12 +6,12 @@ import { Image, StyleSheet, Text, View } from "react-native";
 // Assets
 import { default as useDeviceTypeCheckers } from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
-import { GameData } from "@/types/game";
+import { GameSessionQuestionData } from "@/types/game";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
 
 interface CardProps {
-	data: GameData;
+	data: GameSessionQuestionData;
 	catColors: CategorieColors;
 }
 
@@ -21,10 +21,12 @@ const Card = ({ data, catColors }: CardProps) => {
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
+
 	const selectedCategory: number = data?.attributes.CATEGORIE;
+
 	const backGroundColor = () => {
 		const colorItem = catColors.data.find(
-			(color) => color.id === selectedCategory[0]
+			(color) => color.id === selectedCategory
 		);
 		return `#${colorItem?.attributes.backgroundColor}`;
 	};
@@ -43,10 +45,7 @@ const Card = ({ data, catColors }: CardProps) => {
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL}${
-									catColors.data[selectedCategory[0] - 1].attributes.smallIcon
-										.data.attributes.url
-								}`,
+								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[selectedCategory]?.attributes.smallIcon.data.attributes.url}`,
 							}}
 							style={styles.catIcon}
 						/>

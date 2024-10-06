@@ -39,7 +39,7 @@ export interface GameSessionAttributes {
 	createdAt: string;
 	updatedAt: string;
 	publishedAt: string;
-	CATEGORIE: string;
+	CATEGORIE: number;
 	TAG: string | null;
 	ANSWER: boolean;
 	REPONSE: string;

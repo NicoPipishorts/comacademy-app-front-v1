@@ -83,7 +83,6 @@ export default function UserAccount() {
 	);
 
 	const handleChangePassword = () => {
-		console.log("clicking change password");
 		if (newPassword === passwordConfirm) {
 			if (newPassword !== currentPassword) {
 				changePassword.mutate({
@@ -165,29 +164,7 @@ export default function UserAccount() {
 				<View style={{ paddingTop: 40, paddingBottom: 20 }}>
 					<Text style={{ fontSize: FontSize16 }}>Change ton mot de passe.</Text>
 				</View>
-				{/* {passwordChanged && (
-					<View
-						style={{
-							alignItems: "center",
-							borderColor: colorGreen,
-							borderWidth: 2,
-							padding: 20,
-							borderRadius: 15,
-						}}>
-						<Text
-							style={{
-								color: colorGreen,
-								fontSize: FontSizeH3,
-								fontWeight: "bold",
-								textTransform: "uppercase",
-							}}>
-							mot passe changé
-						</Text>
-					</View>
-				)} */}
 
-				{/* {!passwordChanged && (
-					<> */}
 				<View style={styles.passwordInputContainer}>
 					<TextInput
 						secureTextEntry={!showCurrentPassword} // Bind to showCurrentPassword state
@@ -295,6 +272,3 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 	},
 });
-function showSnackbar(arg0: string) {
-	throw new Error("Function not implemented.");
-}

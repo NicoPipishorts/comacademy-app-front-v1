@@ -34,6 +34,7 @@ const useGameSessions = (userId: number) => {
 		queryKey: ["GameSession", { userId }],
 		queryFn: () => fetchCurrentSessions(token!, userId),
 		enabled: !loading && !!token && !!userId,
+		staleTime: 1000,
 	});
 };
 

@@ -41,17 +41,19 @@ export default function AnswersCard({ id, data, postGame, userAnswer }: Props) {
 			<Text>{data.QUESTION}</Text>
 			<View style={styles.containerIcons}>
 				{data.CATEGORIE !== undefined && data.CATEGORIE !== null
-					? data.CATEGORIE.split(",").map((cat, index) => {
-							const categoryNumber = parseInt(cat, 10);
-							return (
-								<View key={index} style={{ marginRight: 8 }}>
-									<SmallCategroieIconsNoImage
-										key={categoryNumber}
-										cats={categoryNumber}
-									/>
-								</View>
-							);
-					  })
+					? String(data.CATEGORIE)
+							.split(",")
+							.map((cat, index) => {
+								const categoryNumber = parseInt(cat, 10);
+								return (
+									<View key={index} style={{ marginRight: 8 }}>
+										<SmallCategroieIconsNoImage
+											key={categoryNumber}
+											cats={categoryNumber}
+										/>
+									</View>
+								);
+							})
 					: ""}
 			</View>
 		</TouchableOpacity>
