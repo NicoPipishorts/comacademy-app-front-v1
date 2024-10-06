@@ -1,5 +1,3 @@
-// src/hooks/useGameQuestions.ts
-
 import useJwtToken from "@/hooks/useJwtToken";
 import { GameDataPayload } from "@/types/game";
 import { useQuery } from "@tanstack/react-query";
@@ -7,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchGameQuestions = async (token: string, userId: number) => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/questions?random=true&populate=*&pagination[limit]=30&filters[$or][0][game_session_questions][answer][$ne]=true&filters[$or][2][game_session_questions][userId][$nq]=${userId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/random-questions?userId=${userId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -25,44 +23,22 @@ const fetchGameQuestions = async (token: string, userId: number) => {
 
 		const data = await response.json();
 
+		// Since CATEGORIE is now already a number, no need to split or randomize it.
 		const transformedData = {
 			...data,
-			data: Object.keys(data.data).reduce((acc, key) => {
-				const item = data.data[key];
-
-				// Split and parse the CATEGORIE string into an array of numbers
-				let categories = item.attributes.CATEGORIE.split(",").map(
-					(cat: string) => {
-						const parsed = parseInt(cat.trim(), 10);
-						return !isNaN(parsed) ? parsed : 1; // Defaults to 1 if parsing fails
-					}
-				);
-
-				// If there is more than one category, pick one at random
-				if (categories.length > 1) {
-					const randomIndex = Math.floor(Math.random() * categories.length);
-					categories = categories[randomIndex]; // Now this is a single number
-				} else {
-					// If it's just a single category, keep it as a number
-					categories = categories[0] || 1; // Handle edge cases where the array might be empty
-				}
-
-				// Assign the (possibly reduced) categories number back to the transformed data
-				acc[key] = {
-					...item,
-					attributes: {
-						...item.attributes,
-						CATEGORIE: categories, // Now CATEGORIE is a single number
-					},
-				};
-
-				return acc;
-			}, {}),
+			data: data.data.map((item: any) => ({
+				...item,
+				attributes: {
+					...item.attributes,
+					// CATEGORIE is already a number, no need to modify it
+					CATEGORIE: item.attributes.CATEGORIE || 1, // Fallback to 1 if CATEGORIE is missing
+				},
+			})),
 		};
 
 		return transformedData;
 	} catch (error) {
-		console.error("Error fetching game questions: status:", error);
+		console.error("Error fetching game questions:", error);
 		throw error;
 	}
 };
@@ -71,7 +47,7 @@ const useGameQuestions = (userId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<GameDataPayload>({
-		queryKey: ["GameQuestions"],
+		queryKey: ["GameQuestions", userId],
 		queryFn: () => fetchGameQuestions(token, userId),
 		enabled: !!token && !!userId,
 	});
