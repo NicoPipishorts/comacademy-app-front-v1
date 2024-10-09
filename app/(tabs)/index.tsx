@@ -23,6 +23,7 @@ import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
 import ALaUneCitation from "@/components/ALaUneCitation";
+import ALaUneDico from "@/components/ALaUneDico";
 import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -84,6 +85,17 @@ const HomeScreen = () => {
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
+							onPress={() => navigation.navigate("user")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={mesStats}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.cardsButton}
 							onPress={() => navigation.navigate("dico")}>
 							<View style={styles.imageContainer}>
 								<Image
@@ -95,10 +107,10 @@ const HomeScreen = () => {
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
-							onPress={() => navigation.navigate("user")}>
+							onPress={() => navigation.navigate("playlist")}>
 							<View style={styles.imageContainer}>
 								<Image
-									source={mesStats}
+									source={dico}
 									style={styles.shortcutsCards}
 									resizeMode='contain'
 								/>
@@ -126,17 +138,6 @@ const HomeScreen = () => {
 					horizontal={true}
 					showsHorizontalScrollIndicator={false}>
 					<View style={styles.shortcuts}>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("lesCitations")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={lesCitations}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
 							onPress={() => navigation.navigate("secrets")}>
@@ -171,6 +172,17 @@ const HomeScreen = () => {
 								/>
 							</View>
 						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.cardsButton}
+							onPress={() => navigation.navigate("lesCitations")}>
+							<View style={styles.imageContainer}>
+								<Image
+									source={lesCitations}
+									style={styles.shortcutsCards}
+									resizeMode='contain'
+								/>
+							</View>
+						</TouchableOpacity>
 						<TouchableOpacity style={styles.cardsButton}>
 							<View style={styles.imageContainer}>
 								<Image
@@ -198,6 +210,7 @@ const HomeScreen = () => {
 				<View style={styles.alLaUneContainer}>
 					<View style={styles.alLaUne}>
 						<ALaUneCitation />
+						<ALaUneDico />
 					</View>
 				</View>
 			</ScrollView>
@@ -209,6 +222,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: primaryBackground,
+		paddingBottom: 20,
 	},
 	screenHeader: {
 		flexDirection: "row",

@@ -13,3 +13,4 @@ export const colorPurple = "#CC398C";
 export const colorDarkGrey = "#9F9F9F";
 export const primaryBackground = "#f5f5f5";
 export const searchbarBackground = "#E8E8E8";
+export const colorRed = "#bd3c3c";
