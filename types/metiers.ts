@@ -1,5 +1,6 @@
 export interface MetierAttributes {
 	METIER: string;
+	TITRE: string;
 	ROLE_MISSIONS: string;
 	COMPETENCES: string;
 	METIERS_SIMILAIRES: string;

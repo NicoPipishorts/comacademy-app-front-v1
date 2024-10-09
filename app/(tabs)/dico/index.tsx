@@ -4,7 +4,9 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
+import { NavigationType } from "@/types/general";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGlobalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import CategoriesCards from "../../../components/categories/categories";
@@ -12,11 +14,21 @@ import DicoList from "./list";
 
 const Dico = () => {
 	const queryClient = useQueryClient();
+	const navigation = useNavigation<NavigationType>();
+	const router = useRouter();
+	const { id, openDetails } = useGlobalSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
 	const { data: dataDico, isLoading: isLoadingData } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
+
+	useEffect(() => {
+		if (openDetails) {
+			router.setParams({ openDetails: null });
+			navigation.navigate("dicoDetails", { id: id });
+		}
+	}, [openDetails, id, navigation, router]);
 
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
