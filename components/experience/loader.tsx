@@ -8,10 +8,12 @@ export default function Loader() {
 		</View>
 	);
 }
+
 const styles = StyleSheet.create({
 	loadingContainer: {
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
+		backgroundColor: "rgba(250, 250, 250, 0.75)", // 75% opacity for black background
 	},
 });

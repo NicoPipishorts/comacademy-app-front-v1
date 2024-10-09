@@ -52,7 +52,7 @@ const useGetAllUsers = () => {
 	const { token } = useJwtToken();
 
 	return useQuery<Users, Error, TransformedUsers>({
-		queryKey: ["UserInfo"],
+		queryKey: ["AllUserInfo"],
 		queryFn: () => fetchUserInfo(token!),
 		enabled: !!token,
 		select: (data) => transformUsersArray(data), // Transform the data here

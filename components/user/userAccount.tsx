@@ -1,6 +1,11 @@
 import { usePasswordChange } from "@/api/passwordChange";
-import { colorBlack, colorDarkGrey, colorWhite } from "@/constants/colors";
-import { FontSize16 } from "@/constants/fontsizes";
+import {
+	colorBlack,
+	colorDarkGrey,
+	colorRed,
+	colorWhite,
+} from "@/constants/colors";
+import { FontSize14, FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import useChangeUserInfo from "@/hooks/useChangeUserInfo";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -17,21 +22,23 @@ import {
 	View,
 } from "react-native";
 import Loader from "../experience/loader";
-import ScreenHeaders from "../ScreenHeaders";
 
 export default function UserAccount() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
-	const [formFirstName, setFormFirstName] = useState("");
-	const [formLastName, setFormLastName] = useState("");
-	const [currentPassword, setCurrentPassword] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [passwordConfirm, setPasswordConfirm] = useState("");
-	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-	const [showNewPassword, setShowNewPassword] = useState(false);
-	const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-	const [passwordChanged, setPasswordChanged] = useState(false);
+	const [formFirstName, setFormFirstName] = useState<string>("");
+	const [formLastName, setFormLastName] = useState<string>("");
+	const [currentPassword, setCurrentPassword] = useState<string>("");
+	const [newPassword, setNewPassword] = useState<string>("");
+	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
+	const [showCurrentPassword, setShowCurrentPassword] =
+		useState<boolean>(false);
+	const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+	const [showPasswordConfirm, setShowPasswordConfirm] =
+		useState<boolean>(false);
+	const [passwordChanged, setPasswordChanged] = useState<boolean>(false);
+	const [passwordErrors, setPasswordError] = useState<string>(null);
 
 	const showSnackbar = useSnackbar(); // Use the snackbar context
 
@@ -58,6 +65,7 @@ export default function UserAccount() {
 		setNewPassword(null);
 		setPasswordConfirm(null);
 		setPasswordChanged(true);
+		setPasswordError(null);
 		showSnackbar("Mot de passe changé", "success");
 	};
 
@@ -83,19 +91,48 @@ export default function UserAccount() {
 	);
 
 	const handleChangePassword = () => {
+		const passwordValidation = (password) => {
+			const minLength = /.{8,}/;
+			const hasNumbersAndLetters = /^(?=.*[a-zA-Z])(?=.*[0-9])/;
+			const hasSpecialChar = /[!@#$%^&*(),._?":{}|<>]/;
+
+			if (!minLength.test(password)) {
+				setPasswordError(
+					"Le mot de passe doit comporter au moins 8 caractères"
+				);
+				return false;
+			}
+			if (!hasNumbersAndLetters.test(password)) {
+				setPasswordError(
+					"Le mot de passe doit contenir à la fois des lettres et des chiffres"
+				);
+				console.log("");
+				return false;
+			}
+			if (!hasSpecialChar.test(password)) {
+				setPasswordError(
+					"Le mot de passe doit contenir au moins un caractère spécial"
+				);
+				return false;
+			}
+			return true;
+		};
+
 		if (newPassword === passwordConfirm) {
 			if (newPassword !== currentPassword) {
-				changePassword.mutate({
-					currentPassword: currentPassword,
-					password: newPassword,
-					passwordConfirmation: passwordConfirm,
-					token,
-				});
+				if (passwordValidation(newPassword)) {
+					changePassword.mutate({
+						currentPassword: currentPassword,
+						password: newPassword,
+						passwordConfirmation: passwordConfirm,
+						token,
+					});
+				}
 			} else {
-				console.log("the new password is the same as the old");
+				setPasswordError("Le nouveau mot de passe est le même que l'ancien");
 			}
 		} else {
-			console.log("the two passwords don't match");
+			setPasswordError("Les deux mots de passe ne correspondent pas");
 		}
 	};
 
@@ -114,13 +151,9 @@ export default function UserAccount() {
 	}
 	return (
 		<>
-			<ScreenHeaders content='Mon Compte' type='h2' />
-
-			<View style={styles.passwordContainer}>
+			<View style={styles.formsContainers}>
 				<View style={{ paddingBottom: 20 }}>
-					<Text style={{ fontSize: FontSize16 }}>
-						Modifie tes informations.
-					</Text>
+					<Text style={styles.infoSmallTitles}>Tes informations.</Text>
 				</View>
 
 				<View>
@@ -160,10 +193,33 @@ export default function UserAccount() {
 				</TouchableOpacity>
 			</View>
 
-			<View style={styles.passwordContainer}>
-				<View style={{ paddingTop: 40, paddingBottom: 20 }}>
-					<Text style={{ fontSize: FontSize16 }}>Change ton mot de passe.</Text>
+			<View style={styles.formsContainers}>
+				<View style={{ paddingBottom: 20 }}>
+					<Text style={styles.infoSmallTitles}>Mot de Passe</Text>
 				</View>
+
+				{passwordErrors && (
+					<View
+						style={{
+							paddingHorizontal: 10,
+							paddingVertical: 5,
+							borderColor: colorRed,
+							borderStyle: "dashed",
+							borderWidth: 1,
+							borderRadius: 10,
+							marginVertical: 25,
+							minWidth: "100%",
+						}}>
+						<Text
+							style={{
+								color: colorRed,
+								fontSize: FontSize14,
+								fontWeight: "bold",
+							}}>
+							{passwordErrors}
+						</Text>
+					</View>
+				)}
 
 				<View style={styles.passwordInputContainer}>
 					<TextInput
@@ -239,10 +295,11 @@ export default function UserAccount() {
 }
 
 const styles = StyleSheet.create({
-	passwordContainer: {
+	formsContainers: {
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "flex-start",
+		marginTop: 35,
 	},
 	passwordInputContainer: {
 		flexDirection: "row",
@@ -270,5 +327,9 @@ const styles = StyleSheet.create({
 	},
 	eyeIcon: {
 		marginLeft: 10,
+	},
+	infoSmallTitles: {
+		fontSize: FontSize18,
+		fontWeight: "bold",
 	},
 });

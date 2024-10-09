@@ -25,10 +25,17 @@ const Card = ({ data, catColors }: CardProps) => {
 	const selectedCategory: number = data?.attributes.CATEGORIE;
 
 	const backGroundColor = () => {
-		const colorItem = catColors.data.find(
-			(color) => color.id === selectedCategory
-		);
-		return `#${colorItem?.attributes.backgroundColor}`;
+		const item = catColors.data.find((color) => {
+			return color.id === selectedCategory;
+		});
+		return `#${item.attributes.backgroundColor}`;
+	};
+
+	const smallIcon = () => {
+		const item = catColors.data.find((color) => {
+			return color.id === selectedCategory;
+		});
+		return item.attributes.smallIcon.data.attributes.url;
 	};
 
 	return (
@@ -45,7 +52,7 @@ const Card = ({ data, catColors }: CardProps) => {
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL}${catColors.data[selectedCategory]?.attributes.smallIcon.data.attributes.url}`,
+								uri: `${process.env.EXPO_PUBLIC_URL}${smallIcon()}`,
 							}}
 							style={styles.catIcon}
 						/>

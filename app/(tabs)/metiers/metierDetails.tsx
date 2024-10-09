@@ -155,6 +155,12 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 					</View>
 				</View>
 
+				<View>
+					<Text style={styles.containerText}>{data.data.attributes.TITRE}</Text>
+				</View>
+
+				<HR />
+
 				<View style={styles.containerTitles}>
 					<Text style={styles.textTitles}>Métiers Similaires</Text>
 				</View>

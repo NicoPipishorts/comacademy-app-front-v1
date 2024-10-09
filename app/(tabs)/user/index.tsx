@@ -78,10 +78,6 @@ export default function User() {
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
 
-	if (!answers) {
-		return <Loader />;
-	}
-
 	return (
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -97,9 +93,12 @@ export default function User() {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
-					<UserStats categoriesScore={answers} />
-
-					{/* <UserResultsByCat /> */}
+					{!answers && (
+						<View style={[styles.filterWrapper]}>
+							<Loader />
+						</View>
+					)}
+					{answers && <UserStats categoriesScore={answers} />}
 
 					<ChangeAvatar />
 
@@ -128,6 +127,17 @@ export default function User() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
+	},
+	filterWrapper: {
+		width: "100%",
+		borderRadius: 20,
+		backgroundColor: colorWhite,
+		paddingBottom: 20,
+		marginBottom: 30,
+		shadowColor: colorBlack,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 20,
+		minHeight: "60%",
 	},
 	innerWrapper: {
 		flex: 1,

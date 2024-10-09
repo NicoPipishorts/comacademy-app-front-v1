@@ -1,6 +1,6 @@
 import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
-import useGetLaCitation from "@/hooks/useGetLaCitation";
+import useGetOneDico from "@/hooks/useGetOneDico";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import moment from "moment";
@@ -9,24 +9,25 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Loader from "./experience/loader";
 import StyledButton from "./StyledButton";
 
-export default function ALaUneCitation() {
+export default function ALaUneDico() {
 	const navigation = useNavigation<NavigationType>();
-	const { data, isFetched } = useGetLaCitation();
+	const { data, isFetched } = useGetOneDico();
 
 	if (!isFetched) {
 		return null;
 	}
 
-	const citation = data.data[0].attributes;
-
+	const dico = data.data[0].attributes;
+	const openDetails = true;
+	const id = data.data[0].id;
 	const handlePress = () => {
-		navigation.navigate("lesCitations");
+		navigation.navigate("dico", { openDetails, id });
 	};
 
 	return (
 		<TouchableOpacity style={styles.container}>
 			<Text style={styles.smallText}>
-				La dernière citation : {moment(citation.updatedAt).format("DD/MM/YYYY")}
+				La dernière dico : {moment(dico.updatedAt).format("DD/MM/YYYY")}
 			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}
@@ -36,7 +37,7 @@ export default function ALaUneCitation() {
 							style={styles.mainText}
 							numberOfLines={2}
 							ellipsizeMode='tail'>
-							{citation.CITATION}
+							{dico.Word}
 						</Text>
 						<StyledButton
 							title='Découvrir'
