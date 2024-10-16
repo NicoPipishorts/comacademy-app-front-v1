@@ -9,7 +9,7 @@ import { FontSize16 } from "@/constants/fontsizes";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	Keyboard,
 	KeyboardAvoidingView,
@@ -23,7 +23,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Define the type for the accumulator object
 interface CategoryResult {
 	total: number;
 	trueCount: number;
@@ -40,6 +39,9 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
 	const { data: scores, refetch } = useGetUserScore(token, userId);
+
+	// useRef to store the last fetch time
+	const lastFetchTimeRef = useRef<number>(Date.now());
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
@@ -64,6 +66,7 @@ export default function User() {
 	const onRefresh = () => {
 		setRefreshing(true);
 		refetch().finally(() => {
+			lastFetchTimeRef.current = Date.now(); // Update the last fetch time
 			setTimeout(() => {
 				setRefreshing(false);
 			}, 2000);
@@ -73,8 +76,22 @@ export default function User() {
 	useEffect(() => {
 		if (token && !tokenLoading) {
 			refetch();
+			lastFetchTimeRef.current = Date.now(); // Update the last fetch time after successful refetch
 		}
 	}, [refetch, token, tokenLoading]);
+
+	// Refetch if more than 30 seconds have passed
+	useEffect(() => {
+		const intervalId = setInterval(() => {
+			const currentTime = Date.now();
+			if (currentTime - lastFetchTimeRef.current > 30000) {
+				refetch();
+				lastFetchTimeRef.current = currentTime; // Update last fetch time
+			}
+		}, 1000); // Check every second
+
+		return () => clearInterval(intervalId); // Clean up on unmount
+	}, [refetch]);
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
 
