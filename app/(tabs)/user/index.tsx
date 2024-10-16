@@ -6,7 +6,7 @@ import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import { useGetAllScores } from "@/hooks/useGetAllAnswers";
+import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import React, { useEffect, useState } from "react";
@@ -32,14 +32,14 @@ interface CategoryResult {
 export type ResultAccumulator = Record<number, CategoryResult>;
 
 export default function User() {
-	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
-	const { token, loading: tokenLoading } = useJwtToken();
-	const [refreshing, setRefreshing] = useState(false);
-	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { logout } = useAuth();
+	const { userId } = useUserId();
+	const insets = useSafeAreaInsets();
+	const [refreshing, setRefreshing] = useState(false);
+	const { token, loading: tokenLoading } = useJwtToken();
+	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-	const { data: answers, refetch } = useGetAllScores(userId, token);
+	const { data: scores, refetch } = useGetUserScore(token, userId);
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
@@ -78,6 +78,10 @@ export default function User() {
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
 
+	if (!scores) {
+		return <Loader />;
+	}
+
 	return (
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -93,12 +97,7 @@ export default function User() {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
-					{!answers && (
-						<View style={[styles.filterWrapper]}>
-							<Loader />
-						</View>
-					)}
-					{answers && <UserStats categoriesScore={answers} />}
+					{scores && <UserStats categoriesScore={scores} />}
 
 					<ChangeAvatar />
 
