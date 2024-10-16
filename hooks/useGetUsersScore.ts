@@ -1,103 +1,110 @@
-import useJwtToken from "@/hooks/useJwtToken";
 import { useQuery } from "@tanstack/react-query";
 
-// TypeScript Definitions
-export interface GameQuestionPayload {
-	data: {
-		id: number;
-		attributes: {
-			answer: boolean;
-			userId: string;
-			questionId: {
-				data: {
-					id: number;
-					attributes: {
-						COEF: number;
-						ANSWER: boolean;
-					};
-				};
-			};
-		};
-	}[];
+// TypeScript definitions
+
+export interface ScoreByCategory {
+	totalScore: number;
+	percentageCorrect: number;
 }
 
-export interface TransformedUserScore {
+export interface UserAttributes {
 	userId: string;
-	totalCOEF: number;
-	count: number;
+	firstName: string;
+	lastName: string;
 }
 
-export type TransformedUserScores = TransformedUserScore[];
+export interface UserScoreAttributes {
+	user: UserAttributes;
+	totalScore: number;
+	totalAnsweredQuestions: number;
+	totalPercentageCorrect: number;
+	scoreByCategories: {
+		[category: number]: ScoreByCategory; // Categories are likely numbers 1-6, so using 'number' as key
+	};
+}
 
-// Fetch function
-const fetchPayload = async (token: string): Promise<GameQuestionPayload> => {
-	const response = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/game-questions?fields[0]=answer&fields[1]=userId&populate[questionId][fields][0]=COEF&populate[questionId][fields][1]=ANSWER`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
-	);
+export interface UserScoreData {
+	id: string;
+	attributes: UserScoreAttributes;
+}
+
+export interface SingleUserScoreResponse {
+	data: UserScoreData;
+}
+
+export interface AllUsersScoreResponse {
+	data: UserScoreData[];
+}
+
+// Fetch function for all users' scores
+async function fetchAllUsersScores(
+	token: string
+): Promise<AllUsersScoreResponse> {
+	const url = `${process.env.EXPO_PUBLIC_API_URL}/total-scores`;
+
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
 
 	if (!response.ok) {
 		console.error(
-			`HTTP error! status: ${response.status}`,
+			`Error fetching all the Users Scores, status: ${response.status}`,
 			await response.text()
 		);
-		throw new Error(`HTTP error! status: ${response.status}`);
+		throw new Error(
+			`Error fetching all the Users Scores, status: ${response.status}`
+		);
 	}
 
-	const data = await response.json();
-	return data; // Return the untransformed payload
-};
+	const data: AllUsersScoreResponse = await response.json();
+	return data;
+}
 
-// Transform function
-const transformResponse = (
-	response: GameQuestionPayload
-): TransformedUserScores => {
-	const result: Record<
-		string,
-		{ userId: string; totalCOEF: number; count: number }
-	> = {};
+// Fetch function for a single user's score
+async function fetchSingleUserScore(
+	token: string,
+	userId: number
+): Promise<SingleUserScoreResponse> {
+	const url = `${process.env.EXPO_PUBLIC_API_URL}/total-scores/${userId}`;
 
-	response.data.forEach((item) => {
-		const { userId, answer } = item.attributes;
-		const questionAttributes = item.attributes.questionId?.data?.attributes;
-		const COEF = questionAttributes?.COEF ?? 0;
-		const correctAnswer = questionAttributes?.ANSWER;
-
-		// Initialize the object for the user if it doesn't exist yet
-		if (!result[userId]) {
-			result[userId] = {
-				userId,
-				totalCOEF: 0,
-				count: 0,
-			};
-		}
-
-		// Add COEF only if the answer matches the correct answer
-		if (answer === correctAnswer) {
-			// Increment the count and sum the COEF values
-			result[userId].count++;
-			result[userId].totalCOEF += COEF;
-		}
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
 	});
 
-	// Convert the object to an array and sort it by count in descending order
-	return Object.values(result).sort((a, b) => b.count - a.count);
-};
+	if (!response.ok) {
+		console.error(
+			`Error fetching the User Score for userId ${userId}, status: ${response.status}`,
+			await response.text()
+		);
+		throw new Error(
+			`Error fetching the User Score for userId ${userId}, status: ${response.status}`
+		);
+	}
 
-// Hook with query
-const useGetUsersScore = () => {
-	const { token } = useJwtToken();
+	const data: SingleUserScoreResponse = await response.json();
+	return data;
+}
 
-	return useQuery<GameQuestionPayload, Error, TransformedUserScores>({
-		queryKey: ["UsersScore"],
-		queryFn: () => fetchPayload(token!), // fetches GameQuestionPayload
+// Hook to get all users' scores
+export const useGetUsersScore = (token: string) => {
+	return useQuery<AllUsersScoreResponse, Error>({
+		queryKey: ["Scores"],
+		queryFn: () => fetchAllUsersScores(token),
 		enabled: !!token,
-		select: (data) => transformResponse(data), // Transforms to TransformedUserScores
+		staleTime: 1000,
 	});
 };
 
-export default useGetUsersScore;
+// Hook to get a specific user's score
+export const useGetUserScore = (token: string, userId: number) => {
+	return useQuery<SingleUserScoreResponse, Error>({
+		queryKey: ["Scores", userId],
+		queryFn: () => fetchSingleUserScore(token, userId),
+		enabled: !!token && !!userId,
+		staleTime: 1000,
+	});
+};

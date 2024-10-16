@@ -6,10 +6,10 @@ import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import { useGetAllScores } from "@/hooks/useGetAllAnswers";
+import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	Keyboard,
 	KeyboardAvoidingView,
@@ -23,7 +23,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Define the type for the accumulator object
 interface CategoryResult {
 	total: number;
 	trueCount: number;
@@ -32,14 +31,17 @@ interface CategoryResult {
 export type ResultAccumulator = Record<number, CategoryResult>;
 
 export default function User() {
-	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
-	const { token, loading: tokenLoading } = useJwtToken();
-	const [refreshing, setRefreshing] = useState(false);
-	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const { logout } = useAuth();
+	const { userId } = useUserId();
+	const insets = useSafeAreaInsets();
+	const [refreshing, setRefreshing] = useState(false);
+	const { token, loading: tokenLoading } = useJwtToken();
+	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-	const { data: answers, refetch } = useGetAllScores(userId, token);
+	const { data: scores, refetch } = useGetUserScore(token, userId);
+
+	// useRef to store the last fetch time
+	const lastFetchTimeRef = useRef<number>(Date.now());
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
@@ -64,6 +66,7 @@ export default function User() {
 	const onRefresh = () => {
 		setRefreshing(true);
 		refetch().finally(() => {
+			lastFetchTimeRef.current = Date.now(); // Update the last fetch time
 			setTimeout(() => {
 				setRefreshing(false);
 			}, 2000);
@@ -73,10 +76,28 @@ export default function User() {
 	useEffect(() => {
 		if (token && !tokenLoading) {
 			refetch();
+			lastFetchTimeRef.current = Date.now(); // Update the last fetch time after successful refetch
 		}
 	}, [refetch, token, tokenLoading]);
 
+	// Refetch if more than 30 seconds have passed
+	useEffect(() => {
+		const intervalId = setInterval(() => {
+			const currentTime = Date.now();
+			if (currentTime - lastFetchTimeRef.current > 30000) {
+				refetch();
+				lastFetchTimeRef.current = currentTime; // Update last fetch time
+			}
+		}, 1000); // Check every second
+
+		return () => clearInterval(intervalId); // Clean up on unmount
+	}, [refetch]);
+
 	const dynamicPadding = keyboardVisible ? 30 : 100;
+
+	if (!scores) {
+		return <Loader />;
+	}
 
 	return (
 		<KeyboardAvoidingView
@@ -93,12 +114,7 @@ export default function User() {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
-					{!answers && (
-						<View style={[styles.filterWrapper]}>
-							<Loader />
-						</View>
-					)}
-					{answers && <UserStats categoriesScore={answers} />}
+					{scores && <UserStats categoriesScore={scores} />}
 
 					<ChangeAvatar />
 

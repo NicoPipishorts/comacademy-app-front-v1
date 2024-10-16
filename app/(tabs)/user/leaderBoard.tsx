@@ -3,48 +3,24 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import useGetAllUsers from "@/hooks/useGetAllUsers";
-import useGetUsersScore from "@/hooks/useGetUsersScore";
+import { useGetUsersScore } from "@/hooks/useGetUsersScore";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LeaderBoard() {
+	const { token } = useJwtToken();
 	const { userId: currentUser } = useUserId();
 	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
 
-	const { data: allScores } = useGetUsersScore();
-	const { data: allUsers } = useGetAllUsers();
+	const { data: allScores } = useGetUsersScore(token);
 
-	if (!allScores || !allUsers) {
+	if (!allScores) {
 		return <Loader />;
 	}
-
-	// Step 1: Extract users from allScores with count > 0, preserving the order
-	const usersWithScores = allScores
-		.filter((score) => score.count > 0)
-		.map((score) => ({
-			userId: score.userId,
-			...allUsers[score.userId],
-			count: score.count,
-			points: score.totalCOEF,
-		}));
-
-	// Step 2: Get remaining users not included in allScores and sort them by userId
-	const remainingUsers = Object.entries(allUsers)
-		.filter(([userId]) => !allScores.some((score) => score.userId === userId))
-		.sort(([userIdA], [userIdB]) => Number(userIdA) - Number(userIdB))
-		.map(([userId, userInfo]) => ({
-			userId,
-			...userInfo,
-			count: 0,
-			points: 0,
-		}));
-
-	// Step 3: Combine the two lists, users with scores first, then the remaining users
-	const orderedUsers = [...usersWithScores, ...remainingUsers];
 
 	return (
 		<>
@@ -65,12 +41,13 @@ export default function LeaderBoard() {
 						backgroundColor: colorWhite,
 						borderRadius: 20,
 					}}>
-					{orderedUsers.map((user) => {
-						const isSelected = currentUser === Number(user.userId);
+					{allScores.data.map((user) => {
+						const isSelected =
+							currentUser === Number(user.attributes.user.userId);
 
 						return (
 							<View
-								key={user.userId}
+								key={user.attributes.user.userId}
 								style={{
 									borderBottomColor: colorGrey,
 									borderBottomWidth: 1,
@@ -84,12 +61,13 @@ export default function LeaderBoard() {
 										style={styles.resultRowSelected}>
 										<View style={{ flexDirection: "row", paddingLeft: 5 }}>
 											<Text style={[styles.resultsText, { color: colorWhite }]}>
-												{user.firstName} {user.lastName}
+												{user.attributes.user.firstName}{" "}
+												{user.attributes.user.lastName}
 											</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
 											<Text style={[styles.resultsText, { color: colorWhite }]}>
-												{user.points}
+												{user.attributes.totalScore}
 											</Text>
 										</View>
 									</LinearGradient>
@@ -97,11 +75,14 @@ export default function LeaderBoard() {
 									<View style={styles.resultRow}>
 										<View style={{ flexDirection: "row", paddingLeft: 5 }}>
 											<Text style={styles.resultsText}>
-												{user.firstName} {user.lastName}
+												{user.attributes.user.firstName}{" "}
+												{user.attributes.user.lastName}
 											</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
-											<Text style={styles.resultsText}>{user.points}</Text>
+											<Text style={styles.resultsText}>
+												{user.attributes.totalScore}
+											</Text>
 										</View>
 									</View>
 								)}
