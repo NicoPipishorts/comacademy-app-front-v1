@@ -1,25 +1,31 @@
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import { UserScoreByCategory } from "@/hooks/useGetAllAnswers";
+import { SingleUserScoreResponse } from "@/hooks/useGetUsersScore";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import StatsBar from "../ProgressBar";
 
 interface Props {
-	categoriesScore: UserScoreByCategory;
+	categoriesScore: SingleUserScoreResponse;
 }
 
 export default function UserStats({ categoriesScore }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
+	if (!categoriesScore) {
+		return null;
+	}
+
+	const scores = categoriesScore.data[0].attributes;
+
 	return (
 		<View style={{ marginTop: 20 }}>
 			<StatsBar
-				categoriesScore={categoriesScore.categoryScores}
+				categoriesScore={scores.scoreByCategories}
 				title='Mes Stats'
 				shadowOpacity={0}
-				totalPoints={categoriesScore.totalPoints}
+				totalPoints={scores.totalScore}
 			/>
 			<View style={styles.cardWrapper}>
 				<View style={styles.cardTextContainer}>

@@ -1,12 +1,12 @@
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
 import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
-import { CategoryScore } from "@/hooks/useGetScore";
+import { ScoreByCategory } from "@/hooks/useGetUsersScore";
 import { StyleSheet, Text, View } from "react-native";
 import SmallCategroieIcons from "./icons/SmallCategroieIcons";
 
 interface Props {
-	categoriesScore: Record<number, CategoryScore>;
+	categoriesScore: Record<number, ScoreByCategory>;
 	title: string;
 	shadowOpacity: number;
 	totalPoints?: number;
@@ -45,8 +45,9 @@ export default function StatsBar({
 			</View>
 			<View style={styles.containerProgressBars}>
 				{categories.data.map((cat) => {
-					const categoryScore = categoriesScore[cat.id];
-					const progression = categoryScore ? categoryScore.percentage : 0;
+					const progression = Math.round(
+						categoriesScore[cat.id].percentageCorrect
+					);
 
 					return (
 						<View
@@ -83,8 +84,10 @@ export default function StatsBar({
 
 			<View style={styles.cardsWrapper}>
 				{categories.data.map((cat) => {
-					const categoryScore = categoriesScore[cat.id];
-					const progression = categoryScore ? categoryScore.percentage : 0;
+					const progression = Math.round(
+						categoriesScore[cat.id].percentageCorrect
+					);
+
 					return (
 						<View
 							key={cat.id}
