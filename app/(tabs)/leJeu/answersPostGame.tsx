@@ -56,7 +56,6 @@ export default function AnswersPostGame() {
 								key={answer.attributes.questionId.data.id}
 								id={answer.attributes.questionId.data.id}
 								data={answer.attributes.questionId.data.attributes}
-								postGame={false}
 								userAnswer={answer.attributes.answer}
 							/>
 						);

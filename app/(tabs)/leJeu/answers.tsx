@@ -8,8 +8,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
-import useCountAllQuestions from "@/hooks/useCountAllQuestions";
-import { useGetAnswersTrue } from "@/hooks/useGetAnswersTrue";
+import { useGetUserAnswers } from "@/hooks/useGetAllAnswers";
 
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -20,24 +19,19 @@ export default function Answers() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
 
-	const { data: all } = useCountAllQuestions(token);
-	const { data: correctAnswers } = useGetAnswersTrue(userId, token);
+	const { data: all } = useGetUserAnswers(token, userId);
 
-	if (!userId || !all || !correctAnswers) {
+	if (!userId || !all) {
 		return <Loader />;
 	}
 
 	const progressBarProgressions = () => {
-		if (!all || typeof all.count !== "number") {
-			return 0;
-		}
-
 		// Handle case where answered.count is 0 to avoid division by zero
-		if (correctAnswers.data.length === 0 || all.count === 0) {
+		if (all.allUserQuestions === 0) {
 			return 0;
 		}
 
-		const progress = correctAnswers.data.length / all.count;
+		const progress = all.allUserQuestions / all.allQuestions;
 
 		// Ensure progress is between 0 and 1 (or 0% to 100%)
 		return Math.min(Math.max(progress, 0), 1) * 100;
@@ -50,10 +44,8 @@ export default function Answers() {
 			style={{ flex: 1 }}>
 			<View style={styles.cardContainer}>
 				<View style={styles.cardResults}>
-					<Text style={styles.cardResultsLarge}>
-						{correctAnswers.data.length}
-					</Text>
-					<Text style={styles.cardResultsSmall}>/ {all?.count}</Text>
+					<Text style={styles.cardResultsLarge}>{all.allUserQuestions}</Text>
+					<Text style={styles.cardResultsSmall}>/ {all.allQuestions}</Text>
 				</View>
 				<View style={styles.cardProgressContainer}>
 					<View
@@ -73,13 +65,12 @@ export default function Answers() {
 			</View>
 
 			<View style={{ paddingTop: 40 }}>
-				{correctAnswers.data.map((answer) => {
+				{all.data.map((answer) => {
 					return (
 						<AnswersCard
-							key={answer.attributes.questionId.data.id}
-							id={answer.attributes.questionId.data.id}
-							data={answer.attributes.questionId.data.attributes}
-							postGame={true}
+							key={answer.id}
+							id={answer.attributes.questionId}
+							data={answer.attributes}
 						/>
 					);
 				})}

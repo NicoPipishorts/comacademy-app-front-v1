@@ -25,10 +25,9 @@ import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 interface Props {
 	questionId: number;
 	refetch: string;
-	postGame: boolean;
 }
 
-export default function QuestionDetails({ questionId, postGame }: Props) {
+export default function QuestionDetails({ questionId }: Props) {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
@@ -118,35 +117,33 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 				</Text>
 			</View>
 
-			{postGame && (
-				<View style={styles.wrapperIcons}>
-					<View style={styles.containerIcons}>
-						{data.data.attributes.CATEGORIE !== undefined &&
-						data.data.attributes.CATEGORIE !== null
-							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
-									const categoryNumber = parseInt(cat, 10);
-									return (
-										<View style={{ marginRight: 8 }} key={index}>
-											<SmallCategroieIcons
-												key={categoryNumber}
-												cats={categoryNumber}
-											/>
-										</View>
-									);
-							  })
-							: ""}
-					</View>
-					<View style={styles.containerIcons}>
-						<TouchableOpacity onPress={() => handleAddFavorite()}>
-							<Image
-								source={filterIfFavoriteExists ? HeartFull : Heart}
-								style={styles.catIcons as ImageStyle}
-								resizeMode='contain'
-							/>
-						</TouchableOpacity>
-					</View>
+			<View style={styles.wrapperIcons}>
+				<View style={styles.containerIcons}>
+					{data.data.attributes.CATEGORIE !== undefined &&
+					data.data.attributes.CATEGORIE !== null
+						? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
+								const categoryNumber = parseInt(cat, 10);
+								return (
+									<View style={{ marginRight: 8 }} key={index}>
+										<SmallCategroieIcons
+											key={categoryNumber}
+											cats={categoryNumber}
+										/>
+									</View>
+								);
+						  })
+						: ""}
 				</View>
-			)}
+				<View style={styles.containerIcons}>
+					<TouchableOpacity onPress={() => handleAddFavorite()}>
+						<Image
+							source={filterIfFavoriteExists ? HeartFull : Heart}
+							style={styles.catIcons as ImageStyle}
+							resizeMode='contain'
+						/>
+					</TouchableOpacity>
+				</View>
+			</View>
 
 			<View style={styles.answerContainer}>
 				<View style={{ paddingBottom: 20 }}>
