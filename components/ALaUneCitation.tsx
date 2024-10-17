@@ -26,7 +26,7 @@ export default function ALaUneCitation() {
 	return (
 		<TouchableOpacity style={styles.container}>
 			<Text style={styles.smallText}>
-				La dernière citation : {moment(citation.updatedAt).format("DD/MM/YYYY")}
+				La citation du jour : {moment(citation.updatedAt).format("DD/MM/YYYY")}
 			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}

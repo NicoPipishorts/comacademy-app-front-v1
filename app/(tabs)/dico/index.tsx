@@ -23,12 +23,15 @@ const Dico = () => {
 	const { data: dataDico, isLoading: isLoadingData } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
+	// Convert openDetails to boolean
+	const openDetailsBoolean = openDetails === "true";
+
 	useEffect(() => {
-		if (openDetails) {
-			router.setParams({ openDetails: null });
+		if (openDetailsBoolean) {
 			navigation.navigate("dicoDetails", { id: id });
 		}
-	}, [openDetails, id, navigation, router]);
+		router.setParams({ openDetails: null });
+	}, [openDetailsBoolean, id, navigation, router]);
 
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["metiersList"] });

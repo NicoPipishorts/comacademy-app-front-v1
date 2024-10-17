@@ -2,32 +2,37 @@ import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
 import useGetOneDico from "@/hooks/useGetOneDico";
 import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
+import { useGlobalSearchParams, useNavigation, useRouter } from "expo-router";
 import moment from "moment";
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Loader from "./experience/loader";
 import StyledButton from "./StyledButton";
 
 export default function ALaUneDico() {
+	const router = useRouter();
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetOneDico();
+	const { openDetails } = useGlobalSearchParams();
+
+	useEffect(() => {
+		router.setParams({ openDetails: null });
+	}, [openDetails, router]);
 
 	if (!isFetched) {
 		return null;
 	}
 
 	const dico = data.data[0].attributes;
-	const openDetails = true;
 	const id = data.data[0].id;
 	const handlePress = () => {
-		navigation.navigate("dico", { openDetails, id });
+		navigation.navigate("dico", { openDetails: true, id });
 	};
 
 	return (
 		<TouchableOpacity style={styles.container}>
 			<Text style={styles.smallText}>
-				La dernière dico : {moment(dico.updatedAt).format("DD/MM/YYYY")}
+				La défintion du jour : {moment(dico.updatedAt).format("DD/MM/YYYY")}
 			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}
@@ -41,7 +46,7 @@ export default function ALaUneDico() {
 						</Text>
 						<StyledButton
 							title='Découvrir'
-							handlePress={handlePress}
+							handlePress={() => handlePress()}
 							variant='dark'
 						/>
 					</>
