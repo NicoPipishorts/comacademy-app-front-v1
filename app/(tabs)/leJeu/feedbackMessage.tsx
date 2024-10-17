@@ -15,7 +15,7 @@ export default function FeedbkacMessage() {
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			navigation.goBack();
-		}, 1000);
+		}, 800);
 
 		return () => clearTimeout(timer);
 	}, [navigation]);
