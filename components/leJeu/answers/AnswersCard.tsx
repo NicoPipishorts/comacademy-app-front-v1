@@ -1,30 +1,28 @@
-import SmallCategroieIconsNoImage from "@/components/icons/SmallCategroieIconsNoImage";
 import {
 	colorBlack,
 	colorGreen,
 	colorPink,
 	colorWhite,
 } from "@/constants/colors";
-import { GameSessionAttributes } from "@/types/game";
+import { FontSize16 } from "@/constants/fontsizes";
+import { AnswerAttributes } from "@/hooks/useGetAllAnswers";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	id: number;
-	data: GameSessionAttributes;
-	postGame: boolean;
+	data: AnswerAttributes;
 	userAnswer?: boolean;
 }
 
-export default function AnswersCard({ id, data, postGame, userAnswer }: Props) {
+export default function AnswersCard({ id, data, userAnswer }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	// Navigate to the answersDetails screen
 	const handlePress = () => {
 		navigation.navigate("answersDetails", {
 			questionId: id,
-			postGame,
 		});
 	};
 
@@ -33,28 +31,17 @@ export default function AnswersCard({ id, data, postGame, userAnswer }: Props) {
 			style={[
 				styles.cardWrapper,
 				{
-					borderLeftWidth: postGame ? 0 : 10,
-					borderColor: userAnswer ? colorGreen : colorPink,
+					borderLeftWidth: 10,
+					borderColor:
+						data.userAnswer === data.questionAnswer ? colorGreen : colorPink,
 				},
 			]}
 			onPress={handlePress}>
-			<Text>{data.QUESTION}</Text>
-			<View style={styles.containerIcons}>
-				{data.CATEGORIE !== undefined && data.CATEGORIE !== null
-					? String(data.CATEGORIE)
-							.split(",")
-							.map((cat, index) => {
-								const categoryNumber = parseInt(cat, 10);
-								return (
-									<View key={index} style={{ marginRight: 8 }}>
-										<SmallCategroieIconsNoImage
-											key={categoryNumber}
-											cats={categoryNumber}
-										/>
-									</View>
-								);
-							})
-					: ""}
+			<Text>{data.question}</Text>
+			<View style={styles.contentWrapper}>
+				<Text style={styles.answerText}>
+					{data.questionAnswer ? "Vrai" : "Faux"}
+				</Text>
 			</View>
 		</TouchableOpacity>
 	);
@@ -63,22 +50,33 @@ export default function AnswersCard({ id, data, postGame, userAnswer }: Props) {
 const styles = StyleSheet.create({
 	cardWrapper: {
 		display: "flex",
+		justifyContent: "flex-start",
 		minWidth: "100%",
 		marginBottom: 30,
 		borderRadius: 15,
 		padding: 15,
+		paddingBottom: 10,
 		backgroundColor: colorWhite,
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
 		shadowRadius: 8,
 	},
-	cardContentWrapper: {
-		position: "relative",
-		flexDirection: "column",
+	contentWrapper: {
+		display: "flex",
+		justifyContent: "flex-end",
+		alignItems: "flex-end",
+		alignSelf: "flex-end",
+		marginTop: 14,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		flexShrink: 1,
+		backgroundColor: colorBlack,
+		borderRadius: 10,
 	},
-	containerIcons: {
-		flexDirection: "row",
-		marginTop: 15,
+	answerText: {
+		color: colorWhite,
+		fontSize: FontSize16,
+		fontWeight: "bold",
 	},
 });
