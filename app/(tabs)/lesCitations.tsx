@@ -1,3 +1,5 @@
+import QuoteClose from "@/assets/imgs/icons/quote_close.png";
+import QuoteOpen from "@/assets/imgs/icons/quote_open.png";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
@@ -6,7 +8,7 @@ import useLesCitations from "@/hooks/useGetLesCitations";
 import useJwtToken from "@/hooks/useJwtToken";
 import moment from "moment";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 const LesCitations = () => {
 	const { token } = useJwtToken();
@@ -49,6 +51,26 @@ const LesCitations = () => {
 									</Text>
 								</View>
 								<View style={styles.cardContainer}>
+									<Image
+										source={QuoteClose}
+										style={{
+											position: "absolute",
+											bottom: 20,
+											right: 20,
+											width: 45,
+											height: 45,
+										}}
+									/>
+									<Image
+										source={QuoteOpen}
+										style={{
+											position: "absolute",
+											top: 20,
+											left: 20,
+											width: 45,
+											height: 45,
+										}}
+									/>
 									<View style={styles.cardContent}>
 										<Text style={styles.cardTextCitation}>
 											{citation.attributes.CITATION}
@@ -91,8 +113,13 @@ const styles = StyleSheet.create({
 		minWidth: "100%",
 		marginBottom: 40,
 	},
+	cardBackgroundImage: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+	},
 	cardWrapper: {
-		maxHeight: 350,
+		maxHeight: 320,
 	},
 	cardContainer: {
 		flex: 1,
