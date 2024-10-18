@@ -2,10 +2,12 @@ import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import ChangeAvatar from "@/components/user/changeAvatar";
+import ShowNiveaux from "@/components/user/niveaux";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import useGetRounds from "@/hooks/useGetRounds";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -39,6 +41,7 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
 	const { data: scores, refetch } = useGetUserScore(token, userId);
+	const { data: rounds } = useGetRounds(token);
 
 	// useRef to store the last fetch time
 	const lastFetchTimeRef = useRef<number>(Date.now());
@@ -99,6 +102,7 @@ export default function User() {
 		return <Loader />;
 	}
 
+	console.log(scores.data[0].attributes.totalAnsweredQuestions);
 	return (
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -114,6 +118,12 @@ export default function User() {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
+					<View>
+						<ShowNiveaux
+							totalPoints={scores.data[0].attributes.totalAnsweredQuestions}
+						/>
+					</View>
+
 					{scores && <UserStats categoriesScore={scores} />}
 
 					<ChangeAvatar />
