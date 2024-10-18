@@ -29,7 +29,7 @@ export interface UserScoreData {
 }
 
 export interface SingleUserScoreResponse {
-	data: UserScoreData;
+	data: UserScoreData[];
 }
 
 export interface AllUsersScoreResponse {
