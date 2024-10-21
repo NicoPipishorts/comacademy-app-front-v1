@@ -52,6 +52,7 @@ export default function FinishedSession() {
 	const handleSuccessFinish = (data: any) => {
 		setDataGame(null);
 		setPlaying(false);
+		setSessionsId(null);
 		setShowFinishedModal(false);
 		navigation.popToTop("leJeu");
 	};
@@ -72,11 +73,25 @@ export default function FinishedSession() {
 		});
 	};
 
+	const roundLeft = () => {
+		return gameComments.data.totalAnsweredQuestions / 15;
+	};
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top + 30 }]}>
 			<View style={styles.headerTextContainer}>
 				<Text style={styles.headerText}>
 					{gameComments.data.roundCommentaire}
+				</Text>
+			</View>
+
+			<View
+				style={[
+					styles.brogressbarContainer,
+					{ paddingTop: 30, marginBottom: -20 },
+				]}>
+				<Text style={{ fontSize: 20, fontWeight: "bold" }}>
+					Round {roundLeft()}{" "}
 				</Text>
 			</View>
 
@@ -88,7 +103,7 @@ export default function FinishedSession() {
 					</View>
 					<View>
 						<Text style={styles.scoreFraction}>
-							{sessionResults.data.totalQuestions}/15
+							{sessionResults.data.correctAnswers}/15
 						</Text>
 					</View>
 				</View>

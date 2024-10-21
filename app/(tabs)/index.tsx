@@ -22,6 +22,7 @@ import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
+import playlists from "@/assets/imgs/cards/home_playlists.png";
 import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
 import AvatarInitials from "@/components/avatars/initials";
@@ -107,10 +108,10 @@ const HomeScreen = () => {
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
-							onPress={() => navigation.navigate("playlist")}>
+							onPress={() => navigation.navigate("playlists")}>
 							<View style={styles.imageContainer}>
 								<Image
-									source={dico}
+									source={playlists}
 									style={styles.shortcutsCards}
 									resizeMode='contain'
 								/>
