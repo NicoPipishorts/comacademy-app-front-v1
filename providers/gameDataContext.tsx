@@ -1,4 +1,4 @@
-import { GameScore } from "@/hooks/useGetScore";
+import { GameScore } from "@/hooks/useGetEndOfSession";
 import { GameSessionQuestionData } from "@/types/game";
 import React, {
 	createContext,
