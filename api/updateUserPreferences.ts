@@ -13,7 +13,7 @@ interface SuccessPayload {
 	data: any;
 }
 
-// Custom hook to add favorite question
+// Custom hook to update user preferences
 export const UpdateUserPreferences = () => {
 	return useMutation<SuccessPayload, AxiosError, FinishSessionPayload>({
 		mutationFn: async ({
@@ -27,19 +27,45 @@ export const UpdateUserPreferences = () => {
 				},
 			};
 
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences/${userId}`;
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences?filters[user_id]=${userId}`;
+			const postUrl = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences`;
 
 			try {
-				const response: AxiosResponse<SuccessPayload> = await axios({
-					method: "PUT",
-					url: url,
-					data: payload,
+				// First, check if the preferences for the user exist by making a GET request
+				const getResponse = await axios.get(url, {
 					headers: {
-						"Content-Type": "application/json",
 						Authorization: `Bearer ${token}`,
 					},
 				});
-				return response.data;
+
+				// Check if there are existing preferences for the user
+				if (getResponse.data.data.length > 0) {
+					// Extract the ID of the existing preference (assuming it's in getResponse.data.data[0].id)
+					const existingPreferenceId = getResponse.data.data[0].id;
+					const putUrl = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences/${existingPreferenceId}`;
+
+					const putResponse: AxiosResponse<SuccessPayload> = await axios({
+						method: "PUT",
+						url: putUrl,
+						data: payload,
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+					});
+					return putResponse.data;
+				} else {
+					const postResponse: AxiosResponse<SuccessPayload> = await axios({
+						method: "POST",
+						url: postUrl,
+						data: { data: { user_id: userId, avatarBackgroundColor } },
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+					});
+					return postResponse.data;
+				}
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
 					throw error;
@@ -49,13 +75,16 @@ export const UpdateUserPreferences = () => {
 			}
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
+			queryClient.refetchQueries({
 				queryKey: ["UserPreferences"],
 			});
 		},
 		onError: (error) => {
 			if (error.response) {
-				console.error("Error code:", error.response.status);
+				console.error("On Error: Error code:", error.response.status);
+				console.error("Response data:", error.response.data);
+			} else {
+				console.error("An unexpected error occurred:", error.message);
 			}
 		},
 	});

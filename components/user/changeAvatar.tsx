@@ -36,9 +36,9 @@ export default function ChangeAvatar() {
 	];
 
 	const updatePreferences = UpdateUserPreferences();
-	const { data: dataUserPreferences } = useGetUserPreferences(userId);
+	const { data, isFetched } = useGetUserPreferences(userId);
 
-	if (!dataUserPreferences) {
+	if (!isFetched) {
 		return <Loader />;
 	}
 
@@ -46,8 +46,14 @@ export default function ChangeAvatar() {
 		updatePreferences.mutate({ avatarBackgroundColor: color, token, userId });
 	};
 
-	const userSelectedBgColor =
-		dataUserPreferences.data.attributes.avatarBackgroundColor;
+	let userSelectedBgColor: string;
+
+	if (data.data.length <= 0) {
+		userSelectedBgColor = colorYellow;
+	} else {
+		userSelectedBgColor = data.data[0].attributes.avatarBackgroundColor;
+	}
+
 	return (
 		<>
 			<ScreenHeaders content='Change ton Avatar' type='h2' />
@@ -75,10 +81,11 @@ export default function ChangeAvatar() {
 									width: 26,
 									minHeight: 4,
 									borderRadius: 2,
-									backgroundColor:
-										userSelectedBgColor === color
+									backgroundColor: userSelectedBgColor
+										? userSelectedBgColor === color
 											? colorBlack
-											: primaryBackground,
+											: primaryBackground
+										: "",
 								}}
 							/>
 						</View>

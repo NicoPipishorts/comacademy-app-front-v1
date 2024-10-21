@@ -13,14 +13,7 @@ import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import {
-	Pressable,
-	StyleSheet,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Loader from "../experience/loader";
 
 export default function UserAccount() {
@@ -151,7 +144,7 @@ export default function UserAccount() {
 	}
 	return (
 		<>
-			<View style={styles.formsContainers}>
+			{/* <View style={styles.formsContainers}>
 				<View style={{ paddingBottom: 20 }}>
 					<Text style={styles.infoSmallTitles}>Tes informations.</Text>
 				</View>
@@ -191,7 +184,7 @@ export default function UserAccount() {
 						Valider
 					</Text>
 				</TouchableOpacity>
-			</View>
+			</View> */}
 
 			<View style={styles.formsContainers}>
 				<View style={{ paddingBottom: 20 }}>

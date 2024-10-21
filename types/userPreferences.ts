@@ -23,6 +23,6 @@ export type UserPreferencesPayload = {
 				};
 			};
 		};
-	};
+	}[];
 	meta: Record<string, unknown>;
 };

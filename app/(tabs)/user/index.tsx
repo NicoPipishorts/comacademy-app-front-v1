@@ -7,7 +7,6 @@ import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import useGetRounds from "@/hooks/useGetRounds";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -41,7 +40,6 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
 	const { data: scores, refetch } = useGetUserScore(token, userId);
-	const { data: rounds } = useGetRounds(token);
 
 	// useRef to store the last fetch time
 	const lastFetchTimeRef = useRef<number>(Date.now());
@@ -69,7 +67,7 @@ export default function User() {
 	const onRefresh = () => {
 		setRefreshing(true);
 		refetch().finally(() => {
-			lastFetchTimeRef.current = Date.now(); // Update the last fetch time
+			lastFetchTimeRef.current = Date.now();
 			setTimeout(() => {
 				setRefreshing(false);
 			}, 2000);
@@ -79,21 +77,20 @@ export default function User() {
 	useEffect(() => {
 		if (token && !tokenLoading) {
 			refetch();
-			lastFetchTimeRef.current = Date.now(); // Update the last fetch time after successful refetch
+			lastFetchTimeRef.current = Date.now();
 		}
 	}, [refetch, token, tokenLoading]);
 
-	// Refetch if more than 30 seconds have passed
 	useEffect(() => {
 		const intervalId = setInterval(() => {
 			const currentTime = Date.now();
 			if (currentTime - lastFetchTimeRef.current > 30000) {
 				refetch();
-				lastFetchTimeRef.current = currentTime; // Update last fetch time
+				lastFetchTimeRef.current = currentTime;
 			}
-		}, 1000); // Check every second
+		}, 1000);
 
-		return () => clearInterval(intervalId); // Clean up on unmount
+		return () => clearInterval(intervalId);
 	}, [refetch]);
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
@@ -102,7 +99,6 @@ export default function User() {
 		return <Loader />;
 	}
 
-	console.log(scores.data[0].attributes.totalAnsweredQuestions);
 	return (
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -118,11 +114,9 @@ export default function User() {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
-					<View>
-						<ShowNiveaux
-							totalPoints={scores.data[0].attributes.totalAnsweredQuestions}
-						/>
-					</View>
+					<ShowNiveaux
+						totalPoints={scores.data[0].attributes.totalAnsweredQuestions}
+					/>
 
 					{scores && <UserStats categoriesScore={scores} />}
 
