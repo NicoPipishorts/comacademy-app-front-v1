@@ -78,7 +78,7 @@ const LeJeu = () => {
 
 				const filteredQuestionsPool =
 					questionsLeft > 0
-						? sessionQuestionsPool.slice(30 - questionsLeft)
+						? sessionQuestionsPool.slice(15 - questionsLeft)
 						: sessionQuestionsPool;
 
 				if (!playing) {
@@ -86,7 +86,7 @@ const LeJeu = () => {
 				}
 			} else {
 				if (!playing) {
-					setQuestionsLeft(30);
+					setQuestionsLeft(15);
 					setDataGame(
 						fetchedDataGame
 							? Object.keys(fetchedDataGame.data).map(
@@ -112,11 +112,11 @@ const LeJeu = () => {
 		if (sessionId && fetchedCurrentQuestions) {
 			if (currentQuestions.meta.pagination.total > 0) {
 				if (!questionsLeft && !playing) {
-					setQuestionsLeft(30 - currentQuestions.meta.pagination.total);
+					setQuestionsLeft(15 - currentQuestions.meta.pagination.total);
 				}
 			} else {
 				if (!questionsLeft) {
-					setQuestionsLeft(30);
+					setQuestionsLeft(15);
 				}
 				setDataGame(
 					fetchedDataGame
