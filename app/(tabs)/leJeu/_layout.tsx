@@ -45,14 +45,14 @@ const LeJeuLayout = () => {
 						presentation: "modal",
 					}}
 				/>
-				<Stack.Screen
+				{/* <Stack.Screen
 					name='feedbackMessage'
 					options={{
 						headerShown: false,
 						gestureEnabled: true,
 						presentation: "fullScreenModal",
 					}}
-				/>
+				/> */}
 			</Stack>
 		</GameProvider>
 	);

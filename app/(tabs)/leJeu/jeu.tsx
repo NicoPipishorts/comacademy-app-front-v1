@@ -19,10 +19,11 @@ import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import FeedbackMessage from "./feedbackMessage";
 
 const Jeu = () => {
 	const insets = useSafeAreaInsets();
@@ -31,6 +32,19 @@ const Jeu = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
+	const [feedbackVisible, setFeedbackVisible] = useState(false);
+	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
+
+	const showFeedback = (answer: Answer) => {
+		setFeedbackAnswer(answer);
+		setFeedbackVisible(true);
+	};
+
+	const hideFeedback = () => {
+		setFeedbackVisible(false);
+		setFeedbackAnswer(null);
+	};
+
 	const {
 		dataGame,
 		setDataGame,
@@ -89,15 +103,9 @@ const Jeu = () => {
 		const currentCard = dataGame[cardIndex];
 		setCurrentCardId(currentCard.id);
 		if (currentCard && currentCard.attributes.ANSWER === false) {
-			navigation.navigate("feedbackMessage", {
-				answer: Answer.true,
-				questionId: currentCard.id,
-			});
+			showFeedback(Answer.true);
 		} else if (currentCard) {
-			navigation.navigate("feedbackMessage", {
-				answer: Answer.false,
-				questionId: currentCard.id,
-			});
+			showFeedback(Answer.false);
 		}
 		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
@@ -114,15 +122,9 @@ const Jeu = () => {
 		const currentCard = dataGame[cardIndex];
 		setCurrentCardId(currentCard.id);
 		if (currentCard && currentCard.attributes.ANSWER === true) {
-			navigation.navigate("feedbackMessage", {
-				answer: Answer.true,
-				questionId: currentCard.id,
-			});
+			showFeedback(Answer.true);
 		} else if (currentCard) {
-			navigation.navigate("feedbackMessage", {
-				answer: Answer.false,
-				questionId: currentCard.id,
-			});
+			showFeedback(Answer.false);
 		}
 		setQuestionsLeft(questionsLeft - 1);
 		insertPlayerAnswer.mutate({
@@ -199,6 +201,9 @@ const Jeu = () => {
 					stackScale={5}
 					stackSeparation={24}
 				/>
+			)}
+			{feedbackVisible && feedbackAnswer && (
+				<FeedbackMessage answer={feedbackAnswer} onHide={hideFeedback} />
 			)}
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>

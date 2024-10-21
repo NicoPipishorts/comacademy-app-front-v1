@@ -7,7 +7,10 @@ import {
 	FontSize18,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
-import useGetGameScore from "@/hooks/useGetScore";
+import {
+	useGetEndOfSession,
+	useGetEndOfSessionResults,
+} from "@/hooks/useGetEndOfSession";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
@@ -33,50 +36,48 @@ export default function FinishedSession() {
 		setPlaying,
 	} = useGameContext();
 
-	const { data: gameScore } = useGetGameScore({ gameId: sessionId, userId });
+	const { data: gameComments } = useGetEndOfSession(userId);
+	const { data: sessionResults } = useGetEndOfSessionResults(sessionId);
 
 	useEffect(() => {
-		if (gameScore) {
-			setScore(gameScore);
+		if (sessionResults) {
+			setScore(sessionResults.data.totalPoints);
 		}
-	}, [setScore, gameScore]);
-
-	const handleFinishGame = () => {
-		finishGameSession.mutate({
-			score: score.percentage,
-			token,
-			sessionId,
-		});
-	};
+	}, [sessionResults, setScore]);
 
 	const handleError = (error: any) => {
 		console.error(error);
 	};
 
 	const handleSuccessFinish = (data: any) => {
-		if (!data.data.attributes.inProgress) {
-			setSessionsId(null);
-			setDataGame(null);
-			setPlaying(false);
-			setShowFinishedModal(false);
-			navigation.popToTop("leJeu");
-		}
+		setDataGame(null);
+		setPlaying(false);
+		setShowFinishedModal(false);
+		navigation.popToTop("leJeu");
 	};
 
 	const finishGameSession = FinishGameSession(handleSuccessFinish, handleError);
 
-	if (!gameScore || !score) {
+	if (!gameComments || !sessionResults || !score) {
 		return <Loader />;
 	}
 
-	const roundedScore = Math.round(
-		(score.trueAnswersCount / score.totalAnswersCount) * 100
-	);
+	const roundedScore = Math.round(sessionResults?.data.percentageCorrect);
+
+	const handleFinishGame = () => {
+		finishGameSession.mutate({
+			score: roundedScore,
+			token,
+			sessionId,
+		});
+	};
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top + 30 }]}>
 			<View style={styles.headerTextContainer}>
-				<Text style={styles.headerText}>Pas mal pour un débutant ...</Text>
+				<Text style={styles.headerText}>
+					{gameComments.data.roundCommentaire}
+				</Text>
 			</View>
 
 			<View style={styles.containerResults}>
@@ -87,7 +88,7 @@ export default function FinishedSession() {
 					</View>
 					<View>
 						<Text style={styles.scoreFraction}>
-							{score.trueAnswersCount}/30
+							{sessionResults.data.totalQuestions}/15
 						</Text>
 					</View>
 				</View>
@@ -110,7 +111,9 @@ export default function FinishedSession() {
 						<Text style={styles.endRowText}>De bonnes réponses</Text>
 					</View>
 					<View>
-						<Text style={styles.endRowText}>{score.totalScore} pts</Text>
+						<Text style={styles.endRowText}>
+							{sessionResults.data.totalPoints} pts
+						</Text>
 					</View>
 				</View>
 			</View>
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		marginTop: 40,
-		marginBottom: 60,
+		marginBottom: 40,
 	},
 	headerText: {
 		fontSize: FontSizeScreenTitles,
