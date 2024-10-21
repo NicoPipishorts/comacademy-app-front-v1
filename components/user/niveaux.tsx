@@ -1,10 +1,8 @@
-import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize16, FontSizeH4 } from "@/constants/fontsizes";
 import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 
 interface Props {
@@ -14,6 +12,10 @@ interface Props {
 export default function ShowNiveaux({ totalPoints }: Props) {
 	const { token } = useJwtToken();
 	const { data: niveaux } = useGetNiveaux(token);
+
+	const [isOverflowing, setIsOverflowing] = useState(false);
+	const [scrollViewHeight, setScrollViewHeight] = useState(0);
+	const [contentHeight, setContentHeight] = useState(0);
 
 	const [niveauStatut, setNiveauStatut] = useState<string | null>(null);
 	const [niveauNumber, setNiveauNumber] = useState<number | null>(null);
@@ -27,6 +29,10 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 			niveauText(totalPoints);
 		}
 	}, [niveaux, totalPoints]);
+
+	useEffect(() => {
+		setIsOverflowing(contentHeight > scrollViewHeight);
+	}, [contentHeight, scrollViewHeight]);
 
 	if (!niveaux) {
 		return <Loader />;
@@ -188,76 +194,125 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 
 	return (
 		<>
-			<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+			<View style={styles.row}>
 				<LinearGradient
 					colors={["#D683EF", "#FCA9AC"]}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
-					style={{
-						width: "48%",
-						padding: 10,
-						paddingBottom: 0,
-						borderRadius: 15,
-						alignItems: "flex-end",
-					}}>
-					<View style={{ zIndex: 10, position: "absolute", top: 10, left: 10 }}>
-						<Text
-							style={{
-								fontSize: FontSize16,
-								fontWeight: "bold",
-								color: colorWhite,
-							}}>
-							Niveau
-						</Text>
+					style={styles.gradientBox}>
+					<View style={styles.niveauLabelContainer}>
+						<Text style={styles.niveauLabel}>Niveau</Text>
 					</View>
-					<Text style={{ fontSize: 92, fontWeight: "bold", color: colorWhite }}>
-						{niveauNumber}
-					</Text>
+					<Text style={styles.niveauNumber}>{niveauNumber}</Text>
 				</LinearGradient>
 
-				<View
-					style={{
-						width: "48%",
-						padding: 10,
-						borderRadius: 15,
-						backgroundColor: colorBlack,
-						alignItems: "flex-end",
-						justifyContent: "flex-end",
-					}}>
-					<Text
-						style={{
-							fontSize: FontSizeH4,
-							fontWeight: "bold",
-							color: colorWhite,
-						}}>
-						{niveauStatut}
-					</Text>
+				<View style={styles.niveauStatusBox}>
+					<Text style={styles.niveauStatus}>{niveauStatut}</Text>
 				</View>
 			</View>
 
-			<View
-				style={{
-					marginTop: 15,
-					backgroundColor: colorWhite,
-					padding: 15,
-					borderRadius: 15,
-				}}>
+			<View style={styles.citationContainer}>
 				<View>
-					<Text
-						style={{
-							fontSize: FontSize16,
-							fontWeight: "bold",
-						}}>
-						{niveauCitation}
-					</Text>
+					<Text style={styles.citationText}>{niveauCitation}</Text>
 				</View>
-				<ScrollView
-					style={{ marginTop: 15, maxHeight: 100 }}
-					contentContainerStyle={{ paddingRight: 10 }}
-					showsVerticalScrollIndicator={false}>
-					<Text>{niveauCommentaire}</Text>
-				</ScrollView>
+				<View style={styles.scrollViewContainer}>
+					<ScrollView
+						style={styles.scrollView}
+						contentContainerStyle={styles.scrollViewContent}
+						showsVerticalScrollIndicator={false}
+						onLayout={(event) =>
+							setScrollViewHeight(event.nativeEvent.layout.height)
+						} // Set the ScrollView height
+						onContentSizeChange={(width, height) => setContentHeight(height)} // Set content size
+					>
+						<Text>{niveauCommentaire}</Text>
+					</ScrollView>
+					{/* Conditionally render the shadow if content overflows */}
+					{isOverflowing && <View style={styles.bottomShadow} />}
+				</View>
 			</View>
 		</>
 	);
 }
+
+const styles = StyleSheet.create({
+	row: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+	},
+	gradientBox: {
+		width: "48%",
+		padding: 10,
+		paddingBottom: 0,
+		borderRadius: 15,
+		alignItems: "flex-end",
+		position: "relative",
+	},
+	niveauLabelContainer: {
+		zIndex: 10,
+		position: "absolute",
+		top: 10,
+		left: 10,
+	},
+	niveauLabel: {
+		fontSize: 16,
+		fontWeight: "bold",
+		color: "white",
+	},
+	niveauNumber: {
+		fontSize: 92,
+		fontWeight: "bold",
+		color: "white",
+	},
+	niveauStatusBox: {
+		width: "48%",
+		padding: 10,
+		borderRadius: 15,
+		backgroundColor: "black",
+		alignItems: "flex-end",
+		justifyContent: "flex-end",
+	},
+	niveauStatus: {
+		fontSize: 24,
+		fontWeight: "bold",
+		color: "white",
+	},
+	citationContainer: {
+		marginTop: 15,
+		backgroundColor: "white",
+		padding: 15,
+		borderRadius: 15,
+	},
+	citationText: {
+		fontSize: 16,
+		fontWeight: "bold",
+	},
+	scrollView: {
+		marginTop: 15,
+		maxHeight: 100,
+	},
+	scrollViewContent: {
+		paddingRight: 10,
+		paddingBottom: 10,
+	},
+	scrollViewContainer: {
+		overflow: "hidden",
+		borderRadius: 10,
+	},
+	bottomShadow: {
+		position: "absolute",
+		bottom: -10,
+		left: 0,
+		right: 0,
+		height: 10,
+		backgroundColor: "#F0F",
+		shadowColor: "rgb(0, 0, 0)",
+		shadowOffset: {
+			width: 0,
+			height: 5,
+		},
+		shadowOpacity: 0.4,
+		shadowRadius: 10,
+		elevation: 10,
+	},
+});

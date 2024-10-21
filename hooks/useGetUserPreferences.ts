@@ -8,7 +8,7 @@ const fetchPayload = async (
 ): Promise<UserPreferencesPayload | null> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/user-preferences/${userId}?populate=*`,
+			`${process.env.EXPO_PUBLIC_API_URL}/user-preferences?filters[user_id]=${userId}&populate=*`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

@@ -20,10 +20,10 @@ export default function AvatarInitials({ firstName, lastName }: Props) {
 		return <Loader />;
 	}
 
-	if (!data) {
+	if (data.data.length <= 0) {
 		backgroundColor = colorYellow;
 	} else {
-		backgroundColor = data.data.attributes.avatarBackgroundColor;
+		backgroundColor = data.data[0].attributes.avatarBackgroundColor;
 	}
 
 	const initials = () => {
