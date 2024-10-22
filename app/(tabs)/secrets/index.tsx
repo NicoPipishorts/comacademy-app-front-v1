@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		paddingTop: 80,
-		paddingBottom: 100,
+		paddingBottom: 90,
 		backgroundColor: primaryBackground,
 	},
 });

@@ -1,12 +1,13 @@
 import { FinishGameSession } from "@/api/finishSession";
 import Loader from "@/components/experience/loader";
-import { colorBlack, colorWhite } from "@/constants/colors";
+import { colorBlack, colorWhite, colorYellow } from "@/constants/colors";
 import {
 	FontSize14,
 	FontSize16,
 	FontSize18,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import {
 	useGetEndOfSession,
 	useGetEndOfSessionResults,
@@ -24,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function FinishedSession() {
 	const navigation = useNavigation<NavigationType>();
 	const insets = useSafeAreaInsets();
+	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const {
@@ -73,12 +75,17 @@ export default function FinishedSession() {
 		});
 	};
 
-	const roundLeft = () => {
-		return gameComments.data.totalAnsweredQuestions / 15;
+	const roundsPlayed = () => {
+		const result = (gameComments.data.totalAnsweredQuestions / 15).toString();
+		return parseInt(result.slice(-1), 10);
 	};
 
+	const currentNiveau = Math.floor(
+		Math.floor(gameComments.data.totalAnsweredQuestions / 15) / 10
+	);
+
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top + 30 }]}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerTextContainer}>
 				<Text style={styles.headerText}>
 					{gameComments.data.roundCommentaire}
@@ -86,13 +93,37 @@ export default function FinishedSession() {
 			</View>
 
 			<View
+				style={{
+					paddingTop: !isHomeButtonModel ? 40 : 0,
+					marginBottom: 10,
+					flexDirection: "row",
+				}}>
+				<Text style={{ fontWeight: "bold", fontSize: FontSize18 }}>
+					Niveau: {currentNiveau}
+				</Text>
+			</View>
+			<View
 				style={[
 					styles.brogressbarContainer,
-					{ paddingTop: 30, marginBottom: -20 },
+					{ marginBottom: -40, flexDirection: "row" },
 				]}>
-				<Text style={{ fontSize: 20, fontWeight: "bold" }}>
-					Round {roundLeft()}{" "}
-				</Text>
+				{Array(10)
+					.fill(0)
+					.map((_, index) => (
+						<View
+							key={index}
+							style={{
+								width: 20,
+								height: 20,
+								borderWidth: 2,
+								borderColor: colorBlack,
+								borderRadius: 20,
+								marginHorizontal: 3,
+								backgroundColor:
+									index < roundsPlayed() ? colorYellow : "transparent",
+							}}
+						/>
+					))}
 			</View>
 
 			<View style={styles.containerResults}>
@@ -132,16 +163,24 @@ export default function FinishedSession() {
 					</View>
 				</View>
 			</View>
-			<View style={styles.containerButton}>
+			<View
+				style={[
+					styles.containerButton,
+					{ bottom: !isHomeButtonModel ? 130 : 90 },
+				]}>
 				<TouchableOpacity
 					style={styles.buttonTouchable}
 					onPress={() => navigation.navigate("answersPostGame")}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
 				</TouchableOpacity>
 			</View>
-			<View style={styles.containerBackButton}>
+			<View
+				style={[
+					styles.containerBackButton,
+					{ bottom: !isHomeButtonModel ? 60 : 30 },
+				]}>
 				<TouchableOpacity onPress={handleFinishGame} style={styles.backButton}>
-					<Text style={styles.textBackButton}>Finir</Text>
+					<Text style={styles.textBackButton}>Continuer</Text>
 				</TouchableOpacity>
 			</View>
 		</View>
@@ -226,7 +265,6 @@ const styles = StyleSheet.create({
 	},
 	containerButton: {
 		position: "absolute",
-		bottom: 130,
 		left: 30,
 		width: "100%",
 		alignItems: "center",
@@ -245,7 +283,6 @@ const styles = StyleSheet.create({
 	containerBackButton: {
 		zIndex: 10,
 		position: "absolute",
-		bottom: 60,
 		justifyContent: "center",
 		alignItems: "center",
 		width: "100%",

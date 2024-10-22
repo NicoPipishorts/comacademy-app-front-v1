@@ -4,6 +4,7 @@ import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 // Assets
+import Star from "@/assets/imgs/icons/jeu_star.png";
 import { default as useDeviceTypeCheckers } from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
 import { GameSessionQuestionData } from "@/types/game";
@@ -18,6 +19,7 @@ interface CardProps {
 const Card = ({ data, catColors }: CardProps) => {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const insets = useSafeAreaInsets();
+
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
@@ -38,6 +40,17 @@ const Card = ({ data, catColors }: CardProps) => {
 		return item.attributes.smallIcon.data.attributes.url;
 	};
 
+	const renderStars = () => {
+		const stars = [];
+		const coef = data?.attributes?.COEF;
+
+		for (let i = 0; i < coef; i++) {
+			stars.push(<Image key={i} source={Star} style={styles.starIcon} />);
+		}
+
+		return stars;
+	};
+
 	return (
 		<View style={[styles.cardsWrapper, { paddingTop: insets.top }]}>
 			<View
@@ -49,6 +62,7 @@ const Card = ({ data, catColors }: CardProps) => {
 					styles.cardContainer,
 				]}>
 				<View style={styles.containerTopRow}>
+					<View style={styles.containerCatIcon}>{renderStars()}</View>
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
@@ -68,9 +82,8 @@ const Card = ({ data, catColors }: CardProps) => {
 
 const styles = StyleSheet.create({
 	cardsWrapper: {
-		// paddingTop: "15%",
 		justifyContent: "flex-start",
-		alignItems: "center",
+		alignItems: "flex-start",
 	},
 	cardContainer: {
 		minWidth: "100%",
@@ -88,14 +101,21 @@ const styles = StyleSheet.create({
 	containerTopRow: {
 		width: "100%",
 		flexDirection: "row",
-		justifyContent: "flex-end",
+		justifyContent: "space-between",
 	},
 	containerCatIcon: {
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "flex-start",
 		paddingVertical: 15,
 	},
 	catIcon: {
 		width: 55,
 		height: 55,
+	},
+	starIcon: {
+		width: 45,
+		height: 45,
 	},
 	containerText: {},
 	textText: {

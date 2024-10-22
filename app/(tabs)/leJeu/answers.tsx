@@ -60,7 +60,9 @@ export default function Answers() {
 
 			<View style={{ paddingTop: 30 }}>
 				<Text style={{ fontSize: FontSize16, fontWeight: "bold" }}>
-					Joue et débloque en de nouvelles réponses en répondant correctement !
+					Voici toutes tes réponses ! Sois gentil, révise bien celles indiquées
+					en rouge, tu vas retomber dessus. Un autre conseil ? Révise aussi
+					celles en vert, au cas où tu aurais répondu au pif ;P
 				</Text>
 			</View>
 
