@@ -20,6 +20,7 @@ export interface SessionResultsPayload {
 export interface SessionResultsAllquestions {
 	id: number;
 	question: string;
+	questionId?: number;
 	coef: number;
 	questionAnswer: boolean;
 	userAnswer: boolean;

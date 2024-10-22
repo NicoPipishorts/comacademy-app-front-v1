@@ -1,5 +1,6 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { useQuery } from "@tanstack/react-query";
+import { SessionResultsAllquestions } from "./useGetEndOfSession";
 export interface AllAnswersResponse {
 	data: AnswerData[];
 	allQuestions: number;
@@ -8,7 +9,7 @@ export interface AllAnswersResponse {
 
 export interface AnswerData {
 	id: number;
-	attributes: AnswerAttributes;
+	attributes: SessionResultsAllquestions;
 }
 
 export interface AnswerAttributes {

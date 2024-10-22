@@ -141,7 +141,7 @@ export default function FinishedSession() {
 			</View>
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handleFinishGame} style={styles.backButton}>
-					<Text style={styles.textBackButton}>Finir</Text>
+					<Text style={styles.textBackButton}>Continuer</Text>
 				</TouchableOpacity>
 			</View>
 		</View>
