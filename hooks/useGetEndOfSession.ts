@@ -10,10 +10,19 @@ export interface EndOfGameSessionPayload {
 
 export interface SessionResultsPayload {
 	data: {
-		totalQuestions: number;
+		correctAnswers: number;
 		percentageCorrect: number;
 		totalPoints: number;
+		allQuestions: SessionResultsAllquestions[];
 	};
+}
+
+export interface SessionResultsAllquestions {
+	id: number;
+	question: string;
+	coef: number;
+	questionAnswer: boolean;
+	userAnswer: boolean;
 }
 
 // Generic fetch function to reduce code duplication

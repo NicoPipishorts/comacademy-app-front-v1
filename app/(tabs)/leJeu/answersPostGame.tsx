@@ -10,36 +10,19 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import useGetFinishedSessionAnswers from "@/hooks/useGetFinishedSessionAnswers";
-import useUserId from "@/hooks/useUserId";
+import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
 import { useGameContext } from "@/providers/gameDataContext";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function AnswersPostGame() {
-	const { userId } = useUserId();
 	const { sessionId: gameId } = useGameContext();
 	const { isAndroid } = useDeviceTypeCheckers();
 
-	const { data: allAnswerData } = useGetFinishedSessionAnswers(userId, gameId);
+	const { data: allAnswerData } = useGetEndOfSessionResults(gameId);
 
 	if (!allAnswerData) {
 		return <Loader />;
 	}
-
-	const removeDuplicateAnswers = () => {
-		// Step 1: Remove duplicates based on questionId.data.id
-		const uniqueAnswers = allAnswerData.data.filter(
-			(answer, index, self) =>
-				index ===
-				self.findIndex(
-					(t) =>
-						t.attributes.questionId.data.id ===
-						answer.attributes.questionId.data.id
-				)
-		);
-
-		return uniqueAnswers;
-	};
 
 	return (
 		<View style={styles.wrapper}>
@@ -50,15 +33,8 @@ export default function AnswersPostGame() {
 				contentContainerStyle={[styles.scrollWrapper, { paddingBottom: 100 }]}
 				style={{ flex: 1 }}>
 				<View style={{ paddingTop: 40 }}>
-					{removeDuplicateAnswers().map((answer) => {
-						return (
-							<AnswersCard
-								key={answer.attributes.questionId.data.id}
-								id={answer.attributes.questionId.data.id}
-								data={answer.attributes.questionId.data.attributes}
-								userAnswer={answer.attributes.answer}
-							/>
-						);
+					{allAnswerData.data.allQuestions.map((answer) => {
+						return <AnswersCard key={answer.id} id={answer.id} data={answer} />;
 					})}
 				</View>
 			</ScrollView>
