@@ -9,6 +9,7 @@ import {
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
@@ -22,11 +23,11 @@ import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FeedbackMessage from "./feedbackMessage";
 
 const Jeu = () => {
-	const insets = useSafeAreaInsets();
+	const { isHomeButtonModel } = useDeviceTypeCheckers();
+
 	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
@@ -147,13 +148,14 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
+					// transform: [{ rotate: "-90deg" }], // Rotate text -90 degrees for FAUX
 				},
 				wrapper: {
-					flexDirection: "column",
-					alignItems: "flex-end",
-					justifyContent: "flex-start",
-					marginTop: 20,
-					marginLeft: -20,
+					flexDirection: "row", // Align the overlay to span vertically
+					alignItems: "flex-start",
+					justifyContent: "center",
+					width: "100%", // Take up half the width
+					height: "100%", // Take up full height
 				},
 			},
 		},
@@ -166,25 +168,34 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
+					// transform: [{ rotate: "90deg" }], // Rotate text +90 degrees for VRAI
 				},
 				wrapper: {
-					flexDirection: "column",
+					flexDirection: "row", // Align the overlay to span vertically
 					alignItems: "flex-start",
-					justifyContent: "flex-start",
-					marginTop: 20,
-					marginLeft: 20,
+					justifyContent: "center",
+					width: "100%", // Take up half the width
+					height: "100%", // Take up full height
 				},
 			},
 		},
 	};
 
 	const cards = dataGame;
-	const renderCard = (card: GameSessionQuestionData, cardIndex: number) => {
+	const renderCard = (card: GameSessionQuestionData) => {
 		return <Card key={card?.id} catColors={catData} data={card} />;
 	};
 
+	const swiperTopMargin = () => {
+		if (isHomeButtonModel) {
+			return -40;
+		} else {
+			return 0;
+		}
+	};
+
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+		<View style={[styles.wrapper, { marginTop: swiperTopMargin() }]}>
 			{!showFinishedModal && (
 				<Swiper
 					ref={swiperRef}
@@ -195,15 +206,20 @@ const Jeu = () => {
 					onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
 					onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
 					backgroundColor={"transparent"}
-					cardVerticalMargin={120}
+					cardVerticalMargin={100}
 					cardHorizontalMargin={30}
 					stackSize={5}
 					stackScale={5}
 					stackSeparation={24}
+					overlayOpacityHorizontalThreshold={40}
 				/>
 			)}
 			{feedbackVisible && feedbackAnswer && (
-				<FeedbackMessage answer={feedbackAnswer} onHide={hideFeedback} />
+				<FeedbackMessage
+					answer={feedbackAnswer}
+					onHide={hideFeedback}
+					isHomeButtonModel
+				/>
 			)}
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
@@ -218,7 +234,6 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
-		// paddingTop: 100,
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
 		alignItems: "center",
@@ -227,17 +242,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize20,
 		color: colorYellow,
 	},
-	// feedbackContainer: {
-	// 	...StyleSheet.absoluteFillObject,
-	// 	justifyContent: "center",
-	// 	alignItems: "center",
-	// 	zIndex: 15,
-	// },
-	// feedbackText: {
-	// 	fontSize: 100,
-	// 	color: colorWhite,
-	// 	fontWeight: "bold",
-	// },
 	containerBackButton: {
 		zIndex: 10,
 		position: "absolute",

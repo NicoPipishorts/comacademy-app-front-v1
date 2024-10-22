@@ -19,6 +19,7 @@ interface CardProps {
 const Card = ({ data, catColors }: CardProps) => {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const insets = useSafeAreaInsets();
+
 	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
 		return <Loader />;
 	}
@@ -81,9 +82,8 @@ const Card = ({ data, catColors }: CardProps) => {
 
 const styles = StyleSheet.create({
 	cardsWrapper: {
-		// paddingTop: "15%",
 		justifyContent: "flex-start",
-		alignItems: "center",
+		alignItems: "flex-start",
 	},
 	cardContainer: {
 		minWidth: "100%",
