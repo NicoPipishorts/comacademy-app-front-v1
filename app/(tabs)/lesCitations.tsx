@@ -4,13 +4,11 @@ import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSize22 } from "@/constants/fontsizes";
-import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import useLesCitations from "@/hooks/useGetLesCitations";
 import useJwtToken from "@/hooks/useJwtToken";
 import moment from "moment";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated"; // Optional for smooth animation
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const LesCitations = () => {
@@ -18,35 +16,20 @@ const LesCitations = () => {
 	const { data, isLoading } = useLesCitations(token);
 	const insets = useSafeAreaInsets();
 	const scrollViewRef = useRef(null); // Ref for ScrollView
-	const { isHomeButtonModel } = useDeviceTypeCheckers();
-	const [isAtEnd, setIsAtEnd] = useState(false); // State to check if we're already at the end
-	const scrollPosition = useRef(0); // Ref to track current scroll position
 
-	// Function to scroll to the end of the ScrollView
+	// Function to scroll to the end of the ScrollView (immediately)
 	const scrollToEnd = () => {
 		if (scrollViewRef.current) {
-			scrollViewRef.current.scrollToEnd({ animated: true });
+			scrollViewRef.current.scrollToEnd({ animated: false }); // No animation
 		}
 	};
 
 	useEffect(() => {
-		// Scroll to the end only if we're not already at the end
-		if (data && !isAtEnd) {
+		// Scroll to the end when data is available or updated
+		if (data) {
 			scrollToEnd();
 		}
-	}, [data, isAtEnd]);
-
-	// Check if we're already at the end during scrolling
-	const handleScroll = (event) => {
-		const contentWidth = event.nativeEvent.contentSize.width;
-		const layoutWidth = event.nativeEvent.layoutMeasurement.width;
-		const scrollX = event.nativeEvent.contentOffset.x;
-
-		// If scrollX + layoutWidth === contentWidth, we're at the end
-		const isScrollAtEnd = scrollX + layoutWidth >= contentWidth - 10; // Adding some buffer
-		setIsAtEnd(isScrollAtEnd);
-		scrollPosition.current = scrollX;
-	};
+	}, [data]);
 
 	if (isLoading) {
 		return <Loader />;
@@ -74,17 +57,11 @@ const LesCitations = () => {
 				horizontal={true}
 				showsHorizontalScrollIndicator={false}
 				onContentSizeChange={scrollToEnd} // Ensure scroll happens after content size is calculated
-				onScroll={handleScroll} // Track the scroll position
-				scrollEventThrottle={16} // Improve scroll performance
 				onLayout={scrollToEnd} // Ensure scroll happens after layout
 			>
 				<View style={styles.citationsContainer}>
 					{reversedData.map((citation) => (
-						<Animated.View
-							key={citation.id}
-							style={styles.cardWrapper}
-							entering={FadeInUp.delay(100)} // Optional Reanimated transition
-						>
+						<View key={citation.id} style={styles.cardWrapper}>
 							<View
 								style={{
 									paddingRight: 50,
@@ -127,7 +104,7 @@ const LesCitations = () => {
 									</Text>
 								</View>
 							</View>
-						</Animated.View>
+						</View>
 					))}
 				</View>
 			</ScrollView>
