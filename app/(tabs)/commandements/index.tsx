@@ -54,7 +54,7 @@ export default function Secrets() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingBottom: 100,
+		paddingBottom: 90,
 		backgroundColor: primaryBackground,
 	},
 });

@@ -153,7 +153,8 @@ const Jeu = () => {
 				wrapper: {
 					flexDirection: "row", // Align the overlay to span vertically
 					alignItems: "flex-start",
-					justifyContent: "center",
+					justifyContent: "flex-end",
+					paddingRight: 20,
 					width: "100%", // Take up half the width
 					height: "100%", // Take up full height
 				},
@@ -173,7 +174,8 @@ const Jeu = () => {
 				wrapper: {
 					flexDirection: "row", // Align the overlay to span vertically
 					alignItems: "flex-start",
-					justifyContent: "center",
+					justifyContent: "flex-start",
+					paddingLeft: 20,
 					width: "100%", // Take up half the width
 					height: "100%", // Take up full height
 				},
@@ -211,7 +213,7 @@ const Jeu = () => {
 					stackSize={5}
 					stackScale={5}
 					stackSeparation={24}
-					overlayOpacityHorizontalThreshold={40}
+					overlayOpacityHorizontalThreshold={20}
 				/>
 			)}
 			{feedbackVisible && feedbackAnswer && (

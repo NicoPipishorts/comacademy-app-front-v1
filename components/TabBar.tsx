@@ -37,6 +37,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 		playlists: "Playlists",
 		index: "Accueil",
 	};
+
 	// Used to apply the BG or not to the tab bar.
 	const currentRouteName = state.routes[state.index].name;
 
@@ -48,11 +49,17 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 					if (!descriptor) return null;
 
 					const { options } = descriptor;
+
+					// Logic to focus Accueil (index) if the current route is lesCitations or commandements
 					const isFocused =
 						state.index ===
-						state.routes.findIndex((r) => r.name === route.name);
+							state.routes.findIndex((r) => r.name === route.name) ||
+						(route.name === "index" &&
+							(currentRouteName === "lesCitations" ||
+								currentRouteName === "commandements" ||
+								currentRouteName === "secrets"));
 
-					const label = customLabels[route.name] || route.name; // Use custom label or default to route name
+					const label = customLabels[route.name] || route.name;
 
 					const onPress = () => {
 						const event = navigation.emit({
@@ -60,7 +67,16 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							target: route.key,
 							canPreventDefault: true,
 						});
-						if (!isFocused && !event.defaultPrevented) {
+
+						// Reset to Accueil (index) if the Accueil button is pressed
+						if (route.name === "index") {
+							// Use reset to navigate back to the root screen
+							navigation.reset({
+								index: 0,
+								routes: [{ name: "index" }], // Ensure you go back to the root of the home stack
+							});
+						} else if (!isFocused && !event.defaultPrevented) {
+							// Navigate normally to the selected tab
 							navigation.navigate(route.name);
 						}
 					};
@@ -107,14 +123,13 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		alignItems: "center",
 		width: "90%",
-		paddingVertical: 15,
+		paddingVertical: 5,
 	},
 	tabbarItem: {
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
 		paddingBottom: 15,
-		// marginBottom: 10,
 	},
 	tabbarText: {
 		fontSize: FontSizeTabbar,
@@ -136,7 +151,7 @@ const styles = StyleSheet.create({
 		backgroundColor: colorBlack,
 		borderRadius: 2,
 		position: "absolute",
-		bottom: 0,
+		bottom: 2,
 	},
 });
 
