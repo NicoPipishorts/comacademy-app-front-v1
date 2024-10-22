@@ -1,6 +1,6 @@
 import { colorGreen, colorPink, colorWhite } from "@/constants/colors";
 import { Answer } from "@/types/enums";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, {
 	runOnJS,
@@ -12,22 +12,31 @@ import Animated, {
 interface FeedbackMessageProps {
 	answer: Answer;
 	onHide: () => void;
+	isHomeButtonModel: boolean;
 }
 
 export default function FeedbackMessage({
 	answer,
 	onHide,
+	isHomeButtonModel,
 }: FeedbackMessageProps) {
-	const slideAnim = useSharedValue(300); // Initial position off-screen
+	const height = useCallback(() => {
+		if (isHomeButtonModel) {
+			return 200;
+		} else {
+			return 300;
+		}
+	}, [isHomeButtonModel]);
+	const slideAnim = useSharedValue(250); // Initial position off-screen
 
 	useEffect(() => {
 		// Slide in animation
-		slideAnim.value = withTiming(0, { duration: 300 });
+		slideAnim.value = withTiming(0, { duration: 250 });
 
 		// Auto-hide after 800ms
 		const timer = setTimeout(() => {
 			// Slide out before hiding
-			slideAnim.value = withTiming(300, { duration: 300 }, (isFinished) => {
+			slideAnim.value = withTiming(250, { duration: 250 }, (isFinished) => {
 				if (isFinished) {
 					runOnJS(onHide)(); // Call onHide when animation finishes
 				}
@@ -35,7 +44,7 @@ export default function FeedbackMessage({
 		}, 500);
 
 		return () => clearTimeout(timer);
-	}, [slideAnim, onHide]);
+	}, [slideAnim, onHide, height]);
 
 	// Animated styles for Reanimated
 	const animatedStyle = useAnimatedStyle(() => {
@@ -51,6 +60,7 @@ export default function FeedbackMessage({
 				styles.feedbackContainer,
 				{
 					backgroundColor: answer === Answer.true ? colorGreen : colorPink,
+					height: 250,
 				},
 			]}>
 			<Text style={styles.feedbackText}>{answer}</Text>
@@ -64,7 +74,6 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		left: 0,
 		right: 0,
-		height: 300,
 		justifyContent: "center",
 		alignItems: "center",
 		zIndex: 15,
