@@ -8,22 +8,88 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
 import {
 	Dimensions,
-	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+	interpolate,
+	useAnimatedScrollHandler,
+	useAnimatedStyle,
+	useSharedValue,
+} from "react-native-reanimated";
+
+// Separate functional component to render each card
+const AnimatedCard = ({
+	item,
+	index,
+	cardWidth,
+	cardMargin,
+	scrollX,
+	screenWidth,
+}) => {
+	const inputRange = [
+		(index - 1) * (cardWidth + cardMargin * 2),
+		index * (cardWidth + cardMargin * 2),
+		(index + 1) * (cardWidth + cardMargin * 2),
+	];
+
+	// Hook to calculate animated scale
+	const animatedStyle = useAnimatedStyle(() => {
+		const scale = interpolate(scrollX.value, inputRange, [0.92, 1, 0.92]);
+		return { transform: [{ scale }] };
+	});
+
+	if (item.type === "TitleCard") {
+		return (
+			<Animated.View style={[animatedStyle]}>
+				<TitleCard
+					cardWidth={cardWidth}
+					title={item.title}
+					screenWidth={screenWidth}
+				/>
+			</Animated.View>
+		);
+	}
+	if (item.type === "SecretCard") {
+		return (
+			<Animated.View style={[animatedStyle]}>
+				<SecretCard
+					key={item.index}
+					title={item.title}
+					text={item.text}
+					cardWidth={cardWidth}
+					index={item.index}
+					cardMargin={cardMargin}
+				/>
+			</Animated.View>
+		);
+	}
+	return null;
+};
 
 export default function SecretsDetails() {
-	const insets = useSafeAreaInsets();
 	const { data } = useSecrets();
 	const { itemId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
+
+	// Screen and layout calculations
 	const screenWidth = Dimensions.get("window").width;
-	const cardWidth = screenWidth * 0.8;
+	const cardWidth = screenWidth * 0.8; // 80% of the screen width
+	const cardMargin = Math.floor((screenWidth - cardWidth) / 2.6); // Adjust the margin for better centering
+
 	const secretsId = Number(itemId);
+
+	// Shared value to keep track of the scroll position
+	const scrollX = useSharedValue(0);
+
+	// Use hooks outside of conditions
+	const scrollHandler = useAnimatedScrollHandler({
+		onScroll: (event) => {
+			scrollX.value = event.contentOffset.x;
+		},
+	});
 
 	// Filter the secrets data using useMemo for performance optimization
 	const secretsData = useMemo(
@@ -31,41 +97,52 @@ export default function SecretsDetails() {
 		[data, secretsId]
 	);
 
-	// Early return if no secrets data found
+	// Early return in case of no data found (make sure hooks are already defined)
 	if (!secretsData) return null;
 
 	const { Title, ...keys } = secretsData.attributes;
 
+	// Create an array for rendering TitleCard and SecretCard components
+	const cardsData = [
+		{ type: "TitleCard", title: Title },
+		...Object.keys(keys)
+			.filter((key) => key.startsWith("Key"))
+			.map((key, index) => {
+				const [title, text] = keys[key].split(":");
+				return { type: "SecretCard", title, text, index };
+			}),
+	];
+
+	// Render each card in FlatList
+	const renderItem = ({ item, index }) => (
+		<AnimatedCard
+			item={item}
+			index={index}
+			cardWidth={cardWidth}
+			cardMargin={cardMargin}
+			scrollX={scrollX}
+			screenWidth={screenWidth}
+		/>
+	);
+
 	return (
-		<View style={[styles.cardsWrapper, { paddingTop: insets.top }]}>
+		<View style={[styles.cardsWrapper, { paddingTop: isAndroid ? 40 : 20 }]}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>3 Secrets du Succès</Text>
 			</View>
 
-			<ScrollView
+			<Animated.FlatList
+				data={cardsData}
 				horizontal
+				renderItem={renderItem}
+				keyExtractor={(item, index) => `${item.type}-${index}`}
+				showsHorizontalScrollIndicator={false}
 				decelerationRate='fast'
-				snapToInterval={cardWidth + 35} // card width + padding/margin
+				snapToInterval={cardWidth + cardMargin * 2} // Ensure snapping to each card
 				snapToAlignment='center'
-				contentContainerStyle={styles.scrollViewWrapper}
-				showsHorizontalScrollIndicator={false}>
-				<TitleCard cardWidth={cardWidth} title={Title} />
-
-				{Object.keys(keys)
-					.filter((key) => key.startsWith("Key"))
-					.map((key, index) => {
-						const [title, text] = keys[key].split(":");
-						return (
-							<SecretCard
-								key={index}
-								title={title}
-								text={text}
-								cardWidth={cardWidth}
-								index={index}
-							/>
-						);
-					})}
-			</ScrollView>
+				onScroll={scrollHandler}
+				scrollEventThrottle={16}
+			/>
 
 			{isAndroid && (
 				<TouchableOpacity
@@ -91,10 +168,6 @@ const styles = StyleSheet.create({
 	headerText: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
-	},
-	scrollViewWrapper: {
-		alignItems: "center",
-		padding: 18,
 	},
 	backButton: {
 		backgroundColor: colorBlack,

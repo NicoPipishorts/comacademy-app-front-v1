@@ -57,7 +57,8 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 						(route.name === "index" &&
 							(currentRouteName === "lesCitations" ||
 								currentRouteName === "commandements" ||
-								currentRouteName === "secrets"));
+								currentRouteName === "secrets" ||
+								currentRouteName === "petitesHistoires"));
 
 					const label = customLabels[route.name] || route.name;
 

@@ -8,12 +8,67 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
 import {
 	Dimensions,
-	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Animated, {
+	interpolate,
+	useAnimatedScrollHandler,
+	useAnimatedStyle,
+	useSharedValue,
+} from "react-native-reanimated";
+
+// Separate functional component to render each card
+const AnimatedCard = ({
+	item,
+	index,
+	cardWidth,
+	cardMargin,
+	scrollX,
+	screenWidth,
+}) => {
+	const inputRange = [
+		(index - 1) * (cardWidth + cardMargin * 2),
+		index * (cardWidth + cardMargin * 2),
+		(index + 1) * (cardWidth + cardMargin * 2),
+	];
+
+	// Hook to calculate animated scale
+	const animatedStyle = useAnimatedStyle(() => {
+		const scale = interpolate(scrollX.value, inputRange, [0.92, 1, 0.92]);
+		return { transform: [{ scale }] };
+	});
+
+	if (item.type === "TitleCard") {
+		return (
+			<Animated.View style={[animatedStyle]}>
+				<CommandementTitleCard
+					cardMargin={cardMargin}
+					cardWidth={cardWidth}
+					theme={item.theme}
+					screenWidth={screenWidth}
+				/>
+			</Animated.View>
+		);
+	}
+	if (item.type === "CommandementCard") {
+		return (
+			<Animated.View style={[animatedStyle]}>
+				<CommandementCard
+					key={item.index}
+					index={item.index}
+					title={item.title}
+					text={item.text}
+					cardWidth={cardWidth}
+					cardMargin={cardMargin}
+				/>
+			</Animated.View>
+		);
+	}
+	return null;
+};
 
 export default function CommandementsDetails() {
 	const { data } = useCommandements();
@@ -22,54 +77,74 @@ export default function CommandementsDetails() {
 
 	// Screen and layout calculations
 	const screenWidth = Dimensions.get("window").width;
-	const cardWidth = screenWidth * 0.78;
-	const cardMargin = 34;
+	const cardWidth = screenWidth * 0.8; // 80% of screen width for the card
+	const cardMargin = Math.floor((screenWidth - cardWidth) / 3); // Adjust the margin for smoother centering
+
+	const commandementId = Number(itemId);
+
+	// Shared value to keep track of the scroll position
+	const scrollX = useSharedValue(0);
+
+	// Use hooks outside of conditions
+	const scrollHandler = useAnimatedScrollHandler({
+		onScroll: (event) => {
+			scrollX.value = event.contentOffset.x;
+		},
+	});
 
 	// Get the current commandement based on the itemId
-	const commandementId = Number(itemId);
 	const commandementData = useMemo(
 		() => data.data.filter(({ id }) => id === commandementId),
 		[data, commandementId]
 	);
 
-	// Early return in case of no data found
+	// Early return in case of no data found (make sure hooks are already defined)
 	if (!commandementData.length) return null;
 
 	const { Theme, ...commandements } = commandementData[0].attributes;
+
+	// Prepare the data for FlatList
+	const cardsData = [
+		{ type: "TitleCard", theme: Theme },
+		...Object.keys(commandements)
+			.filter((key) => key.startsWith("Astuce_"))
+			.map((key, index) => {
+				const astuceValue = commandements[key];
+				if (!astuceValue) return null;
+				const [title, text] = astuceValue.split(":");
+				return { type: "CommandementCard", title, text, index };
+			}),
+	];
+
+	// Render each card in FlatList
+	const renderItem = ({ item, index }) => (
+		<AnimatedCard
+			item={item}
+			index={index}
+			cardWidth={cardWidth}
+			cardMargin={cardMargin}
+			scrollX={scrollX}
+			screenWidth={screenWidth}
+		/>
+	);
 
 	return (
 		<View style={[styles.cardsWrapper, { paddingTop: isAndroid ? 40 : 20 }]}>
 			<View style={styles.header}>
 				<Text style={styles.headerText}>10 Commandements</Text>
 			</View>
-
-			<ScrollView
+			<Animated.FlatList
+				data={cardsData}
 				horizontal
+				renderItem={renderItem}
+				keyExtractor={(item, index) => `${item.type}-${index}`}
+				showsHorizontalScrollIndicator={false}
 				decelerationRate='fast'
-				snapToInterval={cardWidth + cardMargin}
+				snapToInterval={cardWidth + cardMargin * 2} // Ensure snapping to each card
 				snapToAlignment='center'
-				contentContainerStyle={styles.scrollViewWrapper}
-				showsHorizontalScrollIndicator={false}>
-				<CommandementTitleCard cardWidth={cardWidth} theme={Theme} />
-
-				{Object.keys(commandements)
-					.filter((key) => key.startsWith("Astuce_"))
-					.map((key, index) => {
-						const astuceValue = commandements[key];
-						if (!astuceValue) return null;
-						const [title, text] = astuceValue.split(":");
-						return (
-							<CommandementCard
-								key={index}
-								index={index}
-								title={title}
-								text={text}
-								cardWidth={cardWidth}
-								cardMargin={cardMargin}
-							/>
-						);
-					})}
-			</ScrollView>
+				onScroll={scrollHandler}
+				scrollEventThrottle={16}
+			/>
 
 			{isAndroid && (
 				<TouchableOpacity
@@ -96,9 +171,8 @@ const styles = StyleSheet.create({
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
 	},
-	scrollViewWrapper: {
+	flatListWrapper: {
 		alignItems: "center",
-		padding: 18,
 	},
 	backButton: {
 		backgroundColor: colorBlack,
