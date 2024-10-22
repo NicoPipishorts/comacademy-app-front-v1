@@ -90,6 +90,13 @@ const _layout: React.FC = () => {
 						headerShown: false,
 					}}
 				/>
+				<Tabs.Screen
+					name='petitesHistoires'
+					options={{
+						tabBarLabel: "Les Petites Histoires",
+						headerShown: false,
+					}}
+				/>
 			</Tabs>
 		</TabBarVisibilityProvider>
 	);

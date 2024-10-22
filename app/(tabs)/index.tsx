@@ -163,8 +163,7 @@ const HomeScreen = () => {
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cardsButton}
-							// onPress={() => navigation.navigate("secrets")}
-						>
+							onPress={() => navigation.navigate("petitesHistoires")}>
 							<View style={styles.imageContainer}>
 								<Image
 									source={histoires}
