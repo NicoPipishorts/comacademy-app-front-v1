@@ -2,7 +2,13 @@ import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
 import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { ScoreByCategory } from "@/hooks/useGetUsersScore";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+	useAnimatedStyle,
+	useSharedValue,
+	withTiming,
+} from "react-native-reanimated";
 import SmallCategroieIcons from "./icons/SmallCategroieIcons";
 
 interface Props {
@@ -11,6 +17,35 @@ interface Props {
 	shadowOpacity: number;
 	totalPoints?: number;
 }
+
+const ProgressBar = ({ progression, backgroundColor }) => {
+	const animatedHeight = useSharedValue(0);
+
+	// Animate the height when the progression changes
+	useEffect(() => {
+		animatedHeight.value = withTiming(progression, { duration: 1000 });
+	}, [progression]);
+
+	const animatedStyle = useAnimatedStyle(() => {
+		return {
+			height: `${animatedHeight.value}%`,
+		};
+	});
+
+	return (
+		<View style={styles.wrapperProgressBar}>
+			<Animated.View
+				style={[
+					styles.contentProgressBar,
+					{
+						backgroundColor: `#${backgroundColor}`,
+					},
+					animatedStyle,
+				]}
+			/>
+		</View>
+	);
+};
 
 export default function StatsBar({
 	categoriesScore,
@@ -56,17 +91,10 @@ export default function StatsBar({
 								flexDirection: "column",
 								alignItems: "center",
 							}}>
-							<View key={cat.id} style={styles.wrapperProgressBar}>
-								<View
-									style={[
-										styles.contentProgressBar,
-										{
-											backgroundColor: `#${cat.attributes.backgroundColor}`,
-											height: `${progression}%`,
-										},
-									]}
-								/>
-							</View>
+							<ProgressBar
+								progression={progression}
+								backgroundColor={cat.attributes.backgroundColor}
+							/>
 							<View
 								style={{
 									display: "flex",
