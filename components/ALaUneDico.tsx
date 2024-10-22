@@ -26,7 +26,7 @@ export default function ALaUneDico() {
 	return (
 		<TouchableOpacity style={styles.container}>
 			<Text style={styles.smallText}>
-				La dernière dico : {moment(dico.updatedAt).format("DD/MM/YYYY")}
+				La définition du jour : {moment(dico.updatedAt).format("DD/MM/YYYY")}
 			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}

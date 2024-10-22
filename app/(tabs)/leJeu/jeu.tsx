@@ -201,7 +201,7 @@ const Jeu = () => {
 					ref={swiperRef}
 					overlayLabels={overlayLabels}
 					cards={cards}
-					renderCard={(card, cardIndex) => renderCard(card, cardIndex)}
+					renderCard={(card, cardIndex) => renderCard(card)}
 					verticalSwipe={false}
 					onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
 					onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
