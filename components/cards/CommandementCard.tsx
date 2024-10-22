@@ -3,38 +3,45 @@ import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
-// Commandement Card Component
 export default function CommandementCard({
 	title,
 	text,
-	index,
 	cardWidth,
 	cardMargin,
+	index,
 }) {
 	return (
-		<LinearGradient
-			colors={["#0CA2CC", "#8BF699"]}
-			style={[
-				styles.keyCardWrapper,
-				{ width: cardWidth, marginHorizontal: cardMargin / 2 },
-			]}
-			start={{ x: 0, y: 0 }}
-			end={{ x: 1, y: 1 }}>
-			<Text style={styles.keyCardTitle}>{title} :</Text>
-			<View style={styles.cardContent}>
-				<Text style={styles.keyCardText}>{text}</Text>
-			</View>
-			<View style={styles.cardNumberWrapper}>
-				<Text style={styles.keyCardNum}>{index + 1}</Text>
-			</View>
-		</LinearGradient>
+		<View style={styles.wrapper}>
+			<LinearGradient
+				colors={["#CA87E9", "#F0ADAE"]}
+				style={[
+					styles.keyCardWrapper,
+					{ width: cardWidth, marginHorizontal: cardMargin },
+				]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}>
+				<Text style={styles.keyCardTitle}>{title} :</Text>
+				<View style={styles.cardContent}>
+					<Text style={styles.keyCardText}>{text}</Text>
+				</View>
+				<View style={styles.cardNumberWrapper}>
+					<Text style={styles.keyCardNum}>{index + 1}</Text>
+				</View>
+			</LinearGradient>
+		</View>
 	);
 }
+
 const styles = StyleSheet.create({
+	wrapper: {
+		minHeight: "100%",
+		justifyContent: "center",
+		alignItems: "center",
+	},
 	keyCardWrapper: {
 		position: "relative",
 		justifyContent: "flex-start",
-		minHeight: "80%",
+		minHeight: "70%",
 		backgroundColor: colorBlack,
 		paddingHorizontal: 30,
 		paddingTop: 40,
