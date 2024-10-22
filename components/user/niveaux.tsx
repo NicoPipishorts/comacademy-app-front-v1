@@ -207,6 +207,9 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 				</LinearGradient>
 
 				<View style={styles.niveauStatusBox}>
+					<View style={styles.niveauLabelContainer}>
+						<Text style={styles.niveauLabel}>Statut</Text>
+					</View>
 					<Text style={styles.niveauStatus}>{niveauStatut}</Text>
 				</View>
 			</View>
@@ -222,12 +225,10 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 						showsVerticalScrollIndicator={false}
 						onLayout={(event) =>
 							setScrollViewHeight(event.nativeEvent.layout.height)
-						} // Set the ScrollView height
-						onContentSizeChange={(width, height) => setContentHeight(height)} // Set content size
-					>
+						}
+						onContentSizeChange={(width, height) => setContentHeight(height)}>
 						<Text>{niveauCommentaire}</Text>
 					</ScrollView>
-					{/* Conditionally render the shadow if content overflows */}
 					{isOverflowing && <View style={styles.bottomShadow} />}
 				</View>
 			</View>
