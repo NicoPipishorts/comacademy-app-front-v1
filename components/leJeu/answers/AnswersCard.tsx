@@ -5,18 +5,17 @@ import {
 	colorWhite,
 } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import { AnswerAttributes } from "@/hooks/useGetAllAnswers";
+import { SessionResultsAllquestions } from "@/hooks/useGetEndOfSession";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	id: number;
-	data: AnswerAttributes;
-	userAnswer?: boolean;
+	data: SessionResultsAllquestions;
 }
 
-export default function AnswersCard({ id, data, userAnswer }: Props) {
+export default function AnswersCard({ id, data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	// Navigate to the answersDetails screen
