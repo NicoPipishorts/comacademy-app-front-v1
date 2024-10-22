@@ -1,6 +1,7 @@
 import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
-import useGetLaCitation from "@/hooks/useGetLaCitation";
+import useLesCitations from "@/hooks/useGetLesCitations";
+import useJwtToken from "@/hooks/useJwtToken";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import moment from "moment";
@@ -11,7 +12,8 @@ import StyledButton from "./StyledButton";
 
 export default function ALaUneCitation() {
 	const navigation = useNavigation<NavigationType>();
-	const { data, isFetched } = useGetLaCitation();
+	const { token } = useJwtToken();
+	const { data, isFetched } = useLesCitations(token);
 
 	if (!isFetched) {
 		return null;

@@ -80,6 +80,10 @@ export default function FinishedSession() {
 		return parseInt(result.slice(-1), 10);
 	};
 
+	const currentNiveau = Math.floor(
+		Math.floor(gameComments.data.totalAnsweredQuestions / 15) / 10
+	);
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerTextContainer}>
@@ -94,7 +98,9 @@ export default function FinishedSession() {
 					marginBottom: 10,
 					flexDirection: "row",
 				}}>
-				<Text style={{ fontWeight: "bold" }}>Prochain Niveau</Text>
+				<Text style={{ fontWeight: "bold", fontSize: FontSize18 }}>
+					Niveau: {currentNiveau}
+				</Text>
 			</View>
 			<View
 				style={[
