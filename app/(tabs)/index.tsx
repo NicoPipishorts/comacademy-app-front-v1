@@ -27,6 +27,7 @@ import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
 import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
+import { PushNotificationHandler } from "@/helpers/PushNotificationHandler";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
@@ -49,172 +50,175 @@ const HomeScreen = () => {
 	}
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={styles.screenHeader}>
-				<TouchableOpacity onPress={() => navigation.navigate("user")}>
-					<Text style={styles.headerText}>Hello {userData.firstName}</Text>
-				</TouchableOpacity>
-				<View style={{ marginTop: 10, marginRight: 10 }}>
-					<AvatarInitials
-						firstName={userData.firstName}
-						lastName={userData.lastName}
-					/>
+		<>
+			<PushNotificationHandler />
+			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+				<View style={styles.screenHeader}>
+					<TouchableOpacity onPress={() => navigation.navigate("user")}>
+						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
+					</TouchableOpacity>
+					<View style={{ marginTop: 10, marginRight: 10 }}>
+						<AvatarInitials
+							firstName={userData.firstName}
+							lastName={userData.lastName}
+						/>
+					</View>
 				</View>
+
+				<ScrollView
+					style={styles.contentContainer}
+					showsVerticalScrollIndicator={false}>
+					<View style={styles.header}>
+						<Text style={styles.headerShortcuts}>Accès rapide</Text>
+					</View>
+					<ScrollView
+						style={styles.shortcutsContainer}
+						horizontal={true}
+						showsHorizontalScrollIndicator={false}>
+						<View style={styles.shortcuts}>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("leJeu")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={homeJouer}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("user")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={mesStats}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("dico")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={dico}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("playlists")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={playlists}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("metiers")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={metiers}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+						</View>
+					</ScrollView>
+
+					<View style={styles.header}>
+						<Text style={styles.headerShortcuts}>Découvrir</Text>
+					</View>
+					<ScrollView
+						style={styles.shortcutsContainer}
+						horizontal={true}
+						showsHorizontalScrollIndicator={false}>
+						<View style={styles.shortcuts}>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("secrets")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={secrets}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("commandements")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={commandements}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("petitesHistoires")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={histoires}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("lesCitations")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={lesCitations}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity style={styles.cardsButton}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={homeFlopsDis}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity style={styles.cardsButton}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={homeActusDis}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+						</View>
+					</ScrollView>
+
+					<View style={styles.header}>
+						<Text style={styles.headerShortcuts}>A la une</Text>
+					</View>
+					<View style={styles.alLaUneContainer}>
+						<View style={styles.alLaUne}>
+							<ALaUneCitation />
+							<ALaUneDico />
+						</View>
+					</View>
+				</ScrollView>
 			</View>
-
-			<ScrollView
-				style={styles.contentContainer}
-				showsVerticalScrollIndicator={false}>
-				<View style={styles.header}>
-					<Text style={styles.headerShortcuts}>Accès rapide</Text>
-				</View>
-				<ScrollView
-					style={styles.shortcutsContainer}
-					horizontal={true}
-					showsHorizontalScrollIndicator={false}>
-					<View style={styles.shortcuts}>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("leJeu")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={homeJouer}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("user")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={mesStats}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("dico")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={dico}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("playlists")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={playlists}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("metiers")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={metiers}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-					</View>
-				</ScrollView>
-
-				<View style={styles.header}>
-					<Text style={styles.headerShortcuts}>Découvrir</Text>
-				</View>
-				<ScrollView
-					style={styles.shortcutsContainer}
-					horizontal={true}
-					showsHorizontalScrollIndicator={false}>
-					<View style={styles.shortcuts}>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("secrets")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={secrets}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("commandements")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={commandements}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("petitesHistoires")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={histoires}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cardsButton}
-							onPress={() => navigation.navigate("lesCitations")}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={lesCitations}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.cardsButton}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={homeFlopsDis}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.cardsButton}>
-							<View style={styles.imageContainer}>
-								<Image
-									source={homeActusDis}
-									style={styles.shortcutsCards}
-									resizeMode='contain'
-								/>
-							</View>
-						</TouchableOpacity>
-					</View>
-				</ScrollView>
-
-				<View style={styles.header}>
-					<Text style={styles.headerShortcuts}>A la une</Text>
-				</View>
-				<View style={styles.alLaUneContainer}>
-					<View style={styles.alLaUne}>
-						<ALaUneCitation />
-						<ALaUneDico />
-					</View>
-				</View>
-			</ScrollView>
-		</View>
+		</>
 	);
 };
 
