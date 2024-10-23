@@ -2,6 +2,7 @@
 	"build": {
 		"preview": {
 			"distribution": "internal"
-		}
+		},
+		"production": {}
 	}
 }
