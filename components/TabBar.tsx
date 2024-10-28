@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
 		backgroundColor: colorBlack,
 		borderRadius: 2,
 		position: "absolute",
-		bottom: 2,
+		bottom: 6,
 	},
 });
 
