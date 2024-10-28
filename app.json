@@ -11,6 +11,10 @@
 			"resizeMode": "contain",
 			"backgroundColor": "#f5f5f5"
 		},
+		"notification": {
+			"icon": "./assets/imgs/icons/favicon.png",
+			"color": "#ffffff"
+		},
 		"ios": {
 			"supportsTablet": false,
 			"bundleIdentifier": "com.nicopipishorts.comacademy"
