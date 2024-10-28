@@ -55,7 +55,6 @@ const LeJeu = () => {
 		setSessionsId(data.data.id);
 		navigation.navigate("jeu");
 	};
-
 	const handleError = (error: any) => {
 		console.error(error);
 	};
