@@ -77,7 +77,7 @@ const LeJeu = () => {
 					gameSessions.data[0]?.attributes.questionsPool;
 
 				const filteredQuestionsPool =
-					questionsLeft > 0
+					sessionQuestionsPool && questionsLeft > 0
 						? sessionQuestionsPool.slice(15 - questionsLeft)
 						: sessionQuestionsPool;
 
