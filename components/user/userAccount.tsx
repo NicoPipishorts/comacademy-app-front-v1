@@ -7,7 +7,6 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
-import useChangeUserInfo from "@/hooks/useChangeUserInfo";
 import useJwtToken from "@/hooks/useJwtToken";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
@@ -44,14 +43,14 @@ export default function UserAccount() {
 		}
 	}, [userData]);
 
-	const changeInfo = useChangeUserInfo();
-	const handleChangeInfo = () => {
-		changeInfo.mutate({
-			userId,
-			firstName: formFirstName,
-			lastName: formLastName,
-		});
-	};
+	// const changeInfo = useChangeUserInfo();
+	// const handleChangeInfo = () => {
+	// 	changeInfo.mutate({
+	// 		userId,
+	// 		firstName: formFirstName,
+	// 		lastName: formLastName,
+	// 	});
+	// };
 
 	const onPasswordChangeSuccess = () => {
 		setCurrentPassword(null);

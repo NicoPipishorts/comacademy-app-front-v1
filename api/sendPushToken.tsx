@@ -3,9 +3,9 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
 interface SavePushTokenPayload {
-	token: string; // Expo Push Token
-	userId: number; // User ID
-	authToken: string; // Authorization token (JWT)
+	token: string;
+	userId: number;
+	authToken: string;
 }
 
 interface SuccessResponse {
@@ -31,16 +31,18 @@ export const useSavePushToken = (
 					data: payload,
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${authToken}`, // Authorization token
+						Authorization: `Bearer ${authToken}`,
 					},
 				});
 
 				return response.data;
 			} catch (error) {
-				console.error(
-					"Error sending push token:",
-					error.response ? error.response.data : error.message
-				);
+				if (axios.isAxiosError(error)) {
+					console.error("Error response from server:", error.response?.data);
+					console.error("HTTP status:", error.response?.status);
+				} else {
+					console.error("Unexpected error:", error);
+				}
 				throw error;
 			}
 		},

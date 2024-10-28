@@ -51,7 +51,6 @@ const HomeScreen = () => {
 
 	return (
 		<>
-			<PushNotificationHandler />
 			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 				<View style={styles.screenHeader}>
 					<TouchableOpacity onPress={() => navigation.navigate("user")}>
@@ -64,6 +63,7 @@ const HomeScreen = () => {
 						/>
 					</View>
 				</View>
+				<PushNotificationHandler />
 
 				<ScrollView
 					style={styles.contentContainer}
