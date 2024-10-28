@@ -1,8 +1,13 @@
 {
+	"cli": {
+		"appVersionSource": "local"
+	},
 	"build": {
 		"preview": {
 			"distribution": "internal"
 		},
-		"production": {}
+		"production": {
+			"autoIncrement": true
+		}
 	}
 }
