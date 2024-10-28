@@ -18,6 +18,7 @@ import useGameSessionsQuesions from "@/hooks/useGetCurrentQuestion";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
+import { useNetwork } from "@/providers/NetworkProvider";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
@@ -27,6 +28,7 @@ import LetsPlay from "./play";
 
 const LeJeu = () => {
 	const insets = useSafeAreaInsets();
+	const { isConnected } = useNetwork();
 	const navigation = useNavigation<NavigationType>();
 	const { selectedTab, setSelectedTab } = useTab();
 	const [isEnabled, setIsEnabled] = useState(false);
@@ -172,6 +174,7 @@ const LeJeu = () => {
 						setSelectedTab={setSelectedTab}
 						selectedTab={selectedTab}
 						handlePressPlay={handlePressPlay}
+						disabled={isConnected}
 					/>
 				)}
 

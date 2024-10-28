@@ -16,6 +16,7 @@ import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
+import { useNetwork } from "@/providers/NetworkProvider"; // Import the network provider hook
 import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
@@ -27,7 +28,7 @@ import FeedbackMessage from "./feedbackMessage";
 
 const Jeu = () => {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
-
+	const { isConnected } = useNetwork();
 	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
@@ -148,15 +149,14 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
-					// transform: [{ rotate: "-90deg" }], // Rotate text -90 degrees for FAUX
 				},
 				wrapper: {
-					flexDirection: "row", // Align the overlay to span vertically
+					flexDirection: "row",
 					alignItems: "flex-start",
 					justifyContent: "flex-end",
 					paddingRight: 20,
-					width: "100%", // Take up half the width
-					height: "100%", // Take up full height
+					width: "100%",
+					height: "100%",
 				},
 			},
 		},
@@ -169,15 +169,14 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
-					// transform: [{ rotate: "90deg" }], // Rotate text +90 degrees for VRAI
 				},
 				wrapper: {
-					flexDirection: "row", // Align the overlay to span vertically
+					flexDirection: "row",
 					alignItems: "flex-start",
 					justifyContent: "flex-start",
 					paddingLeft: 20,
-					width: "100%", // Take up half the width
-					height: "100%", // Take up full height
+					width: "100%",
+					height: "100%",
 				},
 			},
 		},
@@ -198,6 +197,16 @@ const Jeu = () => {
 
 	return (
 		<View style={[styles.wrapper, { marginTop: swiperTopMargin() }]}>
+			{!isConnected && (
+				<View style={styles.overlay}>
+					<Text style={styles.overlayText}>
+						Tu as perdu ta connexion internet.
+					</Text>
+					<Text style={styles.overlayText}>
+						Ton jeu reprendra dès que tu la retrouveras.
+					</Text>
+				</View>
+			)}
 			{!showFinishedModal && (
 				<Swiper
 					ref={swiperRef}
@@ -239,6 +248,20 @@ const styles = StyleSheet.create({
 		backgroundColor: primaryBackground,
 		justifyContent: "flex-start",
 		alignItems: "center",
+	},
+	overlay: {
+		...StyleSheet.absoluteFillObject,
+		backgroundColor: "rgba(0, 0, 0, 0.75)",
+		justifyContent: "center",
+		alignItems: "center",
+		zIndex: 999,
+	},
+	overlayText: {
+		color: colorWhite,
+		fontSize: FontSize20,
+		fontWeight: "bold",
+		textAlign: "center",
+		padding: 20,
 	},
 	noDataText: {
 		fontSize: FontSize20,
