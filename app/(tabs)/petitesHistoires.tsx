@@ -35,13 +35,13 @@ const LesPetitesHistoires = () => {
 	const videoRefs = useRef({});
 
 	// Store the current index
-	const [currentIndex, setCurrentIndex] = useState(0);
+	const [, setCurrentIndex] = useState(0);
 
 	// Add a ref to the FlatList to control scrolling
 	const flatListRef = useRef(null);
 
 	// Track the currently in-focus item
-	const [focusedIndex, setFocusedIndex] = useState(null);
+	const [, setFocusedIndex] = useState(null);
 
 	// Animation values for smooth transition
 	const scrollX = useRef(new Animated.Value(0)).current;
@@ -76,7 +76,6 @@ const LesPetitesHistoires = () => {
 
 		// Stop if we are at the last video
 		if (nextIndex >= data.data.length) {
-			console.log("End of video list reached.");
 			return;
 		}
 
