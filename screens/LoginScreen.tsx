@@ -89,9 +89,13 @@ const LoginScreen = () => {
 					style={styles.input}
 					onChangeText={setEmail}
 					value={email}
+					autoCorrect={false}
 					placeholder='Email'
 					placeholderTextColor={colorBlack}
 					autoCapitalize='none'
+					keyboardType='email-address'
+					textContentType='emailAddress'
+					secureTextEntry={false}
 				/>
 			</View>
 
@@ -99,10 +103,13 @@ const LoginScreen = () => {
 				<TextInput
 					secureTextEntry={!showPassword}
 					value={password}
+					autoCorrect={false}
 					onChangeText={setPassword}
 					style={styles.input}
 					placeholder='Mot de Passe'
 					placeholderTextColor={colorBlack}
+					keyboardType='default'
+					textContentType='password'
 				/>
 				<MaterialCommunityIcons
 					name={showPassword ? "eye-off" : "eye"}
