@@ -2,7 +2,7 @@
 	"expo": {
 		"name": "Com'Academy",
 		"slug": "comacademy",
-		"version": "0.6.0",
+		"version": "0.6.1",
 		"orientation": "portrait",
 		"icon": "./assets/imgs/icons/favicon.png",
 		"scheme": "myapp",
@@ -10,6 +10,10 @@
 		"splash": {
 			"resizeMode": "contain",
 			"backgroundColor": "#f5f5f5"
+		},
+		"notification": {
+			"icon": "./assets/imgs/icons/favicon.png",
+			"color": "#ffffff"
 		},
 		"ios": {
 			"supportsTablet": false,
