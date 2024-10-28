@@ -20,7 +20,7 @@ export const PushNotificationHandler = () => {
 	const { token: authToken } = useJwtToken();
 
 	// Use the custom hook to save the push token
-	const { mutate: savePushToken, error } = useSavePushToken(
+	const { mutate: savePushToken } = useSavePushToken(
 		(data) => {},
 		(error) => {}
 	);
@@ -49,7 +49,7 @@ export const PushNotificationHandler = () => {
 		if (expoPushToken) {
 			savePushToken({ token: expoPushToken, userId, authToken });
 		}
-	}, [expoPushToken]);
+	}, [authToken, expoPushToken, savePushToken, userId]);
 
 	// Function to register for push notifications and retrieve the token
 	async function registerForPushNotificationsAsync() {
