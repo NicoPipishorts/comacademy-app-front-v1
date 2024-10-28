@@ -7,7 +7,6 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
-import useChangeUserInfo from "@/hooks/useChangeUserInfo";
 import useJwtToken from "@/hooks/useJwtToken";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
@@ -20,8 +19,8 @@ export default function UserAccount() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
-	const [formFirstName, setFormFirstName] = useState<string>("");
-	const [formLastName, setFormLastName] = useState<string>("");
+	// const [formFirstName, setFormFirstName] = useState<string>("");
+	// const [formLastName, setFormLastName] = useState<string>("");
 	const [currentPassword, setCurrentPassword] = useState<string>("");
 	const [newPassword, setNewPassword] = useState<string>("");
 	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
@@ -35,23 +34,24 @@ export default function UserAccount() {
 
 	const showSnackbar = useSnackbar(); // Use the snackbar context
 
-	useEffect(() => {
-		if (userData && userData.firstName) {
-			setFormFirstName(userData.firstName);
-		}
-		if (userData && userData.lastName) {
-			setFormLastName(userData.lastName);
-		}
-	}, [userData]);
+	// useEffect(() => {
+	// 	if (userData && userData.firstName) {
+	// 		setFormFirstName(userData.firstName);
+	// 	}
+	// 	if (userData && userData.lastName) {
+	// 		setFormLastName(userData.lastName);
+	// 	}
+	// }, [userData]);
 
-	const changeInfo = useChangeUserInfo();
-	const handleChangeInfo = () => {
-		changeInfo.mutate({
-			userId,
-			firstName: formFirstName,
-			lastName: formLastName,
-		});
-	};
+	// const changeInfo = useChangeUserInfo();
+
+	// const handleChangeInfo = () => {
+	// 	changeInfo.mutate({
+	// 		userId,
+	// 		firstName: formFirstName,
+	// 		lastName: formLastName,
+	// 	});
+	// };
 
 	const onPasswordChangeSuccess = () => {
 		setCurrentPassword(null);
