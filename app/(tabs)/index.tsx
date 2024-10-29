@@ -8,10 +8,7 @@ import {
 	View,
 } from "react-native";
 
-// Custom images
-import { primaryBackground } from "@/constants/colors";
-import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
-
+// Custom images and constants
 import commandements from "@/assets/imgs/cards/home_10_commandements.png";
 import secrets from "@/assets/imgs/cards/home_3_secrets.png";
 import homeActusDis from "@/assets/imgs/cards/home_actus_dis.png";
@@ -23,11 +20,14 @@ import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
 import playlists from "@/assets/imgs/cards/home_playlists.png";
+import { primaryBackground } from "@/constants/colors";
+import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
+
+// Components and hooks
 import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
 import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
-import { PushNotificationHandler } from "@/helpers/PushNotificationHandler";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetUserInfo from "@/hooks/userUserInfo";
 import useUserId from "@/hooks/useUserId";
@@ -51,7 +51,6 @@ const HomeScreen = () => {
 
 	return (
 		<>
-			<PushNotificationHandler />
 			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 				<View style={styles.screenHeader}>
 					<TouchableOpacity onPress={() => navigation.navigate("user")}>

@@ -11,7 +11,7 @@ import {
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
-import { useGameContext } from "@/providers/gameDataContext";
+import { useGameContext } from "@/providers/GameDataContext";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function AnswersPostGame() {

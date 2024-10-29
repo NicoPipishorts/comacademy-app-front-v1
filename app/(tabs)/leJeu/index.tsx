@@ -17,7 +17,7 @@ import useGameSessions from "@/hooks/useGameSessions";
 import useGameSessionsQuesions from "@/hooks/useGetCurrentQuestion";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import { useGameContext } from "@/providers/gameDataContext";
+import { useGameContext } from "@/providers/GameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
