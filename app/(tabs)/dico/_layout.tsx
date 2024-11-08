@@ -1,28 +1,25 @@
-import { GameProvider } from "@/providers/GameDataContext";
 import { Stack } from "expo-router";
 import React from "react";
 
 const LeJeuLayout = () => {
 	return (
-		<GameProvider>
-			<Stack>
-				<Stack.Screen
-					name='index'
-					options={{
-						headerShown: false,
-						headerTitle: "Le Dico",
-					}}
-				/>
-				<Stack.Screen
-					name='dicoDetails'
-					options={{
-						headerShown: false,
-						headerTitle: "Le Dico Details",
-						presentation: "modal",
-					}}
-				/>
-			</Stack>
-		</GameProvider>
+		<Stack>
+			<Stack.Screen
+				name='index'
+				options={{
+					headerShown: false,
+					headerTitle: "Le Dico",
+				}}
+			/>
+			<Stack.Screen
+				name='dicoDetails'
+				options={{
+					headerShown: false,
+					headerTitle: "Le Dico Details",
+					presentation: "modal",
+				}}
+			/>
+		</Stack>
 	);
 };
 

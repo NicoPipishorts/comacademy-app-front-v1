@@ -15,7 +15,7 @@ import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import { useGameContext } from "@/providers/GameDataContext";
+import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider"; // Import the network provider hook
 import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
