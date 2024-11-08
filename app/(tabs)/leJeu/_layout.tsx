@@ -1,4 +1,4 @@
-import { GameProvider } from "@/providers/GameDataContext";
+import { GameProvider } from "@/providers/gameDataContext";
 import { Stack } from "expo-router";
 import React from "react";
 

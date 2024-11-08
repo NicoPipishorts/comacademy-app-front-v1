@@ -14,7 +14,7 @@ import {
 } from "@/hooks/useGetEndOfSession";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import { useGameContext } from "@/providers/GameDataContext";
+import { useGameContext } from "@/providers/gameDataContext";
 import { NavigationType } from "@/types/general";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
