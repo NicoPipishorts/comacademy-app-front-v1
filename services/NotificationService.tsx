@@ -35,3 +35,41 @@ export function setupNotificationChannels() {
 		});
 	}
 }
+
+// Function to schedule a one-time or repeating local notification
+export async function scheduleLocalNotification(
+	title: string,
+	body: string,
+	trigger: Notifications.NotificationTriggerInput
+) {
+	await Notifications.scheduleNotificationAsync({
+		content: {
+			title,
+			body,
+		},
+		trigger,
+	});
+}
+
+// Function to schedule a daily notification at a specified time
+export function scheduleDailyNotification(
+	title: string,
+	body: string,
+	hour: number,
+	minute: number
+) {
+	return scheduleLocalNotification(title, body, {
+		hour,
+		minute,
+		repeats: true,
+	});
+}
+
+// Function to schedule multiple notifications with specified delays in seconds
+export function scheduleMultipleNotifications(
+	notifications: { title: string; body: string; delayInSeconds: number }[]
+) {
+	notifications.forEach(({ title, body, delayInSeconds }) => {
+		scheduleLocalNotification(title, body, { seconds: delayInSeconds });
+	});
+}
