@@ -1,4 +1,3 @@
-import { GameScore } from "@/hooks/useGetEndOfSession";
 import { GameSessionQuestionData } from "@/types/game";
 import React, {
 	createContext,
@@ -19,8 +18,8 @@ interface GameContextType {
 	setCurrentCardId: React.Dispatch<React.SetStateAction<number>>;
 	playing: boolean;
 	setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
-	score: GameScore;
-	setScore: React.Dispatch<React.SetStateAction<GameScore>>;
+	score: number;
+	setScore: React.Dispatch<React.SetStateAction<number>>;
 	showFinishedModal: boolean;
 	setShowFinishedModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -34,7 +33,7 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [sessionId, setSessionsId] = useState<number>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
 	const [currentCardId, setCurrentCardId] = useState<number>(null);
-	const [score, setScore] = useState<GameScore | null>(null);
+	const [score, setScore] = useState<number | null>(null);
 	const [showFinishedModal, setShowFinishedModal] = useState<boolean>(false);
 	const [playing, setPlaying] = useState<boolean>(false);
 

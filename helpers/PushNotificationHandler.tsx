@@ -8,63 +8,56 @@ import { Alert, Platform } from "react-native";
 // Set up notification handler to show alerts in foreground
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
-		shouldShowAlert: true, // Ensure notification is shown when the app is in foreground
+		shouldShowAlert: true,
 		shouldPlaySound: true,
 		shouldSetBadge: true,
 	}),
 });
 
 export const PushNotificationHandler = () => {
-	const [expoPushToken, setExpoPushToken] = useState("");
+	const [expoPushToken, setExpoPushToken] = useState(null);
 	const { userId } = useUserId();
 	const { token: authToken } = useJwtToken();
-
-	// Use the custom hook to save the push token
 	const { mutate: savePushToken } = useSavePushToken(
 		(data) => {},
 		(error) => {}
 	);
 
 	useEffect(() => {
-		// Register for push notifications and set the token
-		registerForPushNotificationsAsync().then((token) => {
-			setExpoPushToken(token);
-		});
-
-		// Handle notification received when the app is open (foreground)
-		const notificationListener = Notifications.addNotificationReceivedListener(
-			(notification) => {
-				console.log("This is the received push notification: ", notification);
-			}
-		);
-
-		// Clean up listener when the component unmounts
-		return () => {
-			Notifications.removeNotificationSubscription(notificationListener);
-		};
+		// Initialize push notification setup on mount
+		initializePushNotifications();
 	}, []);
 
-	// Trigger the savePushToken mutation when the expoPushToken is set
 	useEffect(() => {
+		// Save push token to backend when it changes
 		if (expoPushToken) {
 			savePushToken({ token: expoPushToken, userId, authToken });
 		}
-	}, [authToken, expoPushToken, savePushToken, userId]);
+	}, [expoPushToken, userId, authToken, savePushToken]);
+
+	// Function to initialize push notifications
+	const initializePushNotifications = async () => {
+		const token = await registerForPushNotificationsAsync();
+		if (token) setExpoPushToken(token);
+
+		// Add listeners for received notifications
+		Notifications.addNotificationReceivedListener(handleNotificationReceived);
+		Notifications.addNotificationResponseReceivedListener(
+			handleNotificationResponse
+		);
+
+		// Schedule notifications
+		await scheduleNotifications();
+	};
 
 	// Function to register for push notifications and retrieve the token
-	async function registerForPushNotificationsAsync() {
-		let token;
-		// Request permissions for push notifications
+	const registerForPushNotificationsAsync = async () => {
 		const { status } = await Notifications.requestPermissionsAsync();
 		if (status !== "granted") {
-			Alert.alert(
-				"Permission required",
-				"Failed to get push token for push notification!"
-			);
-			return;
+			Alert.alert("Permission required", "Failed to get push token!");
+			return null;
 		}
 
-		// Android-specific notification channel setup
 		if (Platform.OS === "android") {
 			await Notifications.setNotificationChannelAsync("default", {
 				name: "default",
@@ -74,11 +67,49 @@ export const PushNotificationHandler = () => {
 			});
 		}
 
-		// Get the Expo push token for the device
-		token = (await Notifications.getExpoPushTokenAsync()).data;
+		const token = (await Notifications.getExpoPushTokenAsync()).data;
 		return token;
-	}
+	};
 
-	// Return null because this component only handles background logic
-	return null;
+	// Handler for received notifications
+	const handleNotificationReceived = (notification) => {
+		console.log("Notification received:", notification);
+	};
+
+	// Handler for notification response (when tapped)
+	const handleNotificationResponse = (response) => {
+		console.log("Notification response tapped:", response);
+	};
+
+	// Function to schedule notifications at specific intervals
+	const scheduleNotifications = async () => {
+		await Notifications.cancelAllScheduledNotificationsAsync();
+
+		const notifications = [
+			// {
+			// 	title: "Quick Reminder",
+			// 	body: "This is your first scheduled notification!",
+			// 	seconds: 10,
+			// },
+			// {
+			// 	title: "Another Reminder",
+			// 	body: "Here’s another notification for you!",
+			// 	seconds: 30,
+			// },
+			// {
+			// 	title: "Final Reminder",
+			// 	body: "This is the last scheduled notification.",
+			// 	seconds: 60,
+			// },
+		];
+
+		for (const { title, body, seconds } of notifications) {
+			await Notifications.scheduleNotificationAsync({
+				content: { title, body },
+				trigger: { seconds },
+			});
+		}
+	};
+
+	return null; // This component only sets up notifications; no UI needed
 };

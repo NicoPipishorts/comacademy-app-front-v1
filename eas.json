@@ -1,8 +1,8 @@
 {
+	"cli": {
+		"appVersionSource": "local"
+	},
 	"build": {
-		"cli": {
-			"appVersionSource": "local"
-		},
 		"preview": {
 			"distribution": "internal"
 		},
