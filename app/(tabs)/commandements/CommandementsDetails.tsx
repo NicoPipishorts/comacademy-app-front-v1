@@ -111,7 +111,7 @@ export default function CommandementsDetails() {
 			.map((key, index) => {
 				const astuceValue = commandements[key];
 				if (!astuceValue) return null;
-				const [title, text] = astuceValue.split(":");
+				const [title, text] = astuceValue.split(/\r?\n/, 2); // Split at the first line break
 				return { type: "CommandementCard", title, text, index };
 			}),
 	];
