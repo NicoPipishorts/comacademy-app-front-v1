@@ -8,7 +8,7 @@ const fetchUserInfo = async (
 ): Promise<LoginUser> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/users/${userId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/users/${userId}?populate=*`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

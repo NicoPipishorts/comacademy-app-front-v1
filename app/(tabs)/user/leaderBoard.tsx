@@ -3,9 +3,14 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import { useGetUsersScore } from "@/hooks/useGetUsersScore";
+import {
+	AllUsersScoreResponse,
+	useGetUsersScore,
+	UserScoreData,
+} from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import useGetUserInfo from "@/hooks/useUserInfo";
 import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,11 +21,44 @@ export default function LeaderBoard() {
 	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
 
+	const { data: userData } = useGetUserInfo(currentUser);
 	const { data: allScores } = useGetUsersScore(token);
 
-	if (!allScores) {
+	if (!userData || !allScores) {
 		return <Loader />;
 	}
+
+	function filterUsersByRole(
+		allScores: AllUsersScoreResponse,
+		currentRole: string
+	): UserScoreData[] {
+		// If the current role is "Authenticated", return the entire list
+		if (currentRole === "Authenticated") {
+			return allScores.data;
+		}
+
+		// If the current role is "EducationPro", return all roles that start with "Education"
+		if (currentRole === "EducationPro") {
+			return allScores.data.filter((user) =>
+				user.attributes.user.role.startsWith("Education")
+			);
+		}
+
+		// Otherwise, filter users by the currentRole
+		return allScores.data.filter(
+			(user) => user.attributes.user.role === currentRole
+		);
+	}
+
+	// Find the current user's role
+	const currentUserInfo = allScores.data.find(
+		(user) => user.attributes.user.userId === currentUser
+	);
+
+	const currentRole = currentUserInfo?.attributes.user.role;
+
+	// Get the filtered list of users
+	const filteredUsers = filterUsersByRole(allScores, currentRole);
 
 	return (
 		<>
@@ -29,21 +67,20 @@ export default function LeaderBoard() {
 					styles.wrapper,
 					{
 						paddingTop: isAndroid ? insets.top : 20,
-						paddingBottom: isAndroid ? 120 : 60,
+						paddingBottom: isAndroid ? 20 : 60,
 					},
 				]}>
 				<ScreenHeaders content='Classement' />
 				<ScrollView
+					showsVerticalScrollIndicator={false}
 					style={{
-						marginTop: 40,
-						paddingTop: 20,
-						paddingBottom: 40,
+						marginTop: 20,
 						backgroundColor: colorWhite,
 						borderRadius: 20,
+						flex: 1,
 					}}>
-					{allScores.data.map((user) => {
-						const isSelected =
-							currentUser === Number(user.attributes.user.userId);
+					{filteredUsers.map((user) => {
+						const isSelected = currentUser === user.attributes.user.userId;
 
 						return (
 							<View
