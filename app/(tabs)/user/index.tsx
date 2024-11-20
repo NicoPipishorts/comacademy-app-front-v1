@@ -7,6 +7,7 @@ import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -38,6 +39,8 @@ export default function User() {
 	const [refreshing, setRefreshing] = useState(false);
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+	useTrackPageMetrics({ page: "User", token });
 
 	const { data: scores, refetch } = useGetUserScore(token, userId);
 

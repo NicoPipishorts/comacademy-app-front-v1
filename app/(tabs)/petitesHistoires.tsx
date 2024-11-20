@@ -3,6 +3,7 @@ import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetPetitesHistoires from "@/hooks/useGetPetitesHistoires";
 import useJwtToken from "@/hooks/useJwtToken";
 import { Video } from "expo-av"; // Import the Video component from expo-av
@@ -22,6 +23,8 @@ const LesPetitesHistoires = () => {
 	const { token } = useJwtToken();
 	const { data, isLoading } = useGetPetitesHistoires(token);
 	const insets = useSafeAreaInsets();
+
+	useTrackPageMetrics({ page: "PetiteHistoires", token });
 
 	// Get device width and calculate video height based on 9:16 aspect ratio for portrait video
 	const { width } = Dimensions.get("window"); // Get the full width of the device

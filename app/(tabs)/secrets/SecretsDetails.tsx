@@ -102,8 +102,6 @@ export default function SecretsDetails() {
 
 	const { Title, ...keys } = secretsData.attributes;
 
-	console.log(secretsData.attributes.Key1);
-
 	// Create an array for rendering TitleCard and SecretCard components
 	const cardsData = [
 		{ type: "TitleCard", title: Title },
