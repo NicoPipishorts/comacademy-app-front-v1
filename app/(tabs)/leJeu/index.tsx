@@ -12,6 +12,7 @@ import { StyleSheet, Switch, Text, View } from "react-native";
 import { StartNewGameSession } from "@/api/gameNewSession";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGameQuestions from "@/hooks/useGameQuestions";
 import useGameSessions from "@/hooks/useGameSessions";
 import useGameSessionsQuesions from "@/hooks/useGetCurrentQuestion";
@@ -45,6 +46,8 @@ const LeJeu = () => {
 		playing,
 		setPlaying,
 	} = useGameContext();
+
+	useTrackPageMetrics({ page: "Jeu", token });
 
 	// Always call the hooks
 	const { data: gameSessions, isFetched: fetchedGameSessions } =

@@ -3,9 +3,11 @@ import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
@@ -19,6 +21,9 @@ const Metier = () => {
 	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
+	const { token } = useJwtToken();
+
+	useTrackPageMetrics({ page: "Metiers", token });
 
 	const { data: dataMetier, isLoading: isLoadingMetier } =
 		useGetMetiers(filterByCat);

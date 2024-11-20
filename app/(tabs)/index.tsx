@@ -28,7 +28,9 @@ import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
 import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
 import { NavigationType } from "@/types/general";
@@ -40,6 +42,9 @@ const HomeScreen = () => {
 	const navigation = useNavigation<NavigationType>();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
+	const { token } = useJwtToken();
+
+	useTrackPageMetrics({ page: "Dashboard", token });
 
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["Citations"] });

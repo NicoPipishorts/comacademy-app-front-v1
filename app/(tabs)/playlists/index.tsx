@@ -1,12 +1,18 @@
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import { primaryBackground } from "@/constants/colors";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useJwtToken from "@/hooks/useJwtToken";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Playlist = () => {
 	const insets = useSafeAreaInsets();
+	const { token } = useJwtToken();
+
+	useTrackPageMetrics({ page: "Playlists", token });
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Playlists' />

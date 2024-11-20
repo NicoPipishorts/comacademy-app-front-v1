@@ -3,7 +3,9 @@ import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useSecrets } from "@/context/contextSecrets";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetAllSecrets from "@/hooks/useGetAllSecrets";
+import useJwtToken from "@/hooks/useJwtToken";
 import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +14,9 @@ export default function Secrets() {
 	const insets = useSafeAreaInsets();
 	const { data: secrets, isFetched } = useGetAllSecrets();
 	const { setData } = useSecrets();
+	const { token } = useJwtToken();
+
+	useTrackPageMetrics({ page: "Secrets", token });
 
 	useEffect(() => {
 		if (isFetched) {
