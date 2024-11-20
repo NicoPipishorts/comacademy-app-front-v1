@@ -9,6 +9,14 @@ export interface LoginUser {
 	updatedAt: string;
 	firstName: string;
 	lastName: string;
+	role: {
+		id: number;
+		name: string;
+		description: string;
+		type: string;
+		createdAt: string;
+		updatedAt: string;
+	};
 }
 
 export interface LoginPayload {

@@ -8,9 +8,10 @@ export interface ScoreByCategory {
 }
 
 export interface UserAttributes {
-	userId: string;
+	userId: number;
 	firstName: string;
 	lastName: string;
+	role: string;
 }
 
 export interface UserScoreAttributes {

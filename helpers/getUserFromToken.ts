@@ -13,6 +13,7 @@ interface User {
 	updatedAt: string;
 	firstName: string;
 	lastName: string;
+	role: number;
 }
 
 const getUserFromToken = async (): Promise<User | null> => {
