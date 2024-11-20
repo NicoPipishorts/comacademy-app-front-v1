@@ -81,15 +81,20 @@ const Jeu = () => {
 		return () => showTabBar();
 	}, [hideTabBar, showTabBar]);
 
+	console.log(sessionId, questionsLeft, playing, feedbackVisible);
 	useEffect(() => {
-		if (sessionId && questionsLeft <= 0) {
-			if (playing) {
-				setShowFinishedModal(true);
-			}
-		} else {
-			setShowFinishedModal(false);
+		if (sessionId && questionsLeft <= 0 && playing && !feedbackVisible) {
+			setShowFinishedModal(true);
+			navigation.navigate("finishedSession");
 		}
-	}, [sessionId, questionsLeft, setShowFinishedModal, playing]);
+	}, [
+		sessionId,
+		questionsLeft,
+		playing,
+		feedbackVisible,
+		navigation,
+		setShowFinishedModal,
+	]);
 
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
@@ -149,6 +154,7 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
+					// transform: [{ rotate: "-90deg" }], // Rotate text -90 degrees for FAUX
 				},
 				wrapper: {
 					flexDirection: "row",
@@ -169,6 +175,7 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
+					// transform: [{ rotate: "90deg" }], // Rotate text +90 degrees for VRAI
 				},
 				wrapper: {
 					flexDirection: "row",
