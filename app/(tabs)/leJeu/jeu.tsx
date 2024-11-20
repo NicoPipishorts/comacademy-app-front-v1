@@ -81,7 +81,6 @@ const Jeu = () => {
 		return () => showTabBar();
 	}, [hideTabBar, showTabBar]);
 
-	console.log(sessionId, questionsLeft, playing, feedbackVisible);
 	useEffect(() => {
 		if (sessionId && questionsLeft <= 0 && playing && !feedbackVisible) {
 			setShowFinishedModal(true);

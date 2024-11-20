@@ -8,6 +8,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useGetUserAnswers } from "@/hooks/useGetAllAnswers";
 
 import useJwtToken from "@/hooks/useJwtToken";
@@ -18,6 +19,8 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 export default function Answers() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
+
+	useTrackPageMetrics({ page: "AllAnswers", token });
 
 	const { data: all } = useGetUserAnswers(token, userId);
 

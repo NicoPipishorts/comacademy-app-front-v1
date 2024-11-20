@@ -4,6 +4,7 @@ import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSize22 } from "@/constants/fontsizes";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useLesCitations from "@/hooks/useGetLesCitations";
 import useJwtToken from "@/hooks/useJwtToken";
 import moment from "moment";
@@ -16,6 +17,8 @@ const LesCitations = () => {
 	const { data, isLoading } = useLesCitations(token);
 	const insets = useSafeAreaInsets();
 	const scrollViewRef = useRef(null); // Ref for ScrollView
+
+	useTrackPageMetrics({ page: "Citations", token });
 
 	// Function to scroll to the end of the ScrollView (immediately)
 	const scrollToEnd = () => {

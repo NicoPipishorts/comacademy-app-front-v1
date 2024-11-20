@@ -3,6 +3,7 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import {
 	AllUsersScoreResponse,
 	useGetUsersScore,
@@ -20,6 +21,8 @@ export default function LeaderBoard() {
 	const { userId: currentUser } = useUserId();
 	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
+
+	useTrackPageMetrics({ page: "LeaderBoard", token });
 
 	const { data: userData } = useGetUserInfo(currentUser);
 	const { data: allScores } = useGetUsersScore(token);
