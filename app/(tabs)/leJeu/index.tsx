@@ -116,7 +116,7 @@ const LeJeu = () => {
 					setQuestionsLeft(15 - currentQuestions.meta.pagination.total);
 				}
 			} else {
-				if (!questionsLeft) {
+				if (!questionsLeft && !playing) {
 					setQuestionsLeft(15);
 				}
 				setDataGame(
