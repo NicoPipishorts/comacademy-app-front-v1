@@ -11,9 +11,7 @@ export const useTrackPageMetrics = ({
 	page,
 	token,
 }: UseTrackPageMetricsProps) => {
-	const onSuccess = (data: any) => {
-		console.log(`Page metrics for "${page}" updated successfully:`, data);
-	};
+	const onSuccess = (data: any) => {};
 
 	const onError = (error: AxiosError) => {
 		console.error(

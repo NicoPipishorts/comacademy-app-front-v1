@@ -7,7 +7,6 @@ import {
 } from "@/services/NotificationService";
 import * as Notifications from "expo-notifications";
 import React, { createContext, useEffect, useState } from "react";
-import { Alert } from "react-native";
 
 interface PushNotificationContextType {
 	expoPushToken: string | null;
@@ -33,7 +32,7 @@ export const PushNotificationProvider: React.FC<{
 			if (token) {
 				setExpoPushToken(token);
 			} else {
-				Alert.alert("Notification Setup Failed", "Could not get push token.");
+				// Alert.alert("Notification Setup Failed", "Could not get push token.");
 			}
 		});
 
