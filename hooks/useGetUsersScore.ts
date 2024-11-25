@@ -12,6 +12,10 @@ export interface UserAttributes {
 	firstName: string;
 	lastName: string;
 	role: string;
+	clients: {
+		id: number;
+		name: string;
+	};
 }
 
 export interface UserScoreAttributes {
