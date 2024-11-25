@@ -31,37 +31,66 @@ export default function LeaderBoard() {
 		return <Loader />;
 	}
 
-	function filterUsersByRole(
+	function filterUsersByRoleAndClients(
 		allScores: AllUsersScoreResponse,
-		currentRole: string
+		currentRole: string,
+		currentClients: { id: number; name: string }[]
 	): UserScoreData[] {
-		// If the current role is "Authenticated", return the entire list
+		// If the current role is "Authenticated", return all users
 		if (currentRole === "Authenticated") {
 			return allScores.data;
 		}
 
-		// If the current role is "EducationPro", return all roles that start with "Education"
+		// If the current role is "EducationPro", return all users with overlapping clients
 		if (currentRole === "EducationPro") {
-			return allScores.data.filter((user) =>
-				user.attributes.user.role.startsWith("Education")
-			);
+			return allScores.data.filter((user) => {
+				const userClients = Array.isArray(user.attributes.user.clients)
+					? user.attributes.user.clients
+					: [user.attributes.user.clients]; // Ensure it's always an array
+
+				return userClients.some((client) =>
+					currentClients.some((currentClient) => currentClient.id === client.id)
+				);
+			});
 		}
 
-		// Otherwise, filter users by the currentRole
-		return allScores.data.filter(
-			(user) => user.attributes.user.role === currentRole
-		);
+		// For other roles, filter by role and clients
+		return allScores.data.filter((user) => {
+			const userClients = Array.isArray(user.attributes.user.clients)
+				? user.attributes.user.clients
+				: [user.attributes.user.clients]; // Ensure it's always an array
+
+			// Match both role and at least one common client
+			return (
+				user.attributes.user.role === currentRole &&
+				(currentClients.length === 0 ||
+					userClients.some((client) =>
+						currentClients.some(
+							(currentClient) => currentClient.id === client.id
+						)
+					))
+			);
+		});
 	}
 
-	// Find the current user's role
+	// Find the current user's role and clients
 	const currentUserInfo = allScores.data.find(
 		(user) => user.attributes.user.userId === currentUser
 	);
 
-	const currentRole = currentUserInfo?.attributes.user.role;
+	const currentRole = currentUserInfo?.attributes.user.role || "";
+	const currentClients = currentUserInfo?.attributes.user.clients || [];
 
 	// Get the filtered list of users
-	const filteredUsers = filterUsersByRole(allScores, currentRole);
+	const normalizedClients = Array.isArray(currentClients)
+		? currentClients
+		: [currentClients]; // Ensure it's always an array
+
+	const filteredUsers = filterUsersByRoleAndClients(
+		allScores,
+		currentRole,
+		normalizedClients
+	);
 
 	return (
 		<>
@@ -85,6 +114,15 @@ export default function LeaderBoard() {
 					{filteredUsers.map((user) => {
 						const isSelected = currentUser === user.attributes.user.userId;
 
+						const firstName =
+							user.attributes.user.firstName.length > 10
+								? `${user.attributes.user.firstName.slice(0, 10)}...`
+								: user.attributes.user.firstName;
+						const lastName =
+							user.attributes.user.lastName.length > 10
+								? `${user.attributes.user.lastName.slice(0, 10)}...`
+								: user.attributes.user.lastName;
+
 						return (
 							<View
 								key={user.attributes.user.userId}
@@ -101,8 +139,7 @@ export default function LeaderBoard() {
 										style={styles.resultRowSelected}>
 										<View style={{ flexDirection: "row", paddingLeft: 5 }}>
 											<Text style={[styles.resultsText, { color: colorWhite }]}>
-												{user.attributes.user.firstName}{" "}
-												{user.attributes.user.lastName}
+												{firstName} {lastName}
 											</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
@@ -157,5 +194,6 @@ const styles = StyleSheet.create({
 	resultsText: {
 		fontSize: FontSize16,
 		fontWeight: "bold",
+		textTransform: "capitalize",
 	},
 });
