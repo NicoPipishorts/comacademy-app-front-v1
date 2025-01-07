@@ -1,3 +1,4 @@
+import { useCreateNewPlaylist } from "@/api/createNewPlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
@@ -6,19 +7,35 @@ import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useJwtToken from "@/hooks/useJwtToken";
+import useUserId from "@/hooks/useUserId";
+import { AxiosError } from "axios";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Playlist = () => {
 	const insets = useSafeAreaInsets();
+	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState(false);
+
+	const onSuccess = (data: any) => {
+		console.log("successfully created the new playlist : ", data);
+	};
+
+	const onError = (error: AxiosError) => {
+		console.error(`Failed to create new playlist":`, error.message);
+	};
+
+	const { mutate: createNewPlaylist } = useCreateNewPlaylist(
+		onSuccess,
+		onError
+	);
 
 	useTrackPageMetrics({ page: "Playlists", token });
 
 	const handleCreatePlaylist = (name: string) => {
-		// Handle playlist creation logic here
+		createNewPlaylist({ name, userId, authToken: token });
 		setModalVisible(false);
 	};
 

@@ -1,4 +1,4 @@
-import { useCustomPageMetrics } from "@/api/customePageMetrics";
+import { useCustomPageMetrics } from "@/api/customPageMetrics";
 import { AxiosError } from "axios";
 import { useEffect } from "react";
 
