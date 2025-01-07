@@ -2,15 +2,26 @@ import { useCreateNewPlaylist } from "@/api/createNewPlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
+import CardPlaylist from "@/components/cards/CardPlaylists";
+import Loader from "@/components/experience/loader";
 import NewPlaylistModal from "@/components/modal/NewPlaylistModal";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useGetPlaylistsByUser from "@/hooks/Playlistss/getPlaylistsByUser";
+import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { AxiosError } from "axios";
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+	Image,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Playlist = () => {
@@ -19,8 +30,13 @@ const Playlist = () => {
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState(false);
 
+	useTrackPageMetrics({ page: "Playlists", token });
+
+	// ----- Create playist code below
 	const onSuccess = (data: any) => {
-		console.log("successfully created the new playlist : ", data);
+		queryClient.refetchQueries({
+			queryKey: ["Playlists"],
+		});
 	};
 
 	const onError = (error: AxiosError) => {
@@ -32,12 +48,13 @@ const Playlist = () => {
 		onError
 	);
 
-	useTrackPageMetrics({ page: "Playlists", token });
-
-	const handleCreatePlaylist = (name: string) => {
-		createNewPlaylist({ name, userId, authToken: token });
+	const handleCreatePlaylist = (name: string, selectedColor: string) => {
+		createNewPlaylist({ name, selectedColor, userId, authToken: token });
 		setModalVisible(false);
 	};
+	// ----- End create playlist
+
+	const { data: playlistsData, isLoading } = useGetPlaylistsByUser(userId);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -55,9 +72,26 @@ const Playlist = () => {
 				</View>
 			</TouchableOpacity>
 
-			<CardFavoritesList type='favorites' title='Questions ' />
-			<CardFavoritesList type='metiers' title='Les Metiers ' />
-			<CardFavoritesList type='dicos' title='Dico ' />
+			<ScrollView
+				style={styles.playlistsContainer}
+				showsVerticalScrollIndicator={false}>
+				<CardFavoritesList type='favorites' title='Questions ' />
+				<CardFavoritesList type='metiers' title='Les Metiers ' />
+				<CardFavoritesList type='dicos' title='Dico ' />
+
+				{isLoading && <Loader />}
+				{!isLoading &&
+					playlistsData &&
+					playlistsData.data.map((playlist) => {
+						return (
+							<CardPlaylist
+								key={playlist.id}
+								title={playlist.attributes.name}
+								color={playlist.attributes.selectedColor}
+							/>
+						);
+					})}
+			</ScrollView>
 
 			<NewPlaylistModal
 				visible={modalVisible}
@@ -73,6 +107,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		padding: 30,
 		backgroundColor: primaryBackground,
+	},
+	playlistsContainer: {
+		marginBottom: 60,
 	},
 	addPlaylistContainer: {
 		flexDirection: "row",

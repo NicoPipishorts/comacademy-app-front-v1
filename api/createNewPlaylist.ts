@@ -5,6 +5,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 interface payload {
 	userId: number;
 	name: string;
+	selectedColor: string;
 	authToken: string;
 }
 
@@ -21,7 +22,7 @@ export const useCreateNewPlaylist = (
 	onError: (error: AxiosError) => void
 ) => {
 	return useMutation<SuccessResponse, AxiosError, payload>({
-		mutationFn: async ({ userId, name, authToken }: payload) => {
+		mutationFn: async ({ userId, name, selectedColor, authToken }: payload) => {
 			try {
 				const response: AxiosResponse<SuccessResponse> = await axios({
 					method: "POST",
@@ -34,6 +35,7 @@ export const useCreateNewPlaylist = (
 						data: {
 							userId,
 							name,
+							selectedColor,
 						},
 					},
 				});

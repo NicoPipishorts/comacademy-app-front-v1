@@ -4,17 +4,20 @@ import React, { useCallback, useRef, useState } from "react";
 import {
 	Animated,
 	Modal,
+	Pressable,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { colorArray } from "../user/changeAvatar";
 
 interface NewPlaylistModalProps {
 	visible: boolean;
 	onClose: () => void;
-	onSubmit: (name: string) => void;
+	onSubmit: (name: string, selectedColor: string) => void;
 }
 
 const NewPlaylistModal = ({
@@ -24,6 +27,7 @@ const NewPlaylistModal = ({
 }: NewPlaylistModalProps) => {
 	const [playlistName, setPlaylistName] = useState("");
 	const slideAnim = useRef(new Animated.Value(300)).current;
+	const [selectedColor, setSelectedColor] = useState<string>();
 
 	const showModal = useCallback(() => {
 		Animated.spring(slideAnim, {
@@ -43,7 +47,7 @@ const NewPlaylistModal = ({
 	};
 
 	const handleSubmit = () => {
-		onSubmit(playlistName);
+		onSubmit(playlistName, selectedColor);
 		setPlaylistName("");
 	};
 
@@ -52,6 +56,10 @@ const NewPlaylistModal = ({
 			showModal();
 		}
 	}, [showModal, visible]);
+
+	const onPress = (color: string) => {
+		setSelectedColor(color);
+	};
 
 	return (
 		<Modal
@@ -83,6 +91,44 @@ const NewPlaylistModal = ({
 								onChangeText={setPlaylistName}
 							/>
 
+							<ScrollView
+								horizontal
+								contentContainerStyle={styles.colorsContainer}
+								showsHorizontalScrollIndicator={false}>
+								{colorArray.map((color, index) => {
+									return (
+										<View
+											key={index}
+											style={{
+												justifyContent: "flex-start",
+												marginRight: 10,
+											}}>
+											<Pressable
+												style={[
+													styles.colorContainer,
+													{ backgroundColor: color },
+												]}
+												onPress={() => onPress(color)}
+											/>
+											<View
+												style={{
+													marginTop: 6,
+													marginLeft: 8,
+													width: 26,
+													minHeight: 4,
+													borderRadius: 2,
+													backgroundColor: selectedColor
+														? selectedColor === color
+															? colorBlack
+															: primaryBackground
+														: "",
+												}}
+											/>
+										</View>
+									);
+								})}
+							</ScrollView>
+
 							<View style={styles.buttonContainer}>
 								<TouchableOpacity style={styles.button} onPress={handleSubmit}>
 									<Text style={styles.buttonText}>Créer</Text>
@@ -112,7 +158,7 @@ const styles = StyleSheet.create({
 		borderTopLeftRadius: 20,
 		borderTopRightRadius: 20,
 		padding: 20,
-		height: 250,
+		height: 320,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -133,6 +179,18 @@ const styles = StyleSheet.create({
 		borderRadius: 50,
 		padding: 12,
 		marginBottom: 30,
+	},
+
+	colorsContainer: {
+		paddingVertical: 10,
+		marginBottom: 20,
+	},
+	colorContainer: {
+		width: 40,
+		height: 40,
+		borderRadius: 40,
+		borderColor: colorBlack,
+		borderWidth: 1,
 	},
 	buttonContainer: {
 		flexDirection: "row",
