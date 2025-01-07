@@ -31,6 +31,8 @@ export default function LeaderBoard() {
 		return <Loader />;
 	}
 
+	console.log(allScores.data[200].attributes.user);
+
 	function filterUsersByRoleAndClients(
 		allScores: AllUsersScoreResponse,
 		currentRole: string,
@@ -41,13 +43,21 @@ export default function LeaderBoard() {
 			return allScores.data;
 		}
 
+		// Helper function to extract user clients as an array
+		const getUserClients = (user: any): { id: number; name: string }[] => {
+			const userClients = user.attributes.user.clients;
+			return Array.isArray(userClients)
+				? userClients
+				: userClients
+				? [userClients]
+				: [];
+		};
+
 		// If the current role is "EducationPro", return all users with overlapping clients
 		if (currentRole === "EducationPro") {
 			return allScores.data.filter((user) => {
-				const userClients = Array.isArray(user.attributes.user.clients)
-					? user.attributes.user.clients
-					: [user.attributes.user.clients]; // Ensure it's always an array
-
+				const userClients = getUserClients(user);
+				// Check for overlapping clients
 				return userClients.some((client) =>
 					currentClients.some((currentClient) => currentClient.id === client.id)
 				);
@@ -56,19 +66,15 @@ export default function LeaderBoard() {
 
 		// For other roles, filter by role and clients
 		return allScores.data.filter((user) => {
-			const userClients = Array.isArray(user.attributes.user.clients)
-				? user.attributes.user.clients
-				: [user.attributes.user.clients]; // Ensure it's always an array
+			const userClients = getUserClients(user);
+			const userRole = user.attributes.user.role;
 
 			// Match both role and at least one common client
 			return (
-				user.attributes.user.role === currentRole &&
-				(currentClients.length === 0 ||
-					userClients.some((client) =>
-						currentClients.some(
-							(currentClient) => currentClient.id === client.id
-						)
-					))
+				userRole === currentRole &&
+				userClients.some((client) =>
+					currentClients.some((currentClient) => currentClient.id === client.id)
+				)
 			);
 		});
 	}

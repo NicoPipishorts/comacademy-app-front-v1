@@ -24,27 +24,22 @@ const Card = ({ data, catColors }: CardProps) => {
 		return <Loader />;
 	}
 
-	const selectedCategory: number = data?.attributes.CATEGORIE;
+	const selectedCategory: number = data?.attributes.CATEGORIE - 1;
 
 	const backGroundColor = () => {
-		const item = catColors.data.find((color) => {
-			return color.id === selectedCategory;
-		});
-		return `#${item.attributes.backgroundColor}`;
+		return `#${catColors.data[selectedCategory]?.attributes.backgroundColor}`;
 	};
 
 	const smallIcon = () => {
-		const item = catColors.data.find((color) => {
-			return color.id === selectedCategory;
-		});
-		return item.attributes.smallIcon.data.attributes.url;
+		return catColors.data[selectedCategory]?.attributes.smallIcon.data
+			.attributes.url;
 	};
 
 	const renderStars = () => {
 		const stars = [];
 		const coef = data?.attributes?.COEF;
 
-		for (let i = 0; i < coef; i++) {
+		for (let i = 0; i < Math.min(coef, 3); i++) {
 			stars.push(<Image key={i} source={Star} style={styles.starIcon} />);
 		}
 
