@@ -6,14 +6,11 @@ import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useJwtToken from "@/hooks/useJwtToken";
-import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Playlist = () => {
-	const navigation = useNavigation<NavigationType>();
 	const insets = useSafeAreaInsets();
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState(false);

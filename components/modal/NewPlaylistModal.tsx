@@ -1,9 +1,8 @@
-import { primaryBackground } from "@/constants/colors";
-import { FontSize12, FontSize18 } from "@/constants/fontsizes";
-import React, { useRef, useState } from "react";
+import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { FontSize16, FontSize18 } from "@/constants/fontsizes";
+import React, { useCallback, useRef, useState } from "react";
 import {
 	Animated,
-	Dimensions,
 	Modal,
 	StyleSheet,
 	Text,
@@ -26,12 +25,12 @@ const NewPlaylistModal = ({
 	const [playlistName, setPlaylistName] = useState("");
 	const slideAnim = useRef(new Animated.Value(300)).current;
 
-	const showModal = () => {
+	const showModal = useCallback(() => {
 		Animated.spring(slideAnim, {
 			toValue: 0,
 			useNativeDriver: true,
 		}).start();
-	};
+	}, [slideAnim]);
 
 	const hideModal = () => {
 		Animated.timing(slideAnim, {
@@ -52,7 +51,7 @@ const NewPlaylistModal = ({
 		if (visible) {
 			showModal();
 		}
-	}, [visible]);
+	}, [showModal, visible]);
 
 	return (
 		<Modal
@@ -85,15 +84,7 @@ const NewPlaylistModal = ({
 							/>
 
 							<View style={styles.buttonContainer}>
-								<TouchableOpacity
-									style={styles.cancelButton}
-									onPress={hideModal}>
-									<Text style={styles.buttonText}>Annuler</Text>
-								</TouchableOpacity>
-
-								<TouchableOpacity
-									style={styles.createButton}
-									onPress={handleSubmit}>
+								<TouchableOpacity style={styles.button} onPress={handleSubmit}>
 									<Text style={styles.buttonText}>Créer</Text>
 								</TouchableOpacity>
 							</View>
@@ -115,11 +106,13 @@ const styles = StyleSheet.create({
 		justifyContent: "flex-end",
 	},
 	modalContent: {
+		display: "flex",
+		justifyContent: "center",
 		backgroundColor: primaryBackground,
 		borderTopLeftRadius: 20,
 		borderTopRightRadius: 20,
 		padding: 20,
-		height: Dimensions.get("window").height * 0.5,
+		height: 250,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -137,32 +130,25 @@ const styles = StyleSheet.create({
 	},
 	input: {
 		backgroundColor: "#fff",
-		borderRadius: 8,
+		borderRadius: 50,
 		padding: 12,
-		marginBottom: 20,
+		marginBottom: 30,
 	},
 	buttonContainer: {
 		flexDirection: "row",
-		justifyContent: "space-between",
+		justifyContent: "center",
 		gap: 10,
 	},
-	cancelButton: {
-		flex: 1,
-		backgroundColor: "#666",
-		padding: 12,
-		borderRadius: 8,
-		alignItems: "center",
-	},
-	createButton: {
-		flex: 1,
-		backgroundColor: primaryBackground,
-		padding: 12,
-		borderRadius: 8,
-		alignItems: "center",
+	button: {
+		backgroundColor: colorBlack,
+		marginBottom: 20,
+		paddingHorizontal: 30,
+		paddingVertical: 10,
+		borderRadius: 50,
 	},
 	buttonText: {
-		color: "#fff",
-		fontSize: FontSize12,
+		color: colorWhite,
+		fontSize: FontSize16,
 		fontWeight: "bold",
 	},
 });
