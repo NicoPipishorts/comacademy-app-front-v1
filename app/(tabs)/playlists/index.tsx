@@ -1,23 +1,37 @@
+import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
+import NewPlaylistModal from "@/components/modal/NewPlaylistModal";
 import { primaryBackground } from "@/constants/colors";
+import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useJwtToken from "@/hooks/useJwtToken";
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import { NavigationType } from "@/types/general";
+import { useNavigation } from "expo-router";
+import React, { useState } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Playlist = () => {
+	const navigation = useNavigation<NavigationType>();
 	const insets = useSafeAreaInsets();
 	const { token } = useJwtToken();
+	const [modalVisible, setModalVisible] = useState(false);
 
 	useTrackPageMetrics({ page: "Playlists", token });
+
+	const handleCreatePlaylist = (name: string) => {
+		// Handle playlist creation logic here
+		setModalVisible(false);
+	};
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Playlists' />
 
-			{/* <TouchableOpacity style={styles.addPlaylistContainer}>
+			<TouchableOpacity
+				style={styles.addPlaylistContainer}
+				onPress={() => setModalVisible(true)}>
 				<Image source={AddPlaylist} style={styles.addPlaylistImage} />
 				<View style={{ flexDirection: "column" }}>
 					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
@@ -25,11 +39,17 @@ const Playlist = () => {
 					</Text>
 					<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
 				</View>
-			</TouchableOpacity> */}
+			</TouchableOpacity>
 
 			<CardFavoritesList type='favorites' title='Questions ' />
 			<CardFavoritesList type='metiers' title='Les Metiers ' />
 			<CardFavoritesList type='dicos' title='Dico ' />
+
+			<NewPlaylistModal
+				visible={modalVisible}
+				onClose={() => setModalVisible(false)}
+				onSubmit={handleCreatePlaylist}
+			/>
 		</View>
 	);
 };

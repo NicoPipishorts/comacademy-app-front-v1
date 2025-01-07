@@ -8,9 +8,17 @@ const LeJeuLayout = () => {
 				name='index'
 				options={{
 					headerShown: false,
-					headerTitle: "Le Jeu",
+					headerTitle: "Playlists",
 				}}
 			/>
+			{/* <Stack.Screen
+				name='newPlaylist'
+				options={{
+					headerShown: false,
+					headerTitle: "New Playlist",
+					presentation: "modal",
+				}}
+			/> */}
 			<Stack.Screen
 				name='questionsFavoritesList'
 				options={{
