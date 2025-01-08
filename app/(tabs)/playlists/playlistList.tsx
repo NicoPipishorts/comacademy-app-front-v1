@@ -24,25 +24,19 @@ const PlaylistList = () => {
 
 	const playlistContents = playlistData.data.attributes.playlist_contents;
 	return (
-		<View style={styles.container}>
+		<View style={styles.wrapper}>
 			<ReturnButton />
 
-			<View
-				style={{
-					display: "flex",
-					flexDirection: "row",
-					paddingTop: 70,
-					paddingBottom: 20,
-				}}>
+			<View style={styles.headerContainer}>
 				<View>
 					<PlaylistDisplayImage
 						title={playlistData.data.attributes.name}
 						image={playlistData.data.attributes.selectedColor}
-						width={170}
-						height={170}
+						width={70}
+						height={70}
 					/>
 				</View>
-				<View style={{ gap: 10 }}>
+				<View style={styles.headerTextContainer}>
 					<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
 						Playlist
 					</Text>
@@ -55,10 +49,12 @@ const PlaylistList = () => {
 				</View>
 			</View>
 
-			<View style={{ flex: 1, paddingBottom: 70 }}>
+			<View style={styles.contentContainer}>
 				{playlistContents.length <= 0 && (
-					<View>
-						<Text>No contents available</Text>
+					<View style={styles.contentContainerEmpty}>
+						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
+							Ta playlist est vide.
+						</Text>
 					</View>
 				)}
 				{playlistContents.length > 0 && (
@@ -104,15 +100,12 @@ const PlaylistList = () => {
 };
 
 const styles = StyleSheet.create({
-	container: {
+	wrapper: {
 		padding: 20,
 		paddingHorizontal: 25,
 		flex: 1,
 		alignItems: "flex-start",
 		justifyContent: "flex-start",
-	},
-	headerContainer: {
-		marginTop: 50,
 	},
 	returnContainer: {
 		display: "flex",
@@ -125,9 +118,25 @@ const styles = StyleSheet.create({
 		fontSize: FontSize12,
 		fontWeight: "bold",
 	},
-	text: {
-		fontSize: 18,
-		fontWeight: "bold",
+	headerContainer: {
+		display: "flex",
+		flexDirection: "row",
+		paddingTop: 70,
+		paddingBottom: 20,
+	},
+	headerTextContainer: {
+		flexShrink: 1,
+		gap: 10,
+	},
+	contentContainer: {
+		flex: 1,
+		paddingBottom: 70,
+	},
+	contentContainerEmpty: {
+		flexGrow: 1,
+		minWidth: "100%",
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });
 

@@ -16,7 +16,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Questions List",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen
@@ -24,7 +24,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Metiers List",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen
@@ -32,7 +32,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Dico List",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen

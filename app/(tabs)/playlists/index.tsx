@@ -76,7 +76,7 @@ const Playlist = () => {
 			</TouchableOpacity>
 
 			<ScrollView
-				style={styles.playlistsContainer}
+				contentContainerStyle={styles.playlistsContainer}
 				showsVerticalScrollIndicator={false}>
 				<CardFavoritesList type='favorites' title='Questions ' />
 				<CardFavoritesList type='metiers' title='Les Metiers ' />
@@ -109,12 +109,13 @@ const Playlist = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 30,
+		paddingHorizontal: 30,
+		paddingBottom: 90,
 		backgroundColor: primaryBackground,
 	},
 	playlistsContainer: {
-		marginBottom: 60,
 		paddingTop: 30,
+		paddingBottom: 10,
 	},
 	addPlaylistContainer: {
 		flexDirection: "row",
