@@ -7,18 +7,17 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
+	id: number;
 	title: string;
 	color: string;
 }
 
-export default function CardPlaylist({ title, color }: Props) {
+export default function CardPlaylist({ title, color, id }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	const handlePress = () => {
-		navigation.navigate("questionsFavoritesList");
+		navigation.navigate("playlistList", { playlistId: id });
 	};
-
-	console.log(color);
 
 	return (
 		<>

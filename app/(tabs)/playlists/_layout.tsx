@@ -11,14 +11,6 @@ const LeJeuLayout = () => {
 					headerTitle: "Playlists",
 				}}
 			/>
-			{/* <Stack.Screen
-				name='newPlaylist'
-				options={{
-					headerShown: false,
-					headerTitle: "New Playlist",
-					presentation: "modal",
-				}}
-			/> */}
 			<Stack.Screen
 				name='questionsFavoritesList'
 				options={{
@@ -40,6 +32,14 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Dico List",
+					presentation: "modal",
+				}}
+			/>
+			<Stack.Screen
+				name='playlistList'
+				options={{
+					headerShown: false,
+					headerTitle: "List of items of a specific playlist",
 					presentation: "modal",
 				}}
 			/>

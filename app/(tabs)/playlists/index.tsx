@@ -86,6 +86,7 @@ const Playlist = () => {
 						return (
 							<CardPlaylist
 								key={playlist.id}
+								id={playlist.id}
 								title={playlist.attributes.name}
 								color={playlist.attributes.selectedColor}
 							/>
