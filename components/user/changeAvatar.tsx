@@ -15,25 +15,27 @@ import {
 import useGetUserPreferences from "@/hooks/useGetUserPreferences";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 import ScreenHeaders from "../ScreenHeaders";
 
+export const colorArray = [
+	colorGreen,
+	colorTurquoise,
+	colorOrange,
+	colorYellow,
+	colorPink,
+	colorPurple,
+	colorBlue,
+	colorGrey,
+	colorDarkGrey,
+	colorBlack,
+];
+
 export default function ChangeAvatar() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
-	const colorArray = [
-		colorGreen,
-		colorTurquoise,
-		colorOrange,
-		colorYellow,
-		colorPink,
-		colorPurple,
-		colorBlue,
-		colorGrey,
-		colorDarkGrey,
-		colorBlack,
-	];
 
 	const updatePreferences = UpdateUserPreferences();
 	const { data, isFetched } = useGetUserPreferences(userId);

@@ -58,7 +58,7 @@ const HomeScreen = () => {
 		<>
 			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 				<View style={styles.screenHeader}>
-					<TouchableOpacity onPress={() => navigation.navigate("user")}>
+					<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
 						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 					</TouchableOpacity>
 					<View style={{ marginTop: 10, marginRight: 10 }}>

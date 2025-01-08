@@ -30,7 +30,8 @@ import { useLocalSearchParams } from "expo-router";
 interface Props {
 	dicoId: number;
 }
-function DicoDetails({ dicoId: paramsDicoId }: Props) {
+
+export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
@@ -235,5 +236,3 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 });
-
-export default DicoDetails;
