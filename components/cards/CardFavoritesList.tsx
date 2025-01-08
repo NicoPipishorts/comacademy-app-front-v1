@@ -2,6 +2,7 @@ import FavoritePlaylist from "@/assets/imgs/icons/FavoritePlaylist.png";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
@@ -75,7 +76,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginVertical: 20,
+		marginVertical: 12,
 	},
 	image: {
 		width: 70,

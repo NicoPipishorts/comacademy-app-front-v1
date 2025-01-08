@@ -8,7 +8,7 @@ const LeJeuLayout = () => {
 				name='index'
 				options={{
 					headerShown: false,
-					headerTitle: "Le Jeu",
+					headerTitle: "Playlists",
 				}}
 			/>
 			<Stack.Screen
@@ -16,7 +16,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Questions List",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen
@@ -24,7 +24,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Metiers List",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen
@@ -32,7 +32,15 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Dico List",
-					presentation: "modal",
+					presentation: "containedModal",
+				}}
+			/>
+			<Stack.Screen
+				name='playlistList'
+				options={{
+					headerShown: false,
+					headerTitle: "List of items of a specific playlist",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen

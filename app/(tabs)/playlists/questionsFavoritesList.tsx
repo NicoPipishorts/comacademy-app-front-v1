@@ -9,6 +9,7 @@ import {
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
+import ReturnButton from "@/utils/returnButton";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -54,6 +55,7 @@ export default function QuestionsFavoritesList() {
 
 	return (
 		<ScrollView contentContainerStyle={styles.wrapper}>
+			<ReturnButton />
 			<View style={styles.headerContainer}>
 				<Image source={FavoritesIcon} style={styles.headerIcon} />
 				<View style={{ flexDirection: "column" }}>
@@ -104,6 +106,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-end",
 		marginBottom: 30,
+		marginTop: 50,
 	},
 	headerText: {
 		fontSize: FontSizeScreenTitles,
