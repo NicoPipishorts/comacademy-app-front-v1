@@ -1,7 +1,6 @@
-import { colorWhite } from "@/constants/colors";
-import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
+import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
-import { getInitials } from "@/utils/getInitials";
+import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -22,10 +21,13 @@ export default function CardPlaylist({ title, color, id }: Props) {
 	return (
 		<>
 			<TouchableOpacity style={styles.wrapper} onPress={() => handlePress()}>
-				{/* <Image source={{ uri: randomPattern }} style={styles.image} /> */}
-				<View style={[styles.image, { backgroundColor: `${color}` }]}>
-					<Text style={styles.imageText}>{getInitials(title)}</Text>
-				</View>
+				<PlaylistDisplayImage
+					title={title}
+					image={color}
+					width={70}
+					height={70}
+				/>
+
 				<View style={{ flexDirection: "column" }}>
 					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
 						{title}
@@ -41,19 +43,6 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginVertical: 20,
-	},
-	image: {
-		alignItems: "center",
-		justifyContent: "center",
-		width: 70,
-		height: 70,
-		marginRight: 15,
-		borderRadius: 10,
-	},
-	imageText: {
-		fontSize: FontSizeH1,
-		fontWeight: "bold",
-		color: colorWhite,
+		marginVertical: 12,
 	},
 });

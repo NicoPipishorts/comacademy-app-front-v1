@@ -40,7 +40,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "List of items of a specific playlist",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen

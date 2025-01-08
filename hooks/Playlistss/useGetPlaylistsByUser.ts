@@ -1,14 +1,14 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import { PlaylistResponse } from "@/types/playlists";
+import { PlaylistListResponse } from "@/types/playlists";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchData = async (
 	token: string,
-	id: number
-): Promise<PlaylistResponse> => {
+	userId: number
+): Promise<PlaylistListResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/playlists/${id}?populate=playlist_contents`,
+			`${process.env.EXPO_PUBLIC_API_URL}/playlists?filters[userId]=${userId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -37,14 +37,14 @@ const fetchData = async (
 	}
 };
 
-const useGetPlaylistById = (id: number) => {
+const useGetPlaylistsByUser = (userId: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<PlaylistResponse>({
-		queryKey: ["Playlist", id],
-		queryFn: () => fetchData(token!, id),
-		enabled: !!token && !!id,
+	return useQuery<PlaylistListResponse>({
+		queryKey: ["Playlists", userId],
+		queryFn: () => fetchData(token!, userId),
+		enabled: !!token && !!userId,
 	});
 };
 
-export default useGetPlaylistById;
+export default useGetPlaylistsByUser;

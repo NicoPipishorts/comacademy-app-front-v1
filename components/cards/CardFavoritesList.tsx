@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginVertical: 20,
+		marginVertical: 12,
 	},
 	image: {
 		width: 70,

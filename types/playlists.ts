@@ -1,72 +1,65 @@
-// Existing Playlists definitions
-// Import external dependencies for PlaylistContent
-import { DicoAttributes } from "./dico";
-import { MetierAttributes } from "./metiers";
-import { QuestionAttributes } from "./question";
+// Playlist Lists by UserId
 
-export interface PlaylistsResponse {
-	data: PlaylistsData[];
-}
+import { DicoPayload } from "./dico";
+import { MetierPayload } from "./metiers";
+import { QuestionById } from "./question";
 
-export interface PlaylistResponse {
-	data: PlaylistsData;
-}
-
-export interface PlaylistsData {
-	id: number;
-	attributes: PlaylistsAttributes;
-}
-
-export interface PlaylistsAttributes {
-	name: string;
-	selectedColor: string;
-	playlist_contents?: PlaylistContentData[]; // Already defined in this file
-	createdAt: string;
-	updatedAt: string;
-	publishedAt: string;
-}
-
-// Add PlaylistContent definitions
-export interface PlaylistContentResponse {
-	data: PlaylistContentData;
-	meta: Record<string, unknown>;
-}
-
-export interface PlaylistContentData {
-	id: number;
-	attributes: PlaylistContentAttributes;
-}
-
-export interface PlaylistContentAttributes {
-	name: string;
-	createdAt: string;
-	updatedAt: string;
-	publishedAt: string;
-	selectedColor: string;
-	playlist_contents: PlaylistContentsRelation;
-}
-
-export interface PlaylistContentsRelation {
-	data: PlaylistContentItem[];
-}
-
-export interface PlaylistContentItem {
-	id: number;
-	attributes: PlaylistContentItemAttributes;
-}
-
-export interface PlaylistContentItemAttributes {
-	createdAt: string;
-	updatedAt: string;
-	active: boolean;
-	dico: Relation<DicoAttributes> | null;
-	metier: Relation<MetierAttributes> | null;
-	question: Relation<QuestionAttributes> | null;
-}
-
-export interface Relation<T> {
+export interface PlaylistListResponse {
 	data: {
 		id: number;
-		attributes: T;
-	} | null;
+		attributes: {
+			name: string;
+			createdAt: string;
+			updatedAt: string;
+			publishedAt: string;
+			selectedColor: string;
+		};
+	}[];
+}
+
+// Playlist Contents Definition, not grouped
+export interface PlaylistContentResponse {
+	data: {
+		id: number;
+		attributes: {
+			name: string;
+			createdAt: string;
+			updatedAt: string;
+			publishedAt: string;
+			selectedColor: string;
+			playlist_contents: {
+				data: {
+					id: number;
+					attributes: {
+						createdAt: string;
+						updatedAt: string;
+						active: boolean;
+						dico: DicoPayload | { data: null };
+						metier: MetierPayload | { data: null };
+						question: QuestionById | { data: null };
+					};
+				}[];
+			};
+		};
+	};
+}
+
+// Playlist Content definition Groupped
+
+export interface PlaylistContentGrouped {
+	data: {
+		id: number;
+		attributes: {
+			name: string;
+			createdAt: string;
+			updatedAt: string;
+			publishedAt: string;
+			selectedColor: string;
+			playlist_contents: {
+				id: number;
+				value: string;
+				group: "dico" | "métier" | "question";
+			}[];
+		};
+	};
 }

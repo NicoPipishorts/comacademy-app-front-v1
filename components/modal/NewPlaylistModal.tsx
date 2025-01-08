@@ -1,7 +1,18 @@
 import Image1 from "@/assets/imgs/icons/playlists/1.png";
+import Image10 from "@/assets/imgs/icons/playlists/10.png";
+import Image11 from "@/assets/imgs/icons/playlists/11.png";
+import Image12 from "@/assets/imgs/icons/playlists/12.png";
+import Image13 from "@/assets/imgs/icons/playlists/13.png";
+import Image14 from "@/assets/imgs/icons/playlists/14.png";
 import Image2 from "@/assets/imgs/icons/playlists/2.png";
 import Image3 from "@/assets/imgs/icons/playlists/3.png";
 import Image4 from "@/assets/imgs/icons/playlists/4.png";
+import Image5 from "@/assets/imgs/icons/playlists/5.png";
+import Image6 from "@/assets/imgs/icons/playlists/6.png";
+import Image7 from "@/assets/imgs/icons/playlists/7.png";
+import Image8 from "@/assets/imgs/icons/playlists/8.png";
+import Image9 from "@/assets/imgs/icons/playlists/9.png";
+
 import {
 	colorBlack,
 	colorRed,
@@ -9,7 +20,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Animated,
 	Image,
@@ -41,10 +52,20 @@ const NewPlaylistModal = ({
 	const [errorPlaylistName, setErrorPlaylistName] = useState<boolean>();
 
 	const imageArray = [
-		{ name: "Image1", image: Image1 },
-		{ name: "Image2", image: Image2 },
-		{ name: "Image3", image: Image3 },
-		{ name: "Image4", image: Image4 },
+		{ name: "1", image: Image1 },
+		{ name: "2", image: Image2 },
+		{ name: "3", image: Image3 },
+		{ name: "4", image: Image4 },
+		{ name: "5", image: Image5 },
+		{ name: "6", image: Image6 },
+		{ name: "7", image: Image7 },
+		{ name: "8", image: Image8 },
+		{ name: "9", image: Image9 },
+		{ name: "10", image: Image10 },
+		{ name: "11", image: Image11 },
+		{ name: "12", image: Image12 },
+		{ name: "13", image: Image13 },
+		{ name: "14", image: Image14 },
 	];
 
 	const showModal = useCallback(() => {
@@ -70,16 +91,15 @@ const NewPlaylistModal = ({
 			setErrorPlaylistName(true);
 			return;
 		}
-		if (!selectedColor) {
-			console.log(getRandomValues());
-			setSelectedColor(getRandomValues());
-		}
-		onSubmit(playlistName, selectedColor);
+
+		const color = selectedColor ? selectedColor : getRandomValues();
+		console.log(color);
+		onSubmit(playlistName, color);
 		setPlaylistName(null);
 		setSelectedColor(null);
 	};
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (visible) {
 			showModal();
 		}
@@ -91,7 +111,7 @@ const NewPlaylistModal = ({
 
 	const getRandomValues = () => {
 		// Combine both arrays into one
-		const combinedArray = [
+		const combinedArray: string[] = [
 			...imageArray.map((item) => item.name), // Extract names from imageArray
 			...colorArray,
 		];
@@ -99,8 +119,10 @@ const NewPlaylistModal = ({
 		// Pick a random value from the combined array
 		const randomValue =
 			combinedArray[Math.floor(Math.random() * combinedArray.length)];
+
 		return randomValue;
 	};
+
 	return (
 		<Modal
 			animationType='none'

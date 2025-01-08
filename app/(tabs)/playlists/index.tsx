@@ -7,8 +7,9 @@ import Loader from "@/components/experience/loader";
 import NewPlaylistModal from "@/components/modal/NewPlaylistModal";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
+import { useSnackbar } from "@/context/snackBar";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useGetPlaylistsByUser from "@/hooks/Playlistss/getPlaylistsByUser";
+import useGetPlaylistsByUser from "@/hooks/Playlistss/useGetPlaylistsByUser";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -30,6 +31,7 @@ const Playlist = () => {
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState(false);
 
+	const showSnackbar = useSnackbar(); // Use the snackbar context
 	useTrackPageMetrics({ page: "Playlists", token });
 
 	// ----- Create playist code below
@@ -37,6 +39,7 @@ const Playlist = () => {
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
+		showSnackbar("La playlist a était créée", "success");
 	};
 
 	const onError = (error: AxiosError) => {
@@ -111,11 +114,12 @@ const styles = StyleSheet.create({
 	},
 	playlistsContainer: {
 		marginBottom: 60,
+		paddingTop: 30,
 	},
 	addPlaylistContainer: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginVertical: 20,
+		paddingTop: 30,
 	},
 	addPlaylistImage: {
 		width: 70,
