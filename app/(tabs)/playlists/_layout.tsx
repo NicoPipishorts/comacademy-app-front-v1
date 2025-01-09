@@ -48,7 +48,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Details",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen
@@ -56,7 +56,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Metier Details",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 			<Stack.Screen
@@ -64,7 +64,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Dico Details",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 		</Stack>

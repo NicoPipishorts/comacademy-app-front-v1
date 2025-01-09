@@ -24,7 +24,6 @@ import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import UnorderedList from "@/components/UnorderedList";
 import { colorWhite } from "@/constants/colors";
-import { useSnackbar } from "@/context/snackBar";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
@@ -42,8 +41,6 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
 	const [modalVisible, setModalVisible] = useState(false);
-
-	const showSnackbar = useSnackbar(); // Use the snackbar context
 
 	// Parse the 'id' to a number if it exists
 	const metierId = paramsMetierId ? paramsMetierId : Number(id);

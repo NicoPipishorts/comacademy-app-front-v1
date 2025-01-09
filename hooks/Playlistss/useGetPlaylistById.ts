@@ -37,6 +37,7 @@ const fetchData = async (
 			if (item.attributes.metier?.data) {
 				playlistContents.push({
 					id: item.id,
+					itemId: item.attributes.metier.data.id,
 					value: item.attributes.metier.data.attributes.METIER,
 					group: "métier",
 				});
@@ -44,6 +45,7 @@ const fetchData = async (
 			if (item.attributes.dico?.data) {
 				playlistContents.push({
 					id: item.id,
+					itemId: item.attributes.dico.data.id,
 					value: item.attributes.dico.data.attributes.Word,
 					group: "dico",
 				});
@@ -51,6 +53,7 @@ const fetchData = async (
 			if (item.attributes.question?.data) {
 				playlistContents.push({
 					id: item.id,
+					itemId: item.attributes.question.data.id,
 					value: item.attributes.question.data.attributes.QUESTION,
 					group: "question",
 				});

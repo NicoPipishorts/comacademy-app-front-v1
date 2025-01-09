@@ -1,14 +1,16 @@
 import Loader from "@/components/experience/loader";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
+import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import ReturnButton from "@/utils/returnButton";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 const PlaylistList = () => {
 	const { playlistId } = useLocalSearchParams();
+	const navigation = useNavigation<NavigationType>();
 	const playlistIdNumber = playlistId ? Number(playlistId) : null;
 
 	const { data: playlistData, isFetched } =
@@ -23,6 +25,27 @@ const PlaylistList = () => {
 	}
 
 	const playlistContents = playlistData.data.attributes.playlist_contents;
+
+	const handlePress = (type: string, value: number) => {
+		switch (type) {
+			case "métier":
+				navigation.navigate("favoriteMetierDetails", {
+					metierId: value,
+				});
+				break;
+			case "dico":
+				navigation.navigate("favoriteDicoDetails", {
+					dicoId: value,
+				});
+				break;
+			case "question":
+				navigation.navigate("favoriteQuestionDetails", {
+					questionId: value,
+				});
+				break;
+		}
+	};
+
 	return (
 		<View style={styles.wrapper}>
 			<ReturnButton />
@@ -59,7 +82,11 @@ const PlaylistList = () => {
 				)}
 				{playlistContents.length > 0 && (
 					<ScrollView
-						contentContainerStyle={{ paddingTop: 50, gap: 25 }}
+						contentContainerStyle={{
+							paddingTop: 50,
+							paddingBottom: 30,
+							gap: 25,
+						}}
 						showsVerticalScrollIndicator={false}>
 						{playlistContents.map((content) => {
 							return (
@@ -68,7 +95,8 @@ const PlaylistList = () => {
 									style={{
 										flexDirection: "row",
 										alignItems: "center",
-									}}>
+									}}
+									onPress={() => handlePress(content.group, content.itemId)}>
 									<View>
 										<PlaylistDisplayImage
 											image={playlistData.data.attributes.selectedColor}
