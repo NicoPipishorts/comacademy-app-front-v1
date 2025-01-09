@@ -1,4 +1,3 @@
-import accueil from "@/assets/imgs/icons/accueil.png";
 import activity from "@/assets/imgs/icons/activity.png";
 import dico from "@/assets/imgs/icons/dico.png";
 import feed from "@/assets/imgs/icons/feed.png";
@@ -16,14 +15,14 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 	}
 
 	const icons: { [key: string]: any } = {
-		index: activity,
+		activity: activity,
 		leJeu: le_jeu,
 		feed: feed,
 		dico: dico,
 		playlists: playlists,
 	};
 
-	const desiredOrder = ["index", "leJeu", "feed", "playlists", "dico"];
+	const desiredOrder = ["activity", "leJeu", "feed", "playlists", "dico"];
 	const orderedRoutes = state.routes
 		.filter((route) => desiredOrder.includes(route.name))
 		.sort(
@@ -36,7 +35,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 		feed: "Feed",
 		dico: "Dico",
 		playlists: "Playlists",
-		index: "Activitès",
+		activity: "Activitès",
 	};
 
 	// Used to apply the BG or not to the tab bar.
@@ -55,7 +54,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 					const isFocused =
 						state.index ===
 							state.routes.findIndex((r) => r.name === route.name) ||
-						(route.name === "index" &&
+						(route.name === "activity" &&
 							(currentRouteName === "lesCitations" ||
 								currentRouteName === "commandements" ||
 								currentRouteName === "secrets" ||
@@ -71,11 +70,11 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 						});
 
 						// Reset to Accueil (index) if the Accueil button is pressed
-						if (route.name === "index") {
+						if (route.name === "activity") {
 							// Use reset to navigate back to the root screen
 							navigation.reset({
 								index: 0,
-								routes: [{ name: "index" }], // Ensure you go back to the root of the home stack
+								routes: [{ name: "activity" }], // Ensure you go back to the root of the home stack
 							});
 						} else if (!isFocused && !event.defaultPrevented) {
 							// Navigate normally to the selected tab
@@ -92,7 +91,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							onPress={onPress}
 							style={[styles.tabbarItem, styles.onTabBackground]}>
 							<Image
-								source={icons[route.name] || accueil}
+								source={icons[route.name]}
 								style={styles.tabIcons}
 								resizeMode='contain'
 							/>

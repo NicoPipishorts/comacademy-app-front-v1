@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import React from "react";
 
-const FeedLayout = () => {
+const ActivityLayout = () => {
 	return (
 		<Stack>
 			<Stack.Screen
@@ -9,11 +9,10 @@ const FeedLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Feed",
-					presentation: "card",
 				}}
 			/>
 		</Stack>
 	);
 };
 
-export default FeedLayout;
+export default ActivityLayout;

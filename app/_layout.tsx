@@ -16,7 +16,7 @@ export default function RootLayout() {
 					<SnackbarProvider>
 						<NetworkProvider>
 							<TabProvider>
-								<Stack>
+								<Stack screenOptions={{ animation: "none" }}>
 									<Stack.Screen
 										name='(tabs)'
 										options={{ headerShown: false }}
