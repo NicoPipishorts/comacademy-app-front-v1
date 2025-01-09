@@ -10,7 +10,7 @@ export const colorWhite = "#FFF";
 export const colorGrey = "#E4E4E4";
 export const colorPurple = "#CC398C";
 export const colorDarkGrey = "#9F9F9F";
-export const colorRed = "#bd3c3c";
+export const colorRed = "#d82d24";
 
 export const primaryBackground = "#f5f5f5";
 export const searchbarBackground = "#E8E8E8";

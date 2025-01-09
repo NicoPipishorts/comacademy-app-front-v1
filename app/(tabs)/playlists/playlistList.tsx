@@ -1,12 +1,26 @@
+import Trash from "@/assets/imgs/icons/trash_white.png";
 import Loader from "@/components/experience/loader";
+import { colorRed } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import ReturnButton from "@/utils/returnButton";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+	Image,
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Reanimated, {
+	SharedValue,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 
 const PlaylistList = () => {
 	const { playlistId } = useLocalSearchParams();
@@ -15,6 +29,9 @@ const PlaylistList = () => {
 
 	const { data: playlistData, isFetched } =
 		useGetPlaylistById(playlistIdNumber);
+
+	const [openedSwipeable, setOpenedSwipeable] = useState(null);
+	const swipeableRefs = useRef({}); // Store refs for all swipeables
 
 	if (!playlistData && !isFetched) {
 		return (
@@ -45,6 +62,28 @@ const PlaylistList = () => {
 				break;
 		}
 	};
+
+	function RightAction(prog: SharedValue<number>, drag: SharedValue<number>) {
+		const styleAnimation = useAnimatedStyle(() => {
+			return {
+				transform: [{ translateX: drag.value + 80 }],
+				alignItems: "center",
+				justifyContent: "center",
+			};
+		});
+
+		return (
+			<Reanimated.View style={styleAnimation}>
+				<Pressable
+					onPress={() => {
+						console.log("click on button");
+					}}
+					style={styles.rightAction}>
+					<Image source={Trash} style={{ width: 24, height: 24 }} />
+				</Pressable>
+			</Reanimated.View>
+		);
+	}
 
 	return (
 		<View style={styles.wrapper}>
@@ -89,35 +128,57 @@ const PlaylistList = () => {
 						}}
 						showsVerticalScrollIndicator={false}>
 						{playlistContents.map((content) => {
+							const refKey = `swipeable-${content.id}`; // Unique key for each swipeable
+							if (!swipeableRefs.current[refKey]) {
+								swipeableRefs.current[refKey] = React.createRef();
+							}
+
 							return (
-								<Pressable
+								<ReanimatedSwipeable
 									key={content.id}
-									style={{
-										flexDirection: "row",
-										alignItems: "center",
-									}}
-									onPress={() => handlePress(content.group, content.itemId)}>
-									<View>
-										<PlaylistDisplayImage
-											image={playlistData.data.attributes.selectedColor}
-											width={70}
-											height={70}
-										/>
-									</View>
-									<View style={{ gap: 6 }}>
-										<Text
-											style={{
-												fontSize: FontSize18,
-												fontWeight: "bold",
-												textTransform: "capitalize",
-											}}>
-											{content.group}
-										</Text>
-										<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-											{content.value}
-										</Text>
-									</View>
-								</Pressable>
+									ref={swipeableRefs.current[refKey]}
+									friction={2}
+									enableTrackpadTwoFingerGesture
+									rightThreshold={40}
+									renderRightActions={RightAction}
+									onSwipeableWillOpen={() => {
+										if (
+											openedSwipeable &&
+											openedSwipeable !== swipeableRefs.current[refKey].current
+										) {
+											openedSwipeable.close();
+										}
+										setOpenedSwipeable(swipeableRefs.current[refKey].current);
+									}}>
+									<Pressable
+										style={{
+											flexDirection: "row",
+											alignItems: "center",
+										}}
+										onPress={() => handlePress(content.group, content.itemId)}>
+										<View>
+											<PlaylistDisplayImage
+												image={playlistData.data.attributes.selectedColor}
+												width={70}
+												height={70}
+											/>
+										</View>
+										<View style={{ gap: 6 }}>
+											<Text
+												style={{
+													fontSize: FontSize18,
+													fontWeight: "bold",
+													textTransform: "capitalize",
+												}}>
+												{content.group}
+											</Text>
+											<Text
+												style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+												{content.value}
+											</Text>
+										</View>
+									</Pressable>
+								</ReanimatedSwipeable>
 							);
 						})}
 					</ScrollView>
@@ -128,23 +189,20 @@ const PlaylistList = () => {
 };
 
 const styles = StyleSheet.create({
+	rightAction: {
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+		height: 55,
+		width: 80,
+		backgroundColor: colorRed,
+	},
 	wrapper: {
 		padding: 20,
 		paddingHorizontal: 25,
 		flex: 1,
 		alignItems: "flex-start",
 		justifyContent: "flex-start",
-	},
-	returnContainer: {
-		display: "flex",
-		flexDirection: "row",
-		justifyContent: "flex-start",
-		alignItems: "center",
-	},
-	returnText: {
-		marginLeft: 6,
-		fontSize: FontSize12,
-		fontWeight: "bold",
 	},
 	headerContainer: {
 		display: "flex",
@@ -162,7 +220,7 @@ const styles = StyleSheet.create({
 	},
 	contentContainerEmpty: {
 		flexGrow: 1,
-		minWidth: "100%",
+		minWidth: "80%",
 		justifyContent: "center",
 		alignItems: "center",
 	},
