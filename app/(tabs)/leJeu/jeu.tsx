@@ -8,6 +8,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
+import { useSnackbar } from "@/context/snackBar";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -16,7 +17,7 @@ import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
-import { useNetwork } from "@/providers/NetworkProvider"; // Import the network provider hook
+import { useNetwork } from "@/providers/NetworkProvider";
 import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
@@ -34,6 +35,7 @@ const Jeu = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
+	const showSnackbar = useSnackbar(); // Use the useSnackbar hook
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 
@@ -72,9 +74,10 @@ const Jeu = () => {
 
 	useEffect(() => {
 		if (showFinishedModal) {
+			showSnackbar("Session finished!", "success"); // Show snackbar when session is finished
 			navigation.navigate("finishedSession");
 		}
-	}, [navigation, showFinishedModal]);
+	}, [navigation, showFinishedModal, showSnackbar]);
 
 	useEffect(() => {
 		hideTabBar();

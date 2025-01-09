@@ -93,7 +93,6 @@ const NewPlaylistModal = ({
 		}
 
 		const color = selectedColor ? selectedColor : getRandomValues();
-		console.log(color);
 		onSubmit(playlistName, color);
 		setPlaylistName(null);
 		setSelectedColor(null);
@@ -139,6 +138,7 @@ const NewPlaylistModal = ({
 							styles.modalContent,
 							{
 								transform: [{ translateY: slideAnim }],
+								zIndex: 999, // Ensure the modal has a lower zIndex than the Snackbar
 							},
 						]}>
 						<TouchableOpacity
@@ -272,6 +272,7 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
 		elevation: 5,
+		zIndex: 999, // Ensure the modal has a lower zIndex than the Snackbar
 	},
 	modalTitle: {
 		fontSize: FontSize18,

@@ -1,6 +1,7 @@
 import { useAddFavoriteQuestionMutation } from "@/api/favoriteQuestion";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
+import Plus from "@/assets/imgs/icons/plus.png";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
@@ -8,29 +9,31 @@ import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
 import useUserId from "@/hooks/useUserId";
-import { useCallback, useEffect, useState } from "react";
+import ReturnButton from "@/utils/returnButton";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
+	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
-	TouchableOpacity,
 	View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
 import SmallCategroieIcons from "../icons/SmallCategroieIcons";
+import AddToPlaylistModal from "../modal/AddToPlaylistModal";
 
 interface Props {
 	questionId: number;
 	refetch: string;
+	postGame?: boolean;
 }
 
-export default function QuestionDetails({ questionId }: Props) {
-	const insets = useSafeAreaInsets();
+export default function QuestionDetails({ questionId, postGame }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const { data } = useQuestionById(questionId);
 	const { data: category } = useCategories();
@@ -103,64 +106,93 @@ export default function QuestionDetails({ questionId }: Props) {
 	}
 
 	return (
-		<ScrollView
-			contentContainerStyle={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={[styles.contentContainer]}>
-				<Text style={{ fontSize: 22, fontWeight: "bold" }}>
-					{data.data.attributes.QUESTION}
-				</Text>
+		<>
+			<View
+				style={{
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "flex-start",
+					width: "100%",
+					paddingHorizontal: 20,
+				}}>
+				<ReturnButton />
 			</View>
-
-			<View style={[styles.headerContainer]}>
-				<Text style={[styles.headerContainerText]}>
-					{data.data.attributes.ANSWER ? "Vrai" : "Faux"}
-				</Text>
-			</View>
-
-			<View style={styles.wrapperIcons}>
-				<View style={styles.containerIcons}>
-					{data.data.attributes.CATEGORIE !== undefined &&
-					data.data.attributes.CATEGORIE !== null
-						? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
-								const categoryNumber = parseInt(cat, 10);
-								return (
-									<View style={{ marginRight: 8 }} key={index}>
-										<SmallCategroieIcons
-											key={categoryNumber}
-											cats={categoryNumber}
-										/>
-									</View>
-								);
-						  })
-						: ""}
+			<ScrollView contentContainerStyle={styles.wrapper}>
+				<View style={[styles.contentContainer]}>
+					<Text style={{ fontSize: 22, fontWeight: "bold" }}>
+						{data.data.attributes.QUESTION}
+					</Text>
 				</View>
-				<View style={styles.containerIcons}>
-					<TouchableOpacity onPress={() => handleAddFavorite()}>
-						<Image
-							source={filterIfFavoriteExists ? HeartFull : Heart}
-							style={styles.catIcons as ImageStyle}
-							resizeMode='contain'
-						/>
-					</TouchableOpacity>
-				</View>
-			</View>
 
-			<View style={styles.answerContainer}>
-				<View style={{ paddingBottom: 20 }}>
-					<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
+				<View style={[styles.headerContainer]}>
+					<Text style={[styles.headerContainerText]}>
+						{data.data.attributes.ANSWER ? "Vrai" : "Faux"}
+					</Text>
 				</View>
-				<Text style={{ fontSize: 16, fontWeight: "bold", lineHeight: 22 }}>
-					{data.data.attributes.REPONSE}
-				</Text>
-			</View>
-		</ScrollView>
+
+				<View style={styles.wrapperIcons}>
+					<View style={styles.containerIcons}>
+						{data.data.attributes.CATEGORIE !== undefined &&
+						data.data.attributes.CATEGORIE !== null
+							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
+									const categoryNumber = parseInt(cat, 10);
+									return (
+										<View style={{ marginRight: 8 }} key={index}>
+											<SmallCategroieIcons
+												key={categoryNumber}
+												cats={categoryNumber}
+											/>
+										</View>
+									);
+							  })
+							: ""}
+					</View>
+					<View style={styles.containerIcons}>
+						{!postGame && (
+							<>
+								<Pressable onPress={() => setModalVisible(true)}>
+									<Image
+										source={Plus}
+										style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+										resizeMode='contain'
+									/>
+								</Pressable>
+								<Pressable onPress={() => handleAddFavorite()}>
+									<Image
+										source={filterIfFavoriteExists ? HeartFull : Heart}
+										style={styles.catIcons as ImageStyle}
+										resizeMode='contain'
+									/>
+								</Pressable>
+							</>
+						)}
+					</View>
+				</View>
+
+				<View style={styles.answerContainer}>
+					<View style={{ paddingBottom: 20 }}>
+						<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
+					</View>
+					<Text style={{ fontSize: 16, fontWeight: "bold", lineHeight: 22 }}>
+						{data.data.attributes.REPONSE}
+					</Text>
+				</View>
+			</ScrollView>
+
+			<AddToPlaylistModal
+				visible={modalVisible}
+				onClose={() => setModalVisible(false)}
+				elementId={questionId}
+				type={"question"}
+			/>
+		</>
 	);
 }
 
 const styles = StyleSheet.create({
 	wrapper: {
 		alignItems: "center",
-		// padding: 20,
+		marginTop: 20,
 	},
 	headerContainer: {
 		marginVertical: 30,

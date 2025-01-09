@@ -5,19 +5,20 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
+	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
-	TouchableOpacity,
 	View,
 } from "react-native";
 // Icons
 import { useAddFavoriteDico } from "@/api/favoriteDico";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
-import AndroidBackButton from "@/components/buttons/androidBack";
+import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
+import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import { colorWhite } from "@/constants/colors";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -25,6 +26,7 @@ import { useDicoById } from "@/hooks/useGetDico";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import ReturnButton from "@/utils/returnButton";
 import { useLocalSearchParams } from "expo-router";
 
 interface Props {
@@ -35,6 +37,7 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
+	const [modalVisible, setModalVisible] = useState(false);
 	const dicoId = paramsDicoId ? paramsDicoId : Number(id);
 
 	const { isAndroid } = useDeviceTypeCheckers();
@@ -116,7 +119,7 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 				},
 			]}>
 			<View style={styles.headerContainer}>
-				{isAndroid && <AndroidBackButton />}
+				<ReturnButton />
 				<ScreenHeaders content={data?.data.attributes.Word} />
 			</View>
 
@@ -141,18 +144,20 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						{/* <Image
-							source={Plus}
-							style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-							resizeMode='contain'
-						/> */}
-						<TouchableOpacity onPress={() => handleAddFavorite()}>
+						<Pressable onPress={() => setModalVisible(true)}>
+							<Image
+								source={Plus}
+								style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+								resizeMode='contain'
+							/>
+						</Pressable>
+						<Pressable onPress={() => handleAddFavorite()}>
 							<Image
 								source={filterIfFavoriteExists ? HeartFull : Heart}
 								style={styles.catIcons as ImageStyle}
 								resizeMode='contain'
 							/>
-						</TouchableOpacity>
+						</Pressable>
 					</View>
 				</View>
 				<View style={styles.containerDefintion}>
@@ -171,6 +176,13 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 					</TouchableOpacity>
 				</View> */}
 			</ScrollView>
+
+			<AddToPlaylistModal
+				visible={modalVisible}
+				onClose={() => setModalVisible(false)}
+				elementId={dicoId}
+				type={"dico"}
+			/>
 		</View>
 	);
 }

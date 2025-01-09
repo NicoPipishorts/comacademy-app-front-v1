@@ -89,10 +89,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							accessibilityState={isFocused ? { selected: true } : {}}
 							testID={options.tabBarTestID}
 							onPress={onPress}
-							style={[
-								styles.tabbarItem,
-								currentRouteName === "leJeu" && styles.onTabBackground,
-							]}>
+							style={[styles.tabbarItem, styles.onTabBackground]}>
 							<Image
 								source={icons[route.name] || accueil}
 								style={styles.tabIcons}

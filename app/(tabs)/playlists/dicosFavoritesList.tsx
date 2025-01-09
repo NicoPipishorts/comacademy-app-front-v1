@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-end",
 		marginBottom: 30,
-		marginTop: 50,
+		marginTop: 20,
 	},
 	headerText: {
 		fontSize: FontSizeScreenTitles,
