@@ -217,7 +217,6 @@ const Jeu = () => {
 			)}
 			{!showFinishedModal && (
 				<Swiper
-					containerStyle={{ flex: 1, backgroundColor: "transparent" }}
 					ref={swiperRef}
 					overlayLabels={overlayLabels}
 					cards={cards}
