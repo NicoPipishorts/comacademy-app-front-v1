@@ -29,7 +29,6 @@ export const useAddToPlaylist = (
 							data: {
 								playlistId: playlistId,
 								question: elementId,
-								active: true,
 							},
 						};
 					case "metier":
@@ -37,7 +36,6 @@ export const useAddToPlaylist = (
 							data: {
 								playlistId: playlistId,
 								metier: elementId,
-								active: true,
 							},
 						};
 					case "dico":
@@ -45,7 +43,6 @@ export const useAddToPlaylist = (
 							data: {
 								playlistId: playlistId,
 								dico: elementId,
-								active: true,
 							},
 						};
 					default:

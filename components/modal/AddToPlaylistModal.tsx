@@ -58,7 +58,7 @@ export default function AddToPlaylistModal({
 
 	const showSnackbar = useSnackbar();
 
-	const onSuccess = (data: any) => {
+	const onSuccess = () => {
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
