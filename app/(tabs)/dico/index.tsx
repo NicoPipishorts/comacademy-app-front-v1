@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
-		paddingTop: 80,
+		paddingTop: 55,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {
