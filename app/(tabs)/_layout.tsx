@@ -54,8 +54,16 @@ const _layout: React.FC = () => {
 					<Tabs.Screen
 						name='index'
 						options={{
+							tabBarLabel: "index",
+							headerShown: false,
+						}}
+					/>
+					<Tabs.Screen
+						name='activity'
+						options={{
 							tabBarLabel: "Accueil",
 							headerShown: false,
+							lazy: true,
 						}}
 					/>
 					<Tabs.Screen
@@ -63,12 +71,13 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Le Jeu",
 							headerShown: false,
+							lazy: true,
 						}}
 					/>
 					<Tabs.Screen
-						name='lesCitations'
+						name='feed'
 						options={{
-							tabBarLabel: "Les Citations",
+							tabBarLabel: "Feed",
 							headerShown: false,
 						}}
 					/>
@@ -91,6 +100,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Metiers",
 							headerShown: false,
+							href: null,
 						}}
 					/>
 					<Tabs.Screen
@@ -98,6 +108,15 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "User",
 							headerShown: false,
+							href: null,
+						}}
+					/>
+					<Tabs.Screen
+						name='lesCitations'
+						options={{
+							tabBarLabel: "Les Citations",
+							headerShown: false,
+							href: null,
 						}}
 					/>
 					<Tabs.Screen
@@ -105,6 +124,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "3 Secrets",
 							headerShown: false,
+							href: null,
 						}}
 					/>
 					<Tabs.Screen
@@ -112,6 +132,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "10 Commandements",
 							headerShown: false,
+							href: null,
 						}}
 					/>
 					<Tabs.Screen
@@ -119,6 +140,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Les Petites Histoires",
 							headerShown: false,
+							href: null,
 						}}
 					/>
 				</Tabs>

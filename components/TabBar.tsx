@@ -1,7 +1,7 @@
-import accueil from "@/assets/imgs/icons/accueil.png";
+import activity from "@/assets/imgs/icons/activity.png";
 import dico from "@/assets/imgs/icons/dico.png";
+import feed from "@/assets/imgs/icons/feed.png";
 import le_jeu from "@/assets/imgs/icons/le_jeu.png";
-import metiers from "@/assets/imgs/icons/metiers.png";
 import playlists from "@/assets/imgs/icons/playlists.png";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
@@ -15,14 +15,14 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 	}
 
 	const icons: { [key: string]: any } = {
-		index: accueil,
+		activity: activity,
 		leJeu: le_jeu,
-		metiers: metiers,
+		feed: feed,
 		dico: dico,
 		playlists: playlists,
 	};
 
-	const desiredOrder = ["index", "leJeu", "playlists", "dico", "metiers"];
+	const desiredOrder = ["activity", "leJeu", "feed", "playlists", "dico"];
 	const orderedRoutes = state.routes
 		.filter((route) => desiredOrder.includes(route.name))
 		.sort(
@@ -32,10 +32,10 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 	// Define a custom label for each route if necessary
 	const customLabels: { [key: string]: string } = {
 		leJeu: "Le Jeu",
-		metiers: "Métiers",
+		feed: "Feed",
 		dico: "Dico",
 		playlists: "Playlists",
-		index: "Accueil",
+		activity: "Activitès",
 	};
 
 	// Used to apply the BG or not to the tab bar.
@@ -54,7 +54,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 					const isFocused =
 						state.index ===
 							state.routes.findIndex((r) => r.name === route.name) ||
-						(route.name === "index" &&
+						(route.name === "activity" &&
 							(currentRouteName === "lesCitations" ||
 								currentRouteName === "commandements" ||
 								currentRouteName === "secrets" ||
@@ -70,11 +70,11 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 						});
 
 						// Reset to Accueil (index) if the Accueil button is pressed
-						if (route.name === "index") {
+						if (route.name === "activity") {
 							// Use reset to navigate back to the root screen
 							navigation.reset({
 								index: 0,
-								routes: [{ name: "index" }], // Ensure you go back to the root of the home stack
+								routes: [{ name: "activity" }], // Ensure you go back to the root of the home stack
 							});
 						} else if (!isFocused && !event.defaultPrevented) {
 							// Navigate normally to the selected tab
@@ -91,7 +91,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							onPress={onPress}
 							style={[styles.tabbarItem, styles.onTabBackground]}>
 							<Image
-								source={icons[route.name] || accueil}
+								source={icons[route.name]}
 								style={styles.tabIcons}
 								resizeMode='contain'
 							/>

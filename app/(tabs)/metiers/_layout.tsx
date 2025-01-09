@@ -8,7 +8,7 @@ const LeJeuLayout = () => {
 				name='index'
 				options={{
 					headerShown: false,
-					headerTitle: "Le Jeu",
+					headerTitle: "Metiers",
 				}}
 			/>
 			<Stack.Screen
