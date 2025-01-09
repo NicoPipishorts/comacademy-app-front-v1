@@ -1,4 +1,5 @@
 import AvatarInitials from "@/components/avatars/initials";
+import CardLesCitations from "@/components/cards/CardLesCitations";
 import Loader from "@/components/experience/loader";
 import { colorDarkGrey, primaryBackground } from "@/constants/colors";
 import {
@@ -6,6 +7,8 @@ import {
 	FontSizeH2,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
+import useLesCitations from "@/hooks/useGetLesCitations";
+import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
 import React from "react";
@@ -16,8 +19,10 @@ const Feed = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { data: userData } = useGetUserInfo(userId);
+	const { token } = useJwtToken();
+	const { data: CitationsData, isLoading } = useLesCitations(token);
 
-	if (!userData) {
+	if (!userData || !CitationsData) {
 		return <Loader />;
 	}
 	return (
@@ -77,6 +82,10 @@ const Feed = () => {
 							</Text>
 						</View>
 					</View>
+				</View>
+
+				<View>
+					<CardLesCitations citation={CitationsData.data[0]} />
 				</View>
 
 				{/* End of card component */}
