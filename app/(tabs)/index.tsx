@@ -5,11 +5,10 @@ const HomeScreen = () => {
 	const router = useRouter();
 
 	useEffect(() => {
-		console.log("navigating to feed");
-		router.replace("/feed"); // Use the correct path to navigate
+		router.replace("/feed");
 	}, [router]);
 
-	return null; // Optionally, display a loader or splash screen here
+	return null;
 };
 
 export default HomeScreen;
