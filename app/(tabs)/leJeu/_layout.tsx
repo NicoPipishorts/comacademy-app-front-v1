@@ -1,4 +1,4 @@
-import { GameProvider } from "@/providers/gameDataContext";
+import { GameProvider } from "@/providers/gameDataContext"; // Import the SnackbarProvider
 import { Stack } from "expo-router";
 import React from "react";
 
@@ -26,7 +26,7 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						gestureEnabled: true,
-						presentation: "fullScreenModal",
+						presentation: "containedModal",
 					}}
 				/>
 				<Stack.Screen
@@ -34,7 +34,7 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						gestureEnabled: true,
-						presentation: "modal",
+						presentation: "containedModal",
 					}}
 				/>
 				<Stack.Screen
@@ -42,17 +42,9 @@ const LeJeuLayout = () => {
 					options={{
 						headerShown: false,
 						gestureEnabled: true,
-						presentation: "modal",
+						presentation: "containedModal",
 					}}
 				/>
-				{/* <Stack.Screen
-					name='feedbackMessage'
-					options={{
-						headerShown: false,
-						gestureEnabled: true,
-						presentation: "fullScreenModal",
-					}}
-				/> */}
 			</Stack>
 		</GameProvider>
 	);

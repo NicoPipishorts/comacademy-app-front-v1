@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
 	ImageStyle,
+	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -16,18 +17,21 @@ import {
 import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
-import AndroidBackButton from "@/components/buttons/androidBack";
+import Plus from "@/assets/imgs/icons/plus.png";
 import Loader from "@/components/experience/loader";
 import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
+import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import UnorderedList from "@/components/UnorderedList";
 import { colorWhite } from "@/constants/colors";
+import { useSnackbar } from "@/context/snackBar";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import ReturnButton from "@/utils/returnButton";
 import { useLocalSearchParams } from "expo-router";
 
 interface Props {
@@ -37,6 +41,9 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
+	const [modalVisible, setModalVisible] = useState(false);
+
+	const showSnackbar = useSnackbar(); // Use the snackbar context
 
 	// Parse the 'id' to a number if it exists
 	const metierId = paramsMetierId ? paramsMetierId : Number(id);
@@ -120,7 +127,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				},
 			]}>
 			<View style={styles.headerContainer}>
-				{isAndroid && <AndroidBackButton />}
+				<ReturnButton />
 				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 
@@ -145,13 +152,20 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						<TouchableOpacity onPress={() => handleAddFavorite()}>
+						<Pressable onPress={() => setModalVisible(true)}>
+							<Image
+								source={Plus}
+								style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+								resizeMode='contain'
+							/>
+						</Pressable>
+						<Pressable onPress={() => handleAddFavorite()}>
 							<Image
 								source={filterIfFavoriteExists ? HeartFull : Heart}
 								style={styles.catIcons as ImageStyle}
 								resizeMode='contain'
 							/>
-						</TouchableOpacity>
+						</Pressable>
 					</View>
 				</View>
 
@@ -257,6 +271,13 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 					</TouchableOpacity>
 				</View>
 			</ScrollView>
+
+			<AddToPlaylistModal
+				visible={modalVisible}
+				onClose={() => setModalVisible(false)}
+				elementId={metierId}
+				type='metier'
+			/>
 		</View>
 	);
 }
@@ -270,25 +291,8 @@ const styles = StyleSheet.create({
 	headerContainer: {
 		paddingHorizontal: 25,
 	},
-	backBtnContainer: {
-		alignItems: "flex-start",
-	},
-	backButton: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	backBtnText: {
-		fontSize: FontSize12,
-		fontWeight: "bold",
-	},
-	backBtnIcon: {
-		width: 15,
-		height: 15,
-		aspectRatio: 1,
-		marginRight: 3,
-	},
 	contentContainer: {
-		marginBottom: 50,
+		marginBottom: 70,
 	},
 	wrapperIcons: {
 		flexDirection: "row",

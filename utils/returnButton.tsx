@@ -20,7 +20,8 @@ export default function ReturnButton() {
 
 const styles = StyleSheet.create({
 	headerContainer: {
-		marginTop: 50,
+		marginTop: 60,
+		marginBottom: 30,
 	},
 	returnContainer: {
 		display: "flex",
