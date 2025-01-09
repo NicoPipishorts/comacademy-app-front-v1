@@ -57,6 +57,7 @@ export interface PlaylistContentGrouped {
 			selectedColor: string;
 			playlist_contents: {
 				id: number;
+				itemId: number;
 				value: string;
 				group: "dico" | "métier" | "question";
 			}[];
