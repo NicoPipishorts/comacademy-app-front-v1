@@ -74,7 +74,6 @@ const Jeu = () => {
 
 	useEffect(() => {
 		if (showFinishedModal) {
-			showSnackbar("Session finished!", "success"); // Show snackbar when session is finished
 			navigation.navigate("finishedSession");
 		}
 	}, [navigation, showFinishedModal, showSnackbar]);
@@ -218,6 +217,7 @@ const Jeu = () => {
 			)}
 			{!showFinishedModal && (
 				<Swiper
+					containerStyle={{ flex: 1, backgroundColor: "transparent" }}
 					ref={swiperRef}
 					overlayLabels={overlayLabels}
 					cards={cards}
@@ -232,6 +232,8 @@ const Jeu = () => {
 					stackScale={5}
 					stackSeparation={24}
 					overlayOpacityHorizontalThreshold={20}
+					showSecondCard={true}
+					useViewOverflow={true}
 				/>
 			)}
 			{feedbackVisible && feedbackAnswer && (

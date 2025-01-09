@@ -6,8 +6,18 @@ import { Stack } from "expo-router";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider as PaperProvider } from "react-native-paper";
+import {
+	configureReanimatedLogger,
+	ReanimatedLogLevel,
+} from "react-native-reanimated";
 import { AuthProvider } from "../auth/AuthContext";
 import { queryClient } from "../hooks/reactQueryConfig";
+
+// This is the default configuration
+configureReanimatedLogger({
+	level: ReanimatedLogLevel.warn,
+	strict: false, // Reanimated runs in strict mode by default
+});
 
 export default function RootLayout() {
 	return (

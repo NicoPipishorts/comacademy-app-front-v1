@@ -152,6 +152,7 @@ const PlaylistList = () => {
 							paddingTop: 50,
 							paddingBottom: 30,
 							gap: 25,
+							minWidth: "100%",
 						}}
 						showsVerticalScrollIndicator={false}>
 						{playlistContents.map((content) => {
