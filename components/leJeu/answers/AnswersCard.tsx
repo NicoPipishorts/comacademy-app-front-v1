@@ -13,15 +13,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 interface Props {
 	id: number;
 	data: SessionResultsAllquestions;
+	postGame?: boolean;
 }
 
-export default function AnswersCard({ id, data }: Props) {
+export default function AnswersCard({ id, data, postGame }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	// Navigate to the answersDetails screen
 	const handlePress = () => {
 		navigation.navigate("answersDetails", {
 			questionId: id,
+			postGame,
 		});
 	};
 

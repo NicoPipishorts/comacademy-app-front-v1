@@ -16,7 +16,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Les Détails",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 		</Stack>

@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 interface payload {
 	userId: number;
 	name: string;
-	selectedColor: string;
+	selectedColor: string | number;
 	authToken: string;
 }
 

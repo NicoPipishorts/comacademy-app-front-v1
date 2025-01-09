@@ -32,8 +32,6 @@ export default function LeaderBoard() {
 		return <Loader />;
 	}
 
-	console.log(allScores.data[200].attributes.user);
-
 	function filterUsersByRoleAndClients(
 		allScores: AllUsersScoreResponse,
 		currentRole: string,

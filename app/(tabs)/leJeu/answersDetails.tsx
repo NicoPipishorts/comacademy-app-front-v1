@@ -4,8 +4,13 @@ import { useLocalSearchParams } from "expo-router";
 export default function AnswersDetails() {
 	const params = useLocalSearchParams();
 	const questionId = Number(params?.questionId);
+	const postGame = Boolean(params?.postGame);
 
 	return (
-		<QuestionDetails questionId={questionId} refetch='FavoriteQuestions' />
+		<QuestionDetails
+			questionId={questionId}
+			refetch='FavoriteQuestions'
+			postGame={postGame}
+		/>
 	);
 }

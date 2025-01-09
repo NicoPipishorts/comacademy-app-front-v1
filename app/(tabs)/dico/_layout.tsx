@@ -16,7 +16,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Le Dico Details",
-					presentation: "modal",
+					presentation: "containedModal",
 				}}
 			/>
 		</Stack>
