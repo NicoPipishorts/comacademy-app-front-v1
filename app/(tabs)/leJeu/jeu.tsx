@@ -39,6 +39,8 @@ const Jeu = () => {
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 
+	const [cardIndex, setCardIndex] = useState(0);
+
 	const showFeedback = (answer: Answer) => {
 		setFeedbackAnswer(answer);
 		setFeedbackVisible(true);
@@ -108,6 +110,7 @@ const Jeu = () => {
 	}
 
 	const onSwipeLeft = (cardIndex: number) => {
+		setCardIndex(cardIndex + 1);
 		const currentCard = dataGame[cardIndex];
 		setCurrentCardId(currentCard.id);
 		if (currentCard && currentCard.attributes.ANSWER === false) {
@@ -127,6 +130,7 @@ const Jeu = () => {
 	};
 
 	const onSwipeRight = (cardIndex: number) => {
+		setCardIndex(cardIndex + 1);
 		const currentCard = dataGame[cardIndex];
 		setCurrentCardId(currentCard.id);
 		if (currentCard && currentCard.attributes.ANSWER === true) {
@@ -224,12 +228,13 @@ const Jeu = () => {
 					verticalSwipe={false}
 					onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
 					onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
+					cardIndex={cardIndex}
 					backgroundColor={"transparent"}
 					cardVerticalMargin={100}
 					cardHorizontalMargin={30}
 					stackSize={5}
-					stackScale={5}
-					stackSeparation={24}
+					stackScale={10}
+					stackSeparation={15}
 					overlayOpacityHorizontalThreshold={20}
 					showSecondCard={true}
 					useViewOverflow={true}
