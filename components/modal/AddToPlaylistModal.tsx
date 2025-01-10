@@ -1,6 +1,6 @@
 import { useAddToPlaylist } from "@/api/addToPlaylist";
 import { primaryBackground } from "@/constants/colors";
-import { FontSize14, FontSize18 } from "@/constants/fontsizes";
+import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import useGetPlaylistsByUser from "@/hooks/Playlistss/useGetPlaylistsByUser";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -19,6 +19,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import ModalGestureLine from "../experience/modalGestureLine";
 
 interface Props {
 	visible: boolean;
@@ -109,7 +110,8 @@ export default function AddToPlaylistModal({
 						<TouchableOpacity
 							activeOpacity={1}
 							onPress={(e) => e.stopPropagation()}>
-							<Text style={styles.modalTitle}> Choisis une playlist :</Text>
+							<ModalGestureLine />
+							<Text style={styles.modalTitle}> Choisis une playlist.</Text>
 							<ScrollView contentContainerStyle={{ gap: 15 }}>
 								{playlistsData.data.map((playlist) => {
 									return (
@@ -120,11 +122,11 @@ export default function AddToPlaylistModal({
 											<PlaylistDisplayImage
 												image={playlist.attributes.selectedColor}
 												title={playlist.attributes.name}
-												width={40}
-												height={40}
+												width={50}
+												height={50}
 											/>
 											<Text
-												style={{ fontWeight: "bold", fontSize: FontSize14 }}>
+												style={{ fontWeight: "bold", fontSize: FontSize16 }}>
 												{playlist.attributes.name}
 											</Text>
 										</Pressable>
@@ -168,6 +170,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize18,
 		fontWeight: "bold",
 		marginBottom: 20,
-		textAlign: "left",
+		textAlign: "center",
 	},
 });
