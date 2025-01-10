@@ -1,6 +1,8 @@
 import AvatarInitials from "@/components/avatars/initials";
 import FeedCard10Commandements from "@/components/cards/feed/Card10Commandements";
 import FeedCardCitations from "@/components/cards/feed/CardCitations";
+import FeedCardDico from "@/components/cards/feed/CardDico";
+import FeedCardJeu from "@/components/cards/feed/CardJeu";
 import Loader from "@/components/experience/loader";
 import FeedCardHeader from "@/components/hreaders/FeedCardHeader";
 import {
@@ -57,6 +59,10 @@ const Feed = () => {
 				return <FeedCardCitations data={data} />;
 			case "commandement":
 				return <FeedCard10Commandements data={data} />;
+			case "dico":
+				return <FeedCardDico data={data} />;
+			case "question": // le jeu
+				return <FeedCardJeu data={data} />;
 
 			default:
 				return null;
