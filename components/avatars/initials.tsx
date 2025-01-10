@@ -9,8 +9,9 @@ import Loader from "../experience/loader";
 interface Props {
 	firstName: string;
 	lastName: string;
+	size?: number;
 }
-export default function AvatarInitials({ firstName, lastName }: Props) {
+export default function AvatarInitials({ firstName, lastName, size }: Props) {
 	const { userId } = useUserId();
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetUserPreferences(userId);
@@ -39,6 +40,9 @@ export default function AvatarInitials({ firstName, lastName }: Props) {
 				styles.container,
 				{
 					backgroundColor: backgroundColor,
+					height: size || 78,
+					width: size || 78,
+					borderRadius: size || 78,
 				},
 			]}
 			onPress={() => navigation.navigate("user")}>
@@ -51,9 +55,6 @@ const styles = StyleSheet.create({
 	container: {
 		justifyContent: "center",
 		alignItems: "center",
-		height: 74,
-		width: 74,
-		borderRadius: 74,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
