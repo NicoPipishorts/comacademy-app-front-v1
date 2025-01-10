@@ -33,6 +33,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import ModalGestureLine from "../experience/modalGestureLine";
 import { colorArray } from "../user/changeAvatar";
 
 interface NewPlaylistModalProps {
@@ -144,6 +145,7 @@ const NewPlaylistModal = ({
 						<TouchableOpacity
 							activeOpacity={1}
 							onPress={(e) => e.stopPropagation()}>
+							<ModalGestureLine />
 							<Text style={styles.modalTitle}>Créer une nouvelle playlist</Text>
 
 							<TextInput
