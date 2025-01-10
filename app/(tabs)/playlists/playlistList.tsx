@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
 	},
 	contentContainerEmpty: {
 		flexGrow: 1,
-		minWidth: "80%",
+		minwidth: "84%",
 		justifyContent: "center",
 		alignItems: "center",
 	},

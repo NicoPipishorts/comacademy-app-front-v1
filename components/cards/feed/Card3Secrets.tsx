@@ -8,13 +8,13 @@ interface Props {
 	data: FeedAttributes;
 }
 
-export default function FeedCard10Commandements({ data }: Props) {
-	const [title, text] = data.payload.Astuce.split(/\r?\n/, 2); // Split at the first line break
+export default function FeedCard3Secrets({ data }: Props) {
+	const [title, text] = data.payload.Key.split(/\r?\n/, 2); // Split at the first line break
 	return (
 		<View style={styles.cardContainer}>
-			<Text style={styles.cardTitle}>{data.payload.Theme} :</Text>
+			<Text style={styles.cardTitle}>{data.payload.Title} :</Text>
 			<LinearGradient
-				colors={["#368FC9", "#79FC7E"]}
+				colors={["#CA87E9", "#F0ADAE"]}
 				style={[styles.keyCardWrapper]}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 1 }}>

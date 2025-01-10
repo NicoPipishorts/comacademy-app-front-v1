@@ -1,5 +1,6 @@
 import AvatarInitials from "@/components/avatars/initials";
 import FeedCard10Commandements from "@/components/cards/feed/Card10Commandements";
+import FeedCard3Secrets from "@/components/cards/feed/Card3Secrets";
 import FeedCardCitations from "@/components/cards/feed/CardCitations";
 import FeedCardDico from "@/components/cards/feed/CardDico";
 import FeedCardJeu from "@/components/cards/feed/CardJeu";
@@ -63,6 +64,8 @@ const Feed = () => {
 				return <FeedCardDico data={data} />;
 			case "question": // le jeu
 				return <FeedCardJeu data={data} />;
+			case "secret":
+				return <FeedCard3Secrets data={data} />;
 
 			default:
 				return null;

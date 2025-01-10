@@ -19,7 +19,7 @@ export default function FeedCardDico({ data }: Props) {
 const styles = StyleSheet.create({
 	cardContainer: {
 		marginLeft: 10,
-		width: "80%",
+		width: "84%",
 		minHeight: 100,
 	},
 	textTitle: {

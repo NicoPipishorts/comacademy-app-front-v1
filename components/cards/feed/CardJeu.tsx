@@ -87,7 +87,7 @@ export default function FeedCardJeu({ data }: Props) {
 const styles = StyleSheet.create({
 	cardWrapper: {
 		marginLeft: 10,
-		width: "80%",
+		width: "84%",
 	},
 	textTitle: {
 		color: colorBlack,
