@@ -98,7 +98,7 @@ export default function CommandementsDetails() {
 		[data, commandementId]
 	);
 
-	// Early return in case of no data found (make sure hooks are already defined)
+	// Early return in case of no data found
 	if (!commandementData.length) return null;
 
 	const { Theme, ...commandements } = commandementData[0].attributes;
@@ -140,7 +140,7 @@ export default function CommandementsDetails() {
 				keyExtractor={(item, index) => `${item.type}-${index}`}
 				showsHorizontalScrollIndicator={false}
 				decelerationRate='fast'
-				snapToInterval={cardWidth + cardMargin * 2} // Ensure snapping to each card
+				snapToInterval={cardWidth + cardMargin * 2}
 				snapToAlignment='center'
 				onScroll={scrollHandler}
 				scrollEventThrottle={16}

@@ -57,7 +57,11 @@ const Playlist = () => {
 	};
 	// ----- End create playlist
 
-	const { data: playlistsData, isLoading } = useGetPlaylistsByUser(userId);
+	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
+
+	if (!playlistsData && !isFetched) {
+		return <Loader />;
+	}
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -81,9 +85,7 @@ const Playlist = () => {
 				<CardFavoritesList type='favorites' title='Questions ' />
 				<CardFavoritesList type='metiers' title='Les Metiers ' />
 				<CardFavoritesList type='dicos' title='Dico ' />
-
-				{isLoading && <Loader />}
-				{!isLoading &&
+				{isFetched &&
 					playlistsData &&
 					playlistsData.data.map((playlist) => {
 						return (

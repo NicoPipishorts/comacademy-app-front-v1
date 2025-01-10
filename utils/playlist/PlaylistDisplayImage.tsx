@@ -15,8 +15,7 @@ import Image9 from "@/assets/imgs/icons/playlists/9.png";
 
 import { colorWhite } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
-import { Image, StyleSheet, Text, View } from "react-native";
-import { getInitials } from "../getInitials";
+import { Image, StyleSheet, View } from "react-native";
 
 interface Props {
 	image?: string;
@@ -26,7 +25,7 @@ interface Props {
 }
 
 export default function PlaylistDisplayImage(props: Props) {
-	const { image, width, height, title } = props;
+	const { image, width, height } = props;
 
 	const playlistPatternImages = (
 		image: string,
@@ -69,7 +68,7 @@ export default function PlaylistDisplayImage(props: Props) {
 						styles.image,
 						{ backgroundColor: `${image}`, width, height },
 					]}>
-					<Text style={styles.imageText}>{getInitials(title)}</Text>
+					{/* <Text style={styles.imageText}>{getInitials(title)}</Text> */}
 				</View>
 			);
 		}
