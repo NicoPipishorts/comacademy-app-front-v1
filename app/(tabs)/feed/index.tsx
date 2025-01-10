@@ -1,32 +1,63 @@
 import AvatarInitials from "@/components/avatars/initials";
-import CardLesCitations from "@/components/cards/CardLesCitations";
+import FeedCardCitations from "@/components/cards/feed/CardCitations";
 import Loader from "@/components/experience/loader";
+import FeedCardHeader from "@/components/hreaders/FeedCardHeader";
 import { colorDarkGrey, primaryBackground } from "@/constants/colors";
-import {
-	FontSize14,
-	FontSizeH2,
-	FontSizeScreenTitles,
-} from "@/constants/fontsizes";
-import useLesCitations from "@/hooks/useGetLesCitations";
-import useJwtToken from "@/hooks/useJwtToken";
+import { FontSizeScreenTitles } from "@/constants/fontsizes";
+import useGetAllFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
-import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FeedAttributes } from "@/types/feed";
+import React, { useState } from "react";
+import {
+	Image,
+	RefreshControl,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
-	const { data: userData } = useGetUserInfo(userId);
-	const { token } = useJwtToken();
-	const { data: CitationsData, isLoading } = useLesCitations(token);
+	const { data: userData, isFetched: isFetchedUserData } =
+		useGetUserInfo(userId);
+	const {
+		data: feedData,
+		isFetched: isFetchedFeedData,
+		refetch,
+	} = useGetAllFeed();
+	const [refreshing, setRefreshing] = useState(false);
 
-	if (!userData || !CitationsData) {
+	const onRefresh = async () => {
+		setRefreshing(true);
+		try {
+			await refetch(); // Trigger refetch of feed data
+		} catch (error) {
+			console.error("Error refreshing feed:", error);
+		} finally {
+			setRefreshing(false);
+		}
+	};
+
+	if (!userData || !feedData || !isFetchedUserData || !isFetchedFeedData) {
 		return <Loader />;
 	}
+
+	const ShowProperCard = (type: string, data: FeedAttributes) => {
+		switch (type) {
+			case "citation":
+				return <FeedCardCitations data={data} />;
+
+			default:
+				return null;
+		}
+	};
+
 	return (
-		<View style={[styles.wrapper, { marginTop: insets.top + 10 }]}>
+		<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
 			<View style={{ marginBottom: 15 }}>
 				<Image
 					source={require("@/assets/imgs/logos/Login.png")}
@@ -34,7 +65,12 @@ const Feed = () => {
 					resizeMode='contain'
 				/>
 			</View>
-			<ScrollView contentContainerStyle={{ paddingTop: 25 }}>
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+				}>
 				<View style={[styles.headerContainer, { alignItems: "center" }]}>
 					<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
 						Feed
@@ -47,46 +83,27 @@ const Feed = () => {
 				</View>
 
 				{/* Start of card component */}
+				{feedData.data.map((feed) => {
+					return (
+						<View key={feed.id}>
+							<FeedCardHeader data={feed.attributes} />
 
-				<View style={{ marginTop: 40 }}>
-					<View
-						style={{
-							flexDirection: "row",
-							justifyContent: "flex-start",
-							alignItems: "center",
-							minWidth: "100%",
-						}}>
-						<Image
-							source={require("@/assets/imgs/icons/feed/citations.png")}
-							style={{ width: 48, height: 48, marginRight: 10 }}
-							resizeMode='contain'
-						/>
-						<View
-							style={{
-								flexGrow: 1,
-								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "center",
-								paddingRight: 10,
-							}}>
-							<Text style={{ fontSize: FontSizeH2, fontWeight: "bold" }}>
-								Feed
-							</Text>
-							<Text
+							<View
 								style={{
-									fontSize: FontSize14,
-									fontWeight: "bold",
-									color: colorDarkGrey,
+									flexShrink: 0,
+									alignItems: "center",
+									marginTop: 20,
+									borderLeftColor: colorDarkGrey,
+									borderLeftWidth: 1,
+									marginLeft: 25,
 								}}>
-								21mn
-							</Text>
+								{ShowProperCard(feed.attributes.type, feed.attributes)}
+							</View>
 						</View>
-					</View>
-				</View>
+					);
+				})}
 
-				<View>
-					<CardLesCitations citation={CitationsData.data[0]} />
-				</View>
+				<View></View>
 
 				{/* End of card component */}
 			</ScrollView>
