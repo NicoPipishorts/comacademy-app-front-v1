@@ -79,9 +79,9 @@ export default function StatsBar({
 				<Text style={styles.scoreText}>Ton score: {totalPoints}</Text>
 			</View>
 			<View style={styles.containerProgressBars}>
-				{categories.data.map((cat) => {
+				{categories.data.map((cat, index) => {
 					const progression = Math.round(
-						categoriesScore[cat.id].percentageCorrect
+						categoriesScore[index + 1].percentageCorrect
 					);
 
 					return (
@@ -111,9 +111,9 @@ export default function StatsBar({
 			</View>
 
 			<View style={styles.cardsWrapper}>
-				{categories.data.map((cat) => {
+				{categories.data.map((cat, index) => {
 					const progression = Math.round(
-						categoriesScore[cat.id].percentageCorrect
+						categoriesScore[index + 1].percentageCorrect
 					);
 
 					return (
