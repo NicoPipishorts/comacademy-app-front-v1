@@ -41,7 +41,7 @@ export default function FeedCardHeader({ data }: Props) {
 	};
 
 	return (
-		<View style={{ marginTop: 40 }}>
+		<View>
 			<View
 				style={{
 					flexDirection: "row",

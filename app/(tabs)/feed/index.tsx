@@ -1,8 +1,13 @@
 import AvatarInitials from "@/components/avatars/initials";
+import FeedCard10Commandements from "@/components/cards/feed/Card10Commandements";
 import FeedCardCitations from "@/components/cards/feed/CardCitations";
 import Loader from "@/components/experience/loader";
 import FeedCardHeader from "@/components/hreaders/FeedCardHeader";
-import { colorDarkGrey, primaryBackground } from "@/constants/colors";
+import {
+	colorDarkGrey,
+	colorGrey,
+	primaryBackground,
+} from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetAllFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
@@ -50,6 +55,8 @@ const Feed = () => {
 		switch (type) {
 			case "citation":
 				return <FeedCardCitations data={data} />;
+			case "commandement":
+				return <FeedCard10Commandements data={data} />;
 
 			default:
 				return null;
@@ -85,18 +92,17 @@ const Feed = () => {
 				{/* Start of card component */}
 				{feedData.data.map((feed) => {
 					return (
-						<View key={feed.id}>
+						<View
+							key={feed.id}
+							style={{
+								width: "100%",
+								borderBottomWidth: 1,
+								borderBottomColor: colorGrey,
+								paddingVertical: 40,
+							}}>
 							<FeedCardHeader data={feed.attributes} />
 
-							<View
-								style={{
-									flexShrink: 0,
-									alignItems: "center",
-									marginTop: 20,
-									borderLeftColor: colorDarkGrey,
-									borderLeftWidth: 1,
-									marginLeft: 25,
-								}}>
+							<View style={styles.cardWrapper}>
 								{ShowProperCard(feed.attributes.type, feed.attributes)}
 							</View>
 						</View>
@@ -124,6 +130,14 @@ const styles = StyleSheet.create({
 		flexShrink: 0,
 		flexDirection: "row",
 		justifyContent: "space-between",
+	},
+	cardWrapper: {
+		flexShrink: 0,
+		alignItems: "center",
+		marginTop: 20,
+		borderLeftColor: colorDarkGrey,
+		borderLeftWidth: 1,
+		marginLeft: 25,
 	},
 });
 
