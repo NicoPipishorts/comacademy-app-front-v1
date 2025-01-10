@@ -6,7 +6,8 @@ import FeedCardDico from "@/components/cards/feed/CardDico";
 import FeedCardJeu from "@/components/cards/feed/CardJeu";
 import FeedCardMetier from "@/components/cards/feed/CardMetier";
 import Loader from "@/components/experience/loader";
-import FeedCardHeader from "@/components/hreaders/FeedCardHeader";
+import FeedCardFooter from "@/components/footers/Feed/CardFooter";
+import FeedCardHeader from "@/components/headers/Feed/CardHeader";
 import {
 	colorDarkGrey,
 	colorGrey,
@@ -117,6 +118,8 @@ const Feed = () => {
 							<View style={styles.cardWrapper}>
 								{ShowProperCard(feed.attributes.type, feed.attributes)}
 							</View>
+
+							<FeedCardFooter data={feed.attributes} />
 						</View>
 					);
 				})}
@@ -149,7 +152,7 @@ const styles = StyleSheet.create({
 		marginTop: 20,
 		borderLeftColor: colorDarkGrey,
 		borderLeftWidth: 1,
-		marginLeft: 25,
+		marginLeft: 23,
 	},
 });
 
