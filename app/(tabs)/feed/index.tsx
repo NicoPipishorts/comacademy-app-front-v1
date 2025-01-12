@@ -14,14 +14,14 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
-import useGetAllFeed from "@/hooks/Feed/useGetAllFeed";
+import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
 import { FeedAttributes } from "@/types/feed";
-import React, { useState } from "react";
+import React from "react";
 import {
+	ActivityIndicator,
 	Image,
-	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -34,25 +34,27 @@ const Feed = () => {
 	const { userId } = useUserId();
 	const { data: userData, isFetched: isFetchedUserData } =
 		useGetUserInfo(userId);
+
 	const {
 		data: feedData,
-		isFetched: isFetchedFeedData,
-		refetch,
-	} = useGetAllFeed();
-	const [refreshing, setRefreshing] = useState(false);
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading,
+		isFetched,
+	} = useGetInfiniteFeed();
 
-	const onRefresh = async () => {
-		setRefreshing(true);
-		try {
-			await refetch(); // Trigger refetch of feed data
-		} catch (error) {
-			console.error("Error refreshing feed:", error);
-		} finally {
-			setRefreshing(false);
+	const handleScroll = (event: any) => {
+		const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+		const isBottom =
+			layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+
+		if (isBottom && hasNextPage && !isFetchingNextPage) {
+			fetchNextPage();
 		}
 	};
 
-	if (!userData || !feedData || !isFetchedUserData || !isFetchedFeedData) {
+	if (isLoading || !isFetched || !isFetchedUserData) {
 		return <Loader />;
 	}
 
@@ -70,7 +72,6 @@ const Feed = () => {
 				return <FeedCard3Secrets data={data} />;
 			case "metier":
 				return <FeedCardMetier data={data} />;
-
 			default:
 				return null;
 		}
@@ -87,10 +88,9 @@ const Feed = () => {
 			</View>
 			<ScrollView
 				showsVerticalScrollIndicator={false}
-				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}
-				refreshControl={
-					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-				}>
+				onScroll={handleScroll}
+				scrollEventThrottle={16}
+				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}>
 				<View style={[styles.headerContainer, { alignItems: "center" }]}>
 					<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
 						Feed
@@ -102,9 +102,9 @@ const Feed = () => {
 					/>
 				</View>
 
-				{/* Start of card component */}
-				{feedData.data.map((feed) => {
-					return (
+				{/* Card Components */}
+				{feedData?.pages.map((page) =>
+					page.data.map((feed) => (
 						<View
 							key={feed.id}
 							style={{
@@ -114,19 +114,20 @@ const Feed = () => {
 								paddingVertical: 40,
 							}}>
 							<FeedCardHeader data={feed.attributes} />
-
 							<View style={styles.cardWrapper}>
 								{ShowProperCard(feed.attributes.type, feed.attributes)}
 							</View>
-
 							<FeedCardFooter data={feed.attributes} />
 						</View>
-					);
-				})}
+					))
+				)}
 
-				<View></View>
-
-				{/* End of card component */}
+				{/* Loading Indicator for Fetching Next Page */}
+				{isFetchingNextPage && (
+					<View style={{ marginVertical: 20 }}>
+						<ActivityIndicator size='large' />
+					</View>
+				)}
 			</ScrollView>
 		</View>
 	);
