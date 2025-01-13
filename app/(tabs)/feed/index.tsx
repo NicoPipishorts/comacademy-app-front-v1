@@ -22,6 +22,7 @@ import React from "react";
 import {
 	ActivityIndicator,
 	Image,
+	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -88,9 +89,10 @@ const Feed = () => {
 			</View>
 			<ScrollView
 				showsVerticalScrollIndicator={false}
-				onScroll={handleScroll}
-				scrollEventThrottle={16}
-				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}>
+				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+				}>
 				<View style={[styles.headerContainer, { alignItems: "center" }]}>
 					<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
 						Feed
