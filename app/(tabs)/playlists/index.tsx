@@ -1,4 +1,4 @@
-import { useCreateNewPlaylist } from "@/api/createNewPlaylist";
+import { useCreateNewPlaylist } from "@/api/playlist/createNewPlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";

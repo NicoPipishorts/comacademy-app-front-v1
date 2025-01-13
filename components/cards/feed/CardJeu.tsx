@@ -1,16 +1,18 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize14, FontSizeH3 } from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
+	elementId: number;
 }
 
-export default function FeedCardJeu({ data }: Props) {
+export default function FeedCardJeu({ data, elementId }: Props) {
 	const { data: categories, isFetched } = useCategories();
 	const navigation = useNavigation<NavigationType>();
 
@@ -80,6 +82,7 @@ export default function FeedCardJeu({ data }: Props) {
 					<Text style={{ color: colorWhite, fontWeight: "bold" }}>Jouer</Text>
 				</Pressable>
 			</View>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }

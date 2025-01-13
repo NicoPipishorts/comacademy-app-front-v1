@@ -1,13 +1,15 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize14, FontSizeH1 } from "@/constants/fontsizes";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import { StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
+	elementId: number;
 }
 
-export default function FeedCardMetier({ data }: Props) {
+export default function FeedCardMetier({ data, elementId }: Props) {
 	function removeUnderscores(input) {
 		return input.replace(/_/g, " ");
 	}
@@ -19,6 +21,7 @@ export default function FeedCardMetier({ data }: Props) {
 				{removeUnderscores(data.payload.THEME)}
 			</Text>
 			<Text style={styles.textContent}>{data.payload.CONTENT}</Text>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }

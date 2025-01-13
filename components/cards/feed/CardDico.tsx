@@ -1,17 +1,20 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack } from "@/constants/colors";
 import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import { StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
+	elementId: number;
 }
 
-export default function FeedCardDico({ data }: Props) {
+export default function FeedCardDico({ data, elementId }: Props) {
 	return (
 		<View style={styles.cardContainer}>
 			<Text style={styles.textTitle}>{data.payload.Word}</Text>
 			<Text style={styles.textContent}>{data.payload.Definition}</Text>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }
