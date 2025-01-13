@@ -121,8 +121,8 @@ const PlaylistList = () => {
 					<PlaylistDisplayImage
 						title={playlistData.data.attributes.name}
 						image={playlistData.data.attributes.selectedColor}
-						width={70}
-						height={70}
+						width={100}
+						height={100}
 					/>
 				</View>
 				<View style={styles.headerTextContainer}>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
 	},
 	contentContainerEmpty: {
 		flexGrow: 1,
-		minWidth: "84%",
+		minWidth: "100%",
 		justifyContent: "center",
 		alignItems: "center",
 	},
