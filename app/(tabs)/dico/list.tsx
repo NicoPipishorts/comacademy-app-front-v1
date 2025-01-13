@@ -158,13 +158,6 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 				/>
 			</View>
 
-			{filteredData.length <= 0 && (
-				<View style={styles.noDataContainer}>
-					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
-					<Text>Sélectionnez une autre catégorie.</Text>
-				</View>
-			)}
-
 			<View style={styles.contentContainer}>
 				<ScrollView
 					ref={scrollViewRef}
@@ -179,8 +172,15 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 							setFilterByCat={setFilterByCat}
 						/>
 					)}
-
 					{/* If search query is active, render filtered data, else render grouped data */}
+					{filteredData.length <= 0 && (
+						<View style={styles.noDataContainer}>
+							<Text style={styles.noDataText}>
+								Aucun métier de disponible.{" "}
+							</Text>
+							<Text>Sélectionnez une autre catégorie.</Text>
+						</View>
+					)}
 					{searchQuery
 						? filteredData.map((item, index) => (
 								<TouchableOpacity
@@ -191,7 +191,9 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 						  ))
 						: alphabet.map((letter) => (
 								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
-									<Text style={styles.listHeader}>{letter}</Text>
+									{filteredData.length > 0 && (
+										<Text style={styles.listHeader}>{letter}</Text>
+									)}
 									{groupedData[letter]?.map((item, index) => (
 										<Text
 											key={index}
@@ -204,7 +206,7 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 						  ))}
 				</ScrollView>
 
-				{!searchQuery && (
+				{!searchQuery && filteredData.length > 0 && (
 					<View style={styles.sidebar}>
 						{alphabet.map((letter) => (
 							<TouchableOpacity
