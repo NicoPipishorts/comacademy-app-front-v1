@@ -1,4 +1,5 @@
 import QuestionDetails from "@/components/details/questionDetails";
+import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useLocalSearchParams } from "expo-router";
 
 export default function FavoriteQuestionDetails() {
@@ -6,6 +7,11 @@ export default function FavoriteQuestionDetails() {
 	const questionId = Number(params?.questionId);
 
 	return (
-		<QuestionDetails questionId={questionId} refetch='FavoriteQuestionsFull' />
+		<SwipeToGoBack>
+			<QuestionDetails
+				questionId={questionId}
+				refetch='FavoriteQuestionsFull'
+			/>
+		</SwipeToGoBack>
 	);
 }

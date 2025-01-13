@@ -1,4 +1,4 @@
-import { FontSize12, FontSize18 } from "@/constants/fontsizes";
+import { FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
@@ -32,7 +32,7 @@ export default function CardPlaylist({ title, color, id }: Props) {
 					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
 						{title}
 					</Text>
-					<Text style={{ fontSize: FontSize12 }}>" I like it !! "</Text>
+					{/* <Text style={{ fontSize: FontSize12 }}>" I like it !! "</Text> */}
 				</View>
 			</TouchableOpacity>
 		</>

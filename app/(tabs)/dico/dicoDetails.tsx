@@ -27,6 +27,7 @@ import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import ReturnButton from "@/utils/returnButton";
+import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useLocalSearchParams } from "expo-router";
 
 interface Props {
@@ -110,63 +111,66 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 		return <Loader />;
 	}
 	return (
-		<View
-			style={[
-				styles.wrapper,
-				{
-					paddingTop: isAndroid ? 70 : 20,
-					paddingBottom: isAndroid ? 70 : 20,
-				},
-			]}>
-			<View style={styles.headerContainer}>
-				<ReturnButton />
-				<ScreenHeaders content={data?.data.attributes.Word} />
-			</View>
-
-			<ScrollView
-				style={styles.contentContainer}
-				showsVerticalScrollIndicator={false}>
-				<View style={styles.wrapperIcons}>
-					<View style={styles.containerIcons}>
-						{data.data.attributes.Categories !== undefined &&
-						data.data.attributes.Categories !== null
-							? data.data.attributes.Categories.split(",").map((cat, index) => {
-									const categoryNumber = parseInt(cat, 10); // Convert string to number
-									return (
-										<View key={index} style={{ marginRight: 8 }}>
-											<SmallCategroieIcons
-												key={categoryNumber}
-												cats={categoryNumber}
-											/>
-										</View>
-									);
-							  })
-							: ""}
-					</View>
-					<View style={styles.containerIcons}>
-						<Pressable onPress={() => setModalVisible(true)}>
-							<Image
-								source={Plus}
-								style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-								resizeMode='contain'
-							/>
-						</Pressable>
-						<Pressable onPress={() => handleAddFavorite()}>
-							<Image
-								source={filterIfFavoriteExists ? HeartFull : Heart}
-								style={styles.catIcons as ImageStyle}
-								resizeMode='contain'
-							/>
-						</Pressable>
-					</View>
-				</View>
-				<View style={styles.containerDefintion}>
-					<Text style={styles.textDefinition}>
-						{data.data.attributes.Definition}
-					</Text>
+		<SwipeToGoBack>
+			<View
+				style={[
+					styles.wrapper,
+					{
+						paddingTop: isAndroid ? 70 : 20,
+						paddingBottom: isAndroid ? 70 : 20,
+					},
+				]}>
+				<View style={styles.headerContainer}>
+					<ReturnButton />
+					<ScreenHeaders content={data?.data.attributes.Word} />
 				</View>
 
-				{/* <View style={styles.containerSatisfaction}>
+				<ScrollView
+					style={styles.contentContainer}
+					showsVerticalScrollIndicator={false}>
+					<View style={styles.wrapperIcons}>
+						<View style={styles.containerIcons}>
+							{data.data.attributes.Categories !== undefined &&
+							data.data.attributes.Categories !== null
+								? data.data.attributes.Categories.split(",").map(
+										(cat, index) => {
+											const categoryNumber = parseInt(cat, 10); // Convert string to number
+											return (
+												<View key={index} style={{ marginRight: 8 }}>
+													<SmallCategroieIcons
+														key={categoryNumber}
+														cats={categoryNumber}
+													/>
+												</View>
+											);
+										}
+								  )
+								: ""}
+						</View>
+						<View style={styles.containerIcons}>
+							<Pressable onPress={() => setModalVisible(true)}>
+								<Image
+									source={Plus}
+									style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+									resizeMode='contain'
+								/>
+							</Pressable>
+							<Pressable onPress={() => handleAddFavorite()}>
+								<Image
+									source={filterIfFavoriteExists ? HeartFull : Heart}
+									style={styles.catIcons as ImageStyle}
+									resizeMode='contain'
+								/>
+							</Pressable>
+						</View>
+					</View>
+					<View style={styles.containerDefintion}>
+						<Text style={styles.textDefinition}>
+							{data.data.attributes.Definition}
+						</Text>
+					</View>
+
+					{/* <View style={styles.containerSatisfaction}>
 					<Text style={styles.ttlSatisfaction}>Cette fiche a été utile :</Text>
 					<TouchableOpacity style={styles.btnSatisfaction}>
 						<Text style={styles.textSatisfaction}>Yes</Text>
@@ -175,15 +179,16 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 						<Text style={styles.textSatisfaction}>No</Text>
 					</TouchableOpacity>
 				</View> */}
-			</ScrollView>
+				</ScrollView>
 
-			<AddToPlaylistModal
-				visible={modalVisible}
-				onClose={() => setModalVisible(false)}
-				elementId={dicoId}
-				type={"dico"}
-			/>
-		</View>
+				<AddToPlaylistModal
+					visible={modalVisible}
+					onClose={() => setModalVisible(false)}
+					elementId={dicoId}
+					type={"dico"}
+				/>
+			</View>
+		</SwipeToGoBack>
 	);
 }
 

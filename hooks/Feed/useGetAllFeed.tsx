@@ -19,13 +19,11 @@ const fetchData = async ({
 			}
 		);
 
-		console.log("API Response Status:", response.status);
 		if (!response.ok) {
 			throw new Error(`Error fetching the feed! status: ${response.status}`);
 		}
 
 		const data = await response.json();
-		console.log("Fetched Data:", data); // Log the response data
 		return data;
 	} catch (error) {
 		console.error("Error fetching the feed:", error);
@@ -45,7 +43,6 @@ const useGetInfiniteFeed = () => {
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages) => {
 			if (!lastPage?.meta?.pagination) {
-				console.error("Pagination metadata is undefined:", lastPage);
 				return undefined;
 			}
 

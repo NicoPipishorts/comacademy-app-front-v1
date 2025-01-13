@@ -148,24 +148,22 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						{!postGame && (
-							<>
-								<Pressable onPress={() => setModalVisible(true)}>
-									<Image
-										source={Plus}
-										style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-										resizeMode='contain'
-									/>
-								</Pressable>
-								<Pressable onPress={() => handleAddFavorite()}>
-									<Image
-										source={filterIfFavoriteExists ? HeartFull : Heart}
-										style={styles.catIcons as ImageStyle}
-										resizeMode='contain'
-									/>
-								</Pressable>
-							</>
-						)}
+						<>
+							<Pressable onPress={() => setModalVisible(true)}>
+								<Image
+									source={Plus}
+									style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+									resizeMode='contain'
+								/>
+							</Pressable>
+							<Pressable onPress={() => handleAddFavorite()}>
+								<Image
+									source={filterIfFavoriteExists ? HeartFull : Heart}
+									style={styles.catIcons as ImageStyle}
+									resizeMode='contain'
+								/>
+							</Pressable>
+						</>
 					</View>
 				</View>
 

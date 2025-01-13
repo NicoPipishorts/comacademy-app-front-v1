@@ -38,7 +38,7 @@ export default function FilteredByCat({
 				style={styles.filterContainer}
 				onPress={() => onPress()}>
 				<Text style={styles.filterText}>
-					{categoriesById[filterByCat]?.attributes.Title}: {count}
+					{categoriesById[filterByCat + 6]?.attributes.Title}: {count}
 				</Text>
 				<MaterialCommunityIcons
 					name='close-circle-outline'
