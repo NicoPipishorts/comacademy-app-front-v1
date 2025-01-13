@@ -1,8 +1,8 @@
-import { FeedAttributes } from "@/types/feed";
-import { Image, StyleSheet, View } from "react-native";
+import { FeedItem } from "@/types/feed";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
 }
 
 export default function FeedCardFooter({ data }: Props) {
@@ -14,6 +14,7 @@ export default function FeedCardFooter({ data }: Props) {
 					style={styles.icon}
 					resizeMode='contain'
 				/>
+				<Text style={{ fontWeight: "bold" }}>{data.likes}</Text>
 			</View>
 		</View>
 	);
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
 	container: {
 		flexDirection: "row",
 		justifyContent: "flex-start",
-		alignItems: "flex-start",
+		alignItems: "center",
 		minWidth: "100%",
 		marginTop: 20,
 	},
@@ -31,5 +32,6 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		marginLeft: 8,
+		marginRight: 20,
 	},
 });
