@@ -17,7 +17,7 @@ import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import React, { useState } from "react";
 import {
 	ActivityIndicator,
@@ -72,20 +72,20 @@ const Feed = () => {
 		return <Loader />;
 	}
 
-	const ShowProperCard = (type: string, data: FeedAttributes) => {
+	const ShowProperCard = (type: string, data: FeedItem, elementId: number) => {
 		switch (type) {
 			case "citation":
-				return <FeedCardCitations data={data} />;
+				return <FeedCardCitations data={data} elementId={elementId} />;
 			case "commandement":
-				return <FeedCard10Commandements data={data} />;
+				return <FeedCard10Commandements data={data} elementId={elementId} />;
 			case "dico":
-				return <FeedCardDico data={data} />;
+				return <FeedCardDico data={data} elementId={elementId} />;
 			case "question": // le jeu
-				return <FeedCardJeu data={data} />;
+				return <FeedCardJeu data={data} elementId={elementId} />;
 			case "secret":
-				return <FeedCard3Secrets data={data} />;
+				return <FeedCard3Secrets data={data} elementId={elementId} />;
 			case "metier":
-				return <FeedCardMetier data={data} />;
+				return <FeedCardMetier data={data} elementId={elementId} />;
 			default:
 				return null;
 		}
@@ -120,22 +120,24 @@ const Feed = () => {
 
 				{/* Card Components */}
 				{feedData?.pages.map((page) =>
-					page.data.map((feed) => (
-						<View
-							key={feed.id}
-							style={{
-								width: "100%",
-								borderBottomWidth: 1,
-								borderBottomColor: colorGrey,
-								paddingVertical: 40,
-							}}>
-							<FeedCardHeader data={feed.attributes} />
-							<View style={styles.cardWrapper}>
-								{ShowProperCard(feed.attributes.type, feed.attributes)}
+					page.data.map((feed) => {
+						return (
+							<View
+								key={feed.id}
+								style={{
+									width: "100%",
+									borderBottomWidth: 1,
+									borderBottomColor: colorGrey,
+									paddingVertical: 40,
+								}}>
+								<FeedCardHeader data={feed} />
+								<View style={styles.cardWrapper}>
+									{ShowProperCard(feed.type, feed, feed.id)}
+								</View>
+								<FeedCardFooter data={feed} />
 							</View>
-							<FeedCardFooter data={feed.attributes} />
-						</View>
-					))
+						);
+					})
 				)}
 
 				{/* Loading Indicator for Fetching Next Page */}

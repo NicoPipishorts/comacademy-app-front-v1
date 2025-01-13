@@ -1,10 +1,39 @@
+import { useLikePost } from "@/api/feed/likePost";
+import { queryClient } from "@/hooks/reactQueryConfig";
+import useJwtToken from "@/hooks/useJwtToken";
+import useUserId from "@/hooks/useUserId";
 import { Image, Pressable, StyleSheet } from "react-native";
 
-export default function ThumbLikeButton() {
+interface Props {
+	elementId: number;
+	userLiked: boolean;
+}
+
+export default function ThumbLikeButton({ elementId, userLiked }: Props) {
+	const { userId } = useUserId();
+	const { token: authToken } = useJwtToken();
+	const onSuccess = () => {
+		queryClient.refetchQueries({
+			queryKey: ["Playlists"],
+		});
+	};
+
+	const { mutate: likePost } = useLikePost(onSuccess);
+
+	const handleLikePost = () => {
+		likePost({ elementId, userId, authToken });
+	};
+
+	console.log(userLiked);
+
 	return (
-		<Pressable style={{ marginTop: 20 }}>
+		<Pressable style={{ marginTop: 20 }} onPress={() => handleLikePost()}>
 			<Image
-				source={require("@/assets/imgs/icons/thumb.png")}
+				source={
+					userLiked
+						? require("@/assets/imgs/icons/thumb-full.png")
+						: require("@/assets/imgs/icons/thumb.png")
+				}
 				style={styles.icon}
 				resizeMode='contain'
 			/>

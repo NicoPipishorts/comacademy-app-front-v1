@@ -1,7 +1,6 @@
-import { useAddToPlaylist } from "@/api/addToPlaylist";
+import { useAddToPlaylist } from "@/api/playlist/addToPlaylist";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
-import { useSnackbar } from "@/context/snackBar";
 import useGetPlaylistsByUser from "@/hooks/Playlistss/useGetPlaylistsByUser";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -57,13 +56,13 @@ export default function AddToPlaylistModal({
 		});
 	};
 
-	const showSnackbar = useSnackbar();
+	// const showSnackbar = useSnackbar();
 
 	const onSuccess = () => {
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
-		showSnackbar("L'élément a était ajouté a la playlist.", "success");
+		// showSnackbar("L'élément a était ajouté a la playlist.", "success");
 	};
 
 	const onError = (error: AxiosError) => {
