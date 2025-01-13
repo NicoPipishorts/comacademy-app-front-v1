@@ -7854,16 +7854,14 @@ react-native-deck-swiper@^2.0.17:
   dependencies:
     prop-types "15.5.10"
 
-react-native-gesture-handler@~2.16.1:
-  version "2.16.2"
-  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.16.2.tgz#032bd2a07334292d7f6cff1dc9d1ec928f72e26d"
-  integrity sha512-vGFlrDKlmyI+BT+FemqVxmvO7nqxU33cgXVsn6IKAFishvlG3oV2Ds67D5nPkHMea8T+s1IcuMm0bF8ntZtAyg==
+react-native-gesture-handler@^2.22.0:
+  version "2.22.0"
+  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.22.0.tgz#d90dad3e4d7fe149e3d1d445f697b487f717ac8e"
+  integrity sha512-m5Ps1cOSxSiMP4re+XsbeWcC9DNJuIEjMSmtUxBdyfYEJtdu5iAAiX7KlHHrf2mnK4I/56Ncy4PvPKWBwSpWpQ==
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
     invariant "^2.2.4"
-    lodash "^4.17.21"
-    prop-types "^15.7.2"
 
 react-native-helmet-async@2.0.4:
   version "2.0.4"
