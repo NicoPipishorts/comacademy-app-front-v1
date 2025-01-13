@@ -1,4 +1,5 @@
 import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
+import ReturnButton from "@/components/buttons/returnButton";
 import CardFavoriteMetier from "@/components/cards/CardFavoriteMetier";
 import Loader from "@/components/experience/loader";
 import {
@@ -10,7 +11,6 @@ import useCategories from "@/hooks/useCategories";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import useUserId from "@/hooks/useUserId";
 import { FavoriteMetier } from "@/types/metiers";
-import ReturnButton from "@/utils/returnButton";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";

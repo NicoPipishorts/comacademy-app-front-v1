@@ -16,6 +16,7 @@ import { useAddFavoriteDico } from "@/api/favoriteDico";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
+import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
@@ -26,7 +27,6 @@ import { useDicoById } from "@/hooks/useGetDico";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import ReturnButton from "@/utils/returnButton";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useLocalSearchParams } from "expo-router";
 

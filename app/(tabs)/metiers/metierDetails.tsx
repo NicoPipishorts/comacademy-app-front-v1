@@ -18,6 +18,7 @@ import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
+import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
@@ -30,7 +31,6 @@ import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import ReturnButton from "@/utils/returnButton";
 import { useLocalSearchParams } from "expo-router";
 
 interface Props {
