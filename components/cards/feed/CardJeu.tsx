@@ -20,13 +20,13 @@ export default function FeedCardJeu({ data }: Props) {
 
 	const backGroundColor = () => {
 		return `#${
-			categories.data[data.payload.CATEGORIE]?.attributes.backgroundColor
+			categories.data[data.payload.CATEGORIE - 1]?.attributes.backgroundColor
 		}`;
 	};
 
 	const smallIcon = () => {
-		return categories.data[data.payload.CATEGORIE]?.attributes.smallIcon.data
-			.attributes.url;
+		return categories.data[data.payload.CATEGORIE - 1]?.attributes.smallIcon
+			.data.attributes.url;
 	};
 
 	const renderStars = () => {

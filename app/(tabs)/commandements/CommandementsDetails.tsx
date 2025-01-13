@@ -110,10 +110,11 @@ export default function CommandementsDetails() {
 			.filter((key) => key.startsWith("Astuce_"))
 			.map((key, index) => {
 				const astuceValue = commandements[key];
-				if (!astuceValue) return null;
+				if (!astuceValue) return null; // If astuceValue is null, return null
 				const [title, text] = astuceValue.split(/\r?\n/, 2); // Split at the first line break
 				return { type: "CommandementCard", title, text, index };
-			}),
+			})
+			.filter(Boolean), // Remove any null or undefined items
 	];
 
 	// Render each card in FlatList

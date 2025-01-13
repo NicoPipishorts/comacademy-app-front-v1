@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function FeedCard10Commandements({ data }: Props) {
-	const [title, text] = data.payload.Astuce.split(/\r?\n/, 2); // Split at the first line break
+	const [title, text] = (data.payload.Astuce || "").split(/\r?\n/, 2);
 	return (
 		<View style={styles.cardContainer}>
 			<Text style={styles.cardTitle}>{data.payload.Theme} :</Text>

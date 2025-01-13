@@ -1,7 +1,7 @@
 import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
-import { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import {
 	Image,
 	ScrollView,
@@ -32,7 +32,7 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
 						return (
 							<TouchableOpacity
 								key={cat.id}
-								onPress={() => onPress(cat.id)}
+								onPress={() => onPress(cat.id - 6)}
 								style={[
 									styles.card,
 									{ backgroundColor: `#${cat.attributes.backgroundColor}` },

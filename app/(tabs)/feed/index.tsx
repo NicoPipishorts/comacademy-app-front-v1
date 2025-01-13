@@ -18,10 +18,11 @@ import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
 import { FeedAttributes } from "@/types/feed";
-import React from "react";
+import React, { useState } from "react";
 import {
 	ActivityIndicator,
 	Image,
+	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -42,7 +43,20 @@ const Feed = () => {
 		isFetchingNextPage,
 		isLoading,
 		isFetched,
+		refetch,
 	} = useGetInfiniteFeed();
+	const [refreshing, setRefreshing] = useState(false);
+
+	const onRefresh = async () => {
+		setRefreshing(true);
+		try {
+			await refetch(); // Trigger refetch of feed data
+		} catch (error) {
+			console.error("Error refreshing feed:", error);
+		} finally {
+			setRefreshing(false);
+		}
+	};
 
 	const handleScroll = (event: any) => {
 		const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
@@ -89,8 +103,10 @@ const Feed = () => {
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				onScroll={handleScroll}
-				scrollEventThrottle={16}
-				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}>
+				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+				}>
 				<View style={[styles.headerContainer, { alignItems: "center" }]}>
 					<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
 						Feed
