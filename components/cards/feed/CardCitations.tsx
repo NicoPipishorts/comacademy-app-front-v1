@@ -1,33 +1,38 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
+	elementId: number;
 }
 
-export default function FeedCardCitations({ data }: Props) {
+export default function FeedCardCitations({ data, elementId }: Props) {
 	return (
-		<View style={styles.cardContainer}>
-			<Image
-				source={require("@/assets/imgs/icons/quote_open.png")}
-				style={{
-					width: 45,
-					height: 45,
-				}}
-			/>
-			<Text style={styles.textMain}>{data.payload.CITATION}</Text>
-			<View style={styles.baseQuoteContainer}>
-				<Text style={styles.textAuthor}>{data.payload.AUTEUR}</Text>
+		<View>
+			<View style={styles.cardContainer}>
 				<Image
-					source={require("@/assets/imgs/icons/quote_close.png")}
+					source={require("@/assets/imgs/icons/quote_open.png")}
 					style={{
 						width: 45,
 						height: 45,
 					}}
 				/>
+				<Text style={styles.textMain}>{data.payload.CITATION}</Text>
+				<View style={styles.baseQuoteContainer}>
+					<Text style={styles.textAuthor}>{data.payload.AUTEUR}</Text>
+					<Image
+						source={require("@/assets/imgs/icons/quote_close.png")}
+						style={{
+							width: 45,
+							height: 45,
+						}}
+					/>
+				</View>
 			</View>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }

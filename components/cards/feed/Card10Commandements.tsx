@@ -1,14 +1,16 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
+	elementId: number;
 }
 
-export default function FeedCard10Commandements({ data }: Props) {
+export default function FeedCard10Commandements({ data, elementId }: Props) {
 	const [title, text] = (data.payload.Astuce || "").split(/\r?\n/, 2);
 	return (
 		<View style={styles.cardContainer}>
@@ -26,6 +28,7 @@ export default function FeedCard10Commandements({ data }: Props) {
 					<Text style={styles.keyCardNum}>{data.payload.index}</Text>
 				</View>
 			</LinearGradient>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }

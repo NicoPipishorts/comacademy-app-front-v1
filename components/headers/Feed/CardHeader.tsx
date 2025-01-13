@@ -1,13 +1,13 @@
 import { colorDarkGrey, colorGrey } from "@/constants/colors";
 import { FontSize14, FontSizeH3 } from "@/constants/fontsizes";
 import { formatTimeElapsed } from "@/helpers/formatTimeElapsed";
-import { FeedAttributes } from "@/types/feed";
+import { FeedItem } from "@/types/feed";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
-	data: FeedAttributes;
+	data: FeedItem;
 }
 
 export default function FeedCardHeader({ data }: Props) {

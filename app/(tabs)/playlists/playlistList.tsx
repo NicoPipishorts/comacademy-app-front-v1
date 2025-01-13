@@ -1,5 +1,6 @@
 import { useRemoveFromPlaylist } from "@/api/removeFromPlay";
 import Trash from "@/assets/imgs/icons/trash_white.png";
+import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import { colorRed, primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
@@ -9,7 +10,6 @@ import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
-import ReturnButton from "@/utils/returnButton";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { AxiosError } from "axios";
 import { useLocalSearchParams, useNavigation } from "expo-router";

@@ -2,6 +2,7 @@ import { useAddFavoriteQuestionMutation } from "@/api/favoriteQuestion";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
+import ReturnButton from "@/components/buttons/returnButton";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
@@ -9,7 +10,6 @@ import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
 import useUserId from "@/hooks/useUserId";
-import ReturnButton from "@/utils/returnButton";
 import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
