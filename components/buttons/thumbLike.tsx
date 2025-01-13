@@ -14,7 +14,7 @@ export default function ThumbLikeButton({ elementId, userLiked }: Props) {
 	const { token: authToken } = useJwtToken();
 	const onSuccess = () => {
 		queryClient.refetchQueries({
-			queryKey: ["Playlists"],
+			queryKey: ["Feed"],
 		});
 	};
 
@@ -23,8 +23,6 @@ export default function ThumbLikeButton({ elementId, userLiked }: Props) {
 	const handleLikePost = () => {
 		likePost({ elementId, userId, authToken });
 	};
-
-	console.log(userLiked);
 
 	return (
 		<Pressable style={{ marginTop: 20 }} onPress={() => handleLikePost()}>
