@@ -24,7 +24,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Animated,
 	Image,
+	KeyboardAvoidingView,
 	Modal,
+	Platform,
 	Pressable,
 	ScrollView,
 	StyleSheet,
@@ -134,115 +136,123 @@ const NewPlaylistModal = ({
 				activeOpacity={1}
 				onPress={hideModal}>
 				<View style={styles.modalWrapper}>
-					<Animated.View
-						style={[
-							styles.modalContent,
-							{
-								transform: [{ translateY: slideAnim }],
-								zIndex: 999, // Ensure the modal has a lower zIndex than the Snackbar
-							},
-						]}>
-						<TouchableOpacity
-							activeOpacity={1}
-							onPress={(e) => e.stopPropagation()}>
-							<ModalGestureLine />
-							<Text style={styles.modalTitle}>Créer une nouvelle playlist</Text>
+					<KeyboardAvoidingView
+						style={styles.modalWrapper}
+						behavior={Platform.OS === "ios" ? "padding" : undefined}>
+						<Animated.View
+							style={[
+								styles.modalContent,
+								{
+									transform: [{ translateY: slideAnim }],
+									zIndex: 999, // Ensure the modal has a lower zIndex than the Snackbar
+								},
+							]}>
+							<TouchableOpacity
+								activeOpacity={1}
+								onPress={(e) => e.stopPropagation()}>
+								<ModalGestureLine />
+								<Text style={styles.modalTitle}>
+									Créer une nouvelle playlist
+								</Text>
 
-							<TextInput
-								style={[
-									styles.input,
-									{
-										borderColor: errorPlaylistName ? colorRed : "",
-										borderWidth: errorPlaylistName ? 1 : 0,
-									},
-								]}
-								placeholder='Nom de la playlist'
-								value={playlistName}
-								onChangeText={setPlaylistName}
-							/>
+								<TextInput
+									style={[
+										styles.input,
+										{
+											borderColor: errorPlaylistName ? colorRed : "",
+											borderWidth: errorPlaylistName ? 1 : 0,
+										},
+									]}
+									placeholder='Nom de la playlist'
+									value={playlistName}
+									onChangeText={setPlaylistName}
+								/>
 
-							<ScrollView
-								horizontal
-								contentContainerStyle={styles.colorsContainer}
-								showsHorizontalScrollIndicator={false}>
-								{colorArray.map((color, index) => {
-									return (
-										<View
-											key={index}
-											style={{
-												justifyContent: "flex-start",
-												marginRight: 10,
-											}}>
-											<Pressable
-												style={[
-													styles.colorContainer,
-													{ backgroundColor: color },
-												]}
-												onPress={() => onPress(color)}
-											/>
+								<ScrollView
+									horizontal
+									contentContainerStyle={styles.colorsContainer}
+									showsHorizontalScrollIndicator={false}>
+									{colorArray.map((color, index) => {
+										return (
 											<View
+												key={index}
 												style={{
-													marginTop: 6,
-													marginLeft: 8,
-													width: 26,
-													minHeight: 4,
-													borderRadius: 2,
-													backgroundColor: selectedColor
-														? selectedColor === color
-															? colorBlack
-															: primaryBackground
-														: "",
-												}}
-											/>
-										</View>
-									);
-								})}
-							</ScrollView>
-
-							<ScrollView
-								horizontal
-								contentContainerStyle={styles.colorsContainer}
-								showsHorizontalScrollIndicator={false}>
-								{imageArray.map((image, index) => {
-									return (
-										<View
-											key={index}
-											style={{
-												justifyContent: "flex-start",
-												marginRight: 10,
-											}}>
-											<Pressable onPress={() => onPress(image.name)}>
-												<Image
-													source={image.image}
-													style={styles.colorContainer}
+													justifyContent: "flex-start",
+													marginRight: 10,
+												}}>
+												<Pressable
+													style={[
+														styles.colorContainer,
+														{ backgroundColor: color },
+													]}
+													onPress={() => onPress(color)}
 												/>
-											</Pressable>
-											<View
-												style={{
-													marginTop: 6,
-													marginLeft: 8,
-													width: 26,
-													minHeight: 4,
-													borderRadius: 2,
-													backgroundColor: selectedColor
-														? selectedColor === image.name
-															? colorBlack
-															: primaryBackground
-														: "",
-												}}
-											/>
-										</View>
-									);
-								})}
-							</ScrollView>
+												<View
+													style={{
+														marginTop: 6,
+														marginLeft: 8,
+														width: 26,
+														minHeight: 4,
+														borderRadius: 2,
+														backgroundColor: selectedColor
+															? selectedColor === color
+																? colorBlack
+																: primaryBackground
+															: "",
+													}}
+												/>
+											</View>
+										);
+									})}
+								</ScrollView>
 
-							<View style={styles.buttonContainer}>
-								<TouchableOpacity style={styles.button} onPress={handleSubmit}>
-									<Text style={styles.buttonText}>Créer</Text>
-								</TouchableOpacity>
-							</View>
-						</TouchableOpacity>
-					</Animated.View>
+								<ScrollView
+									horizontal
+									contentContainerStyle={styles.colorsContainer}
+									showsHorizontalScrollIndicator={false}>
+									{imageArray.map((image, index) => {
+										return (
+											<View
+												key={index}
+												style={{
+													justifyContent: "flex-start",
+													marginRight: 10,
+												}}>
+												<Pressable onPress={() => onPress(image.name)}>
+													<Image
+														source={image.image}
+														style={styles.colorContainer}
+													/>
+												</Pressable>
+												<View
+													style={{
+														marginTop: 6,
+														marginLeft: 8,
+														width: 26,
+														minHeight: 4,
+														borderRadius: 2,
+														backgroundColor: selectedColor
+															? selectedColor === image.name
+																? colorBlack
+																: primaryBackground
+															: "",
+													}}
+												/>
+											</View>
+										);
+									})}
+								</ScrollView>
+
+								<View style={styles.buttonContainer}>
+									<TouchableOpacity
+										style={styles.button}
+										onPress={handleSubmit}>
+										<Text style={styles.buttonText}>Créer</Text>
+									</TouchableOpacity>
+								</View>
+							</TouchableOpacity>
+						</Animated.View>
+					</KeyboardAvoidingView>
 				</View>
 			</TouchableOpacity>
 		</Modal>
