@@ -1,3 +1,4 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
 import { FeedAttributes } from "@/types/feed";
@@ -26,6 +27,7 @@ export default function FeedCard3Secrets({ data }: Props) {
 					<Text style={styles.keyCardNum}>{data.payload.index}</Text>
 				</View>
 			</LinearGradient>
+			<ThumbLikeButton />
 		</View>
 	);
 }
