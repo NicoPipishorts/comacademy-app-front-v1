@@ -11,6 +11,7 @@ import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import useUserId from "@/hooks/useUserId";
 import { FavoriteMetier } from "@/types/metiers";
 import ReturnButton from "@/utils/returnButton";
+import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -38,61 +39,62 @@ export default function QuestionsFavoritesList() {
 		return <Loader />;
 	}
 
-	// Convert categories.data into a single color array
 	const categoriesColors = categories.data.reduce((acc, category) => {
-		acc[category.id] = category.attributes.backgroundColor;
+		acc[category.id - 6] = category.attributes.backgroundColor;
 		return acc;
 	}, {});
 
 	// Create categoriesIcons object
 	const categoriesIcons = categories.data.reduce((acc, category) => {
-		acc[category.id] = category.attributes.smallIcon.data.attributes.url;
+		acc[category.id - 6] = category.attributes.smallIcon.data.attributes.url;
 		return acc;
 	}, {} as { [key: number]: string });
 
 	return (
-		<ScrollView contentContainerStyle={styles.wrapper}>
-			<ReturnButton />
+		<SwipeToGoBack>
+			<ScrollView contentContainerStyle={styles.wrapper}>
+				<ReturnButton />
 
-			<View style={styles.headerContainer}>
-				<Image source={FavoritesIcon} style={styles.headerIcon} />
-				<View style={{ flexDirection: "column" }}>
-					<Text style={styles.headerSubText}>Playlist</Text>
-					<Text style={styles.headerText}>Les Metiers</Text>
-				</View>
-			</View>
-
-			<View>
-				{!isEmptyArray &&
-					favoriteResponse.data[0]?.attributes.metiers.data.map(
-						(metier: FavoriteMetier) => (
-							<CardFavoriteMetier
-								key={metier.id}
-								data={metier}
-								categoriesColors={categoriesColors}
-								categoriesIcons={categoriesIcons}
-							/>
-						)
-					)}
-				{isEmptyArray && (
-					<View
-						style={{
-							marginTop: 50,
-							paddingHorizontal: 10,
-							alignItems: "center",
-						}}>
-						<Text
-							style={{
-								fontSize: FontSizeH3,
-								fontWeight: "bold",
-								textAlign: "center",
-							}}>
-							Tu n'a pas encore de metiers favorits d'ajouté.
-						</Text>
+				<View style={styles.headerContainer}>
+					<Image source={FavoritesIcon} style={styles.headerIcon} />
+					<View style={{ flexDirection: "column" }}>
+						<Text style={styles.headerSubText}>Playlist</Text>
+						<Text style={styles.headerText}>Les Metiers</Text>
 					</View>
-				)}
-			</View>
-		</ScrollView>
+				</View>
+
+				<View>
+					{!isEmptyArray &&
+						favoriteResponse.data[0]?.attributes.metiers.data.map(
+							(metier: FavoriteMetier) => (
+								<CardFavoriteMetier
+									key={metier.id}
+									data={metier}
+									categoriesColors={categoriesColors}
+									categoriesIcons={categoriesIcons}
+								/>
+							)
+						)}
+					{isEmptyArray && (
+						<View
+							style={{
+								marginTop: 50,
+								paddingHorizontal: 10,
+								alignItems: "center",
+							}}>
+							<Text
+								style={{
+									fontSize: FontSizeH3,
+									fontWeight: "bold",
+									textAlign: "center",
+								}}>
+								Tu n'a pas encore de metiers favorits d'ajouté.
+							</Text>
+						</View>
+					)}
+				</View>
+			</ScrollView>
+		</SwipeToGoBack>
 	);
 }
 

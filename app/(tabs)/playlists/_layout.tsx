@@ -16,7 +16,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Questions List",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen
@@ -24,7 +24,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Metiers List",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen
@@ -32,7 +32,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Dico List",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen
@@ -40,7 +40,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "List of items of a specific playlist",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen
@@ -48,7 +48,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Details",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen
@@ -56,7 +56,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Metier Details",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen
@@ -64,7 +64,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Dico Details",
-					presentation: "containedModal",
+					presentation: "card",
 				}}
 			/>
 		</Stack>
