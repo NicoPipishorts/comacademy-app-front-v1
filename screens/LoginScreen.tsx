@@ -4,10 +4,15 @@ import React, { useEffect, useState } from "react";
 import {
 	Alert,
 	Image,
+	Keyboard,
+	KeyboardAvoidingView,
+	Platform,
+	Pressable,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
-	TouchableOpacity,
+	TouchableWithoutFeedback,
 	View,
 } from "react-native";
 import { useLoginMutation } from "../api/login";
@@ -19,18 +24,20 @@ import {
 	colorBlue,
 	colorDarkGrey,
 	colorGreen,
-	colorLightGrey,
+	colorGrey,
 	colorOrange,
 	colorPurple,
 	colorTurquoise,
 	colorWhite,
 	colorYellow,
 } from "@/constants/colors";
-import { FontSize14, FontSize16 } from "@/constants/fontsizes";
+import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Logo from "../assets/imgs/logos/Login.png";
 
 const LoginScreen = () => {
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
 	const [email, setEmail] = useState("");
@@ -69,100 +76,102 @@ const LoginScreen = () => {
 	}, [navigation, checkLoggedIn]);
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.logoContainer}>
-				<Image source={Logo} style={styles.logo} resizeMode='contain' />
-				<View style={styles.containerDots}>
-					<View style={[styles.dot, { backgroundColor: colorPurple }]}></View>
-					<View style={[styles.dot, { backgroundColor: colorOrange }]}></View>
-					<View style={[styles.dot, { backgroundColor: colorYellow }]}></View>
-					<View style={[styles.dot, { backgroundColor: colorGreen }]}></View>
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+			<KeyboardAvoidingView
+				style={styles.container}
+				behavior={Platform.OS === "ios" ? "padding" : undefined}
+				keyboardVerticalOffset={0} // Adjust this offset as needed
+			>
+				<ScrollView
+					contentContainerStyle={styles.scrollContainer}
+					keyboardShouldPersistTaps='handled'>
+					<View>
+						<View style={{ marginTop: insets.top }}>
+							<Image source={Logo} style={styles.logo} resizeMode='contain' />
+							<View style={styles.containerDots}>
+								<View style={[styles.dot, { backgroundColor: colorPurple }]} />
+								<View style={[styles.dot, { backgroundColor: colorOrange }]} />
+								<View style={[styles.dot, { backgroundColor: colorYellow }]} />
+								<View style={[styles.dot, { backgroundColor: colorGreen }]} />
+								<View
+									style={[styles.dot, { backgroundColor: colorTurquoise }]}
+								/>
+								<View style={[styles.dot, { backgroundColor: colorBlue }]} />
+							</View>
+						</View>
+					</View>
 					<View
-						style={[styles.dot, { backgroundColor: colorTurquoise }]}></View>
-					<View style={[styles.dot, { backgroundColor: colorBlue }]}></View>
-				</View>
-			</View>
-			<Text style={styles.title}>C'est bon de se revoir !</Text>
-
-			<View style={styles.passwordInputContainer}>
-				<TextInput
-					style={styles.input}
-					onChangeText={setEmail}
-					value={email}
-					autoCorrect={false}
-					placeholder='Email'
-					placeholderTextColor={colorBlack}
-					autoCapitalize='none'
-					keyboardType='email-address'
-					textContentType='emailAddress'
-					secureTextEntry={false}
-				/>
-			</View>
-
-			<View style={styles.passwordInputContainer}>
-				<TextInput
-					secureTextEntry={!showPassword}
-					value={password}
-					autoCorrect={false}
-					onChangeText={setPassword}
-					style={styles.input}
-					placeholder='Mot de Passe'
-					placeholderTextColor={colorBlack}
-					keyboardType='default'
-					textContentType='password'
-				/>
-				<MaterialCommunityIcons
-					name={showPassword ? "eye-off" : "eye"}
-					size={24}
-					color={colorBlack}
-					style={styles.eyeIcon}
-					onPress={toggleShowPassword}
-				/>
-			</View>
-			<View style={styles.containerForgot}>
-				<TouchableOpacity>
-					<Text style={styles.textForgot}>Mot de passe oublié?</Text>
-				</TouchableOpacity>
-			</View>
-
-			<View style={styles.buttonContainer}>
-				<TouchableOpacity onPress={handleLogin}>
-					<Text style={styles.buttonText}>Se connecter</Text>
-				</TouchableOpacity>
-			</View>
-		</View>
+						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+						<Text style={styles.title}>C'est bon de se revoir !</Text>
+						<View style={styles.passwordInputContainer}>
+							<TextInput
+								style={styles.input}
+								onChangeText={setEmail}
+								value={email}
+								autoCorrect={false}
+								placeholder='Email'
+								placeholderTextColor={colorBlack}
+								autoCapitalize='none'
+								keyboardType='email-address'
+								textContentType='emailAddress'
+							/>
+						</View>
+						<View style={styles.passwordInputContainer}>
+							<TextInput
+								secureTextEntry={!showPassword}
+								value={password}
+								autoCorrect={false}
+								onChangeText={setPassword}
+								style={styles.input}
+								placeholder='Mot de Passe'
+								placeholderTextColor={colorBlack}
+								keyboardType='default'
+								textContentType='password'
+							/>
+							<MaterialCommunityIcons
+								name={showPassword ? "eye-off" : "eye"}
+								size={24}
+								color={colorBlack}
+								style={styles.eyeIcon}
+								onPress={toggleShowPassword}
+							/>
+						</View>
+						<Pressable style={styles.containerForgot}>
+							<Text style={styles.textForgot}>Mot de passe oublié?</Text>
+						</Pressable>
+						<Pressable style={styles.buttonContainer} onPress={handleLogin}>
+							<Text style={styles.buttonText}>Se connecter</Text>
+						</Pressable>
+					</View>
+				</ScrollView>
+			</KeyboardAvoidingView>
+		</TouchableWithoutFeedback>
 	);
 };
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-		padding: 20,
-		backgroundColor: "#fff",
-	},
-	logoContainer: {
-		flex: 1,
 		justifyContent: "flex-start",
 		alignItems: "center",
-		position: "absolute",
-		top: 50,
-		left: 0,
-		right: 0,
+		padding: 20,
 	},
+
+	scrollContainer: {
+		flexGrow: 1,
+		minWidth: "100%",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+
 	logo: {
-		maxWidth: "45%",
+		width: 150,
+		height: 60,
 	},
 	containerDots: {
 		flexDirection: "row",
-		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		position: "absolute",
-		top: 95,
-		left: 0,
-		right: 0,
 	},
 	dot: {
 		width: 10,
@@ -171,9 +180,9 @@ const styles = StyleSheet.create({
 		borderRadius: 50,
 	},
 	title: {
-		fontSize: 24,
+		fontSize: FontSizeH1,
 		fontWeight: "bold",
-		marginBottom: 80,
+		marginBottom: 40,
 	},
 	passwordInputContainer: {
 		flexDirection: "row",
@@ -185,7 +194,7 @@ const styles = StyleSheet.create({
 		borderWidth: 0,
 		paddingBottom: 16,
 		borderBottomWidth: 2,
-		borderBottomColor: colorLightGrey,
+		borderBottomColor: colorGrey,
 	},
 	input: {
 		flex: 1,
@@ -198,7 +207,7 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 	},
 	containerForgot: {
-		width: "100%",
+		minWidth: "100%",
 		justifyContent: "flex-end",
 		alignItems: "flex-end",
 		marginBottom: 50,
