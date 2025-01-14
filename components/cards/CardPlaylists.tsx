@@ -28,6 +28,7 @@ interface Props {
 	setOpenedSwipeable: React.Dispatch<boolean>;
 	swipeableRefs: React.MutableRefObject<{}>;
 	handDeletePlaylist: (id: number) => void;
+	handleEditPlaylist: (id: number) => void;
 }
 
 export default function CardPlaylist({
@@ -38,6 +39,7 @@ export default function CardPlaylist({
 	setOpenedSwipeable,
 	swipeableRefs,
 	handDeletePlaylist,
+	handleEditPlaylist,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
@@ -57,7 +59,11 @@ export default function CardPlaylist({
 		return (
 			<Reanimated.View style={styleAnimation}>
 				<View style={styles.rightActionContainer}>
-					<Pressable style={[styles.rightAction, styles.actionEdit]}>
+					<Pressable
+						style={[styles.rightAction, styles.actionEdit]}
+						onPress={() => {
+							handleEditPlaylist(id);
+						}}>
 						<Image
 							source={require("@/assets/imgs/icons/pencil_white.png")}
 							style={{ width: 24, height: 24 }}
@@ -86,15 +92,15 @@ export default function CardPlaylist({
 				ref={(ref) => (swipeableRefs.current[id] = ref)}
 				renderRightActions={(prog, drag) => RightAction(prog, drag)}
 				onSwipeableWillOpen={() => {
+					// Close any other open swipeable and set the current one as open
 					if (
 						openedSwipeable &&
 						openedSwipeable !== swipeableRefs.current[id]
 					) {
 						openedSwipeable.close();
 						setOpenedSwipeable(null);
-					} else {
-						setOpenedSwipeable(swipeableRefs.current[id]);
 					}
+					setOpenedSwipeable(swipeableRefs.current[id]);
 				}}>
 				<TouchableOpacity style={styles.wrapper} onPress={() => handlePress()}>
 					<PlaylistDisplayImage

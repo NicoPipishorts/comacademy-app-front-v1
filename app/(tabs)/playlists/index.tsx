@@ -30,21 +30,28 @@ const Playlist = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
-	const [modalVisible, setModalVisible] = useState(false);
+	const [modalVisible, setModalVisible] = useState<boolean>(false);
+	const [modalType, setModalType] = useState<"new" | "edit">(null);
+	const [playlistId, setPlaylistId] = useState(null);
+
+	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
+	useTrackPageMetrics({ page: "Playlists", token });
 
 	// PlaylistCard Swipe Refs
 	const [openedSwipeable, setOpenedSwipeable] = useState(null);
 	const swipeableRefs = useRef({});
 
 	const showSnackbar = useSnackbar(); // Use the snackbar context
-	useTrackPageMetrics({ page: "Playlists", token });
 
-	// ----- Create playist code below
 	const onSuccess = (data: any, message: string) => {
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
 		showSnackbar(message, "success");
+		if (openedSwipeable) {
+			openedSwipeable.close();
+			setOpenedSwipeable(null);
+		}
 	};
 
 	const onError = (error: AxiosError) => {
@@ -55,20 +62,29 @@ const Playlist = () => {
 		onSuccess,
 		onError
 	);
+	const handleCreatePlaylist = (name: string, selectedColor: string) => {
+		createNewPlaylist({
+			name,
+			selectedColor,
+			userId,
+			authToken: token,
+			modalType,
+			playlistId,
+		});
+		setModalVisible(false);
+		setPlaylistId(null);
+	};
 
 	const { mutate: deletePlaylist } = useDeletePlaylist(onSuccess, onError);
-
 	const handDeletePlaylist = (id: number) => {
 		deletePlaylist({ elementId: id, authToken: token });
 	};
 
-	const handleCreatePlaylist = (name: string, selectedColor: string) => {
-		createNewPlaylist({ name, selectedColor, userId, authToken: token });
-		setModalVisible(false);
+	const handleEditPlaylist = (id: number) => {
+		setPlaylistId(id);
+		setModalType("edit");
+		setModalVisible(true);
 	};
-	// ----- End create playlist
-
-	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
 
 	if (!playlistsData && !isFetched) {
 		return <Loader />;
@@ -80,7 +96,10 @@ const Playlist = () => {
 
 			<TouchableOpacity
 				style={styles.addPlaylistContainer}
-				onPress={() => setModalVisible(true)}>
+				onPress={() => {
+					setModalVisible(true);
+					setModalType("new");
+				}}>
 				<Image source={AddPlaylist} style={styles.addPlaylistImage} />
 				<View style={{ flexDirection: "column" }}>
 					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
@@ -114,6 +133,7 @@ const Playlist = () => {
 								color={playlist.attributes.selectedColor}
 								setOpenedSwipeable={setOpenedSwipeable}
 								handDeletePlaylist={handDeletePlaylist}
+								handleEditPlaylist={handleEditPlaylist}
 							/>
 						);
 					})}
@@ -123,6 +143,7 @@ const Playlist = () => {
 				visible={modalVisible}
 				onClose={() => setModalVisible(false)}
 				onSubmit={handleCreatePlaylist}
+				playlistId={playlistId}
 			/>
 		</View>
 	);

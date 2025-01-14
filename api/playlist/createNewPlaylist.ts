@@ -7,6 +7,8 @@ interface payload {
 	name: string;
 	selectedColor: string | number;
 	authToken: string;
+	modalType: "new" | "edit";
+	playlistId: number;
 }
 
 interface SuccessResponse {
@@ -21,12 +23,37 @@ export const useCreateNewPlaylist = (
 	onSuccess: (data: any, message: string) => void,
 	onError: (error: AxiosError) => void
 ) => {
-	return useMutation<SuccessResponse, AxiosError, payload>({
-		mutationFn: async ({ userId, name, selectedColor, authToken }: payload) => {
+	return useMutation<
+		SuccessResponse & { message: string },
+		AxiosError,
+		payload
+	>({
+		mutationFn: async ({
+			userId,
+			name,
+			selectedColor,
+			authToken,
+			modalType,
+			playlistId,
+		}: payload) => {
+			let method: string;
+			let url: string;
+			let message: string;
+
+			if (modalType === "new") {
+				method = "POST";
+				url = `${process.env.EXPO_PUBLIC_API_URL}/playlists`;
+				message = "La playlist a été créée";
+			} else {
+				method = "PUT";
+				url = `${process.env.EXPO_PUBLIC_API_URL}/playlists/${playlistId}`;
+				message = "La playlist a été modifiée";
+			}
+
 			try {
 				const response: AxiosResponse<SuccessResponse> = await axios({
-					method: "POST",
-					url: `${process.env.EXPO_PUBLIC_API_URL}/playlists`,
+					method: method,
+					url: url,
 					headers: {
 						"Content-Type": "application/json",
 						Authorization: `Bearer ${authToken}`, // Authorization token
@@ -40,7 +67,8 @@ export const useCreateNewPlaylist = (
 					},
 				});
 
-				return response.data;
+				// Return response along with the message
+				return { ...response.data, message };
 			} catch (error: any) {
 				console.error(
 					`Error creating the new playlist : ${name} : `,
@@ -50,7 +78,9 @@ export const useCreateNewPlaylist = (
 			}
 		},
 		onSuccess: (data) => {
-			onSuccess(data, "La playlist a été créée");
+			// Extract and pass message to onSuccess
+			const { message, ...responseData } = data;
+			onSuccess(responseData, message);
 		},
 		onError,
 	});
