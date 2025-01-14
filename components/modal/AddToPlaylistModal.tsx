@@ -18,6 +18,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ModalGestureLine from "../experience/modalGestureLine";
 
 interface Props {
@@ -33,6 +34,7 @@ export default function AddToPlaylistModal({
 	type,
 	elementId,
 }: Props) {
+	const insets = useSafeAreaInsets();
 	const slideAnim = useRef(new Animated.Value(300)).current;
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
@@ -111,7 +113,12 @@ export default function AddToPlaylistModal({
 							onPress={(e) => e.stopPropagation()}>
 							<ModalGestureLine />
 							<Text style={styles.modalTitle}> Choisis une playlist.</Text>
-							<ScrollView contentContainerStyle={{ gap: 15 }}>
+							<ScrollView
+								showsVerticalScrollIndicator={false}
+								contentContainerStyle={{
+									gap: 15,
+									paddingBottom: insets.bottom + 30,
+								}}>
 								{playlistsData.data.map((playlist) => {
 									return (
 										<Pressable
