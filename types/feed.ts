@@ -20,7 +20,8 @@ export type FeedType =
 	| "citation"
 	| "secret"
 	| "dico"
-	| "commandement"; // Allowed feed types
+	| "commandement"
+	| "feed-post";
 
 export interface FeedMeta {
 	page: number; // Current page number
