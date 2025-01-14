@@ -4,6 +4,7 @@ import FeedCard3Secrets from "@/components/cards/feed/Card3Secrets";
 import FeedCardArgh from "@/components/cards/feed/CardArgh";
 import FeedCardCitations from "@/components/cards/feed/CardCitations";
 import FeedCardDico from "@/components/cards/feed/CardDico";
+import FeedCardImage from "@/components/cards/feed/CardImage";
 import FeedCardJeu from "@/components/cards/feed/CardJeu";
 import FeedCardMetier from "@/components/cards/feed/CardMetier";
 import FeedCardNumber from "@/components/cards/feed/CardNumber";
@@ -94,6 +95,8 @@ const Feed = () => {
 						return <FeedCardNumber data={data} elementId={elementId} />;
 					case "argh":
 						return <FeedCardArgh data={data} elementId={elementId} />;
+					case "image":
+						return <FeedCardImage data={data} elementId={elementId} />;
 					default:
 						return null;
 				}
