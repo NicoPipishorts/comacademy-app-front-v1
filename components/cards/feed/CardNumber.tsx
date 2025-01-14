@@ -44,7 +44,7 @@ export default function FeedCardNumber({ data, elementId }: Props) {
 	return (
 		<View style={{ justifyContent: "flex-start" }}>
 			<View style={styles.cardContainer}>
-				<Text style={[styles.textTitle, { color: titleColor }]}>
+				<Text style={[styles.textTitle, { color: colorYellow }]}>
 					{data.payload.Titre}
 				</Text>
 				<Text style={styles.textContent}>{data.payload.Text}</Text>
