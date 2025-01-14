@@ -1,4 +1,5 @@
 import { useCreateNewPlaylist } from "@/api/playlist/createNewPlaylist";
+import { useDeletePlaylist } from "@/api/playlist/deletePlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
@@ -14,7 +15,7 @@ import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { AxiosError } from "axios";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
 	Image,
 	ScrollView,
@@ -29,17 +30,28 @@ const Playlist = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
-	const [modalVisible, setModalVisible] = useState(false);
+	const [modalVisible, setModalVisible] = useState<boolean>(false);
+	const [modalType, setModalType] = useState<"new" | "edit">(null);
+	const [playlistId, setPlaylistId] = useState(null);
 
-	const showSnackbar = useSnackbar(); // Use the snackbar context
+	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
 	useTrackPageMetrics({ page: "Playlists", token });
 
-	// ----- Create playist code below
-	const onSuccess = (data: any) => {
+	// PlaylistCard Swipe Refs
+	const [openedSwipeable, setOpenedSwipeable] = useState(null);
+	const swipeableRefs = useRef({});
+
+	const showSnackbar = useSnackbar(); // Use the snackbar context
+
+	const onSuccess = (data: any, message: string) => {
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
-		showSnackbar("La playlist a était créée", "success");
+		showSnackbar(message, "success");
+		if (openedSwipeable) {
+			openedSwipeable.close();
+			setOpenedSwipeable(null);
+		}
 	};
 
 	const onError = (error: AxiosError) => {
@@ -50,14 +62,29 @@ const Playlist = () => {
 		onSuccess,
 		onError
 	);
-
 	const handleCreatePlaylist = (name: string, selectedColor: string) => {
-		createNewPlaylist({ name, selectedColor, userId, authToken: token });
+		createNewPlaylist({
+			name,
+			selectedColor,
+			userId,
+			authToken: token,
+			modalType,
+			playlistId,
+		});
 		setModalVisible(false);
+		setPlaylistId(null);
 	};
-	// ----- End create playlist
 
-	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
+	const { mutate: deletePlaylist } = useDeletePlaylist(onSuccess, onError);
+	const handDeletePlaylist = (id: number) => {
+		deletePlaylist({ elementId: id, authToken: token });
+	};
+
+	const handleEditPlaylist = (id: number) => {
+		setPlaylistId(id);
+		setModalType("edit");
+		setModalVisible(true);
+	};
 
 	if (!playlistsData && !isFetched) {
 		return <Loader />;
@@ -69,7 +96,10 @@ const Playlist = () => {
 
 			<TouchableOpacity
 				style={styles.addPlaylistContainer}
-				onPress={() => setModalVisible(true)}>
+				onPress={() => {
+					setModalVisible(true);
+					setModalType("new");
+				}}>
 				<Image source={AddPlaylist} style={styles.addPlaylistImage} />
 				<View style={{ flexDirection: "column" }}>
 					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
@@ -88,12 +118,22 @@ const Playlist = () => {
 				{isFetched &&
 					playlistsData &&
 					playlistsData.data.map((playlist) => {
+						const refKey = `swipeable-${playlist.id}`;
+						if (!swipeableRefs.current[refKey]) {
+							swipeableRefs.current[refKey] = React.createRef();
+						}
 						return (
 							<CardPlaylist
 								key={playlist.id}
 								id={playlist.id}
+								refKey={refKey}
+								swipeableRefs={swipeableRefs}
+								openedSwipeable={openedSwipeable}
 								title={playlist.attributes.name}
 								color={playlist.attributes.selectedColor}
+								setOpenedSwipeable={setOpenedSwipeable}
+								handDeletePlaylist={handDeletePlaylist}
+								handleEditPlaylist={handleEditPlaylist}
 							/>
 						);
 					})}
@@ -103,6 +143,7 @@ const Playlist = () => {
 				visible={modalVisible}
 				onClose={() => setModalVisible(false)}
 				onSubmit={handleCreatePlaylist}
+				playlistId={playlistId}
 			/>
 		</View>
 	);

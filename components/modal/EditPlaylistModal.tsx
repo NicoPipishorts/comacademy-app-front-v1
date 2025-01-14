@@ -20,7 +20,6 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
-import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Animated,
@@ -43,14 +42,14 @@ interface NewPlaylistModalProps {
 	visible: boolean;
 	onClose: () => void;
 	onSubmit: (name: string, selectedColor: string) => void;
-	playlistId: number;
+	elementId: number;
 }
 
-const NewPlaylistModal = ({
+const EditPlaylistModal = ({
 	visible,
 	onClose,
 	onSubmit,
-	playlistId,
+	elementId,
 }: NewPlaylistModalProps) => {
 	const [playlistName, setPlaylistName] = useState("");
 	const slideAnim = useRef(new Animated.Value(300)).current;
@@ -73,15 +72,6 @@ const NewPlaylistModal = ({
 		{ name: "13", image: Image13 },
 		{ name: "14", image: Image14 },
 	];
-
-	const { data: playlistData, isFetched } = useGetPlaylistById(playlistId);
-
-	useEffect(() => {
-		if (playlistId && playlistData) {
-			setPlaylistName(playlistData.data.attributes.name);
-			setSelectedColor(playlistData.data.attributes.selectedColor);
-		}
-	}, [playlistData, playlistId]);
 
 	const showModal = useCallback(() => {
 		Animated.spring(slideAnim, {
@@ -106,6 +96,7 @@ const NewPlaylistModal = ({
 			setErrorPlaylistName(true);
 			return;
 		}
+
 		const color = selectedColor ? selectedColor : getRandomValues();
 		onSubmit(playlistName, color);
 		setPlaylistName(null);
@@ -136,10 +127,6 @@ const NewPlaylistModal = ({
 		return randomValue;
 	};
 
-	if (!isFetched) {
-		return null;
-	}
-
 	return (
 		<Modal
 			animationType='none'
@@ -159,7 +146,7 @@ const NewPlaylistModal = ({
 								styles.modalContent,
 								{
 									transform: [{ translateY: slideAnim }],
-									zIndex: 999,
+									zIndex: 999, // Ensure the modal has a lower zIndex than the Snackbar
 								},
 							]}>
 							<TouchableOpacity
@@ -167,9 +154,7 @@ const NewPlaylistModal = ({
 								onPress={(e) => e.stopPropagation()}>
 								<ModalGestureLine />
 								<Text style={styles.modalTitle}>
-									{playlistId
-										? "Modifier la playlist"
-										: "Créer une nouvelle playlist"}
+									Créer une nouvelle playlist
 								</Text>
 
 								<TextInput
@@ -264,9 +249,7 @@ const NewPlaylistModal = ({
 									<TouchableOpacity
 										style={styles.button}
 										onPress={handleSubmit}>
-										<Text style={styles.buttonText}>
-											{playlistId ? "Valider" : "Créer"}
-										</Text>
+										<Text style={styles.buttonText}>Créer</Text>
 									</TouchableOpacity>
 								</View>
 							</TouchableOpacity>
@@ -348,4 +331,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default NewPlaylistModal;
+export default EditPlaylistModal;
