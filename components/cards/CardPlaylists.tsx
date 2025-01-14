@@ -27,6 +27,7 @@ interface Props {
 	openedSwipeable: any;
 	setOpenedSwipeable: React.Dispatch<boolean>;
 	swipeableRefs: React.MutableRefObject<{}>;
+	handDeletePlaylist: (id: number) => void;
 }
 
 export default function CardPlaylist({
@@ -36,6 +37,7 @@ export default function CardPlaylist({
 	openedSwipeable,
 	setOpenedSwipeable,
 	swipeableRefs,
+	handDeletePlaylist,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
@@ -61,7 +63,9 @@ export default function CardPlaylist({
 							style={{ width: 24, height: 24 }}
 						/>
 					</Pressable>
-					<Pressable style={[styles.rightAction, styles.actionDelete]}>
+					<Pressable
+						style={[styles.rightAction, styles.actionDelete]}
+						onPress={() => handDeletePlaylist(id)}>
 						<Image
 							source={require("@/assets/imgs/icons/trash_white.png")}
 							style={{ width: 24, height: 24 }}

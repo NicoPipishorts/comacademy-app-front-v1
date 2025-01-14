@@ -1,4 +1,4 @@
-import { useRemoveFromPlaylist } from "@/api/removeFromPlay";
+import { useRemoveFromPlaylist } from "@/api/playlist/removeFromPlaylist";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import { colorRed, primaryBackground } from "@/constants/colors";

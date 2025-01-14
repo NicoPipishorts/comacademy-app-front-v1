@@ -1,4 +1,5 @@
 import { useCreateNewPlaylist } from "@/api/playlist/createNewPlaylist";
+import { useDeletePlaylist } from "@/api/playlist/deletePlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
@@ -39,11 +40,11 @@ const Playlist = () => {
 	useTrackPageMetrics({ page: "Playlists", token });
 
 	// ----- Create playist code below
-	const onSuccess = (data: any) => {
+	const onSuccess = (data: any, message: string) => {
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
-		showSnackbar("La playlist a était créée", "success");
+		showSnackbar(message, "success");
 	};
 
 	const onError = (error: AxiosError) => {
@@ -54,6 +55,12 @@ const Playlist = () => {
 		onSuccess,
 		onError
 	);
+
+	const { mutate: deletePlaylist } = useDeletePlaylist(onSuccess, onError);
+
+	const handDeletePlaylist = (id: number) => {
+		deletePlaylist({ elementId: id, authToken: token });
+	};
 
 	const handleCreatePlaylist = (name: string, selectedColor: string) => {
 		createNewPlaylist({ name, selectedColor, userId, authToken: token });
@@ -106,6 +113,7 @@ const Playlist = () => {
 								title={playlist.attributes.name}
 								color={playlist.attributes.selectedColor}
 								setOpenedSwipeable={setOpenedSwipeable}
+								handDeletePlaylist={handDeletePlaylist}
 							/>
 						);
 					})}

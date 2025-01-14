@@ -3,54 +3,45 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
 interface payload {
-	userId: number;
-	name: string;
-	selectedColor: string | number;
+	elementId: number;
 	authToken: string;
 }
 
 interface SuccessResponse {
 	data: {
-		userId: number;
-		name: string;
+		id: number;
 	};
 }
 
 // Custom hook to add page metrics
-export const useCreateNewPlaylist = (
+export const useDeletePlaylist = (
 	onSuccess: (data: any, message: string) => void,
 	onError: (error: AxiosError) => void
 ) => {
 	return useMutation<SuccessResponse, AxiosError, payload>({
-		mutationFn: async ({ userId, name, selectedColor, authToken }: payload) => {
+		mutationFn: async ({ elementId, authToken }: payload) => {
 			try {
 				const response: AxiosResponse<SuccessResponse> = await axios({
-					method: "POST",
-					url: `${process.env.EXPO_PUBLIC_API_URL}/playlists`,
+					method: "DELETE",
+					url: `${process.env.EXPO_PUBLIC_API_URL}/playlist/delete/${elementId}`,
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${authToken}`, // Authorization token
-					},
-					data: {
-						data: {
-							userId,
-							name,
-							selectedColor,
-						},
+						Authorization: `Bearer ${authToken}`,
 					},
 				});
 
 				return response.data;
 			} catch (error: any) {
 				console.error(
-					`Error creating the new playlist : ${name} : `,
+					`Error deleting the element from the playlist: `,
 					error.response ? error.response.data : error.message
 				);
 				throw error;
 			}
 		},
 		onSuccess: (data) => {
-			onSuccess(data, "La playlist a été créée");
+			// Pass both data and the message to the onSuccess callback
+			onSuccess(data, "La playlist a été supprimée");
 		},
 		onError,
 	});
