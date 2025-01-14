@@ -2,7 +2,6 @@ import { useAddFavoriteQuestionMutation } from "@/api/favoriteQuestion";
 import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
-import ReturnButton from "@/components/buttons/returnButton";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
@@ -21,6 +20,7 @@ import {
 	View,
 } from "react-native";
 import Loader from "../experience/loader";
+import ModalGestureLine from "../experience/modalGestureLine";
 import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 import AddToPlaylistModal from "../modal/AddToPlaylistModal";
 
@@ -111,11 +111,12 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 				style={{
 					display: "flex",
 					flexDirection: "row",
-					justifyContent: "flex-start",
+					justifyContent: "center",
 					width: "100%",
 					paddingHorizontal: 20,
+					marginTop: 20,
 				}}>
-				<ReturnButton />
+				<ModalGestureLine />
 			</View>
 			<ScrollView contentContainerStyle={styles.wrapper}>
 				<View style={[styles.contentContainer]}>
