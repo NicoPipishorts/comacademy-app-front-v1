@@ -102,7 +102,9 @@ const LoginScreen = () => {
 					</View>
 					<View
 						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-						<Text style={styles.title}>C'est bon de se revoir !</Text>
+						<View>
+							<Text style={styles.title}>C'est bon de se revoir !</Text>
+						</View>
 						<View style={styles.passwordInputContainer}>
 							<TextInput
 								style={styles.input}
