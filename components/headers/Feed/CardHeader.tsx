@@ -21,6 +21,7 @@ export default function FeedCardHeader({ data }: Props) {
 		question: require("@/assets/imgs/icons/feed/question.png"),
 		commandement: require("@/assets/imgs/icons/feed/commandement.png"),
 		chiffre: require("@/assets/imgs/icons/feed/chiffre.png"),
+		argh: require("@/assets/imgs/icons/feed/argh.png"),
 	};
 
 	const typeIcons = () => {
@@ -30,6 +31,8 @@ export default function FeedCardHeader({ data }: Props) {
 			switch (data.payload.Icon.split(".")[0]) {
 				case "chiffre":
 					return icons["chiffre"];
+				case "argh":
+					return icons["argh"];
 			}
 		}
 	};
@@ -52,6 +55,8 @@ export default function FeedCardHeader({ data }: Props) {
 				switch (data.payload.Icon.split(".")[0]) {
 					case "chiffre":
 						return "Le chiffre du jour";
+					case "argh":
+						return "AARRGHH !! \nL’expression qui énerve";
 					default:
 						return null;
 				}
@@ -84,11 +89,13 @@ export default function FeedCardHeader({ data }: Props) {
 				<Pressable
 					style={styles.pressable}
 					onPress={() => navigation.navigate(destination())}>
-					<Image
-						source={require("@/assets/imgs/icons/plus-circle.png")}
-						style={styles.plusIcon}
-						resizeMode='contain'
-					/>
+					{data.type !== "feed-post" && (
+						<Image
+							source={require("@/assets/imgs/icons/plus-circle.png")}
+							style={styles.plusIcon}
+							resizeMode='contain'
+						/>
+					)}
 				</Pressable>
 				<View style={styles.infoContainer}>
 					<Text style={styles.title}>{typeTitre()}</Text>

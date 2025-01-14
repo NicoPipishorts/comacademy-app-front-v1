@@ -104,7 +104,6 @@ export default function CardPlaylist({
 				ref={(ref) => (swipeableRefs.current[id] = ref)}
 				renderRightActions={(prog, drag) => RightAction(prog, drag)}
 				onSwipeableWillOpen={() => {
-					// Close any other open swipeable and set the current one as open
 					if (
 						openedSwipeable &&
 						openedSwipeable !== swipeableRefs.current[id]
@@ -137,19 +136,21 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		flex: 1,
 		width: 160,
-		borderLeftColor: primaryBackground,
 	},
 	rightAction: {
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "center",
-		width: "50%",
 	},
 	actionDelete: {
 		backgroundColor: colorRed,
+		width: "47%",
 	},
 	actionEdit: {
+		borderLeftWidth: 10,
+		borderLeftColor: primaryBackground,
 		backgroundColor: colorBlue,
+		width: "53%",
 	},
 	wrapper: {
 		flexDirection: "row",
