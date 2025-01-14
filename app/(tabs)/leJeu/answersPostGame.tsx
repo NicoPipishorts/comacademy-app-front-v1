@@ -11,6 +11,7 @@ import {
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
 import { useGameContext } from "@/providers/gameDataContext";
+import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function AnswersPostGame() {
@@ -24,25 +25,27 @@ export default function AnswersPostGame() {
 
 	return (
 		<View style={styles.wrapper}>
-			<ReturnButton />
+			<SwipeToGoBack>
+				<ReturnButton />
 
-			<ScrollView
-				showsVerticalScrollIndicator={false}
-				contentContainerStyle={[styles.scrollWrapper, { paddingBottom: 100 }]}
-				style={{ flex: 1 }}>
-				<View>
-					{allAnswerData.data.allQuestions.map((answer) => {
-						return (
-							<AnswersCard
-								key={answer.id}
-								id={answer.id}
-								data={answer}
-								postGame={true}
-							/>
-						);
-					})}
-				</View>
-			</ScrollView>
+				<ScrollView
+					showsVerticalScrollIndicator={false}
+					contentContainerStyle={[styles.scrollWrapper, { paddingBottom: 100 }]}
+					style={{ flex: 1 }}>
+					<View>
+						{allAnswerData.data.allQuestions.map((answer) => {
+							return (
+								<AnswersCard
+									key={answer.id}
+									id={answer.id}
+									data={answer}
+									postGame={true}
+								/>
+							);
+						})}
+					</View>
+				</ScrollView>
+			</SwipeToGoBack>
 		</View>
 	);
 }

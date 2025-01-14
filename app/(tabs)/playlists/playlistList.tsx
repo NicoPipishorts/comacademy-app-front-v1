@@ -4,6 +4,7 @@ import Loader from "@/components/experience/loader";
 import { colorRed, primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
+import { truncateString } from "@/helpers/truncateText";
 import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -149,7 +150,7 @@ const PlaylistList = () => {
 							Playlist
 						</Text>
 						<Text style={{ fontSize: FontSizeH1, fontWeight: "bold" }}>
-							{playlistData.data.attributes.name}
+							{truncateString(playlistData.data.attributes.name, 16)}
 						</Text>
 						<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
 							{playlistContents.length} éléments
@@ -215,7 +216,7 @@ const PlaylistList = () => {
 													height={70}
 												/>
 											</View>
-											<View style={{ gap: 6, flexShrink: 1 }}>
+											<View style={{ gap: 4, flexShrink: 1 }}>
 												<Text
 													style={{
 														fontSize: FontSize18,
@@ -229,7 +230,7 @@ const PlaylistList = () => {
 														fontSize: FontSize12,
 														fontWeight: "bold",
 													}}>
-													{content.value}
+													{truncateString(content.value, 100)}
 												</Text>
 											</View>
 										</Pressable>
@@ -269,6 +270,7 @@ const styles = StyleSheet.create({
 		paddingBottom: 20,
 	},
 	headerTextContainer: {
+		justifyContent: "center",
 		flexShrink: 1,
 		gap: 10,
 	},

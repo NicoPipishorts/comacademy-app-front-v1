@@ -169,16 +169,6 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 							{data.data.attributes.Definition}
 						</Text>
 					</View>
-
-					{/* <View style={styles.containerSatisfaction}>
-					<Text style={styles.ttlSatisfaction}>Cette fiche a été utile :</Text>
-					<TouchableOpacity style={styles.btnSatisfaction}>
-						<Text style={styles.textSatisfaction}>Yes</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.btnSatisfaction}>
-						<Text style={styles.textSatisfaction}>No</Text>
-					</TouchableOpacity>
-				</View> */}
 				</ScrollView>
 
 				<AddToPlaylistModal
