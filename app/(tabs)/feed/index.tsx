@@ -5,6 +5,7 @@ import FeedCardCitations from "@/components/cards/feed/CardCitations";
 import FeedCardDico from "@/components/cards/feed/CardDico";
 import FeedCardJeu from "@/components/cards/feed/CardJeu";
 import FeedCardMetier from "@/components/cards/feed/CardMetier";
+import FeedCardNumber from "@/components/cards/feed/CardNumber";
 import Loader from "@/components/experience/loader";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
@@ -86,6 +87,13 @@ const Feed = () => {
 				return <FeedCard3Secrets data={data} elementId={elementId} />;
 			case "metier":
 				return <FeedCardMetier data={data} elementId={elementId} />;
+			case "feed-post":
+				switch (data.payload.Icon.split(".")[0]) {
+					case "chiffre":
+						return <FeedCardNumber data={data} elementId={elementId} />;
+					default:
+						return null;
+				}
 			default:
 				return null;
 		}
