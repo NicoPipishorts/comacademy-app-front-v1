@@ -23,6 +23,7 @@ export default function FeedCardHeader({ data }: Props) {
 		chiffre: require("@/assets/imgs/icons/feed/chiffre.png"),
 		argh: require("@/assets/imgs/icons/feed/argh.png"),
 		image: require("@/assets/imgs/icons/feed/image.png"),
+		vie: require("@/assets/imgs/icons/feed/vie.png"),
 	};
 
 	const typeIcons = () => {
@@ -36,6 +37,8 @@ export default function FeedCardHeader({ data }: Props) {
 					return icons["argh"];
 				case "image":
 					return icons["image"];
+				case "vie":
+					return icons["vie"];
 			}
 		}
 	};
@@ -62,6 +65,8 @@ export default function FeedCardHeader({ data }: Props) {
 						return "AARRGHH !! \nL’expression qui énerve";
 					case "image":
 						return "Une image/ un métier";
+					case "vie":
+						return "Vie de com'";
 					default:
 						return null;
 				}

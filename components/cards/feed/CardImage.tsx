@@ -1,3 +1,4 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
@@ -28,6 +29,7 @@ export default function FeedCardImage({ data, elementId }: Props) {
 					height: 280 * aspectRatio(),
 				}}
 			/>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }

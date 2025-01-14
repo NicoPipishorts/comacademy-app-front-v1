@@ -8,6 +8,7 @@ import FeedCardImage from "@/components/cards/feed/CardImage";
 import FeedCardJeu from "@/components/cards/feed/CardJeu";
 import FeedCardMetier from "@/components/cards/feed/CardMetier";
 import FeedCardNumber from "@/components/cards/feed/CardNumber";
+import FeedCardVie from "@/components/cards/feed/CardVie";
 import Loader from "@/components/experience/loader";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
@@ -97,6 +98,8 @@ const Feed = () => {
 						return <FeedCardArgh data={data} elementId={elementId} />;
 					case "image":
 						return <FeedCardImage data={data} elementId={elementId} />;
+					case "vie":
+						return <FeedCardVie data={data} elementId={elementId} />;
 					default:
 						return null;
 				}
