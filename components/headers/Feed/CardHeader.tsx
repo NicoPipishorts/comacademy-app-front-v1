@@ -13,13 +13,25 @@ interface Props {
 export default function FeedCardHeader({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
-	const typeIcons: { [key: string]: any } = {
+	const icons: { [key: string]: any } = {
 		secret: require("@/assets/imgs/icons/feed/secret.png"),
 		dico: require("@/assets/imgs/icons/feed/dico.png"),
 		citation: require("@/assets/imgs/icons/feed/citation.png"),
 		metier: require("@/assets/imgs/icons/feed/metier.png"),
 		question: require("@/assets/imgs/icons/feed/question.png"),
 		commandement: require("@/assets/imgs/icons/feed/commandement.png"),
+		chiffre: require("@/assets/imgs/icons/feed/chiffre.png"),
+	};
+
+	const typeIcons = () => {
+		if (data.type !== "feed-post") {
+			return icons[data.type];
+		} else {
+			switch (data.payload.Icon.split(".")[0]) {
+				case "chiffre":
+					return icons["chiffre"];
+			}
+		}
 	};
 
 	const typeTitre = () => {
@@ -36,6 +48,13 @@ export default function FeedCardHeader({ data }: Props) {
 				return "Com'Academy : Le Jeu";
 			case "commandement":
 				return "Les 10 commandements";
+			case "feed-post":
+				switch (data.payload.Icon.split(".")[0]) {
+					case "chiffre":
+						return "Le chiffre du jour";
+					default:
+						return null;
+				}
 		}
 	};
 
@@ -53,17 +72,15 @@ export default function FeedCardHeader({ data }: Props) {
 				return "leJeu";
 			case "commandement":
 				return "commandements";
+			default:
+				return null;
 		}
 	};
 
 	return (
 		<View>
 			<View style={styles.container}>
-				<Image
-					source={typeIcons[data.type]}
-					style={styles.icon}
-					resizeMode='contain'
-				/>
+				<Image source={typeIcons()} style={styles.icon} resizeMode='contain' />
 				<Pressable
 					style={styles.pressable}
 					onPress={() => navigation.navigate(destination())}>
