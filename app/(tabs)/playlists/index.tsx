@@ -14,7 +14,7 @@ import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { AxiosError } from "axios";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
 	Image,
 	ScrollView,
@@ -30,6 +30,10 @@ const Playlist = () => {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState(false);
+
+	// PlaylistCard Swipe Refs
+	const [openedSwipeable, setOpenedSwipeable] = useState(null);
+	const swipeableRefs = useRef({});
 
 	const showSnackbar = useSnackbar(); // Use the snackbar context
 	useTrackPageMetrics({ page: "Playlists", token });
@@ -88,12 +92,20 @@ const Playlist = () => {
 				{isFetched &&
 					playlistsData &&
 					playlistsData.data.map((playlist) => {
+						const refKey = `swipeable-${playlist.id}`;
+						if (!swipeableRefs.current[refKey]) {
+							swipeableRefs.current[refKey] = React.createRef();
+						}
 						return (
 							<CardPlaylist
 								key={playlist.id}
 								id={playlist.id}
+								refKey={refKey}
+								swipeableRefs={swipeableRefs}
+								openedSwipeable={openedSwipeable}
 								title={playlist.attributes.name}
 								color={playlist.attributes.selectedColor}
+								setOpenedSwipeable={setOpenedSwipeable}
 							/>
 						);
 					})}

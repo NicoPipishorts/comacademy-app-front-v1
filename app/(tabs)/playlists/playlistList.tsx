@@ -1,5 +1,4 @@
 import { useRemoveFromPlaylist } from "@/api/removeFromPlay";
-import Trash from "@/assets/imgs/icons/trash_white.png";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import { colorRed, primaryBackground } from "@/constants/colors";
@@ -36,13 +35,12 @@ const PlaylistList = () => {
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
 	const playlistIdNumber = playlistId ? Number(playlistId) : null;
-	const [modalVisible, setModalVisible] = useState(false);
 
 	const { data: playlistData, isFetched } =
 		useGetPlaylistById(playlistIdNumber);
 
 	const [openedSwipeable, setOpenedSwipeable] = useState(null);
-	const swipeableRefs = useRef({}); // Store refs for all swipeables
+	const swipeableRefs = useRef({});
 
 	const onSuccess = () => {
 		queryClient.refetchQueries({
@@ -110,7 +108,10 @@ const PlaylistList = () => {
 						removeFromPlaylist({ elementId, authToken: token });
 					}}
 					style={styles.rightAction}>
-					<Image source={Trash} style={{ width: 24, height: 24 }} />
+					<Image
+						source={require("@/assets/imgs/icons/trash_white.png")}
+						style={{ width: 24, height: 24 }}
+					/>
 				</Pressable>
 			</Reanimated.View>
 		);
@@ -174,7 +175,7 @@ const PlaylistList = () => {
 							}}
 							showsVerticalScrollIndicator={false}>
 							{playlistContents.map((content) => {
-								const refKey = `swipeable-${content.id}`; // Unique key for each swipeable
+								const refKey = `swipeable-${content.id}`;
 								if (!swipeableRefs.current[refKey]) {
 									swipeableRefs.current[refKey] = React.createRef();
 								}
@@ -182,7 +183,7 @@ const PlaylistList = () => {
 								return (
 									<ReanimatedSwipeable
 										key={content.id}
-										ref={swipeableRefs.current[refKey]}
+										ref={(ref) => (swipeableRefs.current[content.id] = ref)}
 										friction={2}
 										enableTrackpadTwoFingerGesture
 										rightThreshold={40}
@@ -192,12 +193,12 @@ const PlaylistList = () => {
 										onSwipeableWillOpen={() => {
 											if (
 												openedSwipeable &&
-												openedSwipeable !==
-													swipeableRefs.current[refKey].current
+												openedSwipeable !== swipeableRefs.current[content.id]
 											) {
 												openedSwipeable.close();
+											} else {
+												setOpenedSwipeable(swipeableRefs.current[content.id]);
 											}
-											setOpenedSwipeable(swipeableRefs.current[refKey].current);
 										}}>
 										<Pressable
 											style={{
