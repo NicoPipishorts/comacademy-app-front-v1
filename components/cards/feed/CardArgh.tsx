@@ -1,6 +1,6 @@
 import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, colorWhite, colorYellow } from "@/constants/colors";
-import { FontSize14 } from "@/constants/fontsizes";
+import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -10,7 +10,7 @@ interface Props {
 	elementId: number;
 }
 
-export default function FeedCardNumber({ data, elementId }: Props) {
+export default function FeedCardArgh({ data, elementId }: Props) {
 	return (
 		<View style={{ justifyContent: "flex-start" }}>
 			<View style={styles.cardContainer}>
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		backgroundColor: colorBlack,
 		marginLeft: 10,
-		width: "84%",
+		maxWidth: "84%",
 		minHeight: 100,
 		paddingVertical: 20,
 		paddingHorizontal: 25,
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
 	textTitle: {
 		alignSelf: "center",
 		minWidth: "100%",
-		fontSize: 78,
+		fontSize: FontSizeH1,
 		fontWeight: "bold",
 		marginBottom: 15,
 		color: colorYellow,
