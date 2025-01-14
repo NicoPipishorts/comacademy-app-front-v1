@@ -28,7 +28,6 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 		}
 	};
 
-	// console.log(splitCat());
 	const backGroundColor = () => {
 		return `#${categories.data[splitCat() - 1]?.attributes.backgroundColor}`;
 	};
