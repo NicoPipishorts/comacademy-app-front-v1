@@ -32,7 +32,7 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
 						return (
 							<TouchableOpacity
 								key={cat.id}
-								onPress={() => onPress(cat.id - 6)}
+								onPress={() => onPress(cat.id)}
 								style={[
 									styles.card,
 									{ backgroundColor: `#${cat.attributes.backgroundColor}` },
@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
 		marginVertical: 10,
 		alignItems: "flex-start",
 		justifyContent: "flex-start",
-		borderRadius: 10,
-		padding: 5,
+		borderRadius: 20,
+		padding: 8,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
 		elevation: 5,
 	},
 	icon: {
-		width: 55,
-		height: 55,
+		width: 50,
+		height: 50,
 		marginBottom: 15,
 	},
 	cardText: {

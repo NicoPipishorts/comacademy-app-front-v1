@@ -1,5 +1,3 @@
-// src/hooks/useCategories.ts
-
 import useJwtToken from "@/hooks/useJwtToken";
 import { CategoriePayload } from "@/types/categories";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +22,13 @@ const fetchCategories = async (token: string): Promise<CategoriePayload> => {
 		}
 
 		const data = await response.json();
+
+		// Transform the payload to replace IDs
+		data.data = data.data.map((item: any, index: number) => ({
+			...item,
+			id: index + 1, // Replace id with index + 1
+		}));
+
 		return data;
 	} catch (error) {
 		console.error("Error fetching categories Full:", error);

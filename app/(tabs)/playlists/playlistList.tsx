@@ -27,13 +27,16 @@ import Reanimated, {
 	SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const PlaylistList = () => {
+	const insets = useSafeAreaInsets();
 	const { token } = useJwtToken();
 	const { playlistId } = useLocalSearchParams();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
 	const playlistIdNumber = playlistId ? Number(playlistId) : null;
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const { data: playlistData, isFetched } =
 		useGetPlaylistById(playlistIdNumber);
@@ -117,6 +120,19 @@ const PlaylistList = () => {
 		<SwipeToGoBack>
 			<View style={styles.wrapper}>
 				<ReturnButton />
+
+				<Pressable>
+					<Image
+						source={require("@/assets/imgs/icons/pencil.png")}
+						style={{
+							position: "absolute",
+							top: insets.top + 15,
+							right: 30,
+							width: 25,
+							height: 25,
+						}}
+					/>
+				</Pressable>
 
 				<View style={styles.headerContainer}>
 					<View>
