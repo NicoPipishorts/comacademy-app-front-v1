@@ -99,6 +99,10 @@ const Playlist = () => {
 				onPress={() => {
 					setModalVisible(true);
 					setModalType("new");
+					if (openedSwipeable) {
+						openedSwipeable.close();
+						setOpenedSwipeable(null);
+					}
 				}}>
 				<Image source={AddPlaylist} style={styles.addPlaylistImage} />
 				<View style={{ flexDirection: "column" }}>

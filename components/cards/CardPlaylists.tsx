@@ -1,5 +1,5 @@
 import { colorBlue, colorRed, primaryBackground } from "@/constants/colors";
-import { FontSize12, FontSize18 } from "@/constants/fontsizes";
+import { FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
@@ -63,6 +63,11 @@ export default function CardPlaylist({
 						style={[styles.rightAction, styles.actionEdit]}
 						onPress={() => {
 							handleEditPlaylist(id);
+
+							if (openedSwipeable) {
+								openedSwipeable.close();
+								setOpenedSwipeable(null);
+							}
 						}}>
 						<Image
 							source={require("@/assets/imgs/icons/pencil_white.png")}
@@ -71,7 +76,14 @@ export default function CardPlaylist({
 					</Pressable>
 					<Pressable
 						style={[styles.rightAction, styles.actionDelete]}
-						onPress={() => handDeletePlaylist(id)}>
+						onPress={() => {
+							handDeletePlaylist(id);
+
+							if (openedSwipeable) {
+								openedSwipeable.close();
+								setOpenedSwipeable(null);
+							}
+						}}>
 						<Image
 							source={require("@/assets/imgs/icons/trash_white.png")}
 							style={{ width: 24, height: 24 }}
@@ -113,7 +125,6 @@ export default function CardPlaylist({
 						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
 							{title}
 						</Text>
-						<Text style={{ fontSize: FontSize12 }}>" I like it !! "</Text>
 					</View>
 				</TouchableOpacity>
 			</ReanimatedSwipeable>
