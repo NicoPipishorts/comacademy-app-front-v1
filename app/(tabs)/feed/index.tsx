@@ -1,11 +1,14 @@
 import AvatarInitials from "@/components/avatars/initials";
 import FeedCard10Commandements from "@/components/cards/feed/Card10Commandements";
 import FeedCard3Secrets from "@/components/cards/feed/Card3Secrets";
+import FeedCardArgh from "@/components/cards/feed/CardArgh";
 import FeedCardCitations from "@/components/cards/feed/CardCitations";
 import FeedCardDico from "@/components/cards/feed/CardDico";
+import FeedCardImage from "@/components/cards/feed/CardImage";
 import FeedCardJeu from "@/components/cards/feed/CardJeu";
 import FeedCardMetier from "@/components/cards/feed/CardMetier";
 import FeedCardNumber from "@/components/cards/feed/CardNumber";
+import FeedCardVie from "@/components/cards/feed/CardVie";
 import Loader from "@/components/experience/loader";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
@@ -91,6 +94,12 @@ const Feed = () => {
 				switch (data.payload.Icon.split(".")[0]) {
 					case "chiffre":
 						return <FeedCardNumber data={data} elementId={elementId} />;
+					case "argh":
+						return <FeedCardArgh data={data} elementId={elementId} />;
+					case "image":
+						return <FeedCardImage data={data} elementId={elementId} />;
+					case "vie":
+						return <FeedCardVie data={data} elementId={elementId} />;
 					default:
 						return null;
 				}
