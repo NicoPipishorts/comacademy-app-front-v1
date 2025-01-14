@@ -74,7 +74,6 @@ const Jeu = () => {
 
 	useEffect(() => {
 		if (showFinishedModal) {
-			showSnackbar("Session finished!", "success"); // Show snackbar when session is finished
 			navigation.navigate("finishedSession");
 		}
 	}, [navigation, showFinishedModal, showSnackbar]);

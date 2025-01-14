@@ -97,6 +97,8 @@ const NewPlaylistModal = ({
 			useNativeDriver: true,
 		}).start(() => {
 			onClose();
+			setPlaylistName(null);
+			setSelectedColor(null);
 		});
 	};
 
@@ -136,7 +138,7 @@ const NewPlaylistModal = ({
 		return randomValue;
 	};
 
-	if (!isFetched) {
+	if (playlistId && !isFetched) {
 		return null;
 	}
 

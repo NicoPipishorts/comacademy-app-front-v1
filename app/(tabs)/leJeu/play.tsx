@@ -32,14 +32,6 @@ export default function LetsPlay({ handlePressPlay, disabled }: Props) {
 					</View>
 				)}
 			</View>
-
-			{/* <View style={styles.floatingTabbarContainer}>
-				<FloatingTabBar
-					selectedTab={selectedTab}
-					setSelectedTab={setSelectedTab}
-					values={{ btn1: "Aléatoire", btn2: "Catégories" }}
-				/>
-			</View> */}
 		</View>
 	);
 }

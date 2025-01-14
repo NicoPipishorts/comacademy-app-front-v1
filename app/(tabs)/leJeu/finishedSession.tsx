@@ -7,7 +7,6 @@ import {
 	FontSize18,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import {
 	useGetEndOfSession,
@@ -27,7 +26,6 @@ export default function FinishedSession() {
 	const navigation = useNavigation<NavigationType>();
 	const insets = useSafeAreaInsets();
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
-	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const {
