@@ -13,6 +13,7 @@ export interface PlaylistListResponse {
 			updatedAt: string;
 			publishedAt: string;
 			selectedColor: string;
+			inPlaylist?: boolean;
 		};
 	}[];
 }
