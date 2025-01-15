@@ -39,3 +39,7 @@ export interface CommandementsData {
 export interface CommandementsPayload {
 	data: CommandementsData[];
 }
+
+export interface CommandementPayload {
+	data: CommandementsData;
+}

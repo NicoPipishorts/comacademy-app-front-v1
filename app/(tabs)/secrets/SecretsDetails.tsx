@@ -1,11 +1,12 @@
 import SecretCard from "@/components/cards/SecretCard";
 import TitleCard from "@/components/cards/SecretTitle";
+import Loader from "@/components/experience/loader";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
-import { useSecrets } from "@/context/contextSecrets";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import useGetSecretById from "@/hooks/Secrets/useGetSecretById";
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo } from "react";
+import React from "react";
 import {
 	Dimensions,
 	StyleSheet,
@@ -70,7 +71,6 @@ const AnimatedCard = ({
 };
 
 export default function SecretsDetails() {
-	const { data } = useSecrets();
 	const { itemId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
 
@@ -80,6 +80,8 @@ export default function SecretsDetails() {
 	const cardMargin = Math.floor((screenWidth - cardWidth) / 2.6); // Adjust the margin for better centering
 
 	const secretsId = Number(itemId);
+
+	const { data: secretsData, isFetched } = useGetSecretById(secretsId);
 
 	// Shared value to keep track of the scroll position
 	const scrollX = useSharedValue(0);
@@ -91,18 +93,12 @@ export default function SecretsDetails() {
 		},
 	});
 
-	// Filter the secrets data using useMemo for performance optimization
-	const secretsData = useMemo(
-		() => data.data.find(({ id }) => id === secretsId),
-		[data, secretsId]
-	);
+	if (!secretsData || !isFetched) {
+		return <Loader />;
+	}
 
-	// Early return in case of no data found (make sure hooks are already defined)
-	if (!secretsData) return null;
+	const { Title, ...keys } = secretsData?.data.attributes;
 
-	const { Title, ...keys } = secretsData.attributes;
-
-	// Create an array for rendering TitleCard and SecretCard components
 	const cardsData = [
 		{ type: "TitleCard", title: Title },
 		...Object.keys(keys)

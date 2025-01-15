@@ -2,29 +2,20 @@ import CardSimpleButtonSecrets from "@/components/cards/CardSimpleButtonSecrets"
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
-import { useSecrets } from "@/context/contextSecrets";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useGetAllSecrets from "@/hooks/useGetAllSecrets";
+import useGetAllSecrets from "@/hooks/Secrets/useGetAllSecrets";
 import useJwtToken from "@/hooks/useJwtToken";
-import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Secrets() {
 	const insets = useSafeAreaInsets();
 	const { data: secrets, isFetched } = useGetAllSecrets();
-	const { setData } = useSecrets();
 	const { token } = useJwtToken();
 
 	useTrackPageMetrics({ page: "Secrets", token });
 
-	useEffect(() => {
-		if (isFetched) {
-			setData(secrets);
-		}
-	}, [secrets, isFetched, setData]);
-
-	if (!secrets) {
+	if (!secrets || !isFetched) {
 		return <Loader />;
 	}
 
@@ -38,7 +29,7 @@ export default function Secrets() {
 					<ScreenHeaders content='3 secrets du succès' />
 				</View>
 
-				{secrets.data.map((secret) => {
+				{secrets?.data.map((secret) => {
 					const imageUrl =
 						secret.attributes.headerImage?.data?.attributes?.formats?.medium
 							?.url ?? "/uploads/small_3secrets_placeholder_e0a32b6000.png";

@@ -61,3 +61,7 @@ export interface SecretsData {
 export interface SecretsResponse {
 	data: SecretsData[];
 }
+
+export interface SecretResponse {
+	data: SecretsData;
+}

@@ -1,11 +1,12 @@
 import CommandementCard from "@/components/cards/CommandementCard";
 import CommandementTitleCard from "@/components/cards/CommandementTitle";
+import Loader from "@/components/experience/loader";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
-import { useCommandements } from "@/context/contextCommandements";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import useGetCommandementById from "@/hooks/Commandements/useGetCommandementById";
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo } from "react";
+import React from "react";
 import {
 	Dimensions,
 	StyleSheet,
@@ -71,7 +72,6 @@ const AnimatedCard = ({
 };
 
 export default function CommandementsDetails() {
-	const { data } = useCommandements();
 	const { itemId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
 
@@ -81,6 +81,9 @@ export default function CommandementsDetails() {
 	const cardMargin = Math.floor((screenWidth - cardWidth) / 3); // Adjust the margin for smoother centering
 
 	const commandementId = Number(itemId);
+
+	const { data: commandementData, isFetched } =
+		useGetCommandementById(commandementId);
 
 	// Shared value to keep track of the scroll position
 	const scrollX = useSharedValue(0);
@@ -92,16 +95,12 @@ export default function CommandementsDetails() {
 		},
 	});
 
-	// Get the current commandement based on the itemId
-	const commandementData = useMemo(
-		() => data.data.filter(({ id }) => id === commandementId),
-		[data, commandementId]
-	);
-
 	// Early return in case of no data found
-	if (!commandementData.length) return null;
+	if (!commandementData || !isFetched) {
+		return <Loader />;
+	}
 
-	const { Theme, ...commandements } = commandementData[0].attributes;
+	const { Theme, ...commandements } = commandementData.data.attributes;
 
 	// Prepare the data for FlatList
 	const cardsData = [
