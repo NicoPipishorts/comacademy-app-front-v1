@@ -79,6 +79,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Feed",
 							headerShown: false,
+							unmountOnBlur: true,
 						}}
 					/>
 					<Tabs.Screen
@@ -86,6 +87,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Playlists",
 							headerShown: false,
+							unmountOnBlur: true,
 						}}
 					/>
 					<Tabs.Screen
@@ -93,6 +95,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Dico",
 							headerShown: false,
+							unmountOnBlur: true,
 						}}
 					/>
 					<Tabs.Screen
@@ -100,7 +103,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Metiers",
 							headerShown: false,
-							href: null,
+							unmountOnBlur: true,
 						}}
 					/>
 					<Tabs.Screen
@@ -116,7 +119,7 @@ const _layout: React.FC = () => {
 						options={{
 							tabBarLabel: "Les Citations",
 							headerShown: false,
-							href: null,
+							unmountOnBlur: true,
 						}}
 					/>
 					<Tabs.Screen
