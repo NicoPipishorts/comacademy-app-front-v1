@@ -35,7 +35,12 @@ const CardRenderer = ({
 
 	const displayCard = () => {
 		if (type === "feed-post") {
-			return cardMap[`${type}-${data.payload.Icon.split(".")[0]}`] || null;
+			const iconType = data.payload.Icon?.split(".")[0];
+			if (!iconType) {
+				console.log("in icon type failed");
+				return null;
+			}
+			return cardMap[`${type}-${iconType}`] || null;
 		} else {
 			return cardMap[`${type}`] || null;
 		}
