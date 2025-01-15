@@ -4,7 +4,43 @@ import { formatTimeElapsed } from "@/helpers/formatTimeElapsed";
 import { FeedItem } from "@/types/feed";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+
+const icons = {
+	secret: require("@/assets/imgs/icons/feed/secret.png"),
+	dico: require("@/assets/imgs/icons/feed/dico.png"),
+	citation: require("@/assets/imgs/icons/feed/citation.png"),
+	metier: require("@/assets/imgs/icons/feed/metier.png"),
+	question: require("@/assets/imgs/icons/feed/question.png"),
+	commandement: require("@/assets/imgs/icons/feed/commandement.png"),
+	chiffre: require("@/assets/imgs/icons/feed/chiffre.png"),
+	argh: require("@/assets/imgs/icons/feed/argh.png"),
+	image: require("@/assets/imgs/icons/feed/image.png"),
+	vie: require("@/assets/imgs/icons/feed/vie.png"),
+};
+
+const titles = {
+	secret: "3 secrets du succès",
+	dico: "Le dico",
+	citation: "Les citations",
+	metier: "Ton future metier?",
+	question: "Com'Academy : Le Jeu",
+	commandement: "Les 10 commandements",
+	"feed-post-chiffre": "Le chiffre du jour",
+	"feed-post-argh": "AARRGHH !! \nL’expression qui énerve",
+	"feed-post-image": "Une image/ un métier",
+	"feed-post-vie": "Vie de com'",
+};
+
+const destinations = {
+	secret: "secrets",
+	dico: "dico",
+	citation: "lesCitations",
+	metier: "metiers",
+	question: "leJeu",
+	commandement: "commandements",
+};
 
 interface Props {
 	data: FeedItem;
@@ -13,102 +49,39 @@ interface Props {
 export default function FeedCardHeader({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
-	const icons: { [key: string]: any } = {
-		secret: require("@/assets/imgs/icons/feed/secret.png"),
-		dico: require("@/assets/imgs/icons/feed/dico.png"),
-		citation: require("@/assets/imgs/icons/feed/citation.png"),
-		metier: require("@/assets/imgs/icons/feed/metier.png"),
-		question: require("@/assets/imgs/icons/feed/question.png"),
-		commandement: require("@/assets/imgs/icons/feed/commandement.png"),
-		chiffre: require("@/assets/imgs/icons/feed/chiffre.png"),
-		argh: require("@/assets/imgs/icons/feed/argh.png"),
-		image: require("@/assets/imgs/icons/feed/image.png"),
-		vie: require("@/assets/imgs/icons/feed/vie.png"),
-	};
+	const typeIcon = useMemo(() => {
+		if (data.type !== "feed-post") return icons[data.type];
+		const iconKey = data.payload.Icon.split(".")[0];
+		return icons[iconKey];
+	}, [data]);
 
-	const typeIcons = () => {
-		if (data.type !== "feed-post") {
-			return icons[data.type];
-		} else {
-			switch (data.payload.Icon.split(".")[0]) {
-				case "chiffre":
-					return icons["chiffre"];
-				case "argh":
-					return icons["argh"];
-				case "image":
-					return icons["image"];
-				case "vie":
-					return icons["vie"];
-			}
+	const title = useMemo(() => {
+		if (data.type === "feed-post") {
+			const postKey = `${data.type}-${data.payload.Icon.split(".")[0]}`;
+			return titles[postKey] || null;
 		}
-	};
+		return titles[data.type];
+	}, [data]);
 
-	const typeTitre = () => {
-		switch (data.type) {
-			case "secret":
-				return "3 secrets du succès";
-			case "dico":
-				return "Le dico";
-			case "citation":
-				return "Les citations";
-			case "metier":
-				return "Ton future metier?";
-			case "question":
-				return "Com'Academy : Le Jeu";
-			case "commandement":
-				return "Les 10 commandements";
-			case "feed-post":
-				switch (data.payload.Icon.split(".")[0]) {
-					case "chiffre":
-						return "Le chiffre du jour";
-					case "argh":
-						return "AARRGHH !! \nL’expression qui énerve";
-					case "image":
-						return "Une image/ un métier";
-					case "vie":
-						return "Vie de com'";
-					default:
-						return null;
-				}
-		}
-	};
-
-	const destination = () => {
-		switch (data.type) {
-			case "secret":
-				return "secrets";
-			case "dico":
-				return "dico";
-			case "citation":
-				return "lesCitations";
-			case "metier":
-				return "metiers";
-			case "question":
-				return "leJeu";
-			case "commandement":
-				return "commandements";
-			default:
-				return null;
-		}
-	};
+	const destination = useMemo(() => destinations[data.type] || null, [data]);
 
 	return (
 		<View>
 			<View style={styles.container}>
-				<Image source={typeIcons()} style={styles.icon} resizeMode='contain' />
-				<Pressable
-					style={styles.pressable}
-					onPress={() => navigation.navigate(destination())}>
-					{data.type !== "feed-post" && (
+				<Image source={typeIcon} style={styles.icon} resizeMode='contain' />
+				{data.type !== "feed-post" && (
+					<Pressable
+						style={styles.pressable}
+						onPress={() => navigation.navigate(destination || "")}>
 						<Image
 							source={require("@/assets/imgs/icons/plus-circle.png")}
 							style={styles.plusIcon}
 							resizeMode='contain'
 						/>
-					)}
-				</Pressable>
+					</Pressable>
+				)}
 				<View style={styles.infoContainer}>
-					<Text style={styles.title}>{typeTitre()}</Text>
+					<Text style={styles.title}>{title}</Text>
 					<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
 				</View>
 			</View>

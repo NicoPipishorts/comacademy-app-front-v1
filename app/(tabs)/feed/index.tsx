@@ -1,27 +1,3 @@
-import AvatarInitials from "@/components/avatars/initials";
-import FeedCard10Commandements from "@/components/cards/feed/Card10Commandements";
-import FeedCard3Secrets from "@/components/cards/feed/Card3Secrets";
-import FeedCardArgh from "@/components/cards/feed/CardArgh";
-import FeedCardCitations from "@/components/cards/feed/CardCitations";
-import FeedCardDico from "@/components/cards/feed/CardDico";
-import FeedCardImage from "@/components/cards/feed/CardImage";
-import FeedCardJeu from "@/components/cards/feed/CardJeu";
-import FeedCardMetier from "@/components/cards/feed/CardMetier";
-import FeedCardNumber from "@/components/cards/feed/CardNumber";
-import FeedCardVie from "@/components/cards/feed/CardVie";
-import Loader from "@/components/experience/loader";
-import FeedCardFooter from "@/components/footers/Feed/CardFooter";
-import FeedCardHeader from "@/components/headers/Feed/CardHeader";
-import {
-	colorDarkGrey,
-	colorGrey,
-	primaryBackground,
-} from "@/constants/colors";
-import { FontSizeScreenTitles } from "@/constants/fontsizes";
-import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
-import useUserId from "@/hooks/useUserId";
-import useGetUserInfo from "@/hooks/useUserInfo";
-import { FeedItem } from "@/types/feed";
 import React, { useState } from "react";
 import {
 	ActivityIndicator,
@@ -33,6 +9,21 @@ import {
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import AvatarInitials from "@/components/avatars/initials";
+import CardRenderer from "@/components/cards/feed/CardRenderer";
+import FeedLoader from "@/components/experience/loader";
+import FeedCardFooter from "@/components/footers/Feed/CardFooter";
+import FeedCardHeader from "@/components/headers/Feed/CardHeader";
+import {
+	colorDarkGrey,
+	colorGrey,
+	primaryBackground,
+} from "@/constants/colors";
+import { FontSizeScreenTitles } from "@/constants/fontsizes";
+import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
+import useUserId from "@/hooks/useUserId";
+import useGetUserInfo from "@/hooks/useUserInfo";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
@@ -49,12 +40,13 @@ const Feed = () => {
 		isFetched,
 		refetch,
 	} = useGetInfiniteFeed();
+
 	const [refreshing, setRefreshing] = useState(false);
 
 	const onRefresh = async () => {
 		setRefreshing(true);
 		try {
-			await refetch(); // Trigger refetch of feed data
+			await refetch();
 		} catch (error) {
 			console.error("Error refreshing feed:", error);
 		} finally {
@@ -73,50 +65,15 @@ const Feed = () => {
 	};
 
 	if (isLoading || !isFetched || !isFetchedUserData) {
-		return <Loader />;
+		return <FeedLoader />;
 	}
-
-	const ShowProperCard = (type: string, data: FeedItem, elementId: number) => {
-		switch (type) {
-			case "citation":
-				return <FeedCardCitations data={data} elementId={elementId} />;
-			case "commandement":
-				return <FeedCard10Commandements data={data} elementId={elementId} />;
-			case "dico":
-				return <FeedCardDico data={data} elementId={elementId} />;
-			case "question": // le jeu
-				return <FeedCardJeu data={data} elementId={elementId} />;
-			case "secret":
-				return <FeedCard3Secrets data={data} elementId={elementId} />;
-			case "metier":
-				return <FeedCardMetier data={data} elementId={elementId} />;
-			case "feed-post":
-				switch (data.payload.Icon.split(".")[0]) {
-					case "chiffre":
-						return <FeedCardNumber data={data} elementId={elementId} />;
-					case "argh":
-						return <FeedCardArgh data={data} elementId={elementId} />;
-					case "image":
-						return <FeedCardImage data={data} elementId={elementId} />;
-					case "vie":
-						return <FeedCardVie data={data} elementId={elementId} />;
-					default:
-						return null;
-				}
-			default:
-				return null;
-		}
-	};
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
-			<View style={{ marginBottom: 15 }}>
-				<Image
-					source={require("@/assets/imgs/logos/Login.png")}
-					style={{ width: 100, height: 30 }}
-					resizeMode='contain'
-				/>
-			</View>
+			{/* Header */}
+			<Header userData={userData} />
+
+			{/* Feed Content */}
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				onScroll={handleScroll}
@@ -124,37 +81,8 @@ const Feed = () => {
 				refreshControl={
 					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 				}>
-				<View style={[styles.headerContainer, { alignItems: "center" }]}>
-					<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
-						Feed
-					</Text>
-					<AvatarInitials
-						size={68}
-						firstName={userData.firstName}
-						lastName={userData.lastName}
-					/>
-				</View>
-
-				{/* Card Components */}
 				{feedData?.pages.map((page) =>
-					page.data.map((feed) => {
-						return (
-							<View
-								key={feed.id}
-								style={{
-									width: "100%",
-									borderBottomWidth: 1,
-									borderBottomColor: colorGrey,
-									paddingVertical: 40,
-								}}>
-								<FeedCardHeader data={feed} />
-								<View style={styles.cardWrapper}>
-									{ShowProperCard(feed.type, feed, feed.id)}
-								</View>
-								<FeedCardFooter data={feed} />
-							</View>
-						);
-					})
+					page.data.map((feed) => <FeedWrapper key={feed.id} feed={feed} />)
 				)}
 
 				{/* Loading Indicator for Fetching Next Page */}
@@ -167,6 +95,42 @@ const Feed = () => {
 		</View>
 	);
 };
+
+const Header = ({ userData }: { userData: any }) => (
+	<View style={{ marginBottom: 15 }}>
+		<Image
+			source={require("@/assets/imgs/logos/Login.png")}
+			style={{ width: 100, height: 30 }}
+			resizeMode='contain'
+		/>
+		<View style={[styles.headerContainer, { alignItems: "center" }]}>
+			<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
+				Feed
+			</Text>
+			<AvatarInitials
+				size={68}
+				firstName={userData.firstName}
+				lastName={userData.lastName}
+			/>
+		</View>
+	</View>
+);
+
+const FeedWrapper = ({ feed }: { feed: any }) => (
+	<View
+		style={{
+			width: "100%",
+			borderBottomWidth: 1,
+			borderBottomColor: colorGrey,
+			paddingVertical: 40,
+		}}>
+		<FeedCardHeader data={feed} />
+		<View style={styles.cardWrapper}>
+			<CardRenderer type={feed.type} data={feed} elementId={feed.id} />
+		</View>
+		<FeedCardFooter data={feed} />
+	</View>
+);
 
 const styles = StyleSheet.create({
 	wrapper: {
