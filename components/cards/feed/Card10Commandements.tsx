@@ -1,9 +1,15 @@
 import ThumbLikeButton from "@/components/buttons/thumbLike";
-import { colorBlack, colorWhite } from "@/constants/colors";
+import {
+	colorBlack,
+	colorGrey,
+	colorTurquoise,
+	colorWhite,
+} from "@/constants/colors";
 import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	data: FeedItem;
@@ -12,6 +18,7 @@ interface Props {
 
 export default function FeedCard10Commandements({ data, elementId }: Props) {
 	const [title, text] = (data.payload.Astuce || "").split(/\r?\n/, 2);
+	const router = useRouter();
 	return (
 		<View style={styles.cardContainer}>
 			<Text style={styles.cardTitle}>{data.payload.Theme} :</Text>
@@ -24,6 +31,23 @@ export default function FeedCard10Commandements({ data, elementId }: Props) {
 					<Text style={styles.keyCardTitle}>{title}</Text>
 					<Text style={styles.keyCardText}>{text}</Text>
 				</View>
+				<TouchableOpacity
+					onPress={() =>
+						router.push(
+							`/commandements/CommandementsDetails?itemId=${data.elementId}`
+						)
+					}
+					style={{
+						position: "absolute",
+						bottom: 20,
+						right: 20,
+						backgroundColor: colorGrey,
+						paddingVertical: 8,
+						paddingHorizontal: 25,
+						borderRadius: 50,
+					}}>
+					<Text style={{ color: colorTurquoise }}>Voir +</Text>
+				</TouchableOpacity>
 				<View style={styles.cardNumberWrapper}>
 					<Text style={styles.keyCardNum}>{data.payload.index}</Text>
 				</View>
