@@ -1,7 +1,7 @@
 import { useAddToPlaylist } from "@/api/playlist/addToPlaylist";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
-import useGetPlaylistsByUser from "@/hooks/Playlistss/useGetPlaylistsByUser";
+import useGetPlaylistsForElement from "@/hooks/Playlistss/useGetPlaylistsByElement";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
@@ -39,7 +39,11 @@ export default function AddToPlaylistModal({
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 
-	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
+	const { data: playlistsData, isFetched } = useGetPlaylistsForElement(
+		userId,
+		type,
+		elementId
+	);
 
 	const showModal = useCallback(() => {
 		Animated.spring(slideAnim, {
@@ -64,7 +68,6 @@ export default function AddToPlaylistModal({
 		queryClient.refetchQueries({
 			queryKey: ["Playlists"],
 		});
-		// showSnackbar("L'élément a était ajouté a la playlist.", "success");
 	};
 
 	const onError = (error: AxiosError) => {
@@ -116,26 +119,46 @@ export default function AddToPlaylistModal({
 							<ScrollView
 								showsVerticalScrollIndicator={false}
 								contentContainerStyle={{
-									gap: 15,
 									paddingBottom: insets.bottom + 30,
+									gap: 3,
 								}}>
 								{playlistsData.data.map((playlist) => {
 									return (
-										<Pressable
-											key={playlist.id}
-											onPress={() => handleSubmit(playlist.id)}
-											style={{ flexDirection: "row", alignItems: "center" }}>
-											<PlaylistDisplayImage
-												image={playlist.attributes.selectedColor}
-												title={playlist.attributes.name}
-												width={50}
-												height={50}
-											/>
-											<Text
-												style={{ fontWeight: "bold", fontSize: FontSize16 }}>
-												{playlist.attributes.name}
-											</Text>
-										</Pressable>
+										<View key={playlist.id}>
+											{playlist.attributes.inPlaylist && (
+												<View
+													style={{
+														position: "absolute",
+														minWidth: "100%",
+														minHeight: 66,
+														zIndex: 10,
+														borderRadius: 10,
+														backgroundColor: "rgba(220,220,220,0.7)",
+													}}
+												/>
+											)}
+											<Pressable
+												onPress={() => handleSubmit(playlist.id)}
+												style={{
+													flexDirection: "row",
+													alignItems: "center",
+													padding: 8,
+												}}
+												disabled={
+													playlist.attributes.inPlaylist ? true : false
+												}>
+												<PlaylistDisplayImage
+													image={playlist.attributes.selectedColor}
+													title={playlist.attributes.name}
+													width={50}
+													height={50}
+												/>
+												<Text
+													style={{ fontWeight: "bold", fontSize: FontSize16 }}>
+													{playlist.attributes.name}
+												</Text>
+											</Pressable>
+										</View>
 									);
 								})}
 							</ScrollView>
