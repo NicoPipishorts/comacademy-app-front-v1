@@ -1,15 +1,3 @@
-import React, { useState } from "react";
-import {
-	ActivityIndicator,
-	Image,
-	RefreshControl,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import AvatarInitials from "@/components/avatars/initials";
 import CardRenderer from "@/components/cards/feed/CardRenderer";
 import FeedLoader from "@/components/experience/loader";
@@ -24,6 +12,17 @@ import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
+import React, { useState } from "react";
+import {
+	ActivityIndicator,
+	Image,
+	RefreshControl,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
@@ -40,13 +39,12 @@ const Feed = () => {
 		isFetched,
 		refetch,
 	} = useGetInfiniteFeed();
-
 	const [refreshing, setRefreshing] = useState(false);
 
 	const onRefresh = async () => {
 		setRefreshing(true);
 		try {
-			await refetch();
+			await refetch(); // Trigger refetch of feed data
 		} catch (error) {
 			console.error("Error refreshing feed:", error);
 		} finally {
@@ -69,25 +67,41 @@ const Feed = () => {
 	}
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
-			{/* Header */}
-			<Header userData={userData} />
-
-			{/* Feed Content */}
+		<View style={styles.wrapper}>
+			<View
+				style={[
+					styles.headerWrapper,
+					{
+						paddingTop: insets.top + 10,
+					},
+				]}>
+				<Image
+					source={require("@/assets/imgs/logos/Login.png")}
+					style={styles.logo}
+					resizeMode='contain'
+				/>
+				<View style={styles.headerRow}>
+					<Text style={styles.title}>Feed</Text>
+					<AvatarInitials
+						size={68}
+						firstName={userData.firstName}
+						lastName={userData.lastName}
+					/>
+				</View>
+			</View>
 			<ScrollView
 				showsVerticalScrollIndicator={false}
-				onScroll={handleScroll}
-				contentContainerStyle={{ paddingTop: 25, paddingBottom: 120 }}
+				contentContainerStyle={styles.scrollContent}
+				onScroll={handleScroll} // Add this line
+				scrollEventThrottle={16} // Set for smooth scroll events
 				refreshControl={
 					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 				}>
 				{feedData?.pages.map((page) =>
 					page.data.map((feed) => <FeedWrapper key={feed.id} feed={feed} />)
 				)}
-
-				{/* Loading Indicator for Fetching Next Page */}
 				{isFetchingNextPage && (
-					<View style={{ marginVertical: 20 }}>
+					<View style={styles.loadingIndicator}>
 						<ActivityIndicator size='large' />
 					</View>
 				)}
@@ -96,34 +110,8 @@ const Feed = () => {
 	);
 };
 
-const Header = ({ userData }: { userData: any }) => (
-	<View style={{ marginBottom: 15 }}>
-		<Image
-			source={require("@/assets/imgs/logos/Login.png")}
-			style={{ width: 100, height: 30 }}
-			resizeMode='contain'
-		/>
-		<View style={[styles.headerContainer, { alignItems: "center" }]}>
-			<Text style={{ fontSize: FontSizeScreenTitles, fontWeight: "bold" }}>
-				Feed
-			</Text>
-			<AvatarInitials
-				size={68}
-				firstName={userData.firstName}
-				lastName={userData.lastName}
-			/>
-		</View>
-	</View>
-);
-
 const FeedWrapper = ({ feed }: { feed: any }) => (
-	<View
-		style={{
-			width: "100%",
-			borderBottomWidth: 1,
-			borderBottomColor: colorGrey,
-			paddingVertical: 40,
-		}}>
+	<View style={styles.feedWrapper}>
 		<FeedCardHeader data={feed} />
 		<View style={styles.cardWrapper}>
 			<CardRenderer type={feed.type} data={feed} elementId={feed.id} />
@@ -135,16 +123,42 @@ const FeedWrapper = ({ feed }: { feed: any }) => (
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		justifyContent: "flex-start",
-		alignItems: "center",
-		paddingHorizontal: 25,
 		backgroundColor: primaryBackground,
 	},
-	headerContainer: {
-		width: "100%",
-		flexShrink: 0,
+	scrollContent: {
+		paddingBottom: 120,
+		paddingHorizontal: 25,
+	},
+	loadingIndicator: {
+		marginVertical: 20,
+		alignItems: "center",
+	},
+	headerWrapper: {
+		minWidth: "100%",
+		alignItems: "center",
+		paddingBottom: 20,
+		paddingHorizontal: 25,
+	},
+	logo: {
+		width: 100,
+		height: 30,
+		marginBottom: 20,
+	},
+	headerRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		width: "100%",
+		alignItems: "center",
+	},
+	title: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "bold",
+	},
+	feedWrapper: {
+		width: "100%",
+		borderBottomWidth: 1,
+		borderBottomColor: colorGrey,
+		paddingVertical: 30,
 	},
 	cardWrapper: {
 		flexShrink: 0,
