@@ -98,7 +98,12 @@ const Feed = () => {
 					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 				}>
 				{feedData?.pages.map((page) =>
-					page.data.map((feed) => <FeedWrapper key={feed.id} feed={feed} />)
+					page.data.map((feed) => {
+						if (feed.payload.Icon === null) {
+							return null;
+						}
+						return <FeedWrapper key={feed.id} feed={feed} />;
+					})
 				)}
 				{isFetchingNextPage && (
 					<View style={styles.loadingIndicator}>
