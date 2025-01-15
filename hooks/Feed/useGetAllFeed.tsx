@@ -55,6 +55,8 @@ const useGetInfiniteFeed = () => {
 			return page < pageCount ? page + 1 : undefined; // Fetch the next page if available
 		},
 		enabled: !!token && !!userId, // Ensure both token and userId are available
+		staleTime: 5 * 60 * 1000, // 5 minutes in milliseconds
+		refetchOnMount: true, // Force refetch on remount
 	});
 };
 
