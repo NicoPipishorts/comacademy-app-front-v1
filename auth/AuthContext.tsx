@@ -16,6 +16,7 @@ interface AuthContextType {
 	login: (data: LoginPayload) => void;
 	logout: () => void;
 	checkLoggedIn: () => Promise<boolean>;
+	isLoading: boolean;
 }
 
 // Create the context with an initial undefined type, which will be set in the provider
@@ -31,6 +32,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	children,
 }) => {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
 
 	const login = async (data: LoginPayload) => {
 		setIsAuthenticated(true);
@@ -71,6 +73,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	useEffect(() => {
 		const initializeAuth = async () => {
 			await checkLoggedIn();
+			setIsLoading(false);
 		};
 
 		initializeAuth();
@@ -78,7 +81,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	return (
 		<AuthContext.Provider
-			value={{ isAuthenticated, login, logout, checkLoggedIn }}>
+			value={{ isAuthenticated, login, logout, checkLoggedIn, isLoading }}>
 			{children}
 		</AuthContext.Provider>
 	);

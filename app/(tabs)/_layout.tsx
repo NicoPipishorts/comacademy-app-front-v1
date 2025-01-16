@@ -1,4 +1,5 @@
 // app/(tabs)/_layout.tsx
+import LoginScreen from "@/app/(tabs)/login";
 import { useAuth } from "@/auth/AuthContext";
 import TabBar from "@/components/TabBar";
 import {
@@ -9,7 +10,6 @@ import {
 	PushNotificationContext,
 	PushNotificationProvider,
 } from "@/providers/PushNotificationProvider";
-import LoginScreen from "@/screens/LoginScreen";
 import * as Notifications from "expo-notifications";
 import { Tabs } from "expo-router";
 import { useContext, useEffect } from "react";
@@ -41,7 +41,7 @@ const CustomTabBar: React.FC<any> = (props) => {
 };
 
 const _layout: React.FC = () => {
-	const { isAuthenticated } = useAuth();
+	const { isAuthenticated, isLoading } = useAuth();
 
 	if (!isAuthenticated) {
 		return <LoginScreen />;

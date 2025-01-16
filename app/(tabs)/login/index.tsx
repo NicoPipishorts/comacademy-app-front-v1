@@ -15,8 +15,8 @@ import {
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
-import { useLoginMutation } from "../api/login";
-import { useAuth } from "../auth/AuthContext";
+import { useLoginMutation } from "../../../api/login";
+import { useAuth } from "../../../auth/AuthContext";
 
 // Import Assets
 import {
@@ -34,7 +34,6 @@ import {
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Logo from "../assets/imgs/logos/Login.png";
 
 const LoginScreen = () => {
 	const insets = useSafeAreaInsets();
@@ -87,7 +86,11 @@ const LoginScreen = () => {
 					keyboardShouldPersistTaps='handled'>
 					<View>
 						<View style={{ marginTop: insets.top }}>
-							<Image source={Logo} style={styles.logo} resizeMode='contain' />
+							<Image
+								source={require("@/assets/imgs/logos/Login.png")}
+								style={styles.logo}
+								resizeMode='contain'
+							/>
 							<View style={styles.containerDots}>
 								<View style={[styles.dot, { backgroundColor: colorPurple }]} />
 								<View style={[styles.dot, { backgroundColor: colorOrange }]} />
