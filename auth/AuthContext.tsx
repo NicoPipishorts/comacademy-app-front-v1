@@ -3,8 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode"; // Correct import
 import React, {
 	createContext,
+	Dispatch,
 	FunctionComponent,
 	ReactNode,
+	SetStateAction,
 	useContext,
 	useEffect,
 	useState,
@@ -16,6 +18,8 @@ interface AuthContextType {
 	login: (data: LoginPayload) => void;
 	logout: () => void;
 	checkLoggedIn: () => Promise<boolean>;
+	isRegistering: boolean;
+	setIsRegistering: Dispatch<SetStateAction<boolean>>;
 }
 
 // Create the context with an initial undefined type, which will be set in the provider
@@ -31,6 +35,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	children,
 }) => {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+	const [isRegistering, setIsRegistering] = useState<boolean>(false);
 
 	const login = async (data: LoginPayload) => {
 		setIsAuthenticated(true);
@@ -71,6 +76,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	useEffect(() => {
 		const initializeAuth = async () => {
 			await checkLoggedIn();
+			setIsRegistering(false);
 		};
 
 		initializeAuth();
@@ -78,7 +84,14 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	return (
 		<AuthContext.Provider
-			value={{ isAuthenticated, login, logout, checkLoggedIn }}>
+			value={{
+				isAuthenticated,
+				login,
+				logout,
+				checkLoggedIn,
+				isRegistering,
+				setIsRegistering,
+			}}>
 			{children}
 		</AuthContext.Provider>
 	);
