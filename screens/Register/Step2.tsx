@@ -6,6 +6,7 @@ import {
 	colorRed,
 	colorWhite,
 	colorYellow,
+	primaryBackground,
 } from "@/constants/colors";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -202,6 +203,7 @@ export default function RegisterStep2({
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		width: "100%",
 		justifyContent: "center",
 		alignItems: "center",
 	},
@@ -219,6 +221,7 @@ const styles = StyleSheet.create({
 		flexWrap: "wrap",
 		justifyContent: "space-between",
 		marginBottom: 40,
+		backgroundColor: primaryBackground,
 	},
 
 	optionButton: {

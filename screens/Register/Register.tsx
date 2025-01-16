@@ -68,15 +68,16 @@ const Register = () => {
 			<KeyboardAvoidingView
 				style={styles.container}
 				behavior={Platform.OS === "ios" ? "padding" : undefined}
-				keyboardVerticalOffset={0} // Adjust this offset as needed
-			>
+				keyboardVerticalOffset={0}>
 				<ScrollView
 					contentContainerStyle={[
 						styles.scrollContainer,
-						{ marginTop: insets.top },
+						{ paddingTop: insets.top },
 					]}
 					keyboardShouldPersistTaps='handled'>
-					<LogoPageTop />
+					<View style={[styles.logoContainer]}>
+						<LogoPageTop />
+					</View>
 
 					<View
 						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -104,18 +105,18 @@ const Register = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "flex-start",
+		justifyContent: "center",
 		alignItems: "center",
 		padding: 20,
 	},
-
 	scrollContainer: {
-		flexGrow: 1,
+		flex: 1,
 		minWidth: "100%",
-		justifyContent: "space-between",
 		alignItems: "center",
 	},
-
+	logoContainer: {
+		marginBottom: 20,
+	},
 	logo: {
 		width: 150,
 		height: 60,
