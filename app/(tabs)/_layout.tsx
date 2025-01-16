@@ -1,5 +1,4 @@
 // app/(tabs)/_layout.tsx
-import LoginScreen from "@/app/(tabs)/login";
 import { useAuth } from "@/auth/AuthContext";
 import TabBar from "@/components/TabBar";
 import {
@@ -10,9 +9,11 @@ import {
 	PushNotificationContext,
 	PushNotificationProvider,
 } from "@/providers/PushNotificationProvider";
+import Register from "@/screens/Register/Register";
 import * as Notifications from "expo-notifications";
 import { Tabs } from "expo-router";
 import { useContext, useEffect } from "react";
+import LoginScreen from "../../screens/Sign-in";
 
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
@@ -41,10 +42,14 @@ const CustomTabBar: React.FC<any> = (props) => {
 };
 
 const _layout: React.FC = () => {
-	const { isAuthenticated, isLoading } = useAuth();
+	const { isAuthenticated, isRegistering } = useAuth();
 
-	if (!isAuthenticated) {
+	if (!isAuthenticated && !isRegistering) {
 		return <LoginScreen />;
+	}
+
+	if (!isAuthenticated && isRegistering) {
+		return <Register />;
 	}
 
 	return (
