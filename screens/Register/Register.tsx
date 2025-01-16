@@ -61,8 +61,6 @@ const Register = () => {
 		checkIfLoggedIn();
 	}, [navigation, checkLoggedIn]);
 
-	console.log(formPayload);
-
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 			<KeyboardAvoidingView

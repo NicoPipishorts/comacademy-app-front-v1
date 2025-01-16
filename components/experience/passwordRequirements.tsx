@@ -21,7 +21,6 @@ export default function PasswordRequirements() {
 
 const styles = StyleSheet.create({
 	requirementsContainer: {
-		marginBottom: 20,
 		alignSelf: "flex-start",
 	},
 	requirementText: {

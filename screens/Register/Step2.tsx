@@ -10,7 +10,7 @@ import {
 } from "@/constants/colors";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Pressable,
 	StyleSheet,
@@ -41,6 +41,17 @@ export default function RegisterStep2({
 		useState<boolean>(false);
 	const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
+	// Reset the registered values if available
+	useEffect(() => {
+		if (formPayload.profile !== null) {
+			setSelectedOption(formPayload.profile);
+		}
+		if (formPayload.password !== null) {
+			setNewPassword(formPayload.password);
+			setPasswordConfirm(formPayload.password);
+		}
+	}, [formPayload]);
+
 	const [errors, setErrors] = useState<{
 		newPassword?: string;
 		passwordConfirm?: string;
@@ -59,6 +70,10 @@ export default function RegisterStep2({
 			setSelectedOption(null);
 		} else {
 			setSelectedOption(option);
+			setFormPayload({
+				...formPayload,
+				profile: option,
+			});
 		}
 	};
 
@@ -192,8 +207,13 @@ export default function RegisterStep2({
 				<PasswordRequirements />
 
 				{/* Submit Button */}
-				<Pressable style={styles.buttonContainer} onPress={handleNext}>
-					<Text style={styles.buttonText}>C'est parti</Text>
+				<Pressable style={styles.buttonSubmit} onPress={handleNext}>
+					<Text style={styles.buttonTextSubmit}>C'est parti</Text>
+				</Pressable>
+
+				{/* Return Button */}
+				<Pressable style={styles.buttonRevenir} onPress={() => setStep(1)}>
+					<Text style={styles.buttonTextRevenir}>Revenir</Text>
 				</Pressable>
 			</View>
 		</>
@@ -256,16 +276,30 @@ const styles = StyleSheet.create({
 	eyeIcon: {
 		marginLeft: 10,
 	},
-	buttonContainer: {
-		marginTop: 80,
+	buttonSubmit: {
+		marginTop: 70,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,
 		borderRadius: 50,
 	},
-	buttonText: {
+	buttonTextSubmit: {
 		color: colorWhite,
 		fontWeight: "bold",
+	},
+	buttonRevenir: {
+		marginTop: 10,
+		backgroundColor: primaryBackground,
+		borderColor: colorBlack,
+		borderWidth: 2,
+		paddingHorizontal: 24,
+		paddingVertical: 8,
+		borderRadius: 50,
+	},
+	buttonTextRevenir: {
+		color: colorBlack,
+		fontWeight: "bold",
+		fontSize: FontSize12,
 	},
 	errorText: {
 		color: "red",

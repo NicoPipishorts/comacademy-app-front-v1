@@ -1,11 +1,14 @@
+import { useAuth } from "@/auth/AuthContext";
 import {
 	colorBlack,
 	colorGrey,
 	colorRed,
 	colorWhite,
+	primaryBackground,
 } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import { useNavigation } from "expo-router";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Image,
 	Pressable,
@@ -27,9 +30,24 @@ export default function RegisterStep1({
 	formPayload,
 	setFormPayload,
 }: Props) {
+	const navigation = useNavigation();
 	const [firstName, setFirstName] = useState<string>("");
 	const [lastName, setLastName] = useState<string>("");
 	const [email, setEmail] = useState<string>("");
+	const { setIsRegistering } = useAuth();
+
+	// Reset the registered values if available
+	useEffect(() => {
+		if (formPayload?.firstName !== null) {
+			setFirstName(formPayload?.firstName);
+		}
+		if (formPayload?.lastName !== null) {
+			setLastName(formPayload?.lastName);
+		}
+		if (formPayload?.email !== null) {
+			setEmail(formPayload?.email);
+		}
+	}, [formPayload]);
 
 	// Validation error messages
 	const [errors, setErrors] = useState<{
@@ -95,6 +113,11 @@ export default function RegisterStep1({
 			});
 			setStep(2);
 		}
+	};
+
+	const handleCancle = () => {
+		setFormPayload(null);
+		setIsRegistering(false);
 	};
 
 	return (
@@ -198,6 +221,11 @@ export default function RegisterStep1({
 						/>
 					</View>
 				</Pressable>
+
+				{/* Return Button */}
+				<Pressable style={styles.buttonRevenir} onPress={handleCancle}>
+					<Text style={styles.buttonTextRevenir}>Annuler</Text>
+				</Pressable>
 			</View>
 		</>
 	);
@@ -246,6 +274,18 @@ const styles = StyleSheet.create({
 		fontSize: FontSize16,
 		color: colorBlack,
 		fontWeight: "bold",
+	},
+	buttonRevenir: {
+		marginTop: 10,
+		backgroundColor: colorBlack,
+		paddingHorizontal: 24,
+		paddingVertical: 8,
+		borderRadius: 50,
+	},
+	buttonTextRevenir: {
+		color: primaryBackground,
+		fontWeight: "bold",
+		fontSize: FontSize12,
 	},
 	errorText: {
 		minWidth: "100%",
