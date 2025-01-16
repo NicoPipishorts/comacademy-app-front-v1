@@ -149,7 +149,9 @@ export default function RegisterStep2({
 					/>
 				</View>
 				{errors.newPassword && (
-					<Text style={styles.errorText}>{errors.newPassword}</Text>
+					<View>
+						<Text style={styles.errorText}>{errors.newPassword}</Text>
+					</View>
 				)}
 
 				{/* Password Strength Meter */}
@@ -180,17 +182,19 @@ export default function RegisterStep2({
 					/>
 				</View>
 				{errors.passwordConfirm && (
-					<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+					<View>
+						<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+					</View>
 				)}
 
-				{/* Submit Button */}
-			</View>
+				{/* Password Requirements */}
+				<PasswordRequirements />
 
-			{/* Password Requirements */}
-			<PasswordRequirements />
-			<Pressable style={styles.buttonContainer} onPress={handleNext}>
-				<Text style={styles.buttonText}>C'est parti</Text>
-			</Pressable>
+				{/* Submit Button */}
+				<Pressable style={styles.buttonContainer} onPress={handleNext}>
+					<Text style={styles.buttonText}>C'est parti</Text>
+				</Pressable>
+			</View>
 		</>
 	);
 }
@@ -250,7 +254,7 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 	},
 	buttonContainer: {
-		marginBottom: 40,
+		marginTop: 80,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,

@@ -104,7 +104,9 @@ export default function RegisterStep1({
 					<Text style={styles.title}>Venez com' vous êtes !</Text>
 				</View>
 				{errors.firstName && (
-					<Text style={styles.errorText}>{errors.firstName}</Text>
+					<View>
+						<Text style={styles.errorText}>{errors.firstName}</Text>
+					</View>
 				)}
 				<View
 					style={[
@@ -126,7 +128,9 @@ export default function RegisterStep1({
 				</View>
 
 				{errors.lastName && (
-					<Text style={styles.errorText}>{errors.lastName}</Text>
+					<View>
+						<Text style={styles.errorText}>{errors.lastName}</Text>
+					</View>
 				)}
 				<View
 					style={[
@@ -147,7 +151,11 @@ export default function RegisterStep1({
 					/>
 				</View>
 
-				{errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+				{errors.email && (
+					<View>
+						<Text style={styles.errorText}>{errors.email}</Text>
+					</View>
+				)}
 				<View
 					style={[
 						styles.inputContainer,
