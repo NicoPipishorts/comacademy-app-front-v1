@@ -3,7 +3,6 @@ import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
 	Alert,
-	Image,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -19,31 +18,25 @@ import { useLoginMutation } from "../api/login";
 import { useAuth } from "../auth/AuthContext";
 
 // Import Assets
+import LogoPageTop from "@/components/headers/LogoPageTop";
 import {
 	colorBlack,
-	colorBlue,
 	colorDarkGrey,
-	colorGreen,
 	colorGrey,
-	colorOrange,
-	colorPurple,
-	colorTurquoise,
 	colorWhite,
-	colorYellow,
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Logo from "../assets/imgs/logos/Login.png";
 
-const LoginScreen = () => {
+const SignIn = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const { login, checkLoggedIn } = useAuth();
+	const { login, checkLoggedIn, setIsRegistering } = useAuth();
 
 	const toggleShowPassword = () => {
 		setShowPassword(!showPassword);
@@ -83,23 +76,12 @@ const LoginScreen = () => {
 				keyboardVerticalOffset={0} // Adjust this offset as needed
 			>
 				<ScrollView
-					contentContainerStyle={styles.scrollContainer}
+					contentContainerStyle={[
+						styles.scrollContainer,
+						{ marginTop: insets.top },
+					]}
 					keyboardShouldPersistTaps='handled'>
-					<View>
-						<View style={{ marginTop: insets.top }}>
-							<Image source={Logo} style={styles.logo} resizeMode='contain' />
-							<View style={styles.containerDots}>
-								<View style={[styles.dot, { backgroundColor: colorPurple }]} />
-								<View style={[styles.dot, { backgroundColor: colorOrange }]} />
-								<View style={[styles.dot, { backgroundColor: colorYellow }]} />
-								<View style={[styles.dot, { backgroundColor: colorGreen }]} />
-								<View
-									style={[styles.dot, { backgroundColor: colorTurquoise }]}
-								/>
-								<View style={[styles.dot, { backgroundColor: colorBlue }]} />
-							</View>
-						</View>
-					</View>
+					<LogoPageTop />
 					<View
 						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
 						<View>
@@ -146,6 +128,13 @@ const LoginScreen = () => {
 						</Pressable>
 					</View>
 				</ScrollView>
+				<View
+					style={{ flexDirection: "row", position: "absolute", bottom: 40 }}>
+					<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
+					<Pressable onPress={() => setIsRegistering(true)}>
+						<Text style={{ fontWeight: "bold" }}> S'inscrire</Text>
+					</Pressable>
+				</View>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
@@ -234,4 +223,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default LoginScreen;
+export default SignIn;
