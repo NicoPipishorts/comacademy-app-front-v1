@@ -21,7 +21,12 @@ import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
 import metiers from "@/assets/imgs/cards/home_metiers.png";
 import playlists from "@/assets/imgs/cards/home_playlists.png";
 import { primaryBackground } from "@/constants/colors";
-import { FontSizeAvaterText, FontSizeH1 } from "@/constants/fontsizes";
+import {
+	FontSize10,
+	FontSize12,
+	FontSizeAvaterText,
+	FontSizeH1,
+} from "@/constants/fontsizes";
 
 // Components and hooks
 import ALaUneCitation from "@/components/ALaUneCitation";
@@ -72,6 +77,9 @@ const HomeScreen = () => {
 
 				<ScrollView
 					style={styles.contentContainer}
+					contentContainerStyle={{
+						alignItems: "center",
+					}}
 					showsVerticalScrollIndicator={false}>
 					<View style={styles.header}>
 						<Text style={styles.headerShortcuts}>Accès rapide</Text>
@@ -81,61 +89,111 @@ const HomeScreen = () => {
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}>
 						<View style={styles.shortcuts}>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("leJeu")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={homeJouer}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							{/* Les Le Jeu Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("leJeu")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={homeJouer}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Le Jeu
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Jouez à apprendre
+									</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("user")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={mesStats}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							</View>
+
+							{/* Les Les Stats Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("user")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={mesStats}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Mes Stats
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Résultats, classement
+									</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("dico")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={dico}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							</View>
+
+							{/* Les Dico Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("dico")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={dico}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Le Jeu
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Jouez à apprendre
+									</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("playlists")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={playlists}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							</View>
+
+							{/* Les Playlists Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("playlists")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={playlists}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Mes playlists
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>Ma sélection</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("metiers")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={metiers}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
-								</View>
-							</TouchableOpacity>
+							</View>
 						</View>
 					</ScrollView>
 
@@ -147,50 +205,136 @@ const HomeScreen = () => {
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}>
 						<View style={styles.shortcuts}>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("secrets")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={secrets}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							{/* Les 3 Secrets Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("secrets")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={secrets}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										3 Secrets du succès
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Les clés de la réussite
+									</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("commandements")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={commandements}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							</View>
+
+							{/* Les 10 Commandements Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("commandements")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={commandements}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										10 Commandements
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Les recettes en pagaille
+									</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("petitesHistoires")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={histoires}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							</View>
+
+							{/* Les Citations Card */}
+							<View style={{ alignItems: "center" }}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("lesCitations")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={lesCitations}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Les citations
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>Les citations</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("lesCitations")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={lesCitations}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+							</View>
+
+							{/* Les Metiers Card */}
+							<View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("metiers")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={metiers}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Les metiers de la com'
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>Trouver sa voie</Text>
 								</View>
-							</TouchableOpacity>
+							</View>
+
+							{/* Les Petits Card */}
+							<View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("petitesHistoires")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={histoires}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Les petites histoires
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Apprendre en regardant
+									</Text>
+								</View>
+							</View>
 							<TouchableOpacity style={styles.cardsButton}>
 								<View style={styles.imageContainer}>
 									<Image
@@ -241,9 +385,10 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 	},
 	header: {
+		minWidth: "100%",
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "center",
+		alignItems: "flex-start",
 		marginBottom: 10,
 		paddingHorizontal: 20,
 	},
@@ -296,6 +441,7 @@ const styles = StyleSheet.create({
 	imageContainer: {
 		width: "100%",
 		height: "100%",
+		alignItems: "center",
 	},
 	shortcutsCards: {
 		alignItems: "flex-end",
