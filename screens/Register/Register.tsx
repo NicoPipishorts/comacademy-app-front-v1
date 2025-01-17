@@ -1,6 +1,7 @@
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+	Alert,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -12,6 +13,7 @@ import {
 import { useAuth } from "../../auth/AuthContext";
 
 // Import Assets
+import { useRegisterNewUser } from "@/api/credentials/registerNewUser";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,31 +26,35 @@ export interface FormPayload {
 	email: string;
 	profile: string;
 	password: string;
+	username: string;
 }
 
 const Register = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
-	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
-	const { login, checkLoggedIn, setIsRegistering } = useAuth();
-	const [formPayload, setFormPayload] = useState<FormPayload>(null);
+	const { login, checkLoggedIn } = useAuth();
+	const [formPayload, setFormPayload] = useState<FormPayload>();
 
 	const [step, setStep] = useState<number>(1);
 
-	// const onSuccess = (data) => {
-	// 	login(data);
-	// 	navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
-	// };
+	const onSuccess = (data) => {
+		login(data);
+		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
+	};
 
-	// const onError = (error) => {
-	// 	Alert.alert("Login failed", error.message); // Using Alert from react-native
-	// };
+	const onError = (error) => {
+		Alert.alert("Login failed", error.message); // Using Alert from react-native
+	};
 
-	// const mutation = useLoginMutation(authUrl, onSuccess, onError);
+	const mutation = useRegisterNewUser(onSuccess, onError);
 
-	// const handleLogin = () => {
-	// 	mutation.mutate({ identifier: email, password: password });
-	// };
+	const handleLogin = () => {
+		if (!formPayload) {
+			Alert.alert("Error", "Please complete all fields before proceeding.");
+			return;
+		}
+		mutation.mutate(formPayload); // Pass the formPayload to the mutation
+	};
 
 	useEffect(() => {
 		const checkIfLoggedIn = async () => {
@@ -91,6 +97,7 @@ const Register = () => {
 								setStep={setStep}
 								formPayload={formPayload}
 								setFormPayload={setFormPayload}
+								handleLogin={handleLogin}
 							/>
 						)}
 					</View>

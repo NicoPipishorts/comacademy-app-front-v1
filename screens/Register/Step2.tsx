@@ -25,14 +25,20 @@ interface Props {
 	setStep: Dispatch<SetStateAction<number>>;
 	setFormPayload: Dispatch<SetStateAction<FormPayload>>;
 	formPayload: FormPayload;
+	handleLogin: () => void;
 }
-
-const OPTIONS = ["Étudiant", "Enseignant", "Professionnel", "Passionné"];
+const OPTIONS = [
+	{ label: "Étudiant", value: "etudiant" },
+	{ label: "Enseignant", value: "enseignant" },
+	{ label: "Professionnelle", value: "professionnelle" },
+	{ label: "Passionné", value: "passionne" },
+];
 
 export default function RegisterStep2({
 	setStep,
 	formPayload,
 	setFormPayload,
+	handleLogin,
 }: Props) {
 	const [newPassword, setNewPassword] = useState<string>("");
 	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
@@ -84,14 +90,20 @@ export default function RegisterStep2({
 			passwordConfirm?: string;
 		} = {};
 
+		const passwordRegex =
+			/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 		// Validate new password
-		if (!newPassword.trim()) {
+		// Validate new password
+		if (!newPassword?.trim()) {
 			newErrors.newPassword = "Nouveau mot de passe est requis.";
+			valid = false;
+		} else if (!passwordRegex.test(newPassword)) {
+			newErrors.newPassword = "Le mot de passe n’est pas valide..";
 			valid = false;
 		}
 
 		// Validate password confirmation
-		if (!passwordConfirm.trim()) {
+		if (!passwordConfirm?.trim()) {
 			newErrors.passwordConfirm = "Confirmation du mot de passe est requise.";
 			valid = false;
 		} else if (newPassword !== passwordConfirm) {
@@ -103,16 +115,25 @@ export default function RegisterStep2({
 		return valid;
 	};
 
+	console.log(newPassword);
+
 	const handleNext = () => {
 		if (validateForm()) {
-			// Proceed to the next step
-			setErrors({});
-
-			setFormPayload({
+			// Update the form payload with the latest values
+			const updatedPayload = {
 				...formPayload,
 				profile: selectedOption,
 				password: newPassword,
-			});
+			};
+
+			// Set the updated payload in state
+			setFormPayload(updatedPayload);
+
+			// Proceed to the next step or login
+			setErrors({});
+
+			//Uncomment if login should happen here
+			handleLogin();
 		}
 	};
 
@@ -123,29 +144,36 @@ export default function RegisterStep2({
 				<View style={styles.optionsContainer}>
 					{OPTIONS.map((option, index) => (
 						<TouchableOpacity
-							key={option}
+							key={option.value} // Use value as the key
 							style={[
 								styles.optionButton,
-								selectedOption === option && styles.selectedOptionButton,
+								selectedOption === option.value && styles.selectedOptionButton, // Compare using the value
 							]}
-							onPress={() => handleOptionPress(option)}>
+							onPress={() => handleOptionPress(option.value)}>
+							{/* Pass the value to the handler */}
 							<Text
 								style={[
 									styles.optionText,
-									selectedOption === option && styles.selectedOptionText,
+									selectedOption === option.value && styles.selectedOptionText, // Compare using the value
 								]}>
-								{option}
+								{option.label} {/* Display the label */}
 							</Text>
 						</TouchableOpacity>
 					))}
 				</View>
 
 				{/* New Password Input */}
+				{errors.newPassword && (
+					<View>
+						<Text style={styles.errorText}>{errors.newPassword}</Text>
+					</View>
+				)}
 				<View
 					style={[
 						styles.passwordInputContainer,
 						{
-							borderBottomColor: errors.newPassword ? colorRed : colorGrey,
+							borderBottomColor:
+								errors.newPassword === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -164,21 +192,22 @@ export default function RegisterStep2({
 						onPress={() => toggleShowPassword("new")}
 					/>
 				</View>
-				{errors.newPassword && (
-					<View>
-						<Text style={styles.errorText}>{errors.newPassword}</Text>
-					</View>
-				)}
 
 				{/* Password Strength Meter */}
 				<PasswordStrengthMeter password={newPassword} />
 
 				{/* Confirm Password Input */}
+				{errors.passwordConfirm && (
+					<View>
+						<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+					</View>
+				)}
 				<View
 					style={[
 						styles.passwordInputContainer,
 						{
-							borderBottomColor: errors.passwordConfirm ? colorRed : colorGrey,
+							borderBottomColor:
+								errors.passwordConfirm === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -197,11 +226,6 @@ export default function RegisterStep2({
 						onPress={() => toggleShowPassword("confirm")}
 					/>
 				</View>
-				{errors.passwordConfirm && (
-					<View>
-						<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
-					</View>
-				)}
 
 				{/* Password Requirements */}
 				<PasswordRequirements />
@@ -302,10 +326,10 @@ const styles = StyleSheet.create({
 		fontSize: FontSize12,
 	},
 	errorText: {
+		minWidth: "100%",
 		color: "red",
 		fontSize: FontSize12,
 		textAlign: "left",
-		width: "100%",
 		marginBottom: 5,
 	},
 });

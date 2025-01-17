@@ -7,7 +7,6 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
-import { useNavigation } from "expo-router";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Image,
@@ -30,23 +29,18 @@ export default function RegisterStep1({
 	formPayload,
 	setFormPayload,
 }: Props) {
-	const navigation = useNavigation();
 	const [firstName, setFirstName] = useState<string>("");
 	const [lastName, setLastName] = useState<string>("");
+	const [username, setUsername] = useState<string>("");
 	const [email, setEmail] = useState<string>("");
 	const { setIsRegistering } = useAuth();
 
 	// Reset the registered values if available
 	useEffect(() => {
-		if (formPayload?.firstName !== null) {
-			setFirstName(formPayload?.firstName);
-		}
-		if (formPayload?.lastName !== null) {
-			setLastName(formPayload?.lastName);
-		}
-		if (formPayload?.email !== null) {
-			setEmail(formPayload?.email);
-		}
+		if (formPayload?.firstName) setFirstName(formPayload.firstName);
+		if (formPayload?.lastName) setLastName(formPayload.lastName);
+		if (formPayload?.username) setUsername(formPayload.username);
+		if (formPayload?.email) setEmail(formPayload.email);
 	}, [formPayload]);
 
 	// Validation error messages
@@ -54,11 +48,18 @@ export default function RegisterStep1({
 		firstName?: string;
 		lastName?: string;
 		email?: string;
-	}>({ firstName: null, lastName: null, email: null });
+		username?: string;
+	}>({
+		firstName: undefined,
+		lastName: undefined,
+		email: undefined,
+		username: undefined,
+	});
 
 	const validateForm = () => {
 		let valid = true;
 		const newErrors: {
+			username?: string;
 			firstName?: string;
 			lastName?: string;
 			email?: string;
@@ -87,6 +88,18 @@ export default function RegisterStep1({
 			valid = false;
 		}
 
+		// Validate last name
+
+		const usernameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ0-9\-]+$/;
+		if (!username.trim()) {
+			newErrors.username = "Le pseudo est requis.";
+			valid = false;
+		} else if (!usernameRegex.test(username)) {
+			newErrors.username =
+				"Doit contenir que des lettres, des tirets ou des espaces.";
+			valid = false;
+		}
+
 		// Validate email
 		const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 		if (!email.trim()) {
@@ -104,12 +117,14 @@ export default function RegisterStep1({
 	const handleNext = () => {
 		if (validateForm()) {
 			// Proceed to the next step
+			console.log(username);
 			setErrors({ firstName: null, lastName: null, email: null });
 			setFormPayload({
 				...formPayload,
 				firstName,
 				lastName,
 				email,
+				username,
 			});
 			setStep(2);
 		}
@@ -123,7 +138,10 @@ export default function RegisterStep1({
 	return (
 		<>
 			<View style={styles.container}>
-				<View>
+				<View
+					style={{
+						backgroundColor: primaryBackground,
+					}}>
 					<Text style={styles.title}>Venez com' vous êtes !</Text>
 				</View>
 				{errors.firstName && (
@@ -136,7 +154,7 @@ export default function RegisterStep1({
 						styles.inputContainer,
 						{
 							borderBottomColor:
-								errors.lastName !== null ? colorRed : colorGrey,
+								errors.firstName === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -160,7 +178,7 @@ export default function RegisterStep1({
 						styles.inputContainer,
 						{
 							borderBottomColor:
-								errors.lastName !== null ? colorRed : colorGrey,
+								errors.lastName === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -169,6 +187,30 @@ export default function RegisterStep1({
 						value={lastName}
 						autoCorrect={false}
 						placeholder='Nom'
+						placeholderTextColor={colorBlack}
+						autoCapitalize='none'
+					/>
+				</View>
+
+				{errors.username && (
+					<View>
+						<Text style={styles.errorText}>{errors.username}</Text>
+					</View>
+				)}
+				<View
+					style={[
+						styles.inputContainer,
+						{
+							borderBottomColor:
+								errors.lastName === undefined ? colorGrey : colorRed,
+						},
+					]}>
+					<TextInput
+						style={styles.input}
+						onChangeText={setUsername}
+						value={username}
+						autoCorrect={false}
+						placeholder='Pseudo'
 						placeholderTextColor={colorBlack}
 						autoCapitalize='none'
 					/>
@@ -184,7 +226,7 @@ export default function RegisterStep1({
 						styles.inputContainer,
 						{
 							borderBottomColor:
-								errors.lastName !== null ? colorRed : colorGrey,
+								errors.lastName === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -236,6 +278,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
+		backgroundColor: primaryBackground,
 	},
 	title: {
 		fontSize: FontSizeH1,
