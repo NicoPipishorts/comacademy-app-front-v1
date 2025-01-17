@@ -125,17 +125,6 @@ const HomeScreen = () => {
 									/>
 								</View>
 							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.cardsButton}
-								onPress={() => navigation.navigate("metiers")}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={metiers}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
-								</View>
-							</TouchableOpacity>
 						</View>
 					</ScrollView>
 
@@ -171,10 +160,10 @@ const HomeScreen = () => {
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.cardsButton}
-								onPress={() => navigation.navigate("petitesHistoires")}>
+								onPress={() => navigation.navigate("lesCitations")}>
 								<View style={styles.imageContainer}>
 									<Image
-										source={histoires}
+										source={lesCitations}
 										style={styles.shortcutsCards}
 										resizeMode='contain'
 									/>
@@ -182,10 +171,21 @@ const HomeScreen = () => {
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.cardsButton}
-								onPress={() => navigation.navigate("lesCitations")}>
+								onPress={() => navigation.navigate("metiers")}>
 								<View style={styles.imageContainer}>
 									<Image
-										source={lesCitations}
+										source={metiers}
+										style={styles.shortcutsCards}
+										resizeMode='contain'
+									/>
+								</View>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.cardsButton}
+								onPress={() => navigation.navigate("petitesHistoires")}>
+								<View style={styles.imageContainer}>
+									<Image
+										source={histoires}
 										style={styles.shortcutsCards}
 										resizeMode='contain'
 									/>
