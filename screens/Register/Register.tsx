@@ -32,7 +32,7 @@ export interface FormPayload {
 const Register = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
-	const { login, checkLoggedIn } = useAuth();
+	const { login, checkLoggedIn, setIsRegistering } = useAuth();
 	const [formPayload, setFormPayload] = useState<FormPayload>();
 
 	const [step, setStep] = useState<number>(1);
@@ -48,12 +48,13 @@ const Register = () => {
 
 	const mutation = useRegisterNewUser(onSuccess, onError);
 
-	const handleLogin = () => {
+	const handleLogin = (formPayload: FormPayload) => {
+		console.log(formPayload);
 		if (!formPayload) {
 			Alert.alert("Error", "Please complete all fields before proceeding.");
 			return;
 		}
-		mutation.mutate(formPayload); // Pass the formPayload to the mutation
+		mutation.mutate(formPayload);
 	};
 
 	useEffect(() => {

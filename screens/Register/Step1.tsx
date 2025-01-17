@@ -117,7 +117,6 @@ export default function RegisterStep1({
 	const handleNext = () => {
 		if (validateForm()) {
 			// Proceed to the next step
-			console.log(username);
 			setErrors({ firstName: null, lastName: null, email: null });
 			setFormPayload({
 				...formPayload,

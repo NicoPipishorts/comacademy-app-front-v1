@@ -25,7 +25,7 @@ interface Props {
 	setStep: Dispatch<SetStateAction<number>>;
 	setFormPayload: Dispatch<SetStateAction<FormPayload>>;
 	formPayload: FormPayload;
-	handleLogin: () => void;
+	handleLogin: (formPayload: FormPayload) => void;
 }
 const OPTIONS = [
 	{ label: "Étudiant", value: "etudiant" },
@@ -115,25 +115,23 @@ export default function RegisterStep2({
 		return valid;
 	};
 
-	console.log(newPassword);
-
 	const handleNext = () => {
 		if (validateForm()) {
-			// Update the form payload with the latest values
+			// Create the updated payload
 			const updatedPayload = {
 				...formPayload,
 				profile: selectedOption,
 				password: newPassword,
 			};
 
-			// Set the updated payload in state
+			// Update the state
 			setFormPayload(updatedPayload);
 
-			// Proceed to the next step or login
+			// Use the updated payload directly for the next step
 			setErrors({});
 
-			//Uncomment if login should happen here
-			handleLogin();
+			// Pass the updated payload directly to handleLogin
+			handleLogin(updatedPayload);
 		}
 	};
 
