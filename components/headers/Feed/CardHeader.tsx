@@ -50,14 +50,16 @@ export default function FeedCardHeader({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	const typeIcon = useMemo(() => {
-		if (data.type !== "feed-post") return icons[data.type];
-		const iconKey = data.payload.Icon.split(".")[0];
-		return icons[iconKey];
+		if (data.type !== "feed-post") {
+			return icons[data.type];
+		} else {
+			return icons[data.payload.Type] || null;
+		}
 	}, [data]);
 
 	const title = useMemo(() => {
 		if (data.type === "feed-post") {
-			const postKey = `${data.type}-${data.payload.Icon.split(".")[0]}`;
+			const postKey = `${data.type}-${data.payload.Type}`;
 			return titles[postKey] || null;
 		}
 		return titles[data.type];
