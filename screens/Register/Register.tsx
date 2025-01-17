@@ -43,7 +43,16 @@ const Register = () => {
 	};
 
 	const onError = (error) => {
-		Alert.alert("Login failed", error.message); // Using Alert from react-native
+		const key = error.message.split(" ")[0];
+		const translation = () => {
+			switch (key) {
+				case "Email":
+					return "L'e-mail ou le nom d'utilisateur sont déjà pris";
+				default:
+					return error.message;
+			}
+		};
+		Alert.alert("L'inscription a échoué", translation()); // Using Alert from react-native
 	};
 
 	const mutation = useRegisterNewUser(onSuccess, onError);

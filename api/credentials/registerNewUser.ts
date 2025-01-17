@@ -38,7 +38,7 @@ export const useRegisterNewUser = (
 			}
 		},
 		onError: (error) => {
-			console.error("Registration failed:", error.message);
+			console.error("Registration failed:", error);
 			onError(error); // Call the provided onError callback
 		},
 	});
