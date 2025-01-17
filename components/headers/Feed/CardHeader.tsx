@@ -18,6 +18,7 @@ const icons = {
 	argh: require("@/assets/imgs/icons/feed/argh.png"),
 	image: require("@/assets/imgs/icons/feed/image.png"),
 	vie: require("@/assets/imgs/icons/feed/vie.png"),
+	actusBref: require("@/assets/imgs/icons/feed/actusBref.png"),
 };
 
 const titles = {
@@ -31,6 +32,7 @@ const titles = {
 	"feed-post-argh": "AARRGHH !! \nL’expression qui énerve",
 	"feed-post-image": "Une image/ un métier",
 	"feed-post-vie": "Vie de com'",
+	"feed-post-actusBref": "Vie de com'",
 };
 
 const destinations = {
@@ -50,14 +52,16 @@ export default function FeedCardHeader({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	const typeIcon = useMemo(() => {
-		if (data.type !== "feed-post") return icons[data.type];
-		const iconKey = data.payload.Icon.split(".")[0];
-		return icons[iconKey];
+		if (data.type !== "feed-post") {
+			return icons[data.type];
+		} else {
+			return icons[data.payload.Type] || null;
+		}
 	}, [data]);
 
 	const title = useMemo(() => {
 		if (data.type === "feed-post") {
-			const postKey = `${data.type}-${data.payload.Icon.split(".")[0]}`;
+			const postKey = `${data.type}-${data.payload.Type}`;
 			return titles[postKey] || null;
 		}
 		return titles[data.type];

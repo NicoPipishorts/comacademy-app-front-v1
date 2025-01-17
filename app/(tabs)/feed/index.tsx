@@ -99,7 +99,7 @@ const Feed = () => {
 				}>
 				{feedData?.pages.map((page) =>
 					page.data.map((feed) => {
-						if (feed.payload.Icon === null) {
+						if (feed.payload.Type === null) {
 							return null;
 						}
 						return <FeedWrapper key={feed.id} feed={feed} />;
