@@ -6,18 +6,30 @@ import {
 	useTabBarVisibility,
 } from "@/context/TabBarVisibilityContext";
 import Register from "@/screens/Register/Register";
+import NotificationScheduler from "@/services/notifications/LocalNotifications";
+import * as Notifications from "expo-notifications";
 import { Tabs } from "expo-router";
+import { useEffect } from "react";
 import LoginScreen from "../../screens/Sign-in";
 
 const CustomTabBar: React.FC<any> = (props) => {
 	const { isTabBarVisible } = useTabBarVisibility();
+	useEffect(() => {
+		Notifications.setNotificationHandler({
+			handleNotification: async () => ({
+				shouldShowAlert: true,
+				shouldPlaySound: true,
+				shouldSetBadge: false,
+			}),
+		});
+	}, []);
 
 	// Display notification alert if one is received
 
 	if (!isTabBarVisible) return null;
 
 	return <TabBar {...props} />;
-};
+}; // Import the scheduler
 
 const _layout: React.FC = () => {
 	const { isAuthenticated, isRegistering } = useAuth();
@@ -32,6 +44,8 @@ const _layout: React.FC = () => {
 
 	return (
 		<TabBarVisibilityProvider>
+			{/* Add the notification scheduler */}
+			<NotificationScheduler />
 			<Tabs tabBar={(props) => <CustomTabBar {...props} />}>
 				<Tabs.Screen
 					name='index'
