@@ -37,7 +37,6 @@ const CardRenderer = ({
 		if (type === "feed-post") {
 			const iconType = data.payload.Icon?.split(".")[0];
 			if (!iconType) {
-				console.log("in icon type failed");
 				return null;
 			}
 			return cardMap[`${type}-${iconType}`] || null;

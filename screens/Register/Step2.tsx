@@ -6,10 +6,11 @@ import {
 	colorRed,
 	colorWhite,
 	colorYellow,
+	primaryBackground,
 } from "@/constants/colors";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Pressable,
 	StyleSheet,
@@ -24,14 +25,20 @@ interface Props {
 	setStep: Dispatch<SetStateAction<number>>;
 	setFormPayload: Dispatch<SetStateAction<FormPayload>>;
 	formPayload: FormPayload;
+	handleLogin: (formPayload: FormPayload) => void;
 }
-
-const OPTIONS = ["Étudiant", "Enseignant", "Professionnel", "Passionné"];
+const OPTIONS = [
+	{ label: "Étudiant", value: "etudiant" },
+	{ label: "Enseignant", value: "enseignant" },
+	{ label: "Professionnelle", value: "professionnelle" },
+	{ label: "Passionné", value: "passionne" },
+];
 
 export default function RegisterStep2({
 	setStep,
 	formPayload,
 	setFormPayload,
+	handleLogin,
 }: Props) {
 	const [newPassword, setNewPassword] = useState<string>("");
 	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
@@ -39,6 +46,17 @@ export default function RegisterStep2({
 	const [showPasswordConfirm, setShowPasswordConfirm] =
 		useState<boolean>(false);
 	const [selectedOption, setSelectedOption] = useState<string | null>(null);
+
+	// Reset the registered values if available
+	useEffect(() => {
+		if (formPayload.profile !== null) {
+			setSelectedOption(formPayload.profile);
+		}
+		if (formPayload.password !== null) {
+			setNewPassword(formPayload.password);
+			setPasswordConfirm(formPayload.password);
+		}
+	}, [formPayload]);
 
 	const [errors, setErrors] = useState<{
 		newPassword?: string;
@@ -58,6 +76,10 @@ export default function RegisterStep2({
 			setSelectedOption(null);
 		} else {
 			setSelectedOption(option);
+			setFormPayload({
+				...formPayload,
+				profile: option,
+			});
 		}
 	};
 
@@ -68,14 +90,20 @@ export default function RegisterStep2({
 			passwordConfirm?: string;
 		} = {};
 
+		const passwordRegex =
+			/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 		// Validate new password
-		if (!newPassword.trim()) {
+		// Validate new password
+		if (!newPassword?.trim()) {
 			newErrors.newPassword = "Nouveau mot de passe est requis.";
+			valid = false;
+		} else if (!passwordRegex.test(newPassword)) {
+			newErrors.newPassword = "Le mot de passe n’est pas valide..";
 			valid = false;
 		}
 
 		// Validate password confirmation
-		if (!passwordConfirm.trim()) {
+		if (!passwordConfirm?.trim()) {
 			newErrors.passwordConfirm = "Confirmation du mot de passe est requise.";
 			valid = false;
 		} else if (newPassword !== passwordConfirm) {
@@ -89,14 +117,21 @@ export default function RegisterStep2({
 
 	const handleNext = () => {
 		if (validateForm()) {
-			// Proceed to the next step
-			setErrors({});
-
-			setFormPayload({
+			// Create the updated payload
+			const updatedPayload = {
 				...formPayload,
 				profile: selectedOption,
 				password: newPassword,
-			});
+			};
+
+			// Update the state
+			setFormPayload(updatedPayload);
+
+			// Use the updated payload directly for the next step
+			setErrors({});
+
+			// Pass the updated payload directly to handleLogin
+			handleLogin(updatedPayload);
 		}
 	};
 
@@ -107,29 +142,36 @@ export default function RegisterStep2({
 				<View style={styles.optionsContainer}>
 					{OPTIONS.map((option, index) => (
 						<TouchableOpacity
-							key={option}
+							key={option.value} // Use value as the key
 							style={[
 								styles.optionButton,
-								selectedOption === option && styles.selectedOptionButton,
+								selectedOption === option.value && styles.selectedOptionButton, // Compare using the value
 							]}
-							onPress={() => handleOptionPress(option)}>
+							onPress={() => handleOptionPress(option.value)}>
+							{/* Pass the value to the handler */}
 							<Text
 								style={[
 									styles.optionText,
-									selectedOption === option && styles.selectedOptionText,
+									selectedOption === option.value && styles.selectedOptionText, // Compare using the value
 								]}>
-								{option}
+								{option.label} {/* Display the label */}
 							</Text>
 						</TouchableOpacity>
 					))}
 				</View>
 
 				{/* New Password Input */}
+				{errors.newPassword && (
+					<View>
+						<Text style={styles.errorText}>{errors.newPassword}</Text>
+					</View>
+				)}
 				<View
 					style={[
 						styles.passwordInputContainer,
 						{
-							borderBottomColor: errors.newPassword ? colorRed : colorGrey,
+							borderBottomColor:
+								errors.newPassword === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -148,21 +190,22 @@ export default function RegisterStep2({
 						onPress={() => toggleShowPassword("new")}
 					/>
 				</View>
-				{errors.newPassword && (
-					<View>
-						<Text style={styles.errorText}>{errors.newPassword}</Text>
-					</View>
-				)}
 
 				{/* Password Strength Meter */}
 				<PasswordStrengthMeter password={newPassword} />
 
 				{/* Confirm Password Input */}
+				{errors.passwordConfirm && (
+					<View>
+						<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+					</View>
+				)}
 				<View
 					style={[
 						styles.passwordInputContainer,
 						{
-							borderBottomColor: errors.passwordConfirm ? colorRed : colorGrey,
+							borderBottomColor:
+								errors.passwordConfirm === undefined ? colorGrey : colorRed,
 						},
 					]}>
 					<TextInput
@@ -181,18 +224,18 @@ export default function RegisterStep2({
 						onPress={() => toggleShowPassword("confirm")}
 					/>
 				</View>
-				{errors.passwordConfirm && (
-					<View>
-						<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
-					</View>
-				)}
 
 				{/* Password Requirements */}
 				<PasswordRequirements />
 
 				{/* Submit Button */}
-				<Pressable style={styles.buttonContainer} onPress={handleNext}>
-					<Text style={styles.buttonText}>C'est parti</Text>
+				<Pressable style={styles.buttonSubmit} onPress={handleNext}>
+					<Text style={styles.buttonTextSubmit}>C'est parti</Text>
+				</Pressable>
+
+				{/* Return Button */}
+				<Pressable style={styles.buttonRevenir} onPress={() => setStep(1)}>
+					<Text style={styles.buttonTextRevenir}>Revenir</Text>
 				</Pressable>
 			</View>
 		</>
@@ -202,6 +245,7 @@ export default function RegisterStep2({
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		width: "100%",
 		justifyContent: "center",
 		alignItems: "center",
 	},
@@ -219,6 +263,7 @@ const styles = StyleSheet.create({
 		flexWrap: "wrap",
 		justifyContent: "space-between",
 		marginBottom: 40,
+		backgroundColor: primaryBackground,
 	},
 
 	optionButton: {
@@ -253,22 +298,36 @@ const styles = StyleSheet.create({
 	eyeIcon: {
 		marginLeft: 10,
 	},
-	buttonContainer: {
-		marginTop: 80,
+	buttonSubmit: {
+		marginTop: 70,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,
 		borderRadius: 50,
 	},
-	buttonText: {
+	buttonTextSubmit: {
 		color: colorWhite,
 		fontWeight: "bold",
 	},
+	buttonRevenir: {
+		marginTop: 10,
+		backgroundColor: primaryBackground,
+		borderColor: colorBlack,
+		borderWidth: 2,
+		paddingHorizontal: 24,
+		paddingVertical: 8,
+		borderRadius: 50,
+	},
+	buttonTextRevenir: {
+		color: colorBlack,
+		fontWeight: "bold",
+		fontSize: FontSize12,
+	},
 	errorText: {
+		minWidth: "100%",
 		color: "red",
 		fontSize: FontSize12,
 		textAlign: "left",
-		width: "100%",
 		marginBottom: 5,
 	},
 });

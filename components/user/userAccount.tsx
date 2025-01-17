@@ -99,7 +99,6 @@ export default function UserAccount() {
 				setPasswordError(
 					"Le mot de passe doit contenir à la fois des lettres et des chiffres"
 				);
-				console.log("");
 				return false;
 			}
 			if (!hasSpecialChar.test(password)) {

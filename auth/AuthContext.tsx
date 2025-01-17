@@ -39,11 +39,13 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	const login = async (data: LoginPayload) => {
 		setIsAuthenticated(true);
+		setIsRegistering(false);
 		await AsyncStorage.setItem("jwtToken", data.jwt);
 	};
 
 	const logout = async () => {
 		setIsAuthenticated(false);
+		setIsRegistering(false);
 		await AsyncStorage.removeItem("jwtToken");
 		// Cleanup or additional logout tasks
 	};

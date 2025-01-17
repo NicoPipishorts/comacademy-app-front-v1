@@ -68,5 +68,6 @@ const styles = StyleSheet.create({
 		fontSize: 32,
 		color: colorWhite,
 		fontWeight: "bold",
+		textTransform: "uppercase",
 	},
 });
