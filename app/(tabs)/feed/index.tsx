@@ -9,12 +9,11 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
-import useGetInfiniteFeed from "@/hooks/Feed/useGetAllFeed";
+import useGetAllFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
 import useGetUserInfo from "@/hooks/useUserInfo";
 import React, { useState } from "react";
 import {
-	ActivityIndicator,
 	Image,
 	RefreshControl,
 	ScrollView,
@@ -30,35 +29,18 @@ const Feed = () => {
 	const { data: userData, isFetched: isFetchedUserData } =
 		useGetUserInfo(userId);
 
-	const {
-		data: feedData,
-		fetchNextPage,
-		hasNextPage,
-		isFetchingNextPage,
-		isLoading,
-		isFetched,
-		refetch,
-	} = useGetInfiniteFeed();
+	const { data: feedData, isLoading, isFetched, refetch } = useGetAllFeed();
 	const [refreshing, setRefreshing] = useState(false);
 
 	const onRefresh = async () => {
+		console.log("Refresh triggered");
 		setRefreshing(true);
 		try {
-			await refetch(); // Trigger refetch of feed data
+			await refetch();
 		} catch (error) {
 			console.error("Error refreshing feed:", error);
 		} finally {
 			setRefreshing(false);
-		}
-	};
-
-	const handleScroll = (event: any) => {
-		const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-		const isBottom =
-			layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-
-		if (isBottom && hasNextPage && !isFetchingNextPage) {
-			fetchNextPage();
 		}
 	};
 
@@ -92,24 +74,15 @@ const Feed = () => {
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
-				onScroll={handleScroll} // Add this line
-				scrollEventThrottle={16} // Set for smooth scroll events
 				refreshControl={
 					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 				}>
-				{feedData?.pages.map((page) =>
-					page.data.map((feed) => {
-						if (feed.payload.Type === null) {
-							return null;
-						}
-						return <FeedWrapper key={feed.id} feed={feed} />;
-					})
-				)}
-				{isFetchingNextPage && (
-					<View style={styles.loadingIndicator}>
-						<ActivityIndicator size='large' />
-					</View>
-				)}
+				{feedData?.data.map((feed) => {
+					if (feed.payload.Type === null) {
+						return null;
+					}
+					return <FeedWrapper key={feed.id} feed={feed} />;
+				})}
 			</ScrollView>
 		</View>
 	);
@@ -133,10 +106,6 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		paddingBottom: 120,
 		paddingHorizontal: 25,
-	},
-	loadingIndicator: {
-		marginVertical: 20,
-		alignItems: "center",
 	},
 	headerWrapper: {
 		minWidth: "100%",

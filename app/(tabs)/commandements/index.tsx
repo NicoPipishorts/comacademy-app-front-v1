@@ -4,16 +4,14 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import useGetAllCommandements from "@/hooks/Commandements/useGetAllCommandements";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useJwtToken from "@/hooks/useJwtToken";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Secrets() {
 	const insets = useSafeAreaInsets();
 	const { data: commandements, isFetched } = useGetAllCommandements();
-	const { token } = useJwtToken();
 
-	useTrackPageMetrics({ page: "Commandements", token });
+	useTrackPageMetrics({ page: "Commandements" });
 
 	if (!commandements || !isFetched) {
 		return <Loader />;

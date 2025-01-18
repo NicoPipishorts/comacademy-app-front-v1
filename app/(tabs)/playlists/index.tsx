@@ -35,7 +35,7 @@ const Playlist = () => {
 	const [playlistId, setPlaylistId] = useState(null);
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
-	useTrackPageMetrics({ page: "Playlists", token });
+	useTrackPageMetrics({ page: "Playlists" });
 
 	// PlaylistCard Swipe Refs
 	const [openedSwipeable, setOpenedSwipeable] = useState(null);
