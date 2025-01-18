@@ -40,7 +40,7 @@ export default function User() {
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-	useTrackPageMetrics({ page: "User", token });
+	useTrackPageMetrics({ page: "User" });
 
 	const { data: scores, refetch } = useGetUserScore(token, userId);
 

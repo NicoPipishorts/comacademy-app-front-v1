@@ -33,9 +33,7 @@ export default function FeedCard3Secrets({ data, elementId }: Props) {
 					<Text style={styles.keyCardText}>{text}</Text>
 				</View>
 				<TouchableOpacity
-					onPress={() =>
-						router.push(`/secrets/SecretsDetails?itemId=${data.elementId}`)
-					}
+					onPress={() => router.push(`/secrets?itemId=${data.elementId}`)}
 					style={{
 						position: "absolute",
 						bottom: 20,

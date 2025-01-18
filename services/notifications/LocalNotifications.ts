@@ -11,13 +11,6 @@ const getRandomNotification = (day: "lundi" | "vendredi") => {
 	return messages[randomIndex];
 };
 
-const debugNotifications = async () => {
-	const scheduledNotifications =
-		await Notifications.getAllScheduledNotificationsAsync();
-	console.log("Scheduled Notifications:", scheduledNotifications);
-};
-debugNotifications();
-
 // Function to schedule weekly notifications
 const scheduleWeeklyNotifications = async () => {
 	// Cancel existing notifications to avoid duplicates
@@ -52,8 +45,6 @@ const scheduleWeeklyNotifications = async () => {
 			repeats: true,
 		},
 	});
-
-	console.log("Weekly notifications scheduled successfully.");
 };
 
 Notifications.setNotificationHandler({

@@ -13,9 +13,9 @@ const LesCitations = () => {
 	const { token } = useJwtToken();
 	const { data, isLoading } = useLesCitations(token);
 	const insets = useSafeAreaInsets();
-	const scrollViewRef = useRef(null); // Ref for ScrollView
+	const scrollViewRef = useRef(null);
 
-	useTrackPageMetrics({ page: "Citations", token });
+	useTrackPageMetrics({ page: "Citations" });
 
 	// Function to scroll to the end of the ScrollView (immediately)
 	const scrollToEnd = () => {

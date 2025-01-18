@@ -30,7 +30,6 @@ const CustomTabBar: React.FC<any> = (props) => {
 
 	return <TabBar {...props} />;
 }; // Import the scheduler
-
 const _layout: React.FC = () => {
 	const { isAuthenticated, isRegistering } = useAuth();
 
@@ -107,7 +106,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "User",
 						headerShown: false,
-						href: null,
 					}}
 				/>
 				<Tabs.Screen
