@@ -32,11 +32,7 @@ export default function FeedCard10Commandements({ data, elementId }: Props) {
 					<Text style={styles.keyCardText}>{text}</Text>
 				</View>
 				<TouchableOpacity
-					onPress={() =>
-						router.push(
-							`/commandements/CommandementsDetails?itemId=${data.elementId}`
-						)
-					}
+					onPress={() => router.push(`/commandements?itemId=${data.elementId}`)}
 					style={{
 						position: "absolute",
 						bottom: 20,

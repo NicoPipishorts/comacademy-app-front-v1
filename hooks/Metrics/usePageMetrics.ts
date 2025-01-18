@@ -1,16 +1,14 @@
 import { useCustomPageMetrics } from "@/api/customPageMetrics";
 import { AxiosError } from "axios";
 import { useEffect } from "react";
+import useJwtToken from "../useJwtToken";
 
 interface UseTrackPageMetricsProps {
 	page: string;
-	token: string | null;
 }
 
-export const useTrackPageMetrics = ({
-	page,
-	token,
-}: UseTrackPageMetricsProps) => {
+export const useTrackPageMetrics = ({ page }: UseTrackPageMetricsProps) => {
+	const { token } = useJwtToken();
 	const onSuccess = (data: any) => {};
 
 	const onError = (error: AxiosError) => {

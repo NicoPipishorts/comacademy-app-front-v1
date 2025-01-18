@@ -47,7 +47,7 @@ const LeJeu = () => {
 		setPlaying,
 	} = useGameContext();
 
-	useTrackPageMetrics({ page: "Jeu", token });
+	useTrackPageMetrics({ page: "Jeu" });
 
 	// Always call the hooks
 	const { data: gameSessions, isFetched: fetchedGameSessions } =

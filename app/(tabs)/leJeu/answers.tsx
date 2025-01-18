@@ -20,7 +20,7 @@ export default function Answers() {
 	const { token } = useJwtToken();
 	const { userId } = useUserId();
 
-	useTrackPageMetrics({ page: "AllAnswers", token });
+	useTrackPageMetrics({ page: "AllAnswers" });
 
 	const { data: all } = useGetUserAnswers(token, userId);
 

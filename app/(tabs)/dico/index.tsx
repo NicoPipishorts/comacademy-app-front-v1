@@ -5,7 +5,6 @@ import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
-import useJwtToken from "@/hooks/useJwtToken";
 import { NavigationType } from "@/types/general";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGlobalSearchParams, useNavigation } from "expo-router";
@@ -15,7 +14,6 @@ import CategoriesCards from "../../../components/categories/categories";
 import DicoList from "./list";
 
 const Dico = () => {
-	const { token } = useJwtToken();
 	const queryClient = useQueryClient();
 	const navigation = useNavigation<NavigationType>();
 	const { openDetails } = useGlobalSearchParams();
@@ -25,7 +23,7 @@ const Dico = () => {
 	const { data: dataDico, isLoading: isLoadingData } = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
-	useTrackPageMetrics({ page: "Dico", token });
+	useTrackPageMetrics({ page: "Dico" });
 
 	useEffect(() => {
 		if (openDetails) {

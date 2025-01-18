@@ -71,8 +71,9 @@ const AnimatedCard = ({
 };
 
 export default function SecretsDetails() {
-	const { itemId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
+
+	const { itemId } = useLocalSearchParams();
 
 	// Screen and layout calculations
 	const screenWidth = Dimensions.get("window").width;
