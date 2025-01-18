@@ -4,12 +4,27 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetAllSecrets from "@/hooks/Secrets/useGetAllSecrets";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Secrets() {
 	const insets = useSafeAreaInsets();
 	const { data: secrets, isFetched } = useGetAllSecrets();
+
+	const { itemId } = useLocalSearchParams();
+	const prevItemIdRef = useRef(itemId);
+
+	useEffect(() => {
+		// Update the ref with the current itemId after handling logic
+		prevItemIdRef.current = itemId;
+
+		// Only navigate if itemId is not null, undefined, or empty, and has changed
+		if (itemId != null || itemId === prevItemIdRef.current) {
+			router.push(`/secrets/SecretsDetails?itemId=${itemId}`);
+		}
+	}, [itemId]);
 
 	useTrackPageMetrics({ page: "Secrets" });
 
