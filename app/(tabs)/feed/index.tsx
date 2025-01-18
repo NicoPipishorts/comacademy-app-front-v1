@@ -33,7 +33,6 @@ const Feed = () => {
 	const [refreshing, setRefreshing] = useState(false);
 
 	const onRefresh = async () => {
-		console.log("Refresh triggered");
 		setRefreshing(true);
 		try {
 			await refetch();
