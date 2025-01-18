@@ -24,7 +24,7 @@ const LesPetitesHistoires = () => {
 	const { data, isLoading } = useGetPetitesHistoires(token);
 	const insets = useSafeAreaInsets();
 
-	useTrackPageMetrics({ page: "PetiteHistoires", token });
+	useTrackPageMetrics({ page: "PetiteHistoires" });
 
 	// Get device width and calculate video height based on 9:16 aspect ratio for portrait video
 	const { width } = Dimensions.get("window"); // Get the full width of the device

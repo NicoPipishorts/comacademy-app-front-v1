@@ -23,7 +23,7 @@ export default function LeaderBoard() {
 	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
 
-	useTrackPageMetrics({ page: "LeaderBoard", token });
+	useTrackPageMetrics({ page: "LeaderBoard" });
 
 	const { data: userData } = useGetUserInfo(currentUser);
 	const { data: allScores } = useGetUsersScore(token);
