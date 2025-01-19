@@ -68,11 +68,7 @@ const Feed = () => {
 					},
 				]}>
 				<Text style={styles.title}>Feed</Text>
-				<AvatarInitials
-					firstName={userData.firstName}
-					lastName={userData.lastName}
-					size={68}
-				/>
+				<AvatarInitials size={68} />
 			</View>
 			<FlatList
 				data={data?.pages.flatMap((page) => page.data)} // Flatten pages to get all items

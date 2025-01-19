@@ -7,11 +7,9 @@ import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import Loader from "../experience/loader";
 
 interface Props {
-	firstName: string;
-	lastName: string;
 	size?: number;
 }
-export default function AvatarInitials({ firstName, lastName, size }: Props) {
+export default function AvatarInitials({ size }: Props) {
 	const { userId } = useUserId();
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetUserPreferences(userId);
@@ -27,9 +25,13 @@ export default function AvatarInitials({ firstName, lastName, size }: Props) {
 		backgroundColor = data.data[0].attributes.avatarBackgroundColor;
 	}
 
+	console.log(data.data[0].attributes.user_id.data.attributes);
+
 	const initials = () => {
-		const firstLetter = firstName?.split("")[0];
-		const lastLetter = lastName?.split("")[0];
+		const firstLetter =
+			data.data[0].attributes.user_id.data.attributes.firstName?.split("")[0];
+		const lastLetter =
+			data.data[0].attributes.user_id.data.attributes.lastName?.split("")[0];
 
 		return firstLetter + lastLetter;
 	};
