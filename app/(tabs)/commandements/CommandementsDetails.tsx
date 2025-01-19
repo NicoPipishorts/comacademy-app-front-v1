@@ -85,7 +85,7 @@ export default function CommandementsDetails({ itemId }: Props) {
 
 	let commandementId: number;
 	if (paramId) {
-		commandementId = Number(itemId);
+		commandementId = Number(paramId);
 	} else {
 		commandementId = itemId;
 	}

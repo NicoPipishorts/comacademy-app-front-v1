@@ -86,7 +86,7 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 
 	let secretsId: number;
 	if (paramId) {
-		secretsId = Number(itemId);
+		secretsId = Number(paramId);
 	} else {
 		secretsId = itemId;
 	}
