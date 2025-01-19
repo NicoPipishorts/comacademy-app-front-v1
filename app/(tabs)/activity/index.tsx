@@ -156,10 +156,10 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Le Jeu
+										Dico
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Jouez à apprendre
+										Toutes les définitions
 									</Text>
 								</View>
 							</View>
@@ -218,7 +218,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										3 Secrets du succès
+										3 secrets du succès
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Les clés de la réussite
@@ -245,7 +245,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										10 Commandements
+										10 commandements
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Les recettes en pagaille
@@ -274,7 +274,9 @@ const HomeScreen = () => {
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
 										Les citations
 									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Les citations</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										S'inspirer tous les jours
+									</Text>
 								</View>
 							</View>
 
@@ -297,7 +299,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Les metiers de la com'
+										Les métiers de la com'
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>Trouver sa voie</Text>
 								</View>
@@ -322,7 +324,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Les petites histoires
+										La petites histoires
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Apprendre en regardant
