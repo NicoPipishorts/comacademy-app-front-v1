@@ -7,9 +7,9 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
+import useGetUserInfo from "@/hooks/useGetUserInfo";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import useGetUserInfo from "@/hooks/useUserInfo";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";

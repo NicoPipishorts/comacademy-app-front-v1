@@ -13,13 +13,13 @@ export default function AvatarInitials({ size }: Props) {
 	const { userId } = useUserId();
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetUserPreferences(userId);
-	let backgroundColor: string;
 
+	let backgroundColor: string;
 	if (!isFetched) {
 		return <Loader />;
 	}
 
-	if (data.data.length <= 0) {
+	if (data.data[0].attributes.avatarBackgroundColor === null) {
 		backgroundColor = colorYellow;
 	} else {
 		backgroundColor = data.data[0].attributes.avatarBackgroundColor;
@@ -27,9 +27,9 @@ export default function AvatarInitials({ size }: Props) {
 
 	const initials = () => {
 		const firstLetter =
-			data.data[0].attributes.user_id.data.attributes.firstName?.split("")[0];
+			data?.data[0]?.attributes.user_id.data.attributes.firstName?.split("")[0];
 		const lastLetter =
-			data.data[0].attributes.user_id.data.attributes.lastName?.split("")[0];
+			data?.data[0]?.attributes.user_id.data.attributes.lastName?.split("")[0];
 
 		return firstLetter + lastLetter;
 	};

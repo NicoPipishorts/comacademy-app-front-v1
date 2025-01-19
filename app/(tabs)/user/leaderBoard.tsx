@@ -4,6 +4,7 @@ import { colorGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useGetUserInfo from "@/hooks/useGetUserInfo";
 import {
 	AllUsersScoreResponse,
 	useGetUsersScore,
@@ -11,7 +12,6 @@ import {
 } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import useGetUserInfo from "@/hooks/useUserInfo";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";

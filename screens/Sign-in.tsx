@@ -61,7 +61,7 @@ const SignIn = () => {
 		const checkIfLoggedIn = async () => {
 			const loggedIn = await checkLoggedIn();
 			if (loggedIn) {
-				navigation.navigate("(tabs)"); // Navigate to the home screen if already logged in
+				navigation.navigate("(tabs)");
 			}
 		};
 
