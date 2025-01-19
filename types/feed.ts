@@ -24,8 +24,9 @@ export type FeedType =
 	| "feed-post";
 
 export interface FeedMeta {
-	page: number; // Current page number
-	pageSize: number; // Number of items per page
-	pageCount: number; // Total number of pages
-	total: number; // Total number of items
+	pagination: {
+		start: number;
+		limit: number;
+		total: number;
+	};
 }

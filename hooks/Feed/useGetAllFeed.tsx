@@ -1,18 +1,23 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId"; // Assuming you have a hook for userId
+import useUserId from "@/hooks/useUserId";
 import { FeedPayload } from "@/types/feed";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
+// Function to fetch feed data
 const fetchData = async ({
 	token,
 	userId,
+	pageParam = 0,
+	limit,
 }: {
 	token: string;
 	userId: number;
+	pageParam?: number;
+	limit: number;
 }): Promise<FeedPayload> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/feeds/byUserId/${userId}?sort[0]=createdAt:desc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/feeds/byUserId/${userId}?start=${pageParam}&limit=${limit}&sort[0]=createdAt:desc`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -27,26 +32,37 @@ const fetchData = async ({
 		const data: FeedPayload = await response.json();
 		return data;
 	} catch (error) {
-		console.error("Error fetching the feed:", error);
 		throw error;
 	}
 };
 
-const useGetFeed = () => {
+// Custom hook for infinite scrolling
+const useGetFeed = ({ limit = 10 }: { limit?: number } = {}) => {
 	const { token } = useJwtToken();
-	const { userId } = useUserId(); // Use the userId hook or context
+	const { userId } = useUserId();
 
-	return useQuery<FeedPayload, Error>({
-		queryKey: ["Feed", userId], // Include userId in the queryKey for caching
-		queryFn: () => {
+	return useInfiniteQuery<FeedPayload, Error>({
+		queryKey: ["Feed", userId],
+		queryFn: ({ pageParam = 0 }) => {
 			return fetchData({
 				token: token!,
-				userId, // Pass userId here
+				userId,
+				pageParam,
+				limit,
 			});
 		},
-		enabled: !!token && !!userId, // Ensure both token and userId are available
-		staleTime: 5 * 60 * 1000, // 5 minutes in milliseconds
-		refetchOnMount: true, // Force refetch on remount
+		enabled: !!token && !!userId,
+		getNextPageParam: (lastPage) => {
+			const { start, limit, total } = lastPage.meta.pagination;
+
+			if (start + limit < total) {
+				return start + limit;
+			} else {
+				return undefined;
+			}
+		},
+		initialPageParam: 0,
+		staleTime: 5 * 60 * 1000,
 	});
 };
 
