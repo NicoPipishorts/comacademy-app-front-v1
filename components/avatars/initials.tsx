@@ -25,8 +25,6 @@ export default function AvatarInitials({ size }: Props) {
 		backgroundColor = data.data[0].attributes.avatarBackgroundColor;
 	}
 
-	console.log(data.data[0].attributes.user_id.data.attributes);
-
 	const initials = () => {
 		const firstLetter =
 			data.data[0].attributes.user_id.data.attributes.firstName?.split("")[0];

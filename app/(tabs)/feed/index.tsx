@@ -11,7 +11,6 @@ import {
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
 import useUserId from "@/hooks/useUserId";
-import useGetUserInfo from "@/hooks/useUserInfo";
 import React from "react";
 import {
 	ActivityIndicator,
@@ -25,10 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Feed = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
-	const { data: userData, isFetched: isFetchedUserData } =
-		useGetUserInfo(userId);
 
-	// console.log(userInfo.firstName);
 	// Infinite scroll data hook
 	const {
 		data,
@@ -54,7 +50,7 @@ const Feed = () => {
 	// Render each feed item
 	const renderItem = ({ item }: { item: any }) => <FeedWrapper feed={item} />;
 
-	if (isLoading || !isFetchedUserData) {
+	if (isLoading) {
 		return <FeedLoader />;
 	}
 
