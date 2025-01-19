@@ -10,6 +10,8 @@ import {
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
+import useUserId from "@/hooks/useUserId";
+import useGetUserInfo from "@/hooks/useUserInfo";
 import React from "react";
 import {
 	ActivityIndicator,
@@ -22,7 +24,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
+	const { userId } = useUserId();
+	const { data: userData } = useGetUserInfo(userId);
 
+	// console.log(userInfo.firstName);
 	// Infinite scroll data hook
 	const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
 		useGetFeed({ limit: 10 });
@@ -56,7 +61,11 @@ const Feed = () => {
 					},
 				]}>
 				<Text style={styles.title}>Feed</Text>
-				<AvatarInitials size={68} firstName='John' lastName='Doe' />
+				<AvatarInitials
+					firstName={userData.firstName}
+					lastName={userData.lastName}
+					size={68}
+				/>
 			</View>
 			<FlatList
 				data={data?.pages.flatMap((page) => page.data)} // Flatten pages to get all items
