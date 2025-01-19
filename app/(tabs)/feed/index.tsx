@@ -10,7 +10,6 @@ import {
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
-import useUserId from "@/hooks/useUserId";
 import React from "react";
 import {
 	ActivityIndicator,
@@ -23,7 +22,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
 
 	// Infinite scroll data hook
 	const {

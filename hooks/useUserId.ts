@@ -1,4 +1,4 @@
-import getUserFromToken from "@/helpers/getUserFromToken";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 
 const useUserId = () => {
@@ -7,9 +7,14 @@ const useUserId = () => {
 
 	useEffect(() => {
 		const fetchUserId = async () => {
-			const data = await getUserFromToken();
-			setUserId(data.id);
-			setLoading(false);
+			try {
+				const storedUserId = await AsyncStorage.getItem("userId");
+				setUserId(storedUserId ? parseInt(storedUserId, 10) : null);
+			} catch (error) {
+				console.error("Failed to retrieve userId:", error);
+			} finally {
+				setLoading(false);
+			}
 		};
 
 		fetchUserId();

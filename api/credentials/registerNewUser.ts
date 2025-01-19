@@ -2,9 +2,16 @@ import { FormPayload } from "@/screens/Register/Register";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { jwtDecode, JwtPayload } from "jwt-decode";
 
 export interface RegisterPayload {
 	jwt: string;
+	user: {
+		id: string;
+		username: string;
+		email: string;
+		// Add any other fields returned by the API
+	};
 }
 
 export const useRegisterNewUser = (
@@ -29,12 +36,19 @@ export const useRegisterNewUser = (
 		},
 		onSuccess: async (data: RegisterPayload) => {
 			try {
-				// Store the JWT token in AsyncStorage
-				await AsyncStorage.setItem("jwtToken", data.jwt);
+				// Decode the JWT token to extract the user ID
+				const decodedToken = jwtDecode<JwtPayload & { id?: number }>(data.jwt);
+				const userId = decodedToken?.id;
+
+				// Store the JWT token and userId in AsyncStorage
+				await AsyncStorage.multiSet([
+					["jwtToken", data.jwt],
+					["userId", userId?.toString() || ""],
+				]);
 				onSuccess(data); // Call the provided onSuccess callback
 			} catch (storageError) {
-				console.error("Failed to save the token to storage", storageError);
-				throw new Error("Failed to save the token to storage");
+				console.error("Failed to save the data to storage", storageError);
+				throw new Error("Failed to save the data to storage");
 			}
 		},
 		onError: (error) => {

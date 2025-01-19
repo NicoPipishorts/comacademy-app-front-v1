@@ -40,8 +40,8 @@ const scheduleWeeklyNotifications = async () => {
 		},
 		trigger: {
 			weekday: 6, // Friday
-			hour: 15,
-			minute: 12,
+			hour: 12,
+			minute: 0,
 			repeats: true,
 		},
 	});

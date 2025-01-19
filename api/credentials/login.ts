@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { jwtDecode, JwtPayload } from "jwt-decode";
 
 interface Credentials {
 	identifier: string;
@@ -23,15 +24,23 @@ export const useLoginMutation = (
 				authUrl,
 				credentials
 			);
-			return response.data; // Extract and return the data
+			return response.data;
 		},
 		onSuccess: async (data: LoginPayload) => {
-			// Store the JWT token in AsyncStorage
 			try {
-				await AsyncStorage.setItem("jwtToken", data.jwt);
-				onSuccess(data); // Call the original onSuccess callback
+				// Decode the JWT token to extract the user ID
+				const decodedToken = jwtDecode<JwtPayload & { id?: number }>(data.jwt);
+				const userId = decodedToken?.id;
+
+				// Store the JWT token and userId in AsyncStorage
+				await AsyncStorage.multiSet([
+					["jwtToken", data.jwt],
+					["userId", userId?.toString() || ""],
+				]);
+
+				onSuccess(data); // Call the onSuccess callback
 			} catch (error) {
-				console.error("Failed to save the token to storage", error);
+				console.error("Failed to decode token or save data to storage", error);
 			}
 		},
 		onError,
