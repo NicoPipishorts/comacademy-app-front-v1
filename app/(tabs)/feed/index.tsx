@@ -42,10 +42,6 @@ const Feed = () => {
 	// Render each feed item
 	const renderItem = ({ item }: { item: any }) => <FeedWrapper feed={item} />;
 
-	const totalItems = data?.pages[0]?.meta.pagination.total || 0;
-	const fetchedItems =
-		data?.pages.reduce((acc, page) => acc + page.data.length, 0) || 0;
-
 	if (isLoading) {
 		return <FeedLoader />;
 	}
