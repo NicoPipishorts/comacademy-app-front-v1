@@ -71,8 +71,11 @@ const AnimatedCard = ({
 	return null;
 };
 
-export default function CommandementsDetails() {
-	const { itemId } = useLocalSearchParams();
+interface Props {
+	itemId: number;
+}
+export default function CommandementsDetails({ itemId }: Props) {
+	const { itemId: paramId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
 
 	// Screen and layout calculations
@@ -80,7 +83,12 @@ export default function CommandementsDetails() {
 	const cardWidth = screenWidth * 0.8; // 80% of screen width for the card
 	const cardMargin = Math.floor((screenWidth - cardWidth) / 3); // Adjust the margin for smoother centering
 
-	const commandementId = Number(itemId);
+	let commandementId: number;
+	if (paramId) {
+		commandementId = Number(itemId);
+	} else {
+		commandementId = itemId;
+	}
 
 	const { data: commandementData, isFetched } =
 		useGetCommandementById(commandementId);

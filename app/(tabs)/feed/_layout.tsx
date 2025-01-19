@@ -20,6 +20,14 @@ const FeedLayout = () => {
 					presentation: "modal",
 				}}
 			/>
+			<Stack.Screen
+				name='Detail10Commendements'
+				options={{
+					headerShown: false,
+					headerTitle: "Feed Commendements Card",
+					presentation: "modal",
+				}}
+			/>
 		</Stack>
 	);
 };
