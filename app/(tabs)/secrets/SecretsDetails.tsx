@@ -70,17 +70,26 @@ const AnimatedCard = ({
 	return null;
 };
 
-export default function SecretsDetails() {
+interface SecretsDetailsProps {
+	itemId: number;
+}
+
+export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 	const { isAndroid } = useDeviceTypeCheckers();
 
-	const { itemId } = useLocalSearchParams();
+	const { itemId: paramId } = useLocalSearchParams();
 
 	// Screen and layout calculations
 	const screenWidth = Dimensions.get("window").width;
 	const cardWidth = screenWidth * 0.8; // 80% of the screen width
 	const cardMargin = Math.floor((screenWidth - cardWidth) / 2.6); // Adjust the margin for better centering
 
-	const secretsId = Number(itemId);
+	let secretsId: number;
+	if (paramId) {
+		secretsId = Number(itemId);
+	} else {
+		secretsId = itemId;
+	}
 
 	const { data: secretsData, isFetched } = useGetSecretById(secretsId);
 

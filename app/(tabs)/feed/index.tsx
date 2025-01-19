@@ -25,7 +25,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Feed = () => {
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
-	const { data: userData } = useGetUserInfo(userId);
+	const { data: userData, isFetched: isFetchedUserData } =
+		useGetUserInfo(userId);
 
 	// console.log(userInfo.firstName);
 	// Infinite scroll data hook
@@ -53,7 +54,7 @@ const Feed = () => {
 	// Render each feed item
 	const renderItem = ({ item }: { item: any }) => <FeedWrapper feed={item} />;
 
-	if (isLoading) {
+	if (isLoading || !isFetchedUserData) {
 		return <FeedLoader />;
 	}
 

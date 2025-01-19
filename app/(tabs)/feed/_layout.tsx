@@ -12,6 +12,14 @@ const FeedLayout = () => {
 					presentation: "card",
 				}}
 			/>
+			<Stack.Screen
+				name='Detail3Secrets'
+				options={{
+					headerShown: false,
+					headerTitle: "Feed Secrets Card",
+					presentation: "modal",
+				}}
+			/>
 		</Stack>
 	);
 };
