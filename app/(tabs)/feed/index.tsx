@@ -9,14 +9,11 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
-import useGetAllFeed from "@/hooks/Feed/useGetAllFeed";
-import useUserId from "@/hooks/useUserId";
-import useGetUserInfo from "@/hooks/useUserInfo";
-import React, { useState } from "react";
+import useGetFeed from "@/hooks/Feed/useGetAllFeed";
+import React from "react";
 import {
-	Image,
-	RefreshControl,
-	ScrollView,
+	ActivityIndicator,
+	FlatList,
 	StyleSheet,
 	Text,
 	View,
@@ -25,25 +22,31 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
-	const { data: userData, isFetched: isFetchedUserData } =
-		useGetUserInfo(userId);
 
-	const { data: feedData, isLoading, isFetched, refetch } = useGetAllFeed();
-	const [refreshing, setRefreshing] = useState(false);
+	// Infinite scroll data hook
+	const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
+		useGetFeed({ limit: 10 });
 
-	const onRefresh = async () => {
-		setRefreshing(true);
-		try {
-			await refetch();
-		} catch (error) {
-			console.error("Error refreshing feed:", error);
-		} finally {
-			setRefreshing(false);
+	// Footer loader to show during fetching of the next page
+	const renderFooter = () => {
+		if (isFetchingNextPage) {
+			return (
+				<View style={styles.loader}>
+					<ActivityIndicator size='large' color={colorGrey} />
+				</View>
+			);
 		}
+		return null;
 	};
 
-	if (isLoading || !isFetched || !isFetchedUserData) {
+	// Render each feed item
+	const renderItem = ({ item }: { item: any }) => <FeedWrapper feed={item} />;
+
+	const totalItems = data?.pages[0]?.meta.pagination.total || 0;
+	const fetchedItems =
+		data?.pages.reduce((acc, page) => acc + page.data.length, 0) || 0;
+
+	if (isLoading) {
 		return <FeedLoader />;
 	}
 
@@ -56,37 +59,30 @@ const Feed = () => {
 						paddingTop: insets.top + 10,
 					},
 				]}>
-				<Image
-					source={require("@/assets/imgs/logos/Login.png")}
-					style={styles.logo}
-					resizeMode='contain'
-				/>
-				<View style={styles.headerRow}>
-					<Text style={styles.title}>Feed</Text>
-					<AvatarInitials
-						size={68}
-						firstName={userData.firstName}
-						lastName={userData.lastName}
-					/>
-				</View>
+				<Text style={styles.title}>Feed</Text>
+				<AvatarInitials size={68} firstName='John' lastName='Doe' />
 			</View>
-			<ScrollView
-				showsVerticalScrollIndicator={false}
-				contentContainerStyle={styles.scrollContent}
-				refreshControl={
-					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-				}>
-				{feedData?.data.map((feed) => {
-					if (feed.payload.Type === null) {
-						return null;
+			<FlatList
+				data={data?.pages.flatMap((page) => page.data)} // Flatten pages to get all items
+				extraData={data?.pages.flatMap((page) => page.data)} // Ensures FlatList rerenders on data change
+				renderItem={renderItem} // Render individual feed items
+				keyExtractor={(item) => item.id.toString()} // Unique key for each item
+				onEndReached={() => {
+					if (hasNextPage && !isFetchingNextPage) {
+						fetchNextPage();
+					} else {
+						console.log("No more pages to fetch or already fetching");
 					}
-					return <FeedWrapper key={feed.id} feed={feed} />;
-				})}
-			</ScrollView>
+				}}
+				onEndReachedThreshold={0.1} // Trigger when 10% away from the end
+				ListFooterComponent={renderFooter} // Loader at the bottom
+				contentContainerStyle={styles.scrollContent}
+			/>
 		</View>
 	);
 };
 
+// Wrapper for rendering a single feed item
 const FeedWrapper = ({ feed }: { feed: any }) => (
 	<View style={styles.feedWrapper}>
 		<FeedCardHeader data={feed} />
@@ -107,21 +103,12 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 25,
 	},
 	headerWrapper: {
+		flexDirection: "row",
+		justifyContent: "space-between",
 		minWidth: "100%",
 		alignItems: "center",
 		paddingBottom: 20,
-		paddingHorizontal: 25,
-	},
-	logo: {
-		width: 100,
-		height: 30,
-		marginBottom: 20,
-	},
-	headerRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		width: "100%",
-		alignItems: "center",
+		paddingHorizontal: 20,
 	},
 	title: {
 		fontSize: FontSizeScreenTitles,
@@ -140,6 +127,10 @@ const styles = StyleSheet.create({
 		borderLeftColor: colorDarkGrey,
 		borderLeftWidth: 1,
 		marginLeft: 23,
+	},
+	loader: {
+		paddingVertical: 20,
+		alignItems: "center",
 	},
 });
 
