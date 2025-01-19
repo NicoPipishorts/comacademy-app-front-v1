@@ -29,8 +29,14 @@ const Feed = () => {
 
 	// console.log(userInfo.firstName);
 	// Infinite scroll data hook
-	const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-		useGetFeed({ limit: 10 });
+	const {
+		data,
+		isLoading,
+		isFetchingNextPage,
+		fetchNextPage,
+		hasNextPage,
+		refetch,
+	} = useGetFeed({ limit: 10 });
 
 	// Footer loader to show during fetching of the next page
 	const renderFooter = () => {
@@ -82,6 +88,11 @@ const Feed = () => {
 				onEndReachedThreshold={0.1} // Trigger when 10% away from the end
 				ListFooterComponent={renderFooter} // Loader at the bottom
 				contentContainerStyle={styles.scrollContent}
+				refreshing={isLoading} // Indicate whether the list is currently refreshing
+				onRefresh={() => {
+					// Add logic to refresh the data here
+					refetch(); // Assuming you have a refetch function to reload the data
+				}}
 			/>
 		</View>
 	);
