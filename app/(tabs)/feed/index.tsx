@@ -10,6 +10,7 @@ import {
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
+import useUserId from "@/hooks/useUserId";
 import React from "react";
 import {
 	ActivityIndicator,
@@ -22,10 +23,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
+	const { userId } = useUserId();
 
 	// Infinite scroll data hook
-	const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
-		useGetFeed({ limit: 10 });
+	const {
+		data,
+		isLoading,
+		isFetchingNextPage,
+		fetchNextPage,
+		hasNextPage,
+		refetch,
+	} = useGetFeed({ limit: 10 });
 
 	// Footer loader to show during fetching of the next page
 	const renderFooter = () => {
@@ -56,7 +64,7 @@ const Feed = () => {
 					},
 				]}>
 				<Text style={styles.title}>Feed</Text>
-				<AvatarInitials size={68} firstName='John' lastName='Doe' />
+				<AvatarInitials size={68} />
 			</View>
 			<FlatList
 				data={data?.pages.flatMap((page) => page.data)} // Flatten pages to get all items
@@ -73,6 +81,11 @@ const Feed = () => {
 				onEndReachedThreshold={0.1} // Trigger when 10% away from the end
 				ListFooterComponent={renderFooter} // Loader at the bottom
 				contentContainerStyle={styles.scrollContent}
+				refreshing={isLoading} // Indicate whether the list is currently refreshing
+				onRefresh={() => {
+					// Add logic to refresh the data here
+					refetch(); // Assuming you have a refetch function to reload the data
+				}}
 			/>
 		</View>
 	);

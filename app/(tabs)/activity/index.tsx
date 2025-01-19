@@ -65,11 +65,7 @@ const HomeScreen = () => {
 						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 					</TouchableOpacity>
 					<View style={{ marginTop: 20, marginRight: 0 }}>
-						<AvatarInitials
-							firstName={userData.firstName}
-							lastName={userData.lastName}
-							size={68}
-						/>
+						<AvatarInitials size={68} />
 					</View>
 				</View>
 
