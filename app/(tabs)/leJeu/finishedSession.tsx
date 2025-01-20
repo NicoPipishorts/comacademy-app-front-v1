@@ -76,8 +76,16 @@ export default function FinishedSession() {
 	};
 
 	const roundsPlayed = () => {
-		const result = (gameComments.data.totalAnsweredQuestions / 15).toString();
-		return parseInt(result.slice(-1), 10);
+		const totalAnsweredQuestions = gameComments.data.totalAnsweredQuestions;
+		const divisor = 15;
+
+		// Divide and round to the nearest whole number
+		const roundedQuotient = Math.round(totalAnsweredQuestions / divisor);
+
+		// Multiply back to get the nearest multiple of 15
+		const nearestMultipleOf15 = roundedQuotient;
+		const lastDigit = nearestMultipleOf15 % 10;
+		return lastDigit;
 	};
 
 	const currentNiveau = Math.floor(
