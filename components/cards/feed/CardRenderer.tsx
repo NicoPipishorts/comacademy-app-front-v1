@@ -10,8 +10,8 @@ import FeedCardNumber from "@/components/cards/feed/CardNumber";
 import FeedCardVie from "@/components/cards/feed/CardVie";
 import { FeedItem } from "@/types/feed";
 import React from "react";
+import FeedCardActusBref from "./CardActusBref";
 import FeedCardLol from "./CardLol";
-import FeedCardActusBref from "./CardNumber copy";
 
 const CardRenderer = ({
 	type,
