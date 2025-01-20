@@ -34,11 +34,11 @@ export default function LeaderBoard() {
 
 	function filterUsersByRoleAndClients(
 		allScores: AllUsersScoreResponse,
-		currentRole: string,
+		profile: string,
 		currentClients: { id: number; name: string }[]
 	): UserScoreData[] {
 		// If the current role is "Authenticated", return all users
-		if (currentRole === "Authenticated") {
+		if (profile === "superAdmin") {
 			return allScores.data;
 		}
 
@@ -52,13 +52,41 @@ export default function LeaderBoard() {
 				: [];
 		};
 
-		// If the current role is "EducationPro", return all users with overlapping clients
-		if (currentRole === "EducationPro") {
+		// If the current profile is "EducationPro", return all users with overlapping clients
+		if (profile === "enseignant" || profile === "professionnel") {
 			return allScores.data.filter((user) => {
 				const userClients = getUserClients(user);
+
+				// Skip users with different profiles
+				if (
+					!["enseignant", "professionnel", "etudiant"].includes(
+						user.attributes.user.profile
+					)
+				) {
+					return false;
+				}
+
+				// If both client lists are empty, show the user
+				if (
+					(!userClients || userClients.length === 0) &&
+					(currentClients.length === 0 || !currentClients)
+				) {
+					return true;
+				}
+
 				// Check for overlapping clients
 				return userClients.some((client) =>
-					currentClients.some((currentClient) => currentClient.id === client.id)
+					currentClients.some((currentClient) => {
+						if (currentClient.id === client.id) {
+							return true;
+						}
+
+						if (currentClient.id == null && client.id == null) {
+							return true;
+						}
+
+						return false;
+					})
 				);
 			});
 		}
@@ -66,15 +94,37 @@ export default function LeaderBoard() {
 		// For other roles, filter by role and clients
 		return allScores.data.filter((user) => {
 			const userClients = getUserClients(user);
-			const userRole = user.attributes.user.role;
+			const userRole = user.attributes.user.profile;
 
-			// Match both role and at least one common client
-			return (
-				userRole === currentRole &&
-				userClients.some((client) =>
-					currentClients.some((currentClient) => currentClient.id === client.id)
-				)
+			// Skip users with different roles
+			if (userRole !== profile) {
+				return false;
+			}
+
+			// If both client lists are empty, include the user (matching profile)
+			if (
+				(!userClients || userClients.length === 0) &&
+				(currentClients.length === 0 || !currentClients)
+			) {
+				return true;
+			}
+
+			// Match users with overlapping clients
+			const hasMatchingClients = userClients.some((client) =>
+				currentClients.some((currentClient) => {
+					if (currentClient.id === client.id) {
+						return true;
+					}
+
+					if (currentClient.id == null && client.id == null) {
+						return true;
+					}
+
+					return false;
+				})
 			);
+
+			return hasMatchingClients;
 		});
 	}
 
@@ -83,7 +133,7 @@ export default function LeaderBoard() {
 		(user) => user.attributes.user.userId === currentUser
 	);
 
-	const currentRole = currentUserInfo?.attributes.user.role || "";
+	const profile = currentUserInfo?.attributes.user.profile || "";
 	const currentClients = currentUserInfo?.attributes.user.clients || [];
 
 	// Get the filtered list of users
@@ -93,7 +143,7 @@ export default function LeaderBoard() {
 
 	const filteredUsers = filterUsersByRoleAndClients(
 		allScores,
-		currentRole,
+		profile,
 		normalizedClients
 	);
 

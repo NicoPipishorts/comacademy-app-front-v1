@@ -76,7 +76,7 @@ const HomeScreen = () => {
 					}}
 					showsVerticalScrollIndicator={false}>
 					<View style={styles.header}>
-						<Text style={styles.headerShortcuts}>Accès rapide</Text>
+						<Text style={styles.headerShortcuts}>Rubriques</Text>
 					</View>
 					<ScrollView
 						style={styles.shortcutsContainer}

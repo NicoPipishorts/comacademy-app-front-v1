@@ -111,7 +111,7 @@ export default function User() {
 					styles.innerWrapper,
 					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
 				]}>
-				<ScreenHeaders content='Mon Profil' />
+				<ScreenHeaders content='Mon profil' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={

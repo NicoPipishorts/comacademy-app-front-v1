@@ -9,6 +9,7 @@ export interface LoginUser {
 	updatedAt: string;
 	firstName: string;
 	lastName: string;
+	profile: string;
 	role: {
 		id: number;
 		name: string;

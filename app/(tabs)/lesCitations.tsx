@@ -49,7 +49,7 @@ const LesCitations = () => {
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={{ paddingHorizontal: 30 }}>
-				<ScreenHeaders content='Les Citations' />
+				<ScreenHeaders content='Citations' />
 			</View>
 			<ScrollView
 				ref={scrollViewRef}
