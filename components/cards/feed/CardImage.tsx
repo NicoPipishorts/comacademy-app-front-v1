@@ -2,7 +2,8 @@ import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
-import { Image, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 interface Props {
 	data: FeedItem;
@@ -10,25 +11,75 @@ interface Props {
 }
 
 export default function FeedCardImage({ data, elementId }: Props) {
-	const aspectRatio = () => {
-		return data.payload.Media.width / data.payload.Media.height;
-	};
+	const [height, setHeight] = useState<number>(0);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
+
+	// Function to calculate aspect ratio with a fallback
+	const aspectRatio = useCallback(() => {
+		const { width, height } = data.payload.Media || {};
+		// Fallback values if width or height is missing
+		const validWidth = width ?? 280; // Default width
+		const validHeight = height ?? 280; // Default height (square image)
+		if (validWidth <= 0 || validHeight <= 0) {
+			console.warn("Invalid width/height values:", { width, height });
+			return 1; // Default aspect ratio (square)
+		}
+		return validWidth / validHeight;
+	}, [data.payload.Media]);
+
+	// Build the image URL and ensure it has a fallback
+	const baseUrl = process.env.EXPO_PUBLIC_URL;
+	const imageUrl = data.payload.Media?.url
+		? `${baseUrl}${data.payload.Media.url}`
+		: null;
+	const source = imageUrl ? { uri: imageUrl } : null;
+
+	useEffect(() => {
+		try {
+			const calculatedHeight = 280 / aspectRatio();
+			// Validate the calculated height
+			if (isNaN(calculatedHeight) || calculatedHeight <= 0) {
+				throw new Error("Invalid height calculation");
+			}
+			setHeight(calculatedHeight);
+		} catch (error) {
+			console.error("Error calculating height:", error);
+			setHeight(280); // Default height
+		} finally {
+			setIsLoading(false);
+		}
+	}, [aspectRatio]);
+
+	if (isLoading) {
+		return null;
+	}
 
 	return (
 		<View style={styles.cardContainer}>
-			<Image
-				source={{
-					uri: `${process.env.EXPO_PUBLIC_URL}${data.payload.Media.url}`,
-				}}
-				resizeMode='contain'
-				style={{
-					borderWidth: 8,
-					borderColor: primaryBackground,
-					borderRadius: 25,
-					width: 280,
-					height: 280 * aspectRatio(),
-				}}
-			/>
+			{/* Render the image only if the source is valid */}
+			{source && (
+				<>
+					<Text
+						style={{
+							fontWeight: "bold",
+							textTransform: "capitalize",
+							marginLeft: 20,
+						}}>
+						{data.payload.Media.name.split(".")[0]}
+					</Text>
+					<Image
+						source={source}
+						style={{
+							borderWidth: 8,
+							borderColor: primaryBackground,
+							borderRadius: 25,
+							width: 280,
+							height: height,
+						}}
+					/>
+				</>
+			)}
+			{/* Render the like button */}
 			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
