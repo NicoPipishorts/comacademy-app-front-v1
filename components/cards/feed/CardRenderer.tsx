@@ -10,6 +10,7 @@ import FeedCardNumber from "@/components/cards/feed/CardNumber";
 import FeedCardVie from "@/components/cards/feed/CardVie";
 import { FeedItem } from "@/types/feed";
 import React from "react";
+import FeedCardLol from "./CardLol";
 import FeedCardActusBref from "./CardNumber copy";
 
 const CardRenderer = ({
@@ -32,6 +33,7 @@ const CardRenderer = ({
 		"feed-post-argh": <FeedCardArgh data={data} elementId={elementId} />,
 		"feed-post-image": <FeedCardImage data={data} elementId={elementId} />,
 		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
+		"feed-post-lol": <FeedCardLol data={data} elementId={elementId} />,
 		"feed-post-actusBref": (
 			<FeedCardActusBref data={data} elementId={elementId} />
 		),
