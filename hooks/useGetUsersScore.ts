@@ -12,6 +12,7 @@ export interface UserAttributes {
 	firstName: string;
 	lastName: string;
 	role: string;
+	profile: string;
 	clients: {
 		id: number;
 		name: string;
