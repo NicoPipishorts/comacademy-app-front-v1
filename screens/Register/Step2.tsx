@@ -30,7 +30,7 @@ interface Props {
 const OPTIONS = [
 	{ label: "Étudiant", value: "etudiant" },
 	{ label: "Enseignant", value: "enseignant" },
-	{ label: "Professionnelle", value: "professionnelle" },
+	{ label: "Professionnel", value: "professionnel" },
 	{ label: "Passionné", value: "passionne" },
 ];
 

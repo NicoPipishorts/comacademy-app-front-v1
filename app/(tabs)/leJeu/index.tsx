@@ -157,7 +157,7 @@ const LeJeu = () => {
 			<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
 				<View style={styles.containerHeader}>
 					<View style={styles.header}>
-						<Text style={styles.headerMainText}>Le Jeu</Text>
+						<Text style={styles.headerMainText}>Le jeu</Text>
 					</View>
 					<View style={styles.containerSwitch}>
 						<Text style={styles.textJouer}>Jouer</Text>

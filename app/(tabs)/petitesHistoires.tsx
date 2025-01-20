@@ -119,7 +119,7 @@ const LesPetitesHistoires = () => {
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={{ paddingHorizontal: 30 }}>
-				<ScreenHeaders content='Les Petites Histoires' />
+				<ScreenHeaders content='La petites histoires' />
 			</View>
 
 			<Animated.FlatList

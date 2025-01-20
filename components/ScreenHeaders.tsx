@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
 	mainText: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
-		textTransform: "capitalize",
 	},
 	h2text: {
 		fontWeight: "bold",
