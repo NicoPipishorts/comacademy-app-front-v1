@@ -10,7 +10,6 @@ import {
 	ScrollView,
 	StyleSheet,
 	Text,
-	TouchableOpacity,
 	View,
 } from "react-native";
 // Icons
@@ -257,16 +256,6 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				<View>
 					<Text style={styles.containerText}>{data.data.attributes.BREF}</Text>
 				</View>
-
-				<View style={styles.containerSatisfaction}>
-					<Text style={styles.ttlSatisfaction}>Cette fiche a été utile :</Text>
-					<TouchableOpacity style={styles.btnSatisfaction}>
-						<Text style={styles.textSatisfaction}>Yes</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.btnSatisfaction}>
-						<Text style={styles.textSatisfaction}>No</Text>
-					</TouchableOpacity>
-				</View>
 			</ScrollView>
 
 			<AddToPlaylistModal
@@ -289,7 +278,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 25,
 	},
 	contentContainer: {
-		marginBottom: 70,
+		marginBottom: 100,
 	},
 	wrapperIcons: {
 		flexDirection: "row",
