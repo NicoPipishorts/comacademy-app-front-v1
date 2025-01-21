@@ -21,6 +21,7 @@ const icons = {
 	actusBref: require("@/assets/imgs/icons/feed/actusBref.png"),
 	lol: require("@/assets/imgs/icons/feed/lol.png"),
 	comAcademy: require("@/assets/imgs/icons/feed/comAcademy.png"),
+	marqueMystere: require("@/assets/imgs/icons/feed/marqueMystere.png"),
 };
 
 const titles = {
@@ -37,6 +38,7 @@ const titles = {
 	"feed-post-actusBref": "Actus en bref'",
 	"feed-post-lol": "LOL",
 	"feed-post-comAcademy": "Com'Academy",
+	"feed-post-marqueMystere": "Marque mystère",
 };
 
 const subTitles = {

@@ -13,6 +13,7 @@ import React from "react";
 import FeedCardActusBref from "./CardActusBref";
 import FeedCardCardComAcademy from "./CardComAcademy";
 import FeedCardLol from "./CardLol";
+import FeedCardMarqueMystere from "./CardMarqueMystere";
 
 const CardRenderer = ({
 	type,
@@ -35,6 +36,9 @@ const CardRenderer = ({
 		"feed-post-image": <FeedCardImage data={data} elementId={elementId} />,
 		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
 		"feed-post-lol": <FeedCardLol data={data} elementId={elementId} />,
+		"feed-post-marqueMystere": (
+			<FeedCardMarqueMystere data={data} elementId={elementId} />
+		),
 		"feed-post-comAcademy": (
 			<FeedCardCardComAcademy data={data} elementId={elementId} />
 		),
