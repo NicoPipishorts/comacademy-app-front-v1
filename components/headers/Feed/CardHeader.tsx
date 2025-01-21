@@ -27,13 +27,13 @@ const titles = {
 	dico: "Le dico",
 	citation: "Les citations",
 	metier: "Ton future metier?",
-	question: "Com'Academy : Le Jeu",
+	question: "Com'Academy : Le jeu",
 	commandement: "Les 10 commandements",
 	"feed-post-chiffre": "Le chiffre du jour",
 	"feed-post-argh": "AARRGHH !! \nL’expression qui énerve",
 	"feed-post-image": "Une image/ un métier",
 	"feed-post-vie": "Vie de com'",
-	"feed-post-actusBref": "Vie de com'",
+	"feed-post-actusBref": "Actus en bref'",
 	"feed-post-lol": "LOL",
 };
 
