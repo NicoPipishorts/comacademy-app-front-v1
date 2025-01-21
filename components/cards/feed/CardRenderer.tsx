@@ -14,6 +14,7 @@ import FeedCardActusBref from "./CardActusBref";
 import FeedCardCardComAcademy from "./CardComAcademy";
 import FeedCardLol from "./CardLol";
 import FeedCardMarqueMystere from "./CardMarqueMystere";
+import FeedCardPetitesHistoires from "./CardPetitesHistoires";
 
 const CardRenderer = ({
 	type,
@@ -44,6 +45,9 @@ const CardRenderer = ({
 		),
 		"feed-post-actusBref": (
 			<FeedCardActusBref data={data} elementId={elementId} />
+		),
+		"feed-post-petitesHistoires": (
+			<FeedCardPetitesHistoires data={data} elementId={elementId} />
 		),
 	};
 

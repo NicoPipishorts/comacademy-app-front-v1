@@ -7,7 +7,7 @@ import { useNavigation } from "expo-router";
 import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
-const icons = {
+const ICONS = {
 	secret: require("@/assets/imgs/icons/feed/secret.png"),
 	dico: require("@/assets/imgs/icons/feed/dico.png"),
 	citation: require("@/assets/imgs/icons/feed/citation.png"),
@@ -22,9 +22,10 @@ const icons = {
 	lol: require("@/assets/imgs/icons/feed/lol.png"),
 	comAcademy: require("@/assets/imgs/icons/feed/comAcademy.png"),
 	marqueMystere: require("@/assets/imgs/icons/feed/marqueMystere.png"),
+	petitesHistoires: require("@/assets/imgs/icons/feed/petitesHistoires.png"),
 };
 
-const titles = {
+const TITLES = {
 	secret: "3 secrets du succès",
 	dico: "Le dico",
 	citation: "Les citations",
@@ -39,14 +40,21 @@ const titles = {
 	"feed-post-lol": "LOL",
 	"feed-post-comAcademy": "Com'Academy",
 	"feed-post-marqueMystere": "Marque mystère",
+	"feed-post-petitesHistoires": "La petite histoire \ndes marques ",
 };
 
-const subTitles = {
+const SUB_TITLES = {
+	secret: "Secrets des marques",
 	dico: "Déchiffrer le jargon de la com",
+	citation: "Bol d'inspiration",
 	metier: "Enjeux et missions",
+	question: "Alors, vrai ou faux?",
+	commandement: "Astuces pour réussir",
+	"feed-post-argh": "L’expression qui énerve",
+	"feed-post-petitesHistoires": "Anecdotes pour briller",
 };
 
-const destinations = {
+const DESTINATIONS = {
 	secret: "secrets",
 	dico: "dico",
 	citation: "lesCitations",
@@ -63,39 +71,37 @@ export default function FeedCardHeader({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	const typeIcon = useMemo(() => {
-		if (data.type !== "feed-post") {
-			return icons[data.type];
-		} else {
-			return icons[data.payload.Type] || null;
-		}
+		return data.type !== "feed-post"
+			? ICONS[data.type]
+			: ICONS[data.payload.Type] || null;
 	}, [data]);
 
 	const title = useMemo(() => {
 		if (data.type === "feed-post") {
-			const postKey = `${data.type}-${data.payload.Type}`;
-			return titles[postKey] || null;
+			return TITLES[`${data.type}-${data.payload.Type}`] || null;
 		}
-		return titles[data.type];
+		return TITLES[data.type];
 	}, [data]);
 
 	const subTitle = useMemo(() => {
 		if (data.type === "feed-post") {
-			const postKey = `${data.type}-${data.payload.Type}`;
-			return subTitles[postKey] || null;
+			return SUB_TITLES[`${data.type}-${data.payload.Type}`] || null;
 		}
-		return subTitles[data.type];
+		return SUB_TITLES[data.type];
 	}, [data]);
 
-	const destination = useMemo(() => destinations[data.type] || null, [data]);
+	const destination = useMemo(() => DESTINATIONS[data.type] || null, [data]);
+
+	const handleNavigation = () => {
+		if (destination) navigation.navigate(destination);
+	};
 
 	return (
 		<View>
 			<View style={styles.container}>
 				<Image source={typeIcon} style={styles.icon} resizeMode='contain' />
 				{data.type !== "feed-post" && (
-					<Pressable
-						style={styles.pressable}
-						onPress={() => navigation.navigate(destination || "")}>
+					<Pressable style={styles.pressable} onPress={handleNavigation}>
 						<Image
 							source={require("@/assets/imgs/icons/plus-circle.png")}
 							style={styles.plusIcon}
@@ -103,17 +109,12 @@ export default function FeedCardHeader({ data }: Props) {
 						/>
 					</Pressable>
 				)}
-				<View style={{ minWidth: "86%" }}>
+				<View style={styles.textContainer}>
 					<View style={styles.infoContainer}>
 						<Text style={styles.title}>{title}</Text>
 						<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
 					</View>
-					<View style={{ marginTop: 0 }}>
-						{data.type === "dico" ||
-							(data.type === "metier" && (
-								<Text style={styles.subTitle}>{subTitle}</Text>
-							))}
-					</View>
+					{subTitle && <Text style={styles.subTitle}>{subTitle}</Text>}
 				</View>
 			</View>
 		</View>
@@ -123,9 +124,8 @@ export default function FeedCardHeader({ data }: Props) {
 const styles = StyleSheet.create({
 	container: {
 		flexDirection: "row",
-		justifyContent: "flex-start",
 		alignItems: "flex-start",
-		minWidth: "100%",
+		width: "100%",
 	},
 	icon: {
 		width: 48,
@@ -146,12 +146,14 @@ const styles = StyleSheet.create({
 		borderWidth: 3,
 		borderColor: colorGrey,
 	},
+	textContainer: {
+		flex: 1,
+	},
 	infoContainer: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "flex-start",
+		alignItems: "center",
 		paddingRight: 10,
-		paddingTop: 4,
 	},
 	title: {
 		fontSize: FontSizeH3,
