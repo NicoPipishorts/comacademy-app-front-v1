@@ -7,6 +7,10 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
+import {
+	CapitalizeFirstLetter,
+	LowerCaseFirstLetter,
+} from "@/helpers/capitalizeFirstLetter";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Image,
@@ -158,9 +162,8 @@ export default function RegisterStep1({
 					]}>
 					<TextInput
 						style={styles.input}
-						onChangeText={setFirstName}
+						onChangeText={(text) => setFirstName(CapitalizeFirstLetter(text))}
 						value={firstName}
-						autoCorrect={false}
 						placeholder='Prénom'
 						placeholderTextColor={colorBlack}
 						autoCapitalize='none'
@@ -182,9 +185,8 @@ export default function RegisterStep1({
 					]}>
 					<TextInput
 						style={styles.input}
-						onChangeText={setLastName}
+						onChangeText={(text) => setLastName(CapitalizeFirstLetter(text))}
 						value={lastName}
-						autoCorrect={false}
 						placeholder='Nom'
 						placeholderTextColor={colorBlack}
 						autoCapitalize='none'
@@ -231,7 +233,7 @@ export default function RegisterStep1({
 					<TextInput
 						value={email}
 						autoCorrect={false}
-						onChangeText={setEmail}
+						onChangeText={(text) => setEmail(LowerCaseFirstLetter(text))}
 						style={styles.input}
 						placeholder='Email'
 						placeholderTextColor={colorBlack}
