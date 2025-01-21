@@ -35,7 +35,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 		feed: "Feed",
 		dico: "Dico",
 		playlists: "Playlists",
-		activity: "Activitès",
+		activity: "Rubriques",
 	};
 
 	// Used to apply the BG or not to the tab bar.
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		paddingBottom: 15,
+		paddingBottom: 22,
 	},
 	tabbarText: {
 		fontSize: FontSizeTabbar,
@@ -139,10 +139,9 @@ const styles = StyleSheet.create({
 		width: 28,
 		height: 28,
 		aspectRatio: 1,
-		marginBottom: 10,
+		marginBottom: 5,
 	},
 	tabLabel: {
-		borderBottomWidth: 4,
 		borderBottomColor: "transparent",
 	},
 	focusedTab: {
@@ -151,7 +150,7 @@ const styles = StyleSheet.create({
 		backgroundColor: colorBlack,
 		borderRadius: 2,
 		position: "absolute",
-		bottom: 6,
+		bottom: 10,
 	},
 });
 
