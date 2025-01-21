@@ -20,6 +20,7 @@ const icons = {
 	vie: require("@/assets/imgs/icons/feed/vie.png"),
 	actusBref: require("@/assets/imgs/icons/feed/actusBref.png"),
 	lol: require("@/assets/imgs/icons/feed/lol.png"),
+	comAcademy: require("@/assets/imgs/icons/feed/comAcademy.png"),
 };
 
 const titles = {
@@ -35,6 +36,12 @@ const titles = {
 	"feed-post-vie": "Vie de com'",
 	"feed-post-actusBref": "Actus en bref'",
 	"feed-post-lol": "LOL",
+	"feed-post-comAcademy": "Com'Academy",
+};
+
+const subTitles = {
+	dico: "Déchiffrer le jargon de la com",
+	metier: "Enjeux et missions",
 };
 
 const destinations = {
@@ -69,6 +76,14 @@ export default function FeedCardHeader({ data }: Props) {
 		return titles[data.type];
 	}, [data]);
 
+	const subTitle = useMemo(() => {
+		if (data.type === "feed-post") {
+			const postKey = `${data.type}-${data.payload.Type}`;
+			return subTitles[postKey] || null;
+		}
+		return subTitles[data.type];
+	}, [data]);
+
 	const destination = useMemo(() => destinations[data.type] || null, [data]);
 
 	return (
@@ -86,9 +101,17 @@ export default function FeedCardHeader({ data }: Props) {
 						/>
 					</Pressable>
 				)}
-				<View style={styles.infoContainer}>
-					<Text style={styles.title}>{title}</Text>
-					<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
+				<View style={{ minWidth: "86%" }}>
+					<View style={styles.infoContainer}>
+						<Text style={styles.title}>{title}</Text>
+						<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
+					</View>
+					<View style={{ marginTop: 0 }}>
+						{data.type === "dico" ||
+							(data.type === "metier" && (
+								<Text style={styles.subTitle}>{subTitle}</Text>
+							))}
+					</View>
 				</View>
 			</View>
 		</View>
@@ -122,16 +145,19 @@ const styles = StyleSheet.create({
 		borderColor: colorGrey,
 	},
 	infoContainer: {
-		flexGrow: 1,
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "center",
+		alignItems: "flex-start",
 		paddingRight: 10,
-		paddingTop: 3,
+		paddingTop: 4,
 	},
 	title: {
 		fontSize: FontSizeH3,
 		fontWeight: "bold",
+	},
+	subTitle: {
+		fontSize: FontSize14,
+		color: colorDarkGrey,
 	},
 	time: {
 		fontSize: FontSize14,
