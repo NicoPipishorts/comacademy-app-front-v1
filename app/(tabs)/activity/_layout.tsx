@@ -11,6 +11,14 @@ const ActivityLayout = () => {
 					headerTitle: "Feed",
 				}}
 			/>
+			<Stack.Screen
+				name='feedback'
+				options={{
+					headerShown: false,
+					headerTitle: "Feedback",
+					presentation: "modal",
+				}}
+			/>
 		</Stack>
 	);
 };

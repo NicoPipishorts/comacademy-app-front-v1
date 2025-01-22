@@ -43,7 +43,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 		paddingBottom: 90,
-		marginBottom: 103,
 	},
 	centerTitle: {
 		fontSize: FontSizeScreenTitles,

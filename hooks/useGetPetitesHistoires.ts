@@ -30,7 +30,7 @@ const fetchCitations = async (
 ): Promise<PetitesHistoiresResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/petites-histoires?sort=id:ASC&populate=*`,
+			`${process.env.EXPO_PUBLIC_API_URL}/petites-histoires?sort=id:ASC&populate=*&filters[visible]=true`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

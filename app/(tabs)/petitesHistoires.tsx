@@ -159,6 +159,7 @@ const LesPetitesHistoires = () => {
 								ref={(ref) => (videoRefs.current[item.id] = ref)} // Store the ref for each video
 								source={{ uri: videoUri }} // Use the URI from the data
 								style={{ width: videoWidth, height: videoHeight }}
+								isMuted={false}
 								isLooping={false} // Disable looping
 								useNativeControls={isPlaying ? true : false} // Show media controls (play, pause, etc.)
 								onPlaybackStatusUpdate={(status) =>

@@ -10,11 +10,11 @@ import {
 
 // Custom images and constants
 import commandements from "@/assets/imgs/cards/home_10_commandements.png";
+import trentes from "@/assets/imgs/cards/home_30s.png";
 import secrets from "@/assets/imgs/cards/home_3_secrets.png";
 import homeActusDis from "@/assets/imgs/cards/home_actus_dis.png";
 import lesCitations from "@/assets/imgs/cards/home_citations.png";
 import dico from "@/assets/imgs/cards/home_dico.png";
-import homeFlopsDis from "@/assets/imgs/cards/home_flops_dis.png";
 import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
@@ -104,9 +104,7 @@ const HomeScreen = () => {
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
 										Le Jeu
 									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Jouez à apprendre
-									</Text>
+									<Text style={{ fontSize: FontSize10 }}>Vrai ou faux ?</Text>
 								</View>
 							</View>
 
@@ -159,7 +157,7 @@ const HomeScreen = () => {
 										Dico
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Toutes les définitions
+										Déchiffrer le jargon
 									</Text>
 								</View>
 							</View>
@@ -185,17 +183,69 @@ const HomeScreen = () => {
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
 										Mes playlists
 									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Ma sélection</Text>
+									<Text style={{ fontSize: FontSize10 }}>Mes favoris</Text>
 								</View>
 							</View>
+
+							{/* Les Petits Card */}
+							<View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("petitesHistoires")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={histoires}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										La petites histoires
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Apprendre en regardant
+									</Text>
+								</View>
+							</View>
+
+							{/* Feedback Card */}
+							{/* <View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("feedback")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={feedback}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Feedback
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Votre voix compte
+									</Text>
+								</View>
+							</View> */}
 						</View>
 					</ScrollView>
 
-					<View style={styles.header}>
-						<Text style={styles.headerShortcuts}>Découvrir</Text>
-					</View>
+					{/* Second row of shortcuts */}
 					<ScrollView
-						style={styles.shortcutsContainer}
+						style={[styles.shortcutsContainer, { marginTop: -20 }]}
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}>
 						<View style={styles.shortcuts}>
@@ -305,14 +355,12 @@ const HomeScreen = () => {
 								</View>
 							</View>
 
-							{/* Les Petits Card */}
+							{/* 3à Secondes Chrono */}
 							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("petitesHistoires")}>
+								<TouchableOpacity style={styles.cardsButton}>
 									<View style={styles.imageContainer}>
 										<Image
-											source={histoires}
+											source={trentes}
 											style={styles.shortcutsCards}
 											resizeMode='contain'
 										/>
@@ -324,31 +372,38 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										La petites histoires
+										30s top chrono
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Apprendre en regardant
+										Decryptage de pubs
 									</Text>
 								</View>
 							</View>
-							<TouchableOpacity style={styles.cardsButton}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={homeFlopsDis}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
+
+							{/* Les Flops Card */}
+							<View>
+								<TouchableOpacity style={styles.cardsButton}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={homeActusDis}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Top des flips
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Petits et grands échecs
+									</Text>
 								</View>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.cardsButton}>
-								<View style={styles.imageContainer}>
-									<Image
-										source={homeActusDis}
-										style={styles.shortcutsCards}
-										resizeMode='contain'
-									/>
-								</View>
-							</TouchableOpacity>
+							</View>
 						</View>
 					</ScrollView>
 
