@@ -65,7 +65,7 @@ const HomeScreen = () => {
 					<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
 						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 					</TouchableOpacity>
-					<View style={{ marginTop: 20, marginRight: 0 }}>
+					<View style={{ marginRight: 0 }}>
 						<AvatarInitials size={68} />
 					</View>
 				</View>
@@ -454,13 +454,13 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: primaryBackground,
+		marginTop: 20,
 		paddingBottom: 20,
 	},
 	screenHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 10,
 		paddingHorizontal: 20,
 	},
 	header: {
