@@ -22,10 +22,9 @@ export default function FilteredByCat({
 	const navigation = useNavigation<NavigationType>();
 	const categoriesArray = categories.data;
 
-	const categoriesById = categoriesArray.reduce((acc, category) => {
-		acc[category.id] = category;
-		return acc;
-	}, {});
+	const categoriesById = categoriesArray.find(
+		(category) => category.id === filterByCat
+	);
 
 	const onPress = () => {
 		setFilterByCat(null);
@@ -38,7 +37,7 @@ export default function FilteredByCat({
 				style={styles.filterContainer}
 				onPress={() => onPress()}>
 				<Text style={styles.filterText}>
-					{categoriesById[filterByCat + 6]?.attributes.Title}: {count}
+					{categoriesById.attributes.Title}: {count}
 				</Text>
 				<MaterialCommunityIcons
 					name='close-circle-outline'
