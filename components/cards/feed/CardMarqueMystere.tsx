@@ -1,5 +1,3 @@
-import { colorBlack } from "@/constants/colors";
-import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
 import { ResizeMode, Video } from "expo-av";
 import { StyleSheet, View } from "react-native";
@@ -7,9 +5,13 @@ import { StyleSheet, View } from "react-native";
 interface Props {
 	data: FeedItem;
 	elementId: number;
+	visibleItems: number[];
 }
 
-export default function FeedCardMarqueMystere({ data, elementId }: Props) {
+export default function FeedCardPetitesHistoires({
+	data,
+	visibleItems,
+}: Props) {
 	return (
 		<View style={styles.container}>
 			<Video
@@ -17,7 +19,7 @@ export default function FeedCardMarqueMystere({ data, elementId }: Props) {
 					uri: `${process.env.EXPO_PUBLIC_URL}${data.payload.Media.url}`,
 				}} // Use the URI from the data
 				style={{ width: 268, height: 268 }}
-				shouldPlay
+				shouldPlay={visibleItems.includes(data.id)}
 				isLooping={false} // Disable looping
 				useNativeControls={true}
 				resizeMode={ResizeMode.CONTAIN}
@@ -27,22 +29,5 @@ export default function FeedCardMarqueMystere({ data, elementId }: Props) {
 }
 
 const styles = StyleSheet.create({
-	container: {
-		marginLeft: 10,
-		width: "84%",
-		minHeight: 100,
-		borderRadius: 25,
-		overflow: "hidden",
-	},
-	textTitle: {
-		color: colorBlack,
-		fontSize: FontSizeH1,
-		fontWeight: "bold",
-		marginBottom: 15,
-	},
-	textContent: {
-		color: colorBlack,
-		fontSize: FontSize14,
-		fontWeight: "bold",
-	},
+	container: { width: "86%", borderRadius: 10, overflow: "hidden" },
 });
