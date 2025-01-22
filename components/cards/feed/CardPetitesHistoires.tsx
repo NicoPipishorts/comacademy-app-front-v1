@@ -19,7 +19,7 @@ export default function FeedCardPetitesHistoires({
 				source={{
 					uri: `${process.env.EXPO_PUBLIC_URL}${data.payload.Media.url}`,
 				}}
-				style={{ width: 268, height: 476 }}
+				style={{ width: 275, height: 490 }}
 				shouldPlay={visibleItems.includes(data.id)}
 				isLooping={false}
 				useNativeControls={true}

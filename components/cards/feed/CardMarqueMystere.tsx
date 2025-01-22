@@ -18,7 +18,7 @@ export default function FeedCardPetitesHistoires({
 				source={{
 					uri: `${process.env.EXPO_PUBLIC_URL}${data.payload.Media.url}`,
 				}} // Use the URI from the data
-				style={{ width: 268, height: 268 }}
+				style={{ width: 275, height: 275 }}
 				shouldPlay={visibleItems.includes(data.id)}
 				isLooping={false} // Disable looping
 				useNativeControls={true}
