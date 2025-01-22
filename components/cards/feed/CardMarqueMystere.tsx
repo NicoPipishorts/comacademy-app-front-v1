@@ -1,3 +1,4 @@
+import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { FeedItem } from "@/types/feed";
 import { ResizeMode, Video } from "expo-av";
 import { StyleSheet, View } from "react-native";
@@ -10,6 +11,7 @@ interface Props {
 
 export default function FeedCardPetitesHistoires({
 	data,
+	elementId,
 	visibleItems,
 }: Props) {
 	return (
@@ -24,6 +26,7 @@ export default function FeedCardPetitesHistoires({
 				useNativeControls={true}
 				resizeMode={ResizeMode.CONTAIN}
 			/>
+			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
 }
