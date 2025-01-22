@@ -20,10 +20,12 @@ const CardRenderer = ({
 	type,
 	data,
 	elementId,
+	visibleItems,
 }: {
 	type: string;
 	data: FeedItem;
 	elementId: number;
+	visibleItems: number[];
 }) => {
 	const cardMap: { [key: string]: JSX.Element } = {
 		citation: <FeedCardCitations data={data} elementId={elementId} />,
@@ -38,7 +40,11 @@ const CardRenderer = ({
 		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
 		"feed-post-lol": <FeedCardLol data={data} elementId={elementId} />,
 		"feed-post-marqueMystere": (
-			<FeedCardMarqueMystere data={data} elementId={elementId} />
+			<FeedCardMarqueMystere
+				data={data}
+				elementId={elementId}
+				visibleItems={visibleItems}
+			/>
 		),
 		"feed-post-comAcademy": (
 			<FeedCardCardComAcademy data={data} elementId={elementId} />
@@ -47,7 +53,11 @@ const CardRenderer = ({
 			<FeedCardActusBref data={data} elementId={elementId} />
 		),
 		"feed-post-petitesHistoires": (
-			<FeedCardPetitesHistoires data={data} elementId={elementId} />
+			<FeedCardPetitesHistoires
+				data={data}
+				elementId={elementId}
+				visibleItems={visibleItems}
+			/>
 		),
 	};
 

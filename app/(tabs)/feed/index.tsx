@@ -10,7 +10,7 @@ import {
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
@@ -22,6 +22,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
+	const [visibleItems, setVisibleItems] = useState<number[]>([]);
+
+	// Viewability config
+	const viewabilityConfig = {
+		itemVisiblePercentThreshold: 50, // At least 50% of the item must be visible
+		minimumViewTime: 100, // Minimum time (ms) an item must be visible to count
+	};
+
+	// Handle viewable items change
+	const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+		const visibleIds = viewableItems.map((item: any) => item.item.id);
+		setVisibleItems(visibleIds);
+	}).current;
+
+	// Combine config and callback
+	const viewabilityConfigCallbackPairs = useRef([
+		{ viewabilityConfig, onViewableItemsChanged },
+	]);
 
 	// Infinite scroll data hook
 	const {
@@ -46,7 +64,9 @@ const Feed = () => {
 	};
 
 	// Render each feed item
-	const renderItem = ({ item }: { item: any }) => <FeedWrapper feed={item} />;
+	const renderItem = ({ item }: { item: any }) => {
+		return <FeedWrapper feed={item} visibleItems={visibleItems} />;
+	};
 
 	if (isLoading) {
 		return <FeedLoader />;
@@ -65,24 +85,21 @@ const Feed = () => {
 				<AvatarInitials size={68} />
 			</View>
 			<FlatList
-				data={data?.pages.flatMap((page) => page.data)} // Flatten pages to get all items
-				extraData={data?.pages.flatMap((page) => page.data)} // Ensures FlatList rerenders on data change
-				renderItem={renderItem} // Render individual feed items
-				keyExtractor={(item) => item.id.toString()} // Unique key for each item
+				data={data?.pages.flatMap((page) => page.data)}
+				keyExtractor={(item) => item.id.toString()}
+				renderItem={renderItem}
 				onEndReached={() => {
 					if (hasNextPage && !isFetchingNextPage) {
 						fetchNextPage();
-					} else {
-						console.log("No more pages to fetch or already fetching");
 					}
 				}}
 				onEndReachedThreshold={0.1} // Trigger when 10% away from the end
 				ListFooterComponent={renderFooter} // Loader at the bottom
+				viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
 				contentContainerStyle={styles.scrollContent}
 				refreshing={isLoading} // Indicate whether the list is currently refreshing
 				onRefresh={() => {
-					// Add logic to refresh the data here
-					refetch(); // Assuming you have a refetch function to reload the data
+					refetch();
 				}}
 			/>
 		</View>
@@ -90,11 +107,22 @@ const Feed = () => {
 };
 
 // Wrapper for rendering a single feed item
-const FeedWrapper = ({ feed }: { feed: any }) => (
+const FeedWrapper = ({
+	feed,
+	visibleItems,
+}: {
+	feed: any;
+	visibleItems: number[];
+}) => (
 	<View style={styles.feedWrapper}>
 		<FeedCardHeader data={feed} />
 		<View style={styles.cardWrapper}>
-			<CardRenderer type={feed.type} data={feed} elementId={feed.id} />
+			<CardRenderer
+				type={feed.type}
+				data={feed}
+				elementId={feed.id}
+				visibleItems={visibleItems}
+			/>
 		</View>
 		<FeedCardFooter data={feed} />
 	</View>
