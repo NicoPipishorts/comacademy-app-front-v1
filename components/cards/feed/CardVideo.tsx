@@ -1,8 +1,9 @@
 import ThumbLikeButton from "@/components/buttons/thumbLike";
+import { colorYellow, primaryBackground } from "@/constants/colors";
 import { FeedItem } from "@/types/feed";
 import { ResizeMode, Video } from "expo-av";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 interface Props {
 	data: FeedItem;
@@ -21,6 +22,7 @@ export default function FeedCardVideo({
 		width: 0,
 		height: 0,
 	});
+	const [isLoading, setIsLoading] = useState(true); // Loading state
 
 	useEffect(() => {
 		if (status?.didJustFinish && video.current) {
@@ -33,11 +35,20 @@ export default function FeedCardVideo({
 	const videoHeight =
 		videoDimensions.width > 0 && videoDimensions.height > 0
 			? 275 * (videoDimensions.height / videoDimensions.width)
-			: 490;
+			: 275;
 
 	return (
 		<View>
 			<View style={styles.container}>
+				{isLoading && (
+					<View style={styles.loaderContainer}>
+						<ActivityIndicator
+							size='large'
+							color={colorYellow}
+							style={{ backgroundColor: primaryBackground }}
+						/>
+					</View>
+				)}
 				<Video
 					ref={video}
 					source={{
@@ -46,13 +57,16 @@ export default function FeedCardVideo({
 					style={{
 						width: 275, // Fixed width
 						height: videoHeight, // Proportional height
+						backgroundColor: primaryBackground,
 					}}
 					shouldPlay={visibleItems.includes(data.id)}
 					isLooping={false}
 					useNativeControls={true}
 					resizeMode={ResizeMode.CONTAIN} // Maintain aspect ratio
 					onPlaybackStatusUpdate={(status) => setStatus(status)}
+					onLoadStart={() => setIsLoading(true)} // Show loader when loading starts
 					onReadyForDisplay={({ naturalSize }) => {
+						setIsLoading(false); // Hide loader when ready
 						const { width, height } = naturalSize || { width: 0, height: 0 };
 						if (width > 0 && height > 0) {
 							setVideoDimensions({ width, height });
@@ -66,5 +80,21 @@ export default function FeedCardVideo({
 }
 
 const styles = StyleSheet.create({
-	container: { width: "86%", borderRadius: 10, overflow: "hidden" },
+	container: {
+		width: "86%",
+		borderRadius: 10,
+		overflow: "hidden",
+		position: "relative",
+	},
+	loaderContainer: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: primaryBackground,
+		zIndex: 1,
+	},
 });
