@@ -2,7 +2,14 @@ import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+	Image,
+	LayoutAnimation,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import Loader from "../experience/loader";
 
 interface Props {
@@ -13,6 +20,8 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 	const { token } = useJwtToken();
 	const { data: niveaux } = useGetNiveaux(token);
 
+	const [textHeight, setTextHeight] = useState<number | "auto">(40);
+	const [isExpanded, setIsExpanded] = useState(false); // Track expansion state
 	const [niveauStatut, setNiveauStatut] = useState<string | null>(null);
 	const [niveauNumber, setNiveauNumber] = useState<number | null>(null);
 	const [niveauCitation, setNiveauCitation] = useState<string | null>(null);
@@ -47,6 +56,16 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		}
 	};
 
+	const toggleCommentSection = () => {
+		LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+		if (isExpanded) {
+			setTextHeight(40); // Collapse the comment section
+		} else {
+			setTextHeight("auto"); // Expand the comment section
+		}
+		setIsExpanded(!isExpanded); // Toggle the expansion state
+	};
+
 	return (
 		<>
 			<View style={styles.row}>
@@ -73,9 +92,22 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 				<View>
 					<Text style={styles.citationText}>{niveauCitation}</Text>
 				</View>
-				<View style={styles.commentContainer}>
+				<View style={[styles.commentContainer, { height: textHeight }]}>
 					<Text>{niveauCommentaire}</Text>
 				</View>
+				<TouchableOpacity onPress={toggleCommentSection} style={{ zIndex: 10 }}>
+					<Image
+						source={require("@/assets/imgs/icons/chevron-circle.png")}
+						style={{
+							transform: [{ rotate: isExpanded ? "180deg" : "0deg" }],
+							position: "absolute",
+							bottom: 0,
+							right: 5,
+							width: 30,
+							height: 30,
+						}}
+					/>
+				</TouchableOpacity>
 			</View>
 		</>
 	);
