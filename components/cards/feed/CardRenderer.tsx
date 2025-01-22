@@ -13,7 +13,6 @@ import React from "react";
 import FeedCardActusBref from "./CardActusBref";
 import FeedCardCardComAcademy from "./CardComAcademy";
 import FeedCardLol from "./CardLol";
-import FeedCardMarqueMystere from "./CardMarqueMystere";
 import FeedCardPetitesHistoires from "./CardPetitesHistoires";
 
 const CardRenderer = ({
@@ -40,7 +39,7 @@ const CardRenderer = ({
 		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
 		"feed-post-lol": <FeedCardLol data={data} elementId={elementId} />,
 		"feed-post-marqueMystere": (
-			<FeedCardMarqueMystere
+			<FeedCardPetitesHistoires
 				data={data}
 				elementId={elementId}
 				visibleItems={visibleItems}

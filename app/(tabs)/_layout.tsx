@@ -10,7 +10,7 @@ import * as Notifications from "expo-notifications";
 import { Tabs } from "expo-router";
 import { useEffect } from "react";
 import LoginScreen from "../../screens/Sign-in";
-import NotificationScheduler from "../services/notifications/LocalNotifications";
+import NotificationScheduler from "../../services/notifications/LocalNotifications";
 
 const CustomTabBar: React.FC<any> = (props) => {
 	const { isTabBarVisible } = useTabBarVisibility();

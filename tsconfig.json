@@ -43,7 +43,9 @@
 		"app/playlist.jsx",
 		"app/(tabs)/metiers.jsx",
 		"screens/CategoriesCards.jsx",
-		"components/user"
+		"components/user",
+		"services",
+		"data"
 	],
 	"exclude": [
 		"node_modules",
