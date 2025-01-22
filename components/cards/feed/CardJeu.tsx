@@ -56,7 +56,9 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 
 	return (
 		<View style={styles.cardWrapper}>
-			<Text style={styles.textTitle}>Alors, vrai ou faux ?</Text>
+			<Text style={styles.textTitle}>
+				A toi de jouer, viens voir ce que tu vaut
+			</Text>
 
 			<View
 				style={[
@@ -102,7 +104,8 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: FontSizeH3,
 		fontWeight: "bold",
-		marginBottom: 15,
+		marginVertical: 10,
+		marginLeft: 10,
 	},
 
 	cardContainer: {
