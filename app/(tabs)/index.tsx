@@ -1,48 +1,53 @@
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import useUserId from "@/hooks/useUserId";
+import {
+	getOnboardingStatus,
+	setOnboardingStatus,
+} from "@/services/onboarding/Onboarding";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 const HomeScreen = () => {
-	const [isOnboardingComplete, setIsOnboardingComplete] = useState(null);
+	const { userId } = useUserId();
+	const [isOnboardingComplete, setIsOnboardingComplete] = useState<
+		boolean | null
+	>(null);
 	const router = useRouter();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
 	// Temporary useEffect to reset onboarding status to false
-	useEffect(() => {
-		const resetOnboardingStatus = async () => {
-			await AsyncStorage.setItem("onboardingComplete", "false");
-		};
-
-		resetOnboardingStatus();
-	}, []); // This runs only once when the component mounts
+	// useEffect(() => {
+	// 	resetOnboardingStatus();
+	// }, []);
 
 	useEffect(() => {
-		const checkOnboardingStatus = async () => {
-			const status = await AsyncStorage.getItem("onboardingComplete");
-			setIsOnboardingComplete(status === "true");
+		const fetchOnboardingStatus = async () => {
+			if (!userId) return; // Skip fetching if no user ID is available
+			const status = await getOnboardingStatus(userId);
+			setIsOnboardingComplete(status);
 		};
 
-		checkOnboardingStatus();
-	}, []);
+		fetchOnboardingStatus();
+	}, [userId]);
 
 	const handleOnboardingComplete = useCallback(async () => {
-		await AsyncStorage.setItem("onboardingComplete", "true");
+		if (!userId) return; // Ensure the user ID is available
+		await setOnboardingStatus(userId, true);
 		setIsOnboardingComplete(true);
 		showTabBar();
-	}, [showTabBar]);
+	}, [userId, showTabBar]);
 
 	useEffect(() => {
 		if (isOnboardingComplete === true) {
 			router.replace("/feed");
 		} else if (isOnboardingComplete === false) {
-			hideTabBar(); // Hide the tab bar during onboarding
+			hideTabBar();
 		}
-	}, [isOnboardingComplete]); // Removed `router` and `hideTabBar` from dependencies
+	}, [isOnboardingComplete, router, hideTabBar]);
 
-	if (isOnboardingComplete === null) {
+	if (!userId || isOnboardingComplete === null) {
 		return (
 			<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
 				<ActivityIndicator size='large' />
