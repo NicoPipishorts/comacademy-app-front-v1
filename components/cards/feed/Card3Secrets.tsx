@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		marginVertical: 10,
 		marginLeft: 10,
+		marginBottom: 20,
 	},
 	keyCardTitle: {
 		color: colorWhite,
