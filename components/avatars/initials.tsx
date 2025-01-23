@@ -35,6 +35,20 @@ export default function AvatarInitials({ size }: Props) {
 	};
 
 	return (
+		// <Pressable onPress={() => navigation.navigate("user")}>
+		// 	<Image
+		// 		source={require("@/assets/imgs/avatar/2-y.png")}
+		// 		style={[
+		// 			styles.container,
+		// 			{
+		// 				backgroundColor: backgroundColor,
+		// 				height: size || 78,
+		// 				width: size || 78,
+		// 				borderRadius: size || 78,
+		// 			},
+		// 		]}
+		// 	/>
+		// </Pressable>
 		<TouchableOpacity
 			style={[
 				styles.container,

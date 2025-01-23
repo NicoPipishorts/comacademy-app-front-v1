@@ -15,6 +15,7 @@ import secrets from "@/assets/imgs/cards/home_3_secrets.png";
 import homeActusDis from "@/assets/imgs/cards/home_actus_dis.png";
 import lesCitations from "@/assets/imgs/cards/home_citations.png";
 import dico from "@/assets/imgs/cards/home_dico.png";
+import feed from "@/assets/imgs/cards/home_feed.png";
 import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
@@ -64,7 +65,7 @@ const HomeScreen = () => {
 					<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
 						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
 					</TouchableOpacity>
-					<View style={{ marginTop: 20, marginRight: 0 }}>
+					<View style={{ marginRight: 0 }}>
 						<AvatarInitials size={68} />
 					</View>
 				</View>
@@ -187,14 +188,14 @@ const HomeScreen = () => {
 								</View>
 							</View>
 
-							{/* Les Petits Card */}
+							{/* Les Metiers Card */}
 							<View>
 								<TouchableOpacity
 									style={styles.cardsButton}
-									onPress={() => navigation.navigate("petitesHistoires")}>
+									onPress={() => navigation.navigate("metiers")}>
 									<View style={styles.imageContainer}>
 										<Image
-											source={histoires}
+											source={metiers}
 											style={styles.shortcutsCards}
 											resizeMode='contain'
 										/>
@@ -206,10 +207,35 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										La petites histoires
+										Les métiers de la com'
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>Trouver sa voie</Text>
+								</View>
+							</View>
+
+							{/* Le Feed Card */}
+							<View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("feed")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={feed}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Le feed
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Apprendre en regardant
+										Pour ne rien louper
 									</Text>
 								</View>
 							</View>
@@ -249,33 +275,6 @@ const HomeScreen = () => {
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}>
 						<View style={styles.shortcuts}>
-							{/* Les 3 Secrets Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("secrets")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={secrets}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										3 secrets du succès
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Les clés de la réussite
-									</Text>
-								</View>
-							</View>
-
 							{/* Les 10 Commandements Card */}
 							<View style={{ alignItems: "center" }}>
 								<TouchableOpacity
@@ -299,6 +298,33 @@ const HomeScreen = () => {
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Les recettes en pagaille
+									</Text>
+								</View>
+							</View>
+
+							{/* Les Petits Card */}
+							<View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("petitesHistoires")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={histoires}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										La petites histoires
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Apprendre en regardant
 									</Text>
 								</View>
 							</View>
@@ -330,14 +356,14 @@ const HomeScreen = () => {
 								</View>
 							</View>
 
-							{/* Les Metiers Card */}
-							<View>
+							{/* Les 3 Secrets Card */}
+							<View style={{ alignItems: "center" }}>
 								<TouchableOpacity
 									style={styles.cardsButton}
-									onPress={() => navigation.navigate("metiers")}>
+									onPress={() => navigation.navigate("secrets")}>
 									<View style={styles.imageContainer}>
 										<Image
-											source={metiers}
+											source={secrets}
 											style={styles.shortcutsCards}
 											resizeMode='contain'
 										/>
@@ -349,9 +375,11 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Les métiers de la com'
+										3 secrets du succès
 									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Trouver sa voie</Text>
+									<Text style={{ fontSize: FontSize10 }}>
+										Les clés de la réussite
+									</Text>
 								</View>
 							</View>
 
@@ -426,13 +454,13 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: primaryBackground,
+		marginTop: 20,
 		paddingBottom: 20,
 	},
 	screenHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 10,
 		paddingHorizontal: 20,
 	},
 	header: {

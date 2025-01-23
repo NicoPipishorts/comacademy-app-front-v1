@@ -1,4 +1,4 @@
-import { localNotifications } from "@/app/data/localNotifications";
+import { localNotifications } from "@/data/localNotifications";
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
 import { Platform } from "react-native";
