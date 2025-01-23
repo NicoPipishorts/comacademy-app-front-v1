@@ -57,7 +57,7 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 	return (
 		<View style={styles.cardWrapper}>
 			<Text style={styles.textTitle}>
-				A toi de jouer, viens voir ce que tu vaut
+				A toi de jouer, viens voir ce que tu vaux : vrai ou faux ?
 			</Text>
 
 			<View
