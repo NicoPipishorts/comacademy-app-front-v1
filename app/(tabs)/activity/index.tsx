@@ -12,10 +12,10 @@ import {
 import commandements from "@/assets/imgs/cards/home_10_commandements.png";
 import trentes from "@/assets/imgs/cards/home_30s.png";
 import secrets from "@/assets/imgs/cards/home_3_secrets.png";
-import homeActusDis from "@/assets/imgs/cards/home_actus_dis.png";
 import lesCitations from "@/assets/imgs/cards/home_citations.png";
 import dico from "@/assets/imgs/cards/home_dico.png";
 import feed from "@/assets/imgs/cards/home_feed.png";
+import topFlops from "@/assets/imgs/cards/home_flops_dis.png";
 import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
 import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
@@ -413,7 +413,7 @@ const HomeScreen = () => {
 								<TouchableOpacity style={styles.cardsButton}>
 									<View style={styles.imageContainer}>
 										<Image
-											source={homeActusDis}
+											source={topFlops}
 											style={styles.shortcutsCards}
 											resizeMode='contain'
 										/>
