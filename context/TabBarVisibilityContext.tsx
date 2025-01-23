@@ -1,5 +1,11 @@
 // TabBarVisibilityContext.tsx
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, {
+	createContext,
+	ReactNode,
+	useCallback,
+	useContext,
+	useState,
+} from "react";
 
 interface TabBarVisibilityContextType {
 	isTabBarVisible: boolean;
@@ -30,10 +36,14 @@ export const TabBarVisibilityProvider: React.FC<
 > = ({ children }) => {
 	const [isTabBarVisible, setTabBarVisible] = useState(true);
 
-	const showTabBar = () => {
+	// Memoize the functions to ensure they have stable references
+	const showTabBar = useCallback(() => {
 		setTabBarVisible(true);
-	};
-	const hideTabBar = () => setTabBarVisible(false);
+	}, []);
+
+	const hideTabBar = useCallback(() => {
+		setTabBarVisible(false);
+	}, []);
 
 	return (
 		<TabBarVisibilityContext.Provider

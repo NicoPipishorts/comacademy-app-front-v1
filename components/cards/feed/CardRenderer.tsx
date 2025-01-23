@@ -13,8 +13,7 @@ import React from "react";
 import FeedCardActusBref from "./CardActusBref";
 import FeedCardCardComAcademy from "./CardComAcademy";
 import FeedCardLol from "./CardLol";
-import FeedCardMarqueMystere from "./CardMarqueMystere";
-import FeedCardPetitesHistoires from "./CardPetitesHistoires";
+import FeedCardVideo from "./CardVideo";
 
 const CardRenderer = ({
 	type,
@@ -40,7 +39,7 @@ const CardRenderer = ({
 		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
 		"feed-post-lol": <FeedCardLol data={data} elementId={elementId} />,
 		"feed-post-marqueMystere": (
-			<FeedCardMarqueMystere
+			<FeedCardVideo
 				data={data}
 				elementId={elementId}
 				visibleItems={visibleItems}
@@ -53,7 +52,7 @@ const CardRenderer = ({
 			<FeedCardActusBref data={data} elementId={elementId} />
 		),
 		"feed-post-petitesHistoires": (
-			<FeedCardPetitesHistoires
+			<FeedCardVideo
 				data={data}
 				elementId={elementId}
 				visibleItems={visibleItems}
