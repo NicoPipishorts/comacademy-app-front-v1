@@ -53,7 +53,7 @@ const OnboardingV1 = ({ onComplete }) => {
 				<Animated.View
 					style={[
 						finishButtonStyle,
-						{ backgroundColor: "rgba(255, 0, 0, 0.2)" },
+						{ backgroundColor: "rgba(255, 0, 0, 0.2)", zIndex: 10 },
 					]}>
 					<TouchableOpacity onPress={onComplete} style={styles.finishedButton}>
 						<Text style={styles.finishedButtonText}>Entrer</Text>
@@ -61,10 +61,10 @@ const OnboardingV1 = ({ onComplete }) => {
 				</Animated.View>
 				<FlatList
 					data={slides}
-					pointerEvents={currentSlide === slides.length - 1 ? "none" : "auto"}
 					horizontal
 					pagingEnabled
 					showsHorizontalScrollIndicator={false}
+					keyboardShouldPersistTaps='handled' // Important for tap handling
 					renderItem={renderSlide}
 					keyExtractor={(item) => item.id}
 					onScroll={(e) => {

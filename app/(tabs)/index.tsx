@@ -11,14 +11,13 @@ const HomeScreen = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
 	// Temporary useEffect to reset onboarding status to false
-	// useEffect(() => {
-	// 	const resetOnboardingStatus = async () => {
-	// 		await AsyncStorage.setItem("onboardingComplete", "false");
-	// 		console.log("Onboarding status reset to false");
-	// 	};
+	useEffect(() => {
+		const resetOnboardingStatus = async () => {
+			await AsyncStorage.setItem("onboardingComplete", "false");
+		};
 
-	// 	resetOnboardingStatus();
-	// }, []); // This runs only once when the component mounts
+		resetOnboardingStatus();
+	}, []); // This runs only once when the component mounts
 
 	useEffect(() => {
 		const checkOnboardingStatus = async () => {
@@ -30,7 +29,6 @@ const HomeScreen = () => {
 	}, []);
 
 	const handleOnboardingComplete = useCallback(async () => {
-		console.log("Onboarding complete");
 		await AsyncStorage.setItem("onboardingComplete", "true");
 		setIsOnboardingComplete(true);
 		showTabBar();

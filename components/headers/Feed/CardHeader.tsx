@@ -29,14 +29,14 @@ const TITLES = {
 	secret: "3 secrets du succès",
 	dico: "Le dico",
 	citation: "Les citations",
-	metier: "Ton future metier?",
+	metier: "Les métiers de la com",
 	question: "Com'Academy : Le jeu",
 	commandement: "Les 10 commandements",
 	"feed-post-chiffre": "Le chiffre du jour",
-	"feed-post-argh": "AARRGHH !! \nL’expression qui énerve",
+	"feed-post-argh": "AARRGHH !! ",
 	"feed-post-image": "Une image/ un métier",
 	"feed-post-vie": "Vie de com'",
-	"feed-post-actusBref": "Actus en bref'",
+	"feed-post-actusBref": "Actus en bref",
 	"feed-post-lol": "LOL",
 	"feed-post-comAcademy": "Com'Academy",
 	"feed-post-marqueMystere": "Marque mystère",
@@ -44,14 +44,20 @@ const TITLES = {
 };
 
 const SUB_TITLES = {
-	secret: "Secrets des marques",
+	secret: "Secrets de marques",
 	dico: "Déchiffrer le jargon de la com",
 	citation: "Bol d'inspiration",
-	metier: "Enjeux et missions",
+	metier: "Focus",
 	question: "Alors, vrai ou faux?",
 	commandement: "Astuces pour réussir",
 	"feed-post-argh": "L’expression qui énerve",
 	"feed-post-petitesHistoires": "Anecdotes pour briller",
+	"feed-post-chiffre": "1 chiffre : 1 révélation",
+	"feed-post-vie": "Ca sent le vécu",
+	"feed-post-actusBref": "L'actu sans blabla",
+	"feed-post-comAcademy": "Le Boss",
+	"feed-post-image": "1 image vaut 1000 mots",
+	"feed-post-lol": "La pause café",
 };
 
 const DESTINATIONS = {

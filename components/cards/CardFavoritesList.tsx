@@ -63,7 +63,7 @@ export default function CardFavoritesList({ title, type }: Props) {
 							{title}
 						</Text>
 						<Text style={{ fontSize: FontSize12 }}>
-							" C'est quoi la définition ?! "
+							" A savoir par cœur ! ?! "
 						</Text>
 					</View>
 				</TouchableOpacity>

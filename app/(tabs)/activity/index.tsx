@@ -136,14 +136,14 @@ const HomeScreen = () => {
 								</View>
 							</View>
 
-							{/* Les Dico Card */}
-							<View style={{ alignItems: "center" }}>
+							{/* Le Feed Card */}
+							<View>
 								<TouchableOpacity
 									style={styles.cardsButton}
-									onPress={() => navigation.navigate("dico")}>
+									onPress={() => navigation.navigate("feed")}>
 									<View style={styles.imageContainer}>
 										<Image
-											source={dico}
+											source={feed}
 											style={styles.shortcutsCards}
 											resizeMode='contain'
 										/>
@@ -155,11 +155,36 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Dico
+										Le feed
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Déchiffrer le jargon
+										Pour ne rien louper
 									</Text>
+								</View>
+							</View>
+
+							{/* Les Metiers Card */}
+							<View>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("metiers")}>
+									<View style={styles.imageContainer}>
+										<Image
+											source={metiers}
+											style={styles.shortcutsCards}
+											resizeMode='contain'
+										/>
+									</View>
+								</TouchableOpacity>
+								<View
+									style={{
+										alignItems: "center",
+										marginLeft: -20,
+									}}>
+									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+										Les métiers de la com'
+									</Text>
+									<Text style={{ fontSize: FontSize10 }}>Focus</Text>
 								</View>
 							</View>
 
@@ -188,14 +213,14 @@ const HomeScreen = () => {
 								</View>
 							</View>
 
-							{/* Les Metiers Card */}
-							<View>
+							{/* Les Dico Card */}
+							<View style={{ alignItems: "center" }}>
 								<TouchableOpacity
 									style={styles.cardsButton}
-									onPress={() => navigation.navigate("metiers")}>
+									onPress={() => navigation.navigate("dico")}>
 									<View style={styles.imageContainer}>
 										<Image
-											source={metiers}
+											source={dico}
 											style={styles.shortcutsCards}
 											resizeMode='contain'
 										/>
@@ -207,35 +232,10 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Les métiers de la com'
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Trouver sa voie</Text>
-								</View>
-							</View>
-
-							{/* Le Feed Card */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("feed")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={feed}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Le feed
+										Dico
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Pour ne rien louper
+										Déchiffrer le jargon
 									</Text>
 								</View>
 							</View>
@@ -297,7 +297,7 @@ const HomeScreen = () => {
 										10 commandements
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Les recettes en pagaille
+										Astuces pour réussir
 									</Text>
 								</View>
 							</View>
@@ -321,7 +321,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										La petites histoires
+										La petite histoire...
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Apprendre en regardant
@@ -351,7 +351,7 @@ const HomeScreen = () => {
 										Les citations
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										S'inspirer tous les jours
+										Bol d’inspiration
 									</Text>
 								</View>
 							</View>
@@ -378,7 +378,7 @@ const HomeScreen = () => {
 										3 secrets du succès
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Les clés de la réussite
+										Secrets de marques
 									</Text>
 								</View>
 							</View>
@@ -403,7 +403,7 @@ const HomeScreen = () => {
 										30s top chrono
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Decryptage de pubs
+										1 pub, 1 analyse, c’est plié
 									</Text>
 								</View>
 							</View>
@@ -425,7 +425,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Top des flips
+										Top des flops
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Petits et grands échecs

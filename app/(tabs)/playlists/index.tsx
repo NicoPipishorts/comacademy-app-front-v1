@@ -117,7 +117,7 @@ const Playlist = () => {
 				contentContainerStyle={styles.playlistsContainer}
 				showsVerticalScrollIndicator={false}>
 				<CardFavoritesList type='favorites' title='Questions ' />
-				<CardFavoritesList type='metiers' title='Les Metiers ' />
+				<CardFavoritesList type='metiers' title='Metiers ' />
 				<CardFavoritesList type='dicos' title='Dico ' />
 				{isFetched &&
 					playlistsData &&
