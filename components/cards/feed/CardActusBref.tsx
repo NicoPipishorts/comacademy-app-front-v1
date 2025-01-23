@@ -1,6 +1,11 @@
 import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorBlack, primaryBackground } from "@/constants/colors";
-import { FontSize14, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
+import {
+	FontSize12,
+	FontSize14,
+	FontSize18,
+	FontSizeH1,
+} from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
 import React, { useCallback, useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -67,14 +72,6 @@ export default function FeedCardActusBref({ data, elementId }: Props) {
 					}}>
 					{data.payload.Titre}
 				</Text>
-				<Text
-					style={{
-						fontWeight: "bold",
-						marginHorizontal: 15,
-						marginBottom: 10,
-					}}>
-					{data.payload.Text}
-				</Text>
 				{data.payload.Media && (
 					<Image
 						source={source}
@@ -92,12 +89,22 @@ export default function FeedCardActusBref({ data, elementId }: Props) {
 					<Text
 						style={{
 							fontWeight: "bold",
+							marginTop: 5,
+							marginBottom: 20,
 							marginHorizontal: 15,
-							marginTop: 10,
+							fontSize: FontSize12,
 						}}>
 						Crédit photo :{data.payload.Credits}
 					</Text>
 				)}
+				<Text
+					style={{
+						fontWeight: "bold",
+						marginHorizontal: 15,
+						marginVertical: 10,
+					}}>
+					{data.payload.Text}
+				</Text>
 			</>
 			{/* Render the like button */}
 			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />

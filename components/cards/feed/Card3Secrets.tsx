@@ -5,7 +5,7 @@ import {
 	colorPurple,
 	colorWhite,
 } from "@/constants/colors";
-import { FontSize14, FontSizeH1 } from "@/constants/fontsizes";
+import { FontSize14, FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import { FeedItem } from "@/types/feed";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -83,11 +83,11 @@ const styles = StyleSheet.create({
 		shadowRadius: 10.84,
 	},
 	cardTitle: {
-		fontSize: FontSize14,
 		color: colorBlack,
+		fontSize: FontSizeH3,
 		fontWeight: "bold",
+		marginVertical: 10,
 		marginLeft: 10,
-		marginBottom: 10,
 	},
 	keyCardTitle: {
 		color: colorWhite,
