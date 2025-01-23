@@ -1,4 +1,4 @@
-import { colorPurple } from "@/constants/colors";
+import { colorPurple, primaryBackground } from "@/constants/colors";
 import React, { useState } from "react";
 import {
 	Dimensions,
@@ -99,7 +99,7 @@ const OnboardingV1 = ({ onComplete }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#fff",
+		backgroundColor: primaryBackground,
 	},
 	slide: {
 		flex: 1,
