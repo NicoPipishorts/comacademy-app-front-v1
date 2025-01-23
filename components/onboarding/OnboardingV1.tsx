@@ -4,7 +4,6 @@ import {
 	Dimensions,
 	Image,
 	StyleSheet,
-	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
@@ -56,7 +55,11 @@ const OnboardingV1 = ({ onComplete }) => {
 						{ backgroundColor: "rgba(255, 0, 0, 0.2)", zIndex: 10 },
 					]}>
 					<TouchableOpacity onPress={onComplete} style={styles.finishedButton}>
-						<Text style={styles.finishedButtonText}>Entrer</Text>
+						{/* <Text style={styles.finishedButtonText}>Entrer</Text> */}
+						<Image
+							source={require("@/assets/imgs/icons/arrow-onboarding.png")}
+							style={{ width: 45, height: 25 }}
+						/>
 					</TouchableOpacity>
 				</Animated.View>
 				<FlatList
@@ -114,10 +117,10 @@ const styles = StyleSheet.create({
 	finishedButton: {
 		position: "absolute",
 		top: 60,
-		right: 20,
+		right: 25,
 		backgroundColor: colorPurple,
-		paddingVertical: 8,
-		paddingHorizontal: 25,
+		paddingVertical: 6,
+		paddingHorizontal: 20,
 		borderRadius: 50,
 		zIndex: 100,
 		elevation: 10,
