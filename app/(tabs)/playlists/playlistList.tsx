@@ -1,7 +1,7 @@
 import { useRemoveFromPlaylist } from "@/api/playlist/removeFromPlaylist";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
-import { colorRed, primaryBackground } from "@/constants/colors";
+import { colorGrey, colorRed, primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { truncateString } from "@/helpers/truncateText";
@@ -15,18 +15,16 @@ import { AxiosError } from "axios";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
+	Animated,
 	Image,
 	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
+	TouchableWithoutFeedback,
 	View,
 } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Reanimated, {
-	SharedValue,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const PlaylistList = () => {
@@ -89,21 +87,24 @@ const PlaylistList = () => {
 		}
 	};
 
-	function RightAction(
-		prog: SharedValue<number>,
-		drag: SharedValue<number>,
-		elementId: number
-	) {
-		const styleAnimation = useAnimatedStyle(() => {
-			return {
-				transform: [{ translateX: drag.value + 80 }],
-				alignItems: "center",
-				justifyContent: "center",
-			};
+	const handleOutsidePress = () => {
+		// Close the currently opened swipeable card
+		if (openedSwipeable) {
+			openedSwipeable.close();
+			setOpenedSwipeable(null);
+		}
+	};
+
+	function RightAction(dragX, elementId) {
+		const trans = dragX.interpolate({
+			inputRange: [-80, 0],
+			outputRange: [0, 80],
+			extrapolate: "clamp",
 		});
 
 		return (
-			<Reanimated.View style={styleAnimation}>
+			<Animated.View
+				style={[styles.rightAction, { transform: [{ translateX: trans }] }]}>
 				<Pressable
 					onPress={() => {
 						removeFromPlaylist({ elementId, authToken: token });
@@ -114,133 +115,136 @@ const PlaylistList = () => {
 						style={{ width: 24, height: 24 }}
 					/>
 				</Pressable>
-			</Reanimated.View>
+			</Animated.View>
 		);
 	}
 
 	return (
 		<SwipeToGoBack>
-			<View style={styles.wrapper}>
-				<ReturnButton />
+			<TouchableWithoutFeedback onPress={handleOutsidePress} accessible={false}>
+				<View style={styles.wrapper}>
+					<ReturnButton />
 
-				<Pressable>
-					<Image
-						source={require("@/assets/imgs/icons/pencil.png")}
-						style={{
-							position: "absolute",
-							top: insets.top + 15,
-							right: 30,
-							width: 25,
-							height: 25,
-						}}
-					/>
-				</Pressable>
-
-				<View style={styles.headerContainer}>
-					<View>
-						<PlaylistDisplayImage
-							title={playlistData.data.attributes.name}
-							image={playlistData.data.attributes.selectedColor}
-							width={100}
-							height={100}
+					<Pressable>
+						<Image
+							source={require("@/assets/imgs/icons/pencil.png")}
+							style={{
+								position: "absolute",
+								top: insets.top + 15,
+								right: 30,
+								width: 25,
+								height: 25,
+							}}
 						/>
-					</View>
-					<View style={styles.headerTextContainer}>
-						<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-							Playlist
-						</Text>
-						<Text style={{ fontSize: FontSizeH1, fontWeight: "bold" }}>
-							{truncateString(playlistData.data.attributes.name, 16)}
-						</Text>
-						<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-							{playlistContents.length} éléments
-						</Text>
-					</View>
-				</View>
+					</Pressable>
 
-				<View style={styles.contentContainer}>
-					{playlistContents.length <= 0 && (
-						<View style={styles.contentContainerEmpty}>
-							<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
-								Ta playlist est vide.
+					<View style={styles.headerContainer}>
+						<View>
+							<PlaylistDisplayImage
+								title={playlistData.data.attributes.name}
+								image={playlistData.data.attributes.selectedColor}
+								width={100}
+								height={100}
+							/>
+						</View>
+						<View style={styles.headerTextContainer}>
+							<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+								Playlist
+							</Text>
+							<Text style={{ fontSize: FontSizeH1, fontWeight: "bold" }}>
+								{truncateString(playlistData.data.attributes.name, 16)}
+							</Text>
+							<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
+								{playlistContents.length} éléments
 							</Text>
 						</View>
-					)}
-					{playlistContents.length > 0 && (
-						<ScrollView
-							contentContainerStyle={{
-								paddingTop: 50,
-								paddingBottom: 30,
-								gap: 25,
-								minWidth: "100%",
-							}}
-							showsVerticalScrollIndicator={false}>
-							{playlistContents.map((content) => {
-								const refKey = `swipeable-${content.id}`;
-								if (!swipeableRefs.current[refKey]) {
-									swipeableRefs.current[refKey] = React.createRef();
-								}
+					</View>
 
-								return (
-									<ReanimatedSwipeable
-										key={content.id}
-										ref={(ref) => (swipeableRefs.current[content.id] = ref)}
-										friction={2}
-										enableTrackpadTwoFingerGesture
-										rightThreshold={40}
-										renderRightActions={(prog, drag) =>
-											RightAction(prog, drag, content.id)
-										}
-										onSwipeableWillOpen={() => {
-											if (
-												openedSwipeable &&
-												openedSwipeable !== swipeableRefs.current[content.id]
-											) {
-												openedSwipeable.close();
-											} else {
-												setOpenedSwipeable(swipeableRefs.current[content.id]);
+					<View style={styles.contentContainer}>
+						{playlistContents.length <= 0 && (
+							<View style={styles.contentContainerEmpty}>
+								<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
+									Ta playlist est vide.
+								</Text>
+							</View>
+						)}
+						{playlistContents.length > 0 && (
+							<ScrollView
+								contentContainerStyle={{
+									paddingTop: 50,
+									paddingBottom: 30,
+									minWidth: "100%",
+								}}
+								showsVerticalScrollIndicator={false}>
+								{playlistContents.map((content) => {
+									const refKey = `swipeable-${content.id}`;
+									if (!swipeableRefs.current[refKey]) {
+										swipeableRefs.current[refKey] = React.createRef();
+									}
+
+									return (
+										<Swipeable
+											key={content.id}
+											ref={(ref) => (swipeableRefs.current[content.id] = ref)}
+											friction={2}
+											enableTrackpadTwoFingerGesture
+											renderRightActions={(progress, dragX) =>
+												RightAction(dragX, content.id)
 											}
-										}}>
-										<Pressable
-											style={{
-												flexDirection: "row",
-												alignItems: "center",
-											}}
-											onPress={() =>
-												handlePress(content.group, content.itemId)
-											}>
-											<View>
-												<PlaylistDisplayImage
-													image={playlistData.data.attributes.selectedColor}
-													width={70}
-													height={70}
-												/>
-											</View>
-											<View style={{ gap: 4, flexShrink: 1 }}>
-												<Text
-													style={{
-														fontSize: FontSize18,
-														fontWeight: "bold",
-														textTransform: "capitalize",
-													}}>
-													{content.group}
-												</Text>
-												<Text
-													style={{
-														fontSize: FontSize12,
-														fontWeight: "bold",
-													}}>
-													{truncateString(content.value, 100)}
-												</Text>
-											</View>
-										</Pressable>
-									</ReanimatedSwipeable>
-								);
-							})}
-						</ScrollView>
-					)}
+											onSwipeableWillOpen={() => {
+												if (
+													openedSwipeable &&
+													openedSwipeable !== swipeableRefs.current[content.id]
+												) {
+													openedSwipeable.close();
+												} else {
+													setOpenedSwipeable(swipeableRefs.current[content.id]);
+												}
+											}}>
+											<Pressable
+												style={{
+													flexDirection: "row",
+													alignItems: "center",
+													borderBottomColor: colorGrey,
+													paddingVertical: 10,
+													borderBottomWidth: 1,
+												}}
+												onPress={() =>
+													handlePress(content.group, content.itemId)
+												}>
+												<View>
+													<PlaylistDisplayImage
+														image={playlistData.data.attributes.selectedColor}
+														width={70}
+														height={70}
+													/>
+												</View>
+												<View style={{ gap: 4, flexShrink: 1 }}>
+													<Text
+														style={{
+															fontSize: FontSize18,
+															fontWeight: "bold",
+															textTransform: "capitalize",
+														}}>
+														{content.group}
+													</Text>
+													<Text
+														style={{
+															fontSize: FontSize12,
+															fontWeight: "bold",
+														}}>
+														{truncateString(content.value, 100)}
+													</Text>
+												</View>
+											</Pressable>
+										</Swipeable>
+									);
+								})}
+							</ScrollView>
+						)}
+					</View>
 				</View>
-			</View>
+			</TouchableWithoutFeedback>
 		</SwipeToGoBack>
 	);
 };
@@ -251,7 +255,8 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		flex: 1,
-		width: 80,
+		maxWidth: 80,
+		minWidth: 80,
 		backgroundColor: colorRed,
 		borderLeftWidth: 5,
 		borderLeftColor: primaryBackground,
