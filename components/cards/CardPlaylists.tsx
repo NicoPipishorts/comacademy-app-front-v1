@@ -1,10 +1,16 @@
-import { colorBlue, colorRed, primaryBackground } from "@/constants/colors";
+import {
+	colorBlue,
+	colorGrey,
+	colorRed,
+	primaryBackground,
+} from "@/constants/colors";
 import { FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
 import React from "react";
 import {
+	Animated,
 	Image,
 	Pressable,
 	StyleSheet,
@@ -12,12 +18,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Reanimated, {
-	SharedValue,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 
 interface Props {
 	id: number;
@@ -25,7 +26,7 @@ interface Props {
 	color: string;
 	refKey: string;
 	openedSwipeable: any;
-	setOpenedSwipeable: React.Dispatch<boolean>;
+	setOpenedSwipeable: React.Dispatch<any>;
 	swipeableRefs: React.MutableRefObject<{}>;
 	handDeletePlaylist: (id: number) => void;
 	handleEditPlaylist: (id: number) => void;
@@ -47,73 +48,87 @@ export default function CardPlaylist({
 		navigation.navigate("playlistList", { playlistId: id });
 	};
 
-	function RightAction(prog: SharedValue<number>, drag: SharedValue<number>) {
-		const styleAnimation = useAnimatedStyle(() => {
-			return {
-				transform: [{ translateX: drag.value + 160 }],
-				alignItems: "center",
-				justifyContent: "center",
-			};
+	const closeSwipeable = () => {
+		if (openedSwipeable) {
+			openedSwipeable.close();
+			setOpenedSwipeable(null);
+		}
+	};
+
+	const renderRightActions = (
+		progress: Animated.AnimatedInterpolation<number>
+	) => {
+		// Animate the buttons as you swipe
+		const translateX = progress.interpolate({
+			inputRange: [0, 1],
+			outputRange: [160, 0], // Buttons slide in from the right
 		});
 
 		return (
-			<Reanimated.View style={styleAnimation}>
-				<View style={styles.rightActionContainer}>
+			<View style={styles.rightActionContainer}>
+				<Animated.View
+					style={[styles.actionEdit, { transform: [{ translateX }] }]}>
 					<Pressable
-						style={[styles.rightAction, styles.actionEdit]}
+						style={styles.rightAction}
 						onPress={() => {
 							handleEditPlaylist(id);
-
-							if (openedSwipeable) {
-								openedSwipeable.close();
-								setOpenedSwipeable(null);
-							}
+							closeSwipeable();
 						}}>
 						<Image
 							source={require("@/assets/imgs/icons/pencil_white.png")}
 							style={{ width: 24, height: 24 }}
 						/>
 					</Pressable>
+				</Animated.View>
+				<Animated.View
+					style={[styles.actionDelete, { transform: [{ translateX }] }]}>
 					<Pressable
-						style={[styles.rightAction, styles.actionDelete]}
+						style={styles.rightAction}
 						onPress={() => {
 							handDeletePlaylist(id);
-
-							if (openedSwipeable) {
-								openedSwipeable.close();
-								setOpenedSwipeable(null);
-							}
+							closeSwipeable();
 						}}>
 						<Image
 							source={require("@/assets/imgs/icons/trash_white.png")}
 							style={{ width: 24, height: 24 }}
 						/>
 					</Pressable>
-				</View>
-			</Reanimated.View>
+				</Animated.View>
+			</View>
 		);
-	}
+	};
 
 	return (
-		<>
-			<ReanimatedSwipeable
+		<View
+			style={{
+				flex: 1,
+				borderBottomColor: colorGrey,
+				borderBottomWidth: 1,
+			}}>
+			<Swipeable
 				key={id}
-				enableTrackpadTwoFingerGesture
-				rightThreshold={40}
-				friction={2}
 				ref={(ref) => (swipeableRefs.current[id] = ref)}
-				renderRightActions={(prog, drag) => RightAction(prog, drag)}
+				friction={2}
+				rightThreshold={40}
+				renderRightActions={(progress) => renderRightActions(progress)}
 				onSwipeableWillOpen={() => {
 					if (
 						openedSwipeable &&
 						openedSwipeable !== swipeableRefs.current[id]
 					) {
 						openedSwipeable.close();
-						setOpenedSwipeable(null);
 					}
 					setOpenedSwipeable(swipeableRefs.current[id]);
+				}}
+				onSwipeableClose={() => {
+					setOpenedSwipeable(null);
 				}}>
-				<TouchableOpacity style={styles.wrapper} onPress={() => handlePress()}>
+				<TouchableOpacity
+					style={styles.wrapper}
+					onPress={() => {
+						handlePress();
+						closeSwipeable(); // Close swipeable when card is pressed
+					}}>
 					<PlaylistDisplayImage
 						title={title}
 						image={color}
@@ -126,21 +141,22 @@ export default function CardPlaylist({
 						</Text>
 					</View>
 				</TouchableOpacity>
-			</ReanimatedSwipeable>
-		</>
+			</Swipeable>
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	rightActionContainer: {
 		flexDirection: "row",
-		flex: 1,
-		width: 160,
+		maxWidth: 160,
 	},
 	rightAction: {
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "center",
+		minHeight: "100%",
+		minWidth: "100%",
 	},
 	actionDelete: {
 		backgroundColor: colorRed,

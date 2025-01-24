@@ -18,10 +18,12 @@ import { AxiosError } from "axios";
 import React, { useRef, useState } from "react";
 import {
 	Image,
+	Keyboard,
 	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
+	TouchableWithoutFeedback,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -90,66 +92,81 @@ const Playlist = () => {
 		return <Loader />;
 	}
 
+	const closeSwipeable = () => {
+		if (openedSwipeable) {
+			openedSwipeable.close();
+			setOpenedSwipeable(null);
+		}
+	};
+
+	const handleOutsidePress = () => {
+		Keyboard.dismiss();
+		closeSwipeable();
+	};
+
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<ScreenHeaders content='Playlists' />
+		<TouchableWithoutFeedback onPress={handleOutsidePress} accessible={false}>
+			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+				<ScreenHeaders content='Playlists' />
 
-			<TouchableOpacity
-				style={styles.addPlaylistContainer}
-				onPress={() => {
-					setModalVisible(true);
-					setModalType("new");
-					if (openedSwipeable) {
-						openedSwipeable.close();
-						setOpenedSwipeable(null);
-					}
-				}}>
-				<Image source={AddPlaylist} style={styles.addPlaylistImage} />
-				<View style={{ flexDirection: "column" }}>
-					<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
-						Nouvelle Playlist
-					</Text>
-					<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
-				</View>
-			</TouchableOpacity>
-
-			<ScrollView
-				contentContainerStyle={styles.playlistsContainer}
-				showsVerticalScrollIndicator={false}>
-				<CardFavoritesList type='favorites' title='Questions ' />
-				<CardFavoritesList type='metiers' title='Metiers ' />
-				<CardFavoritesList type='dicos' title='Dico ' />
-				{isFetched &&
-					playlistsData &&
-					playlistsData.data.map((playlist) => {
-						const refKey = `swipeable-${playlist.id}`;
-						if (!swipeableRefs.current[refKey]) {
-							swipeableRefs.current[refKey] = React.createRef();
+				<TouchableOpacity
+					style={styles.addPlaylistContainer}
+					onPress={() => {
+						setModalVisible(true);
+						setModalType("new");
+						if (openedSwipeable) {
+							openedSwipeable.close();
+							setOpenedSwipeable(null);
 						}
-						return (
-							<CardPlaylist
-								key={playlist.id}
-								id={playlist.id}
-								refKey={refKey}
-								swipeableRefs={swipeableRefs}
-								openedSwipeable={openedSwipeable}
-								title={playlist.attributes.name}
-								color={playlist.attributes.selectedColor}
-								setOpenedSwipeable={setOpenedSwipeable}
-								handDeletePlaylist={handDeletePlaylist}
-								handleEditPlaylist={handleEditPlaylist}
-							/>
-						);
-					})}
-			</ScrollView>
+					}}>
+					<Image source={AddPlaylist} style={styles.addPlaylistImage} />
+					<View style={{ flexDirection: "column" }}>
+						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
+							Nouvelle Playlist
+						</Text>
+						<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
+					</View>
+				</TouchableOpacity>
 
-			<NewPlaylistModal
-				visible={modalVisible}
-				onClose={() => setModalVisible(false)}
-				onSubmit={handleCreatePlaylist}
-				playlistId={playlistId}
-			/>
-		</View>
+				<ScrollView
+					contentContainerStyle={styles.playlistsContainer}
+					showsVerticalScrollIndicator={false}
+					keyboardShouldPersistTaps='handled'>
+					<CardFavoritesList type='favorites' title='Questions ' />
+					<CardFavoritesList type='metiers' title='Metiers ' />
+					<CardFavoritesList type='dicos' title='Dico ' />
+					{isFetched &&
+						playlistsData &&
+						playlistsData.data.map((playlist) => {
+							const refKey = `swipeable-${playlist.id}`;
+							if (!swipeableRefs.current[refKey]) {
+								swipeableRefs.current[refKey] = React.createRef();
+							}
+							return (
+								<CardPlaylist
+									key={playlist.id}
+									id={playlist.id}
+									refKey={refKey}
+									swipeableRefs={swipeableRefs}
+									openedSwipeable={openedSwipeable}
+									title={playlist.attributes.name}
+									color={playlist.attributes.selectedColor}
+									setOpenedSwipeable={setOpenedSwipeable}
+									handDeletePlaylist={handDeletePlaylist}
+									handleEditPlaylist={handleEditPlaylist}
+								/>
+							);
+						})}
+				</ScrollView>
+
+				<NewPlaylistModal
+					visible={modalVisible}
+					onClose={() => setModalVisible(false)}
+					onSubmit={handleCreatePlaylist}
+					playlistId={playlistId}
+				/>
+			</View>
+		</TouchableWithoutFeedback>
 	);
 };
 
