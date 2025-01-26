@@ -2,7 +2,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-	Alert,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -26,11 +25,13 @@ import {
 	colorWhite,
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
+import { useSnackbar } from "@/context/snackBar";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SignIn = () => {
 	const insets = useSafeAreaInsets();
+	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
 	const [email, setEmail] = useState("");
@@ -48,7 +49,10 @@ const SignIn = () => {
 	};
 
 	const onError = (error) => {
-		Alert.alert("Login failed", error.message); // Using Alert from react-native
+		showSnackbar(
+			"Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.",
+			"error"
+		);
 	};
 
 	const mutation = useLoginMutation(authUrl, onSuccess, onError);
