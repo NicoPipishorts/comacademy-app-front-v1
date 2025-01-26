@@ -1,9 +1,4 @@
-import {
-	colorBlue,
-	colorGrey,
-	colorRed,
-	primaryBackground,
-} from "@/constants/colors";
+import { colorBlue, colorRed } from "@/constants/colors";
 import { FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
@@ -67,7 +62,11 @@ export default function CardPlaylist({
 		return (
 			<View style={styles.rightActionContainer}>
 				<Animated.View
-					style={[styles.actionEdit, { transform: [{ translateX }] }]}>
+					style={[
+						styles.actionEdit,
+						styles.actionButton,
+						{ transform: [{ translateX }] },
+					]}>
 					<Pressable
 						style={styles.rightAction}
 						onPress={() => {
@@ -81,7 +80,11 @@ export default function CardPlaylist({
 					</Pressable>
 				</Animated.View>
 				<Animated.View
-					style={[styles.actionDelete, { transform: [{ translateX }] }]}>
+					style={[
+						styles.actionDelete,
+						styles.actionButton,
+						{ transform: [{ translateX }] },
+					]}>
 					<Pressable
 						style={styles.rightAction}
 						onPress={() => {
@@ -102,8 +105,6 @@ export default function CardPlaylist({
 		<View
 			style={{
 				flex: 1,
-				borderBottomColor: colorGrey,
-				borderBottomWidth: 1,
 			}}>
 			<Swipeable
 				key={id}
@@ -158,15 +159,17 @@ const styles = StyleSheet.create({
 		minHeight: "100%",
 		minWidth: "100%",
 	},
+	actionButton: {
+		width: "50%",
+		borderRadius: 5,
+		marginVertical: 10,
+		justifyContent: "center",
+	},
 	actionDelete: {
 		backgroundColor: colorRed,
-		width: "47%",
 	},
 	actionEdit: {
-		borderLeftWidth: 10,
-		borderLeftColor: primaryBackground,
 		backgroundColor: colorBlue,
-		width: "53%",
 	},
 	wrapper: {
 		flexDirection: "row",
