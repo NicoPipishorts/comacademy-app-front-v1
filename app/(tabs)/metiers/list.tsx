@@ -304,4 +304,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default MetierList;
+export default React.memo(MetierList);
