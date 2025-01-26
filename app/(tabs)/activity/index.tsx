@@ -302,7 +302,7 @@ const HomeScreen = () => {
 								</View>
 							</View>
 
-							{/* Les Petits Card */}
+							{/* Les Petits Histoires Card */}
 							<View>
 								<TouchableOpacity
 									style={styles.cardsButton}
@@ -324,7 +324,7 @@ const HomeScreen = () => {
 										La petite histoire...
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
-										Apprendre en regardant
+										Anecdotes pour briller
 									</Text>
 								</View>
 							</View>
