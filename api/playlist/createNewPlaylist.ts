@@ -56,7 +56,7 @@ export const useCreateNewPlaylist = (
 					url: url,
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${authToken}`, // Authorization token
+						Authorization: `Bearer ${authToken}`,
 					},
 					data: {
 						data: {
