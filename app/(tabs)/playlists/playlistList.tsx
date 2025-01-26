@@ -1,7 +1,7 @@
 import { useRemoveFromPlaylist } from "@/api/playlist/removeFromPlaylist";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
-import { colorGrey, colorRed, primaryBackground } from "@/constants/colors";
+import { colorRed } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { truncateString } from "@/helpers/truncateText";
@@ -205,9 +205,9 @@ const PlaylistList = () => {
 												style={{
 													flexDirection: "row",
 													alignItems: "center",
-													borderBottomColor: colorGrey,
-													paddingVertical: 10,
-													borderBottomWidth: 1,
+													// borderBottomColor: colorGrey,
+													// paddingVertical: 10,
+													// borderBottomWidth: 1,
 												}}
 												onPress={() =>
 													handlePress(content.group, content.itemId)
@@ -258,8 +258,7 @@ const styles = StyleSheet.create({
 		maxWidth: 80,
 		minWidth: 80,
 		backgroundColor: colorRed,
-		borderLeftWidth: 5,
-		borderLeftColor: primaryBackground,
+		borderRadius: 8,
 	},
 	wrapper: {
 		padding: 20,
