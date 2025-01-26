@@ -113,6 +113,7 @@ const Playlist = () => {
 					style={styles.addPlaylistContainer}
 					onPress={() => {
 						setModalVisible(true);
+						setPlaylistId(null);
 						setModalType("new");
 						if (openedSwipeable) {
 							openedSwipeable.close();
