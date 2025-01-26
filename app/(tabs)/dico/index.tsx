@@ -79,7 +79,7 @@ const Dico = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 30,
+		padding: 25,
 		paddingTop: 55,
 		backgroundColor: primaryBackground,
 	},

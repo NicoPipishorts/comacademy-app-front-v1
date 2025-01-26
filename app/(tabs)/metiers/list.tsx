@@ -1,7 +1,7 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack, colorGrey } from "@/constants/colors";
-import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
+import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
 import { NavigationType } from "@/types/general";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
@@ -256,15 +256,16 @@ const styles = StyleSheet.create({
 		paddingBottom: 80, // Adjust this value as needed
 	},
 	listHeader: {
-		fontWeight: "500",
-		fontSize: FontSizeH4,
-		paddingTop: 25,
-		paddingBottom: 10,
+		fontWeight: "bold",
+		fontSize: FontSizeH3,
+		paddingVertical: 5,
+		marginTop: 20,
+		overflow: "hidden",
 	},
 	listItem: {
-		paddingVertical: 4,
+		paddingVertical: 5,
 		color: colorBlack,
-		fontSize: 16,
+		fontSize: 18,
 		fontWeight: "500",
 	},
 	sidebar: {
