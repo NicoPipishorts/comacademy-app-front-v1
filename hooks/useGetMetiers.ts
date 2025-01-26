@@ -35,6 +35,8 @@ const useGetMetierById = (id: number) => {
 	return useQuery<MetierPayload>({
 		queryKey: ["Metier"],
 		queryFn: () => fetchDicoById(token, id),
+		staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+		gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
 		enabled: !!token,
 	});
 };
