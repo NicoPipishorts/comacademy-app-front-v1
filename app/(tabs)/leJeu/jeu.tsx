@@ -8,7 +8,6 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
-import { useSnackbar } from "@/context/snackBar";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
@@ -35,7 +34,6 @@ const Jeu = () => {
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
-	const showSnackbar = useSnackbar(); // Use the useSnackbar hook
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 
@@ -76,7 +74,7 @@ const Jeu = () => {
 		if (showFinishedModal) {
 			navigation.navigate("finishedSession");
 		}
-	}, [navigation, showFinishedModal, showSnackbar]);
+	}, [navigation, showFinishedModal]);
 
 	useEffect(() => {
 		hideTabBar();
