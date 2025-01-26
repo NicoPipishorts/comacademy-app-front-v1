@@ -10,6 +10,7 @@ import {
 } from "@/constants/colors";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import React, { useRef, useState } from "react";
 import {
 	ActivityIndicator,
@@ -23,6 +24,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Feed = () => {
 	const insets = useSafeAreaInsets();
 	const [visibleItems, setVisibleItems] = useState<number[]>([]);
+
+	useTrackPageMetrics({ page: "Feed" });
 
 	// Viewability config
 	const viewabilityConfig = {
