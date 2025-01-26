@@ -283,4 +283,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default DicoList;
+export default React.memo(DicoList);
