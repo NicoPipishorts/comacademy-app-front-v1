@@ -80,7 +80,7 @@ const Metier = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 30,
+		padding: 25,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {

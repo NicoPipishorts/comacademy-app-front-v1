@@ -2,7 +2,7 @@ import Loader from "@/components/experience/loader";
 import FilteredByCat from "@/components/filters/filteredByCat";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack } from "@/constants/colors";
-import { FontSize12, FontSize22, FontSizeH4 } from "@/constants/fontsizes";
+import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
 import { CategoriePayload } from "@/types/categories";
 import { DicoLists, DicoSelected } from "@/types/dico";
 import { NavigationType } from "@/types/general";
@@ -191,9 +191,7 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 						  ))
 						: alphabet.map((letter) => (
 								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
-									{filteredData.length > 0 && (
-										<Text style={styles.listHeader}>{letter}</Text>
-									)}
+									<Text style={styles.listHeader}>{letter}</Text>
 									{groupedData[letter]?.map((item, index) => (
 										<Text
 											key={index}
@@ -235,16 +233,18 @@ const styles = StyleSheet.create({
 	listContainer: {
 		paddingBottom: 80, // Adjust this value as needed
 	},
+
 	listHeader: {
-		fontWeight: "500",
-		fontSize: FontSizeH4,
-		paddingTop: 25,
-		paddingBottom: 10,
+		fontWeight: "bold",
+		fontSize: FontSizeH3,
+		paddingVertical: 5,
+		marginTop: 20,
+		overflow: "hidden",
 	},
 	listItem: {
-		paddingVertical: 4,
+		paddingVertical: 5,
 		color: colorBlack,
-		fontSize: 16,
+		fontSize: 18,
 		fontWeight: "500",
 	},
 	sidebar: {
