@@ -61,6 +61,7 @@ export default function RegisterStep2({
 	const [errors, setErrors] = useState<{
 		newPassword?: string;
 		passwordConfirm?: string;
+		selectedOption?: string;
 	}>({});
 
 	const toggleShowPassword = (field: "new" | "confirm") => {
@@ -88,6 +89,7 @@ export default function RegisterStep2({
 		const newErrors: {
 			newPassword?: string;
 			passwordConfirm?: string;
+			selectedOption?: string;
 		} = {};
 
 		const passwordRegex =
@@ -111,13 +113,18 @@ export default function RegisterStep2({
 			valid = false;
 		}
 
+		if (!selectedOption) {
+			newErrors.selectedOption = "Un profil est requis";
+			valid = false;
+		}
+
 		setErrors(newErrors);
 		return valid;
 	};
 
 	const handleNext = () => {
 		if (validateForm()) {
-			// Create the updated payload
+			// Create the updated payload``
 			const updatedPayload = {
 				...formPayload,
 				profile: selectedOption,
@@ -139,25 +146,40 @@ export default function RegisterStep2({
 		<>
 			<View style={styles.container}>
 				{/* Options */}
-				<View style={styles.optionsContainer}>
+				<View
+					style={[
+						styles.optionsContainer,
+						{
+							borderColor: errors.selectedOption
+								? "rgba(199, 62, 48, .5)"
+								: colorGrey,
+							borderWidth: errors.selectedOption ? 2 : 1,
+							borderRadius: 8,
+						},
+					]}>
 					{OPTIONS.map((option, index) => (
 						<TouchableOpacity
 							key={option.value} // Use value as the key
 							style={[
 								styles.optionButton,
-								selectedOption === option.value && styles.selectedOptionButton, // Compare using the value
+								selectedOption === option.value && styles.selectedOptionButton,
 							]}
 							onPress={() => handleOptionPress(option.value)}>
 							{/* Pass the value to the handler */}
 							<Text
 								style={[
 									styles.optionText,
-									selectedOption === option.value && styles.selectedOptionText, // Compare using the value
+									selectedOption === option.value && styles.selectedOptionText,
 								]}>
 								{option.label} {/* Display the label */}
 							</Text>
 						</TouchableOpacity>
 					))}
+					{errors.selectedOption && (
+						<View>
+							<Text style={styles.errorText}>{errors.selectedOption}</Text>
+						</View>
+					)}
 				</View>
 
 				{/* New Password Input */}
@@ -262,6 +284,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		flexWrap: "wrap",
 		justifyContent: "space-between",
+		padding: 10,
 		marginBottom: 40,
 		backgroundColor: primaryBackground,
 	},
