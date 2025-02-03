@@ -5,12 +5,12 @@ export default function ModalGestureLine() {
 	return (
 		<View
 			style={{
-				width: 45,
+				width: 65,
 				height: 3,
 				backgroundColor: colorGrey,
 				borderRadius: 10,
 				alignSelf: "center",
-				marginBottom: 10,
+				marginBottom: 15,
 			}}
 		/>
 	);
