@@ -41,7 +41,6 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const { id } = useLocalSearchParams();
 	const [modalVisible, setModalVisible] = useState(false);
 
-	// Parse the 'id' to a number if it exists
 	const metierId = paramsMetierId ? paramsMetierId : Number(id);
 	const { isAndroid } = useDeviceTypeCheckers();
 

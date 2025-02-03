@@ -47,7 +47,8 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 					...item.attributes,
 					id: item.id,
 				}))
-				.filter((item) => item.Word && item.Word !== "-");
+				.filter((item) => item.Word && item.Word !== "-")
+				.sort((a, b) => a.Word.localeCompare(b.Word));
 			const grouped = groupDataByFirstLetter(mappedData, "Word");
 			setGroupedData(grouped);
 			setFilteredData(mappedData);
@@ -56,8 +57,8 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 
 	const alphabet = Object.keys(groupedData)
 		.sort()
-		.filter((letter) => letter !== "#"); // First, exclude the '#' from the sorting
-	alphabet.push("#"); // Then add the '#' at the end
+		.filter((letter) => letter !== "#");
+	alphabet.push("#");
 
 	function groupDataByFirstLetter(
 		items: DicoSelected[],
@@ -72,7 +73,6 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 			if (typeof propValue === "string") {
 				const firstChar = normalizeString(propValue).charAt(0).toUpperCase();
 
-				// Check if the first character is a letter
 				const letter = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
 
 				if (!groups[letter]) {
@@ -81,7 +81,9 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 				groups[letter].push(item);
 			}
 		});
-
+		Object.keys(groups).forEach((key) => {
+			groups[key].sort((a, b) => a.Word.localeCompare(b.Word));
+		});
 		return groups;
 	}
 
@@ -113,9 +115,8 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 
 				const filteredResults = data.data
 					.map((item) => ({
-						id: item.id, // Ensure that id is included
+						id: item.id,
 						Word: item.attributes.Word,
-						// Include any other properties that are part of DicoSelected
 					}))
 					.filter(
 						(item) =>
@@ -124,17 +125,18 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 								.replace(/[\u0300-\u036f]/g, "")
 								.toLowerCase()
 								.includes(normalizedQuery)
-					);
+					)
+					.sort((a, b) => a.Word.localeCompare(b.Word));
 
-				setFilteredData(filteredResults as DicoSelected[]); // Ensure the type matches
+				setFilteredData(filteredResults as DicoSelected[]);
 			} else {
-				// Reset to the original data if the search query is empty
 				setFilteredData(
-					data.data.map((item) => ({
-						id: item.id,
-						Word: item.attributes.Word,
-						// Include any other properties that are part of DicoSelected
-					}))
+					data.data
+						.map((item) => ({
+							id: item.id,
+							Word: item.attributes.Word,
+						}))
+						.sort((a, b) => a.Word.localeCompare(b.Word))
 				);
 			}
 		},
@@ -152,10 +154,7 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
-				<Searchbar
-					placeholder='Rechercher'
-					onChangeText={handleSearch} // Pass the handleSearch function to the Searchbar
-				/>
+				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
 
 			<View style={styles.contentContainer}>
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	listContainer: {
-		paddingBottom: 80, // Adjust this value as needed
+		paddingBottom: 80,
 	},
 
 	listHeader: {
@@ -246,6 +245,7 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: 18,
 		fontWeight: "500",
+		textTransform: "capitalize",
 	},
 	sidebar: {
 		width: 30,

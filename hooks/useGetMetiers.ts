@@ -2,7 +2,7 @@ import useJwtToken from "@/hooks/useJwtToken";
 import { MetierPayload, MetiersList } from "@/types/metiers";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchDicoById = async (token: string, id: number): Promise<any> => {
+const fetchMetierById = async (token: string, id: number): Promise<any> => {
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/metiers/${id}`,
@@ -33,10 +33,10 @@ const useGetMetierById = (id: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<MetierPayload>({
-		queryKey: ["Metier"],
-		queryFn: () => fetchDicoById(token, id),
-		staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
-		gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+		queryKey: ["Metier", id],
+		queryFn: () => fetchMetierById(token, id),
+		staleTime: 1000 * 60 * 60 * 24 * 7,
+		gcTime: 1000 * 60 * 60 * 24 * 7,
 		enabled: !!token,
 	});
 };

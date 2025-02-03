@@ -1,15 +1,19 @@
 import { useAddToPlaylist } from "@/api/playlist/addToPlaylist";
+import { useCreateNewPlaylist } from "@/api/playlist/createNewPlaylist";
+import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
+import { useSnackbar } from "@/context/snackBar";
 import useGetPlaylistsForElement from "@/hooks/Playlistss/useGetPlaylistsByElement";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { AxiosError } from "axios";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Animated,
+	Image,
 	Modal,
 	Pressable,
 	ScrollView,
@@ -20,6 +24,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ModalGestureLine from "../experience/modalGestureLine";
+import NewPlaylistModal from "./NewPlaylistModal";
 
 interface Props {
 	visible: boolean;
@@ -75,6 +80,7 @@ export default function AddToPlaylistModal({
 	};
 
 	const { mutate: addToPlaylist } = useAddToPlaylist(onSuccess, onError);
+
 	const handleSubmit = (playlistId: number) => {
 		addToPlaylist({
 			playlistId,
@@ -90,6 +96,44 @@ export default function AddToPlaylistModal({
 			showModal();
 		}
 	}, [showModal, visible]);
+	const [modalVisible, setModalVisible] = useState<boolean>(false);
+	const [modalType, setModalType] = useState<"new" | "edit">(null);
+	const [playlistId, setPlaylistId] = useState(null);
+	const [openedSwipeable, setOpenedSwipeable] = useState(null);
+
+	const showSnackbar = useSnackbar(); // Use the snackbar context
+
+	const onSuccessCreate = (data: any, message: string) => {
+		queryClient.refetchQueries({
+			queryKey: ["Playlists"],
+		});
+		showSnackbar(message, "success");
+		if (openedSwipeable) {
+			openedSwipeable.close();
+			setOpenedSwipeable(null);
+		}
+	};
+
+	const onErrorCreate = (error: AxiosError) => {
+		console.error(`Failed to create new playlist":`, error.message);
+	};
+
+	const { mutate: createNewPlaylist } = useCreateNewPlaylist(
+		onSuccessCreate,
+		onErrorCreate
+	);
+	const handleCreatePlaylist = (name: string, selectedColor: string) => {
+		createNewPlaylist({
+			name,
+			selectedColor,
+			userId,
+			authToken: token,
+			modalType,
+			playlistId,
+		});
+		setModalVisible(false);
+		setPlaylistId(null);
+	};
 
 	if (!isFetched) return null;
 
@@ -115,11 +159,29 @@ export default function AddToPlaylistModal({
 							activeOpacity={1}
 							onPress={(e) => e.stopPropagation()}>
 							<ModalGestureLine />
+							<TouchableOpacity
+								style={styles.addPlaylistContainer}
+								onPress={() => {
+									setModalVisible(true);
+									setPlaylistId(null);
+									setModalType("new");
+									if (openedSwipeable) {
+										openedSwipeable.close();
+										setOpenedSwipeable(null);
+									}
+								}}>
+								<Image source={AddPlaylist} style={styles.addPlaylistImage} />
+								<View style={{ flexDirection: "column" }}>
+									<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
+										Nouvelle Playlist
+									</Text>
+								</View>
+							</TouchableOpacity>
 							<Text style={styles.modalTitle}> Choisis une playlist.</Text>
 							<ScrollView
 								showsVerticalScrollIndicator={false}
 								contentContainerStyle={{
-									paddingBottom: insets.bottom + 30,
+									paddingBottom: 150,
 									gap: 3,
 								}}>
 								{playlistsData.data.map((playlist) => {
@@ -166,6 +228,13 @@ export default function AddToPlaylistModal({
 					</Animated.View>
 				</View>
 			</TouchableOpacity>
+
+			<NewPlaylistModal
+				visible={modalVisible}
+				onClose={() => setModalVisible(false)}
+				onSubmit={handleCreatePlaylist}
+				playlistId={playlistId}
+			/>
 		</Modal>
 	);
 }
@@ -198,7 +267,17 @@ const styles = StyleSheet.create({
 	modalTitle: {
 		fontSize: FontSize18,
 		fontWeight: "bold",
-		marginBottom: 20,
-		textAlign: "center",
+		marginTop: 20,
+		marginBottom: 10,
+		marginLeft: 10,
+		textAlign: "left",
+	},
+	addPlaylistContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	addPlaylistImage: {
+		width: 70,
+		height: 70,
 	},
 });

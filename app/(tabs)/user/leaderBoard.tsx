@@ -1,6 +1,6 @@
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
-import { colorGrey, colorWhite } from "@/constants/colors";
+import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
@@ -166,7 +166,7 @@ export default function LeaderBoard() {
 						borderRadius: 20,
 						flex: 1,
 					}}>
-					{filteredUsers.map((user) => {
+					{filteredUsers.map((user, index) => {
 						const isSelected = currentUser === user.attributes.user.userId;
 
 						const firstName =
@@ -193,6 +193,7 @@ export default function LeaderBoard() {
 										end={{ x: 1, y: 0 }} // End at the right
 										style={styles.resultRowSelected}>
 										<View style={{ flexDirection: "row", paddingLeft: 5 }}>
+											<Text style={styles.ranking}>{index + 1}</Text>
 											<Text style={[styles.resultsText, { color: colorWhite }]}>
 												{firstName} {lastName}
 											</Text>
@@ -206,6 +207,9 @@ export default function LeaderBoard() {
 								) : (
 									<View style={styles.resultRow}>
 										<View style={{ flexDirection: "row", paddingLeft: 5 }}>
+											<Text style={[styles.ranking, { color: colorBlack }]}>
+												{index + 1}
+											</Text>
 											<Text style={styles.resultsText}>
 												{user.attributes.user.firstName}{" "}
 												{user.attributes.user.lastName}
@@ -250,5 +254,11 @@ const styles = StyleSheet.create({
 		fontSize: FontSize16,
 		fontWeight: "bold",
 		textTransform: "capitalize",
+	},
+	ranking: {
+		minWidth: 40,
+		fontSize: FontSize16,
+		fontWeight: "bold",
+		color: colorWhite,
 	},
 });
