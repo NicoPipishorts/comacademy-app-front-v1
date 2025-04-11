@@ -54,11 +54,11 @@ export default function FeedCardLol({ data, elementId }: Props) {
 		return null;
 	}
 
+	console.log(data.payload.Text);
 	return (
 		<View style={styles.cardContainer}>
-			{/* Render the image only if the source is valid */}
-			{source && (
-				<>
+			<>
+				{source && (
 					<Image
 						source={source}
 						style={{
@@ -69,16 +69,15 @@ export default function FeedCardLol({ data, elementId }: Props) {
 							height: height,
 						}}
 					/>
-					<Text
-						style={{
-							fontWeight: "bold",
-							marginLeft: 20,
-						}}>
-						{data.payload.Text}
-					</Text>
-				</>
-			)}
-			{/* Render the like button */}
+				)}
+				<Text
+					style={{
+						fontWeight: "bold",
+						marginLeft: 20,
+					}}>
+					{data.payload.Text}
+				</Text>
+			</>
 			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
