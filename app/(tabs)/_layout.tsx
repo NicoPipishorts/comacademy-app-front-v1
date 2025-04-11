@@ -1,5 +1,6 @@
 // app/(tabs)/_layout.tsx
 import { useAuth } from "@/auth/AuthContext";
+import BannerContainer from "@/components/banners/bannerContainer";
 import TabBar from "@/components/TabBar";
 import {
 	TabBarVisibilityProvider,
@@ -141,6 +142,9 @@ const _layout: React.FC = () => {
 					}}
 				/>
 			</Tabs>
+
+			{/* The BannerContainer manages the lifecycle of the BannerFree */}
+			<BannerContainer />
 		</TabBarVisibilityProvider>
 	);
 };

@@ -3,8 +3,8 @@ import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
-// Function to randomly select a notification message
-const getRandomNotification = (day: "lundi" | "vendredi") => {
+// Update the getRandomNotification function to also handle "random" messages.
+const getRandomNotification = (day: "lundi" | "vendredi" | "random") => {
 	const messages = localNotifications[day] || [];
 	if (messages.length === 0) return "Default notification message.";
 	const randomIndex = Math.floor(Math.random() * messages.length);
@@ -45,8 +45,30 @@ const scheduleWeeklyNotifications = async () => {
 			repeats: true,
 		},
 	});
+
+	// Schedule a random weekday notification for every weekday (Monday=2 to Friday=6).
+	// The time is selected randomly between 9 AM and 5 PM.
+	for (let weekday = 2; weekday <= 6; weekday++) {
+		const randomHour = Math.floor(Math.random() * (17 - 9)) + 9; // Hour between 9 (inclusive) and 17 (exclusive)
+		const randomMinute = Math.floor(Math.random() * 60); // Minute between 0 and 59
+
+		await Notifications.scheduleNotificationAsync({
+			content: {
+				title: "La surpirse du jour ⚡",
+				body: getRandomNotification("random"),
+				data: { path: "/index" },
+			},
+			trigger: {
+				weekday,
+				hour: randomHour,
+				minute: randomMinute,
+				repeats: true,
+			},
+		});
+	}
 };
 
+// Set the notification handler so that alerts are shown when notifications are received.
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
 		shouldShowAlert: true,

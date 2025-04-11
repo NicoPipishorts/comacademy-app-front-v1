@@ -9,7 +9,7 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
-const HomeScreen = () => {
+const HomeScreen: React.FC = () => {
 	const { userId } = useUserId();
 	const [isOnboardingComplete, setIsOnboardingComplete] = useState<
 		boolean | null
@@ -17,13 +17,8 @@ const HomeScreen = () => {
 	const router = useRouter();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
-	// Temporary useEffect to reset onboarding status to false
-	// useEffect(() => {
-	// 	resetOnboardingStatus();
-	// }, []);
-
 	useEffect(() => {
-		const fetchOnboardingStatus = async () => {
+		const fetchOnboardingStatus = async (): Promise<void> => {
 			if (!userId) return; // Skip fetching if no user ID is available
 			const status = await getOnboardingStatus(userId);
 			setIsOnboardingComplete(status);
@@ -32,7 +27,7 @@ const HomeScreen = () => {
 		fetchOnboardingStatus();
 	}, [userId]);
 
-	const handleOnboardingComplete = useCallback(async () => {
+	const handleOnboardingComplete = useCallback(async (): Promise<void> => {
 		if (!userId) return; // Ensure the user ID is available
 		await setOnboardingStatus(userId, true);
 		setIsOnboardingComplete(true);
@@ -55,8 +50,13 @@ const HomeScreen = () => {
 		);
 	}
 
-	return isOnboardingComplete ? null : (
-		<OnboardingV1 onComplete={handleOnboardingComplete} />
+	return (
+		<View style={{ flex: 1 }}>
+			{/* Conditionally render onboarding or your main content */}
+			{isOnboardingComplete ? null : (
+				<OnboardingV1 onComplete={handleOnboardingComplete} />
+			)}
+		</View>
 	);
 };
 
