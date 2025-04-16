@@ -54,7 +54,7 @@ const scheduleWeeklyNotifications = async () => {
 
 		await Notifications.scheduleNotificationAsync({
 			content: {
-				title: "La surpirse du jour ⚡",
+				title: "La surprise du jour ⚡",
 				body: getRandomNotification("random"),
 				data: { path: "/index" },
 			},

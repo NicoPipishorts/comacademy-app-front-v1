@@ -1,19 +1,21 @@
 {
-	"cli": {
-		"appVersionSource": "remote"
-	},
-	"build": {
-		"preview": {
-			"distribution": "internal",
-			"autoIncrement": true
-		},
-		"production": {
-			"ios": {
-				"autoIncrement": true
-			},
-			"android": {
-				"autoIncrement": true
-			}
-		}
-	}
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "channel": "preview"
+    },
+    "production": {
+      "ios": {
+        "autoIncrement": true
+      },
+      "android": {
+        "autoIncrement": true
+      },
+      "channel": "production"
+    }
+  }
 }
