@@ -9,13 +9,16 @@ interface BannerFreeProps {
 }
 
 const BANNER_CLOSED_TIME_KEY = "BANNER_CLOSED_TIME";
-const CACHE_TIME = 2 * 60 * 1000; // 2 minutes for testing
+// For production, change this value if needed.
+const CACHE_TIME = 60 * 24 * 7 * 1000;
 
 const BannerFree: FC<BannerFreeProps> = ({ onDismiss }) => {
 	const insets = useSafeAreaInsets();
 	const [visible, setVisible] = useState<boolean>(false);
 
 	useEffect(() => {
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
 		const checkBannerVisibility = async (): Promise<void> => {
 			try {
 				const storedTimeString = await AsyncStorage.getItem(
@@ -27,7 +30,14 @@ const BannerFree: FC<BannerFreeProps> = ({ onDismiss }) => {
 				const currentTime: number = new Date().getTime();
 
 				if (storedTime && currentTime - storedTime < CACHE_TIME) {
+					// Calculate the remaining time until the banner should reappear.
+					const delay = CACHE_TIME - (currentTime - storedTime);
+					// Hide the banner for now...
 					setVisible(false);
+					// ...but schedule it to show again after the remaining delay.
+					timeoutId = setTimeout(() => {
+						setVisible(true);
+					}, delay);
 				} else {
 					setVisible(true);
 				}
@@ -38,6 +48,11 @@ const BannerFree: FC<BannerFreeProps> = ({ onDismiss }) => {
 		};
 
 		checkBannerVisibility();
+
+		// Cleanup the timeout when the component unmounts or before rerunning effect.
+		return () => {
+			if (timeoutId) clearTimeout(timeoutId);
+		};
 	}, []);
 
 	const handleClose = async (): Promise<void> => {
@@ -62,7 +77,10 @@ const BannerFree: FC<BannerFreeProps> = ({ onDismiss }) => {
 
 	return (
 		<View style={[styles.bannerContainer, { paddingTop: insets.top }]}>
-			<Text style={styles.message}>This is your banner message</Text>
+			<Text style={styles.message}>
+				💥 Oui, c’est gratuit. Oui, c’est fou. En septembre, ça redeviendra
+				normal. En mieux mais en payant.
+			</Text>
 			<TouchableOpacity onPress={handleClose} style={styles.iconButton}>
 				<Ionicons name='close-circle' size={32} color='#000' />
 			</TouchableOpacity>
