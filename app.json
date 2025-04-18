@@ -2,7 +2,7 @@
   "expo": {
     "name": "Com'Academy",
     "slug": "comacademy",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/imgs/icons/favicon.png",
     "scheme": "myapp",
@@ -18,7 +18,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.nicopipishorts.comacademy",
-      "buildNumber": "1.0.5"
+      "buildNumber": "1.0.6",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
