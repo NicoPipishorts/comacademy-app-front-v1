@@ -132,13 +132,13 @@ const SignIn = () => {
 						</Pressable>
 					</View>
 				</ScrollView>
-				<View
+				{/* <View
 					style={{ flexDirection: "row", position: "absolute", bottom: 40 }}>
 					<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
 					<Pressable onPress={() => setIsRegistering(true)}>
 						<Text style={{ fontWeight: "bold" }}> S'inscrire</Text>
 					</Pressable>
-				</View>
+				</View> */}
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
