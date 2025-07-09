@@ -9,7 +9,7 @@
 		"jsx": "react-native",
 		"lib": ["esnext"],
 		"types": ["react-native", "jest", "node"],
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"noEmit": true,
 		"strict": false,
 		"target": "esnext",
