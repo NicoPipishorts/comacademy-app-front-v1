@@ -1,16 +1,16 @@
-import { InsertAnswer } from "@/api/gameInsertAnswer";
+// File: src/components/leJeu/Jeu.tsx
+import { useNavigation } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Swiper from "react-native-deck-swiper";
+
 import Loader from "@/components/experience/loader";
 import Card from "@/components/leJeu/Card";
-import {
-	colorBlack,
-	colorWhite,
-	colorYellow,
-	primaryBackground,
-} from "@/constants/colors";
-import { FontSize20 } from "@/constants/fontsizes";
+import FeedbackMessage from "./feedbackMessage";
+
+import { InsertAnswer } from "@/api/gameInsertAnswer";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import { queryClient } from "@/hooks/reactQueryConfig";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -18,129 +18,83 @@ import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { Answer } from "@/types/enums";
-import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Swiper from "react-native-deck-swiper";
-import FeedbackMessage from "./feedbackMessage";
+import { QuestionData } from "@/types/userGameSessionStatus";
 
-const Jeu = () => {
+import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { FontSize20 } from "@/constants/fontsizes";
+
+export default function Jeu() {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const { isConnected } = useNetwork();
-	const swiperRef = useRef<Swiper<GameSessionQuestionData>>(null);
+	const swiperRef = useRef<Swiper<QuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
+	const [swiperKey, setSwiperKey] = useState(0);
 
-	const showFeedback = (answer: Answer) => {
-		setFeedbackAnswer(answer);
-		setFeedbackVisible(true);
-	};
+	const { dataGame, setDataGame, sessionId, gameStatus } = useGameContext();
+	const { data: catData } = useCategories();
+	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
+	const insertPlayerAnswer = InsertAnswer();
 
-	const hideFeedback = () => {
-		setFeedbackVisible(false);
-		setFeedbackAnswer(null);
-	};
-
-	const {
-		dataGame,
-		setDataGame,
-		sessionId,
-		questionsLeft,
-		setQuestionsLeft,
-		showFinishedModal,
-		setShowFinishedModal,
-		playing,
-		setPlaying,
-		setCurrentCardId,
-	} = useGameContext();
-
-	const handlePress = () => {
-		showTabBar();
-		setPlaying(false);
-		setDataGame(null);
-		queryClient.removeQueries({ queryKey: ["GameQuestions"] });
-		setTimeout(() => {
-			navigation.navigate("index");
-		}, 100);
-	};
+	const removeCardAndCheckEnd = useCallback(
+		(cardIndex: number) => {
+			setDataGame((prev) => {
+				const next = prev.filter((_, i) => i !== cardIndex);
+				return next;
+			});
+		},
+		[setDataGame]
+	);
 
 	useEffect(() => {
-		if (showFinishedModal) {
-			navigation.navigate("finishedSession");
-		}
-	}, [navigation, showFinishedModal]);
+		setSwiperKey((k) => k + 1);
+	}, [dataGame]);
 
 	useEffect(() => {
 		hideTabBar();
 		return () => showTabBar();
 	}, [hideTabBar, showTabBar]);
 
-	useEffect(() => {
-		if (sessionId && questionsLeft <= 0 && playing && !feedbackVisible) {
-			setShowFinishedModal(true);
-			navigation.navigate("finishedSession");
-		}
-	}, [
-		sessionId,
-		questionsLeft,
-		playing,
-		feedbackVisible,
-		navigation,
-		setShowFinishedModal,
-	]);
-
-	const { data: catData } = useCategories();
-	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
-
-	const insertPlayerAnswer = InsertAnswer();
-
-	// If dataGame is not yet available, show a loading indicator
 	if (!dataGame || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
 
-	const onSwipeLeft = (cardIndex: number) => {
-		const currentCard = dataGame[cardIndex];
-		setCurrentCardId(currentCard.id);
-		if (currentCard && currentCard.attributes.ANSWER === false) {
-			showFeedback(Answer.true);
-		} else if (currentCard) {
-			showFeedback(Answer.false);
-		}
-		setQuestionsLeft(questionsLeft - 1);
-		insertPlayerAnswer.mutate({
-			gameId: sessionId,
-			userId: userId,
-			questionId: currentCard.id,
-			answer: false,
-			categorie: currentCard.attributes.CATEGORIE,
-			token,
-		});
+	const showFeedback = (answer: Answer) => {
+		setFeedbackAnswer(answer);
+		setFeedbackVisible(true);
+	};
+	const hideFeedback = () => {
+		setFeedbackVisible(false);
+		setFeedbackAnswer(null);
 	};
 
-	const onSwipeRight = (cardIndex: number) => {
+	const handlePress = () => {
+		showTabBar();
+		setTimeout(() => navigation.navigate("index"), 100);
+	};
+
+	const onSwipe = (cardIndex: number, answer: boolean) => {
 		const currentCard = dataGame[cardIndex];
-		setCurrentCardId(currentCard.id);
-		if (currentCard && currentCard.attributes.ANSWER === true) {
-			showFeedback(Answer.true);
-		} else if (currentCard) {
-			showFeedback(Answer.false);
-		}
-		setQuestionsLeft(questionsLeft - 1);
+		if (!currentCard) return;
+
+		const correct = currentCard.attributes.ANSWER;
+		showFeedback(correct === answer ? Answer.true : Answer.false);
+
 		insertPlayerAnswer.mutate({
 			gameId: sessionId,
-			userId: userId,
+			userId,
 			questionId: currentCard.id,
-			answer: true,
+			answer,
 			categorie: currentCard.attributes.CATEGORIE,
 			token,
 		});
+
+		removeCardAndCheckEnd(cardIndex);
 	};
 
 	const overlayLabels = {
@@ -153,7 +107,6 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
-					// transform: [{ rotate: "-90deg" }], // Rotate text -90 degrees for FAUX
 				},
 				wrapper: {
 					flexDirection: "row",
@@ -174,7 +127,6 @@ const Jeu = () => {
 					color: "white",
 					borderWidth: 1,
 					fontSize: 24,
-					// transform: [{ rotate: "90deg" }], // Rotate text +90 degrees for VRAI
 				},
 				wrapper: {
 					flexDirection: "row",
@@ -188,21 +140,10 @@ const Jeu = () => {
 		},
 	};
 
-	const cards = dataGame;
-	const renderCard = (card: GameSessionQuestionData) => {
-		return <Card key={card?.id} catColors={catData} data={card} />;
-	};
-
-	const swiperTopMargin = () => {
-		if (isHomeButtonModel) {
-			return -40;
-		} else {
-			return 0;
-		}
-	};
+	const swiperTopMargin = isHomeButtonModel ? -40 : 0;
 
 	return (
-		<View style={[styles.wrapper, { marginTop: swiperTopMargin() }]}>
+		<View style={[styles.wrapper, { marginTop: swiperTopMargin }]}>
 			{!isConnected && (
 				<View style={styles.overlay}>
 					<Text style={styles.overlayText}>
@@ -213,16 +154,27 @@ const Jeu = () => {
 					</Text>
 				</View>
 			)}
-			{!showFinishedModal && (
+
+			{gameStatus === "in_progress" && sessionId > 0 && (
 				<Swiper
+					key={swiperKey}
 					ref={swiperRef}
 					overlayLabels={overlayLabels}
-					cards={cards}
-					renderCard={(card, cardIndex) => renderCard(card)}
+					cards={dataGame}
+					renderCard={(card, cardIndex) => {
+						// guard against undefined
+						if (!card) {
+							return null;
+						}
+						return <Card key={card.id} catColors={catData} data={card} />;
+					}}
 					verticalSwipe={false}
-					onSwipedLeft={(cardIndex) => onSwipeLeft(cardIndex)}
-					onSwipedRight={(cardIndex) => onSwipeRight(cardIndex)}
-					backgroundColor={"transparent"}
+					onSwipedLeft={(i) => onSwipe(i, false)}
+					onSwipedRight={(i) => onSwipe(i, true)}
+					onSwipedAll={() =>
+						setTimeout(() => navigation.navigate("finishedSession"), 500)
+					}
+					backgroundColor='transparent'
 					cardVerticalMargin={100}
 					cardHorizontalMargin={30}
 					stackSize={5}
@@ -231,13 +183,15 @@ const Jeu = () => {
 					overlayOpacityHorizontalThreshold={20}
 				/>
 			)}
+
 			{feedbackVisible && feedbackAnswer && (
 				<FeedbackMessage
 					answer={feedbackAnswer}
 					onHide={hideFeedback}
-					isHomeButtonModel
+					isHomeButtonModel={isHomeButtonModel}
 				/>
 			)}
+
 			<View style={styles.containerBackButton}>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
@@ -245,19 +199,18 @@ const Jeu = () => {
 			</View>
 		</View>
 	);
-};
+}
 
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		padding: 30,
 		backgroundColor: primaryBackground,
-		justifyContent: "flex-start",
 		alignItems: "center",
 	},
 	overlay: {
 		...StyleSheet.absoluteFillObject,
-		backgroundColor: "rgba(0, 0, 0, 0.75)",
+		backgroundColor: "rgba(0,0,0,0.75)",
 		justifyContent: "center",
 		alignItems: "center",
 		zIndex: 999,
@@ -269,17 +222,12 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 		padding: 20,
 	},
-	noDataText: {
-		fontSize: FontSize20,
-		color: colorYellow,
-	},
 	containerBackButton: {
-		zIndex: 10,
 		position: "absolute",
 		bottom: 60,
-		justifyContent: "center",
-		alignItems: "center",
 		width: "100%",
+		alignItems: "center",
+		zIndex: 10,
 	},
 	backButton: {
 		paddingHorizontal: 40,
@@ -293,5 +241,3 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 });
-
-export default Jeu;

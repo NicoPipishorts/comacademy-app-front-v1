@@ -1,6 +1,6 @@
 import { colorGreen, colorPink, colorWhite } from "@/constants/colors";
 import { Answer } from "@/types/enums";
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, {
 	runOnJS,
@@ -20,38 +20,28 @@ export default function FeedbackMessage({
 	onHide,
 	isHomeButtonModel,
 }: FeedbackMessageProps) {
-	const height = useCallback(() => {
-		if (isHomeButtonModel) {
-			return 200;
-		} else {
-			return 300;
-		}
-	}, [isHomeButtonModel]);
-	const slideAnim = useSharedValue(250); // Initial position off-screen
+	// Ensure starting off-screen each mount
+	const slideAnim = useSharedValue(250);
 
 	useEffect(() => {
-		// Slide in animation
+		// Slide in
 		slideAnim.value = withTiming(0, { duration: 250 });
 
-		// Auto-hide after 800ms
+		// Auto-hide after 500ms
 		const timer = setTimeout(() => {
-			// Slide out before hiding
-			slideAnim.value = withTiming(250, { duration: 250 }, (isFinished) => {
-				if (isFinished) {
-					runOnJS(onHide)(); // Call onHide when animation finishes
+			slideAnim.value = withTiming(250, { duration: 250 }, (finished) => {
+				if (finished) {
+					runOnJS(onHide)();
 				}
 			});
 		}, 500);
 
 		return () => clearTimeout(timer);
-	}, [slideAnim, onHide, height]);
+	}, [slideAnim, onHide]);
 
-	// Animated styles for Reanimated
-	const animatedStyle = useAnimatedStyle(() => {
-		return {
-			transform: [{ translateY: slideAnim.value }],
-		};
-	});
+	const animatedStyle = useAnimatedStyle(() => ({
+		transform: [{ translateY: slideAnim.value }],
+	}));
 
 	return (
 		<Animated.View
@@ -60,7 +50,7 @@ export default function FeedbackMessage({
 				styles.feedbackContainer,
 				{
 					backgroundColor: answer === Answer.true ? colorGreen : colorPink,
-					height: 250,
+					height: isHomeButtonModel ? 200 : 300,
 				},
 			]}>
 			<Text style={styles.feedbackText}>{answer}</Text>
@@ -80,10 +70,7 @@ const styles = StyleSheet.create({
 		borderTopLeftRadius: 30,
 		borderTopRightRadius: 30,
 		shadowColor: "rgb(0, 0, 0)",
-		shadowOffset: {
-			width: 0,
-			height: 5,
-		},
+		shadowOffset: { width: 0, height: 5 },
 		shadowOpacity: 0.4,
 		shadowRadius: 20,
 		elevation: 10,

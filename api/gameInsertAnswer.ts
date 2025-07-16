@@ -1,4 +1,5 @@
-import { queryClient } from "@/hooks/reactQueryConfig";
+// File: src/hooks/useInsertAnswer.ts
+
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
@@ -12,58 +13,36 @@ export interface CreateNewGameSession {
 }
 
 interface NewSessionResponse {
-	data: any; // Adjust based on your response structure
+	data: any;
 }
 
-// Custom hook to add favorite question
-export const InsertAnswer = () =>
-	// onSuccess: (data: any) => void, //TODO
-	// onError: (error: AxiosError) => void
-	{
-		return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
-			mutationFn: async ({
-				gameId,
-				userId,
-				questionId,
-				categorie,
-				answer,
-				token,
-			}: CreateNewGameSession) => {
-				const payload = {
-					data: {
-						gameId,
-						userId,
-						questionId,
-						categorie,
-						answer,
+export const InsertAnswer = () => {
+	return useMutation<NewSessionResponse, AxiosError, CreateNewGameSession>({
+		mutationFn: async (vars) => {
+			const { gameId, userId, questionId, categorie, answer, token } = vars;
+			const payload = {
+				data: { gameId, userId, questionId, categorie, answer },
+			};
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/game-questions`;
+
+			const response: AxiosResponse<NewSessionResponse> = await axios.post(
+				url,
+				payload,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
 					},
-				};
-
-				const url = `${process.env.EXPO_PUBLIC_API_URL}/game-questions`;
-
-				try {
-					const response: AxiosResponse<NewSessionResponse> = await axios({
-						method: "POST",
-						url: url,
-						data: payload,
-						headers: {
-							"Content-Type": "application/json",
-							Authorization: `Bearer ${token}`,
-						},
-					});
-					return response.data;
-				} catch (error) {
-					if (axios.isAxiosError(error)) {
-						throw error;
-					} else {
-						throw new Error("An unexpected error occurred");
-					}
 				}
-			},
-			onSuccess: (userId) => {
-				queryClient.refetchQueries({
-					queryKey: ["GameSessionQuestions", { userId }],
-				});
-			},
-		});
-	};
+			);
+
+			return response.data;
+		},
+		onSuccess: () => {
+			// queryClient.invalidateQueries({ queryKey: ["UserGameSessionStatus"] });
+		},
+		onError: (error) => {
+			console.error("❌ Mutation failed:", error);
+		},
+	});
+};

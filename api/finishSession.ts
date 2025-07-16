@@ -1,63 +1,55 @@
+// File: src/hooks/useFinishGameSession.ts
+
 import { queryClient } from "@/hooks/reactQueryConfig";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-// Define the payload and response types
-interface FinishSessionPayload {
-	sessionId: number;
-	score: number;
-	token: string; // Include token in the payload
+export interface FinishSessionPayload {
+	userId: number;
+	token: string;
+	action: "end" | "new";
 }
 
-interface SuccessPayload {
-	data: any; // Adjust based on your response structure
+export interface SuccessPayload {
+	data: {
+		success: boolean;
+		sessionId: number | null;
+		message?: string;
+		status?: string;
+	};
 }
 
-// Custom hook to add favorite question
-export const FinishGameSession = (
-	onSuccess: (data: any) => void,
+export const useFinishGameSession = (
+	onSuccess: (data: SuccessPayload["data"], action: "end" | "new") => void,
 	onError: (error: AxiosError) => void
 ) => {
 	return useMutation<SuccessPayload, AxiosError, FinishSessionPayload>({
-		mutationFn: async ({ sessionId, score, token }: FinishSessionPayload) => {
-			const payload = {
-				data: {
-					score,
-					inProgress: false,
-				},
-			};
-
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/game-sessions/${sessionId}`;
-
-			try {
-				const response: AxiosResponse<SuccessPayload> = await axios({
-					method: "PUT",
-					url: url,
-					data: payload,
+		mutationFn: async ({ userId, token, action }) => {
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/${action}`;
+			const response: AxiosResponse<SuccessPayload> = await axios.post(
+				url,
+				{}, // no body
+				{
 					headers: {
 						"Content-Type": "application/json",
 						Authorization: `Bearer ${token}`,
 					},
-				});
-				return response.data;
-			} catch (error) {
-				if (axios.isAxiosError(error)) {
-					throw error;
-				} else {
-					throw new Error("An unexpected error occurred");
 				}
-			}
+			);
+			return response.data;
 		},
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ["GameSession"] });
-			queryClient.invalidateQueries({ queryKey: ["GameQuestions"] });
-			onSuccess(data);
+		onSuccess: (resp, vars) => {
+			// Invalidate session-status so the next UI read sees the new state
+			queryClient.invalidateQueries({ queryKey: ["UserGameSessionStatus"] });
+			onSuccess(resp.data, vars.action);
 		},
 		onError: (error) => {
-			if (error.response) {
-				console.error("Error code:", error.response.status);
-			}
-			onError(error); // Call the original onError callback
+			console.error(
+				"Error finishing session:",
+				error.response?.status,
+				error.message
+			);
+			onError(error);
 		},
 	});
 };

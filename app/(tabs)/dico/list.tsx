@@ -174,10 +174,8 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 					{/* If search query is active, render filtered data, else render grouped data */}
 					{filteredData.length <= 0 && (
 						<View style={styles.noDataContainer}>
-							<Text style={styles.noDataText}>
-								Aucun métier de disponible.{" "}
-							</Text>
-							<Text>Sélectionnez une autre catégorie.</Text>
+							<Text style={styles.noDataText}>Aucune définition trouvée. </Text>
+							<Text>Essayez un autre mot.</Text>
 						</View>
 					)}
 					{searchQuery

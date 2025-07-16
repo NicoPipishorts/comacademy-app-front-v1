@@ -30,5 +30,5 @@ export const useTrackPageMetrics = ({ page }: UseTrackPageMetricsProps) => {
 		}
 
 		addPageMetric({ page, authToken: token });
-	}, [page, token]);
+	}, [addPageMetric, page, token]);
 };
