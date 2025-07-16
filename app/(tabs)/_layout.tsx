@@ -30,7 +30,8 @@ const CustomTabBar: React.FC<any> = (props) => {
 	if (!isTabBarVisible) return null;
 
 	return <TabBar {...props} />;
-}; // Import the scheduler
+};
+
 const _layout: React.FC = () => {
 	const { isAuthenticated, isRegistering } = useAuth();
 
