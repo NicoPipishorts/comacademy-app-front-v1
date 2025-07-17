@@ -54,7 +54,6 @@ export default function FeedCardLol({ data, elementId }: Props) {
 		return null;
 	}
 
-	console.log(data.payload.Text);
 	return (
 		<View style={styles.cardContainer}>
 			<>
