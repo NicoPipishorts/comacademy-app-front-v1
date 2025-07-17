@@ -38,7 +38,7 @@ export const useEndSession = (
 				setDataGame([]);
 				setSessionsId(null);
 			}
-			queryClient.refetchQueries({ queryKey: ["UserGameSessionStatus"] });
+			queryClient.refetchQueries({ queryKey: ["GameQuestions"] });
 		},
 		onError,
 	});

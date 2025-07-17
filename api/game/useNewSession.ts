@@ -41,7 +41,7 @@ export const useSessionAction = (
 			return response.data;
 		},
 		onSuccess: (resp, vars) => {
-			queryClient.refetchQueries({ queryKey: ["UserGameSessionStatus"] });
+			queryClient.refetchQueries({ queryKey: ["GameQuestions"] });
 			onSuccess(resp.data, vars.action);
 		},
 		onError,

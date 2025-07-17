@@ -40,7 +40,7 @@ export const useFinishGameSession = (
 		},
 		onSuccess: (resp, vars) => {
 			// Invalidate session-status so the next UI read sees the new state
-			queryClient.invalidateQueries({ queryKey: ["UserGameSessionStatus"] });
+			queryClient.invalidateQueries({ queryKey: ["GameQuestions"] });
 			onSuccess(resp.data, vars.action);
 		},
 		onError: (error) => {

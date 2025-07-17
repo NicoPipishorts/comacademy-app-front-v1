@@ -21,7 +21,7 @@ export interface QuestionData {
 }
 
 // The payload returned by GET /user-game-session-status/:userId
-export interface UserGameSessionStatusResponse {
+export interface GameQuestionsResponse {
 	sessionId: number;
 	isNewSession: boolean;
 	answeredCount: number;

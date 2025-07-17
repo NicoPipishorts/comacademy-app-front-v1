@@ -39,7 +39,7 @@ export const InsertAnswer = () => {
 			return response.data;
 		},
 		onSuccess: () => {
-			// queryClient.invalidateQueries({ queryKey: ["UserGameSessionStatus"] });
+			// queryClient.invalidateQueries({ queryKey: ["GameQuestions"] });
 		},
 		onError: (error) => {
 			console.error("❌ Mutation failed:", error);
