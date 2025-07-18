@@ -294,7 +294,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										10 commandements
+										Tips and tactics
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Astuces pour réussir

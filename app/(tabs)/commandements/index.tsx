@@ -23,7 +23,7 @@ export default function Secrets() {
 					paddingHorizontal: 20,
 					paddingTop: insets.top,
 				}}>
-				<ScreenHeaders content='10 commandements' />
+				<ScreenHeaders content='Tips and Tactics' />
 			</View>
 			<ScrollView
 				showsVerticalScrollIndicator={false}
@@ -32,11 +32,17 @@ export default function Secrets() {
 					paddingHorizontal: 20,
 				}}>
 				{commandements.data.map((commandement) => {
+					const imageUrl =
+						commandement.attributes.headerImage?.data?.attributes?.formats
+							?.medium?.url ??
+						"https://fearless-comfort-efded67ed1.media.strapiapp.com/tips_n_tactics_52aeea960b.png";
+
 					return (
 						<CardSimpleButtonCommandements
 							key={commandement.id}
 							itemId={commandement.id}
 							content={commandement.attributes.Theme}
+							image={imageUrl}
 						/>
 					);
 				})}

@@ -1,7 +1,17 @@
+// File: src/components/cards/CommandementCard.tsx
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
+import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+
+interface Props {
+	title: string;
+	text: string;
+	cardWidth: number;
+	cardMargin: number;
+	index: number;
+}
 
 export default function CommandementCard({
 	title,
@@ -9,7 +19,7 @@ export default function CommandementCard({
 	cardWidth,
 	cardMargin,
 	index,
-}) {
+}: Props) {
 	return (
 		<View style={styles.wrapper}>
 			<LinearGradient
@@ -20,12 +30,16 @@ export default function CommandementCard({
 				]}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 1 }}>
+				<Text style={styles.tinyTitle}>Tips and Tactic – {index}</Text>
 				<Text style={styles.keyCardTitle}>{title} :</Text>
+
 				<View style={styles.cardContent}>
-					<Text style={styles.keyCardText}>{text}</Text>
-				</View>
-				<View style={styles.cardNumberWrapper}>
-					<Text style={styles.keyCardNum}>{index + 1}</Text>
+					<ScrollView
+						contentContainerStyle={styles.scrollContent}
+						showsVerticalScrollIndicator={false} // <– hide the scrollbar
+					>
+						<Text style={styles.keyCardText}>{text}</Text>
+					</ScrollView>
 				</View>
 			</LinearGradient>
 		</View>
@@ -34,22 +48,28 @@ export default function CommandementCard({
 
 const styles = StyleSheet.create({
 	wrapper: {
-		minHeight: "100%",
 		justifyContent: "center",
 		alignItems: "center",
+		minHeight: "100%",
 	},
 	keyCardWrapper: {
 		position: "relative",
 		justifyContent: "flex-start",
-		minHeight: "70%",
+		height: 500,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 30,
-		paddingTop: 40,
+		paddingTop: 30,
 		borderRadius: 25,
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.55,
 		shadowRadius: 10.84,
+	},
+	tinyTitle: {
+		color: colorWhite,
+		fontSize: FontSize14,
+		fontWeight: "bold",
+		marginBottom: 10,
 	},
 	keyCardTitle: {
 		color: colorWhite,
@@ -57,23 +77,17 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 	cardContent: {
+		flex: 1, // take up remaining space
 		marginTop: 20,
+		overflow: "hidden",
+	},
+	scrollContent: {
+		paddingBottom: 20, // so last lines aren’t cut off
 	},
 	keyCardText: {
 		color: colorWhite,
 		fontSize: FontSize16,
 		fontWeight: "bold",
-	},
-	cardNumberWrapper: {
-		marginTop: 20,
-		position: "absolute",
-		bottom: 10,
-		left: 30,
-	},
-	keyCardNum: {
-		color: colorWhite,
-		fontSize: 148,
-		opacity: 0.2,
-		fontWeight: "bold",
+		lineHeight: 22,
 	},
 });

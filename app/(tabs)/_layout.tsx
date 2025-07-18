@@ -33,7 +33,11 @@ const CustomTabBar: React.FC<any> = (props) => {
 };
 
 const _layout: React.FC = () => {
-	const { isAuthenticated, isRegistering } = useAuth();
+	const { isAuthenticated, isRegistering, logout } = useAuth();
+
+	// useEffect(() => {
+	// 	logout();
+	// }, []);
 
 	if (!isAuthenticated && !isRegistering) {
 		return <LoginScreen />;

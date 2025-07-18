@@ -1,45 +1,38 @@
-export interface CommandementsCategories {
-	id: number;
-	attributes: {
-		Name: string;
-		Description: string | null;
-		Title: string;
-		backgroundColor: string;
-		createdAt: string;
-		updatedAt: string;
-	};
+// src/types/commandement.ts
+
+export interface CommandementCategory {
+	Name: string;
+	backgroundColor: string;
 }
 
-export interface CommandementsAttributes {
+export interface CommandementCategories {
+	data: CommandementCategory[];
+}
+
+export interface CommandementCard {
+	id: number;
+	titre: string;
+	contenus: string;
+	cta: string | null;
+	headerCard: string | null;
+}
+
+export interface CommandementAttributes {
 	Theme: string;
-	Astuce_1: string;
-	Astuce_2: string;
-	Astuce_3: string;
-	Astuce_4: string;
-	Astuce_5: string;
-	Astuce_7: string;
-	Astuce_8: string;
-	Astuce_9: string;
-	Astuce_10: string;
-	Astuce_11: string;
 	Active: boolean;
-	createdAt: string;
-	updatedAt: string;
-	publishedAt: string;
-	Categories: {
-		data: CommandementsCategories[];
-	};
+	Categories: CommandementCategories;
+	cards: CommandementCard[];
 }
 
-export interface CommandementsData {
+export interface CommandementData {
 	id: number;
-	attributes: CommandementsAttributes;
+	attributes: CommandementAttributes;
 }
 
-export interface CommandementsPayload {
-	data: CommandementsData[];
+export interface SingleCommandementResponse {
+	data: CommandementData;
 }
 
-export interface CommandementPayload {
-	data: CommandementsData;
+export interface MultipleCommandementsResponse {
+	data: CommandementData[];
 }
