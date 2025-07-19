@@ -1,11 +1,14 @@
+// File: src/components/leJeu/Card.tsx
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSizeH1 } from "@/constants/fontsizes";
+import { FontSize22 } from "@/constants/fontsizes";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Assets
+import jeuIconFalse from "@/assets/imgs/icons/jeu_icon_false.png";
+import jeuIconTrue from "@/assets/imgs/icons/jeu_icon_true.png";
 import Star from "@/assets/imgs/icons/jeu_star.png";
-import { default as useDeviceTypeCheckers } from "@/helpers/deviceModel";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
 import { QuestionData } from "@/types/userGameSessionStatus";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,35 +17,29 @@ import Loader from "../experience/loader";
 interface CardProps {
 	data: QuestionData;
 	catColors: CategorieColors;
+	onSwipeFalse: () => void;
+	onSwipeTrue: () => void;
 }
 
-const Card = ({ data, catColors }: CardProps) => {
+const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const insets = useSafeAreaInsets();
 
-	if (!data || !catColors || !catColors.data || catColors.data.length === 0) {
+	if (!data || !catColors?.data?.length) {
 		return <Loader />;
 	}
 
-	const selectedCategory: number = data?.attributes.CATEGORIE - 1;
-
-	const backGroundColor = () => {
-		return `#${catColors.data[selectedCategory]?.attributes.backgroundColor}`;
-	};
-
-	const smallIcon = () => {
-		return catColors.data[selectedCategory]?.attributes.smallIcon.data
-			.attributes.url;
-	};
+	const selectedCategory = data.attributes.CATEGORIE - 1;
+	const backGroundColor = `#${catColors.data[selectedCategory].attributes.backgroundColor}`;
+	const smallIconUrl =
+		catColors.data[selectedCategory].attributes.smallIcon.data.attributes.url;
 
 	const renderStars = () => {
 		const stars = [];
-		const coef = data?.attributes?.COEF;
-
+		const coef = data.attributes.COEF;
 		for (let i = 0; i < Math.min(coef, 3); i++) {
 			stars.push(<Image key={i} source={Star} style={styles.starIcon} />);
 		}
-
 		return stars;
 	};
 
@@ -50,25 +47,34 @@ const Card = ({ data, catColors }: CardProps) => {
 		<View style={[styles.cardsWrapper, { paddingTop: insets.top }]}>
 			<View
 				style={[
+					styles.cardContainer,
 					{
-						backgroundColor: `${backGroundColor()}`,
+						backgroundColor: backGroundColor,
 						minHeight: isHomeButtonModel ? "85%" : "65%",
 					},
-					styles.cardContainer,
 				]}>
 				<View style={styles.containerTopRow}>
 					<View style={styles.containerCatIcon}>{renderStars()}</View>
 					<View style={styles.containerCatIcon}>
 						<Image
-							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL}${smallIcon()}`,
-							}}
+							source={{ uri: `${process.env.EXPO_PUBLIC_URL}${smallIconUrl}` }}
 							style={styles.catIcon}
 						/>
 					</View>
 				</View>
+
 				<View style={styles.containerText}>
-					<Text style={styles.textText}>{data?.attributes.QUESTION}</Text>
+					<Text style={styles.textText}>{data.attributes.QUESTION}</Text>
+				</View>
+
+				<View style={styles.containerCardIcons}>
+					<TouchableOpacity onPress={onSwipeFalse} style={styles.cardIcon}>
+						<Image source={jeuIconFalse} style={styles.actionIcon} />
+					</TouchableOpacity>
+
+					<TouchableOpacity onPress={onSwipeTrue} style={styles.cardIcon}>
+						<Image source={jeuIconTrue} style={styles.actionIcon} />
+					</TouchableOpacity>
 				</View>
 			</View>
 		</View>
@@ -81,7 +87,7 @@ const styles = StyleSheet.create({
 		alignItems: "flex-start",
 	},
 	cardContainer: {
-		minWidth: "100%",
+		width: "100%",
 		padding: 20,
 		paddingTop: 0,
 		borderRadius: 25,
@@ -99,9 +105,7 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 	},
 	containerCatIcon: {
-		display: "flex",
 		flexDirection: "row",
-		justifyContent: "flex-start",
 		paddingVertical: 15,
 	},
 	catIcon: {
@@ -112,29 +116,36 @@ const styles = StyleSheet.create({
 		width: 45,
 		height: 45,
 	},
-	containerText: {},
+	containerText: {
+		width: "100%",
+		justifyContent: "center",
+		alignItems: "center",
+		marginVertical: 20,
+	},
 	textText: {
-		fontSize: FontSizeH1,
+		fontSize: FontSize22,
 		color: colorWhite,
 		fontWeight: "bold",
 	},
 	containerCardIcons: {
 		width: "100%",
 		position: "absolute",
-		bottom: 20,
-		marginTop: 80,
+		bottom: 30,
+		paddingHorizontal: 10,
 		flexDirection: "row",
 		justifyContent: "space-between",
 	},
 	cardIcon: {
 		padding: 10,
-		borderColor: colorWhite,
-		borderWidth: 4,
-		borderRadius: 30,
-		width: 60,
-		height: 60,
+		width: 52,
+		height: 52,
 		justifyContent: "center",
 		alignItems: "center",
+	},
+	actionIcon: {
+		width: 52,
+		height: 52,
+		resizeMode: "contain",
 	},
 });
 

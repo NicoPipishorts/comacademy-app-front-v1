@@ -43,10 +43,7 @@ export default function Jeu() {
 
 	const removeCardAndCheckEnd = useCallback(
 		(cardIndex: number) => {
-			setDataGame((prev) => {
-				const next = prev.filter((_, i) => i !== cardIndex);
-				return next;
-			});
+			setDataGame((prev) => prev.filter((_, i) => i !== cardIndex));
 		},
 		[setDataGame]
 	);
@@ -161,13 +158,17 @@ export default function Jeu() {
 					ref={swiperRef}
 					overlayLabels={overlayLabels}
 					cards={dataGame}
-					renderCard={(card, cardIndex) => {
-						// guard against undefined
-						if (!card) {
-							return null;
-						}
-						return <Card key={card.id} catColors={catData} data={card} />;
-					}}
+					renderCard={(card, cardIndex) =>
+						card ? (
+							<Card
+								key={card.id}
+								catColors={catData}
+								data={card}
+								onSwipeFalse={() => swiperRef.current?.swipeLeft()}
+								onSwipeTrue={() => swiperRef.current?.swipeRight()}
+							/>
+						) : null
+					}
 					verticalSwipe={false}
 					onSwipedLeft={(i) => onSwipe(i, false)}
 					onSwipedRight={(i) => onSwipe(i, true)}
