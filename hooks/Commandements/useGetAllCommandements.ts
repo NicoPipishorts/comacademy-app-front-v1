@@ -1,44 +1,42 @@
-// src/hooks/useCategories.ts
+// src/hooks/Commandements/useGetCommandements.ts
 
 import useJwtToken from "@/hooks/useJwtToken";
-import { CommandementsPayload } from "@/types/commandements";
+import { MultipleCommandementsResponse } from "@/types/commandements";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchData = async (token: string): Promise<CommandementsPayload> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/commandements?sort=id:asc&populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+const fetchCommandements = async (
+	token: string,
+	categoryId: number | null
+): Promise<MultipleCommandementsResponse> => {
+	const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+	// choose endpoint based on categoryId
+	const endpoint = categoryId
+		? `/commandements/by-category/${categoryId}`
+		: "/commandements";
 
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
+	const res = await fetch(`${baseUrl}${endpoint}`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
 
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error fetching Amm Secrets:", error);
-		throw error;
+	if (!res.ok) {
+		const text = await res.text();
+		console.error(`Error fetching commandements:`, res.status, text);
+		throw new Error(`Failed to fetch commandements: ${res.status}`);
 	}
+
+	return res.json();
 };
 
-const useGetAllCommandements = () => {
+export const useGetCommandements = (categoryId: number | null = null) => {
 	const { token } = useJwtToken();
 
-	return useQuery<CommandementsPayload>({
-		queryKey: ["CommandementsFull"],
-		queryFn: () => fetchData(token),
-		enabled: !!token,
+	return useQuery<MultipleCommandementsResponse>({
+		queryKey: ["Commandements", categoryId],
+		queryFn: () => fetchCommandements(token, categoryId),
+		enabled: !!token, // only run once we have a token
 	});
 };
 
-export default useGetAllCommandements;
+export default useGetCommandements;

@@ -8,7 +8,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	count?: number;
-	categories: CategoriePayload;
+	// either a full payload or just the category title as a string
+	categories: CategoriePayload | string;
 	filterByCat: number;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 }
@@ -20,11 +21,19 @@ export default function FilteredByCat({
 	count,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
-	const categoriesArray = categories.data;
 
-	const categoriesById = categoriesArray.find(
-		(category) => category.id === filterByCat
-	);
+	console.log(categories);
+
+	// figure out the display title & id
+	let title: string;
+	if (typeof categories === "string") {
+		// if they passed a string, use it directly
+		title = categories;
+	} else {
+		// otherwise find the matching category in the payload
+		const match = categories.data.find((c) => c.id === filterByCat);
+		title = match?.attributes.Title ?? "Unknown";
+	}
 
 	const onPress = () => {
 		setFilterByCat(null);
@@ -33,11 +42,10 @@ export default function FilteredByCat({
 
 	return (
 		<View style={styles.filterCWrapper}>
-			<TouchableOpacity
-				style={styles.filterContainer}
-				onPress={() => onPress()}>
+			<TouchableOpacity style={styles.filterContainer} onPress={onPress}>
 				<Text style={styles.filterText}>
-					{categoriesById.attributes.Title}: {count}
+					{title}
+					{count != null ? `: ${count}` : ""}
 				</Text>
 				<MaterialCommunityIcons
 					name='close-circle-outline'
@@ -50,12 +58,6 @@ export default function FilteredByCat({
 }
 
 const styles = StyleSheet.create({
-	contentContainer: {
-		flexDirection: "row",
-		flex: 1,
-		marginTop: 20,
-		marginBottom: 80,
-	},
 	filterCWrapper: {
 		flexDirection: "row",
 		alignItems: "center",

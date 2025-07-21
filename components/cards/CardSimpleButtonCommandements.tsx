@@ -67,7 +67,6 @@ const styles = StyleSheet.create({
 		display: "flex",
 		flexDirection: "column",
 		marginVertical: 20,
-		marginHorizontal: 10,
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.55,

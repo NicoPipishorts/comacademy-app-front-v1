@@ -1,38 +1,53 @@
 // src/types/commandement.ts
 
-export interface CommandementCategory {
-	Name: string;
-	backgroundColor: string;
-}
-
-export interface CommandementCategories {
-	data: CommandementCategory[];
-}
-
+/** --- Shared --- */
 export interface CommandementCard {
 	id: number;
 	titre: string;
 	contenus: string;
 	cta: string | null;
-	headerCard: string | null;
+	headerCard: boolean;
 }
 
-export interface CommandementAttributes {
+/** --- Single‐item response --- */
+export interface SingleCommandementAttributes {
 	Theme: string;
 	Active: boolean;
-	Categories: CommandementCategories;
 	cards: CommandementCard[];
 }
 
-export interface CommandementData {
+export interface SingleCommandementData {
 	id: number;
-	attributes: CommandementAttributes;
+	attributes: SingleCommandementAttributes;
 }
 
 export interface SingleCommandementResponse {
-	data: CommandementData;
+	data: SingleCommandementData;
+}
+
+/** --- List response --- */
+export interface ListCommandementAttributes {
+	Theme: string;
+	Active: boolean;
+	imageUrl: string | null;
+	catName: string | null;
+}
+
+export interface ListCommandementData {
+	id: number;
+	attributes: ListCommandementAttributes;
+}
+
+export interface PaginationMeta {
+	pagination: {
+		page: number;
+		pageSize: number;
+		pageCount: number;
+		total: number;
+	};
 }
 
 export interface MultipleCommandementsResponse {
-	data: CommandementData[];
+	data: ListCommandementData[];
+	meta: PaginationMeta;
 }
