@@ -1,115 +1,165 @@
-import ScreenHeaders from "@/components/ScreenHeaders";
-import { primaryBackground } from "@/constants/colors";
-import { FontSize12, FontSize16 } from "@/constants/fontsizes";
-import React, { useCallback, useEffect, useState } from "react";
+// File: src/components/leJeu/DicoDetails.tsx
+import { useLocalSearchParams } from "expo-router";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
+	Animated,
+	Dimensions,
+	Easing,
 	Image,
 	ImageStyle,
+	LayoutChangeEvent,
 	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
 	View,
 } from "react-native";
-// Icons
-import { useAddFavoriteDico } from "@/api/favoriteDico";
-import HeartFull from "@/assets/imgs/icons/heart-full.png";
-import Heart from "@/assets/imgs/icons/heart.png";
-import Plus from "@/assets/imgs/icons/plus.png";
+
+// Components
+import ScreenHeaders from "@/components/ScreenHeaders";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
-import { colorWhite } from "@/constants/colors";
+import SwipeToGoBack from "@/utils/swipeToGoBack";
+
+// Hooks & API
+import { useAddFavoriteDico } from "@/api/favoriteDico";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import { useDicoById } from "@/hooks/useGetDico";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
-import SwipeToGoBack from "@/utils/swipeToGoBack";
-import { useLocalSearchParams } from "expo-router";
+
+// Constants
+import { colorWhite, primaryBackground } from "@/constants/colors";
+import { FontSize16 } from "@/constants/fontsizes";
+
+// Icons
+import HeartFull from "@/assets/imgs/icons/heart-full.png";
+import Heart from "@/assets/imgs/icons/heart.png";
+import Plus from "@/assets/imgs/icons/plus.png";
+import { Entypo } from "@expo/vector-icons";
 
 interface Props {
-	dicoId: number;
+	dicoId?: number;
+}
+
+interface FavoriteState {
+	isFavorite: boolean;
+	favoriteIds: number[];
+	favoriteDataId: number | null;
 }
 
 export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
-	const [modalVisible, setModalVisible] = useState(false);
-	const dicoId = paramsDicoId ? paramsDicoId : Number(id);
-
 	const { isAndroid } = useDeviceTypeCheckers();
 
-	const { data } = useDicoById(dicoId);
-	const { data: favoritesRespons, isFetched: isFetchFavorites } =
-		useGetFavoriteDicos(userId);
+	// Modal visibility
+	const [modalVisible, setModalVisible] = useState(false);
 
-	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
-		useState<boolean>(null);
-	const [idArray, setIdArray] = useState<number[]>([]);
-	const [dataId, setDataId] = useState<number>(null);
+	// Measure definition heights
+	const [def1Height, setDef1Height] = useState(0);
+	const [def2Height, setDef2Height] = useState(0);
 
-	const handleSuccess = () => {
+	// 60% of viewport height
+	const windowHeight = Dimensions.get("window").height;
+	const sixtyDvh = windowHeight * 0.5;
+
+	// Flag: true if combined definitions exceed 60dvh
+	const defsTooTall = def1Height + def2Height > sixtyDvh;
+
+	// Arrow animation value
+	const arrowAnim = useRef(new Animated.Value(0)).current;
+	useEffect(() => {
+		Animated.loop(
+			Animated.sequence([
+				Animated.timing(arrowAnim, {
+					toValue: -4,
+					duration: 800,
+					easing: Easing.inOut(Easing.ease),
+					useNativeDriver: true,
+				}),
+				Animated.timing(arrowAnim, {
+					toValue: 0,
+					duration: 800,
+					easing: Easing.inOut(Easing.ease),
+					useNativeDriver: true,
+				}),
+			])
+		).start();
+	}, [arrowAnim]);
+
+	// Determine dicoId
+	const dicoId = paramsDicoId !== undefined ? paramsDicoId : Number(id || 0);
+
+	// Fetch data
+	const { data: dicoData } = useDicoById(dicoId);
+	const { data: favoritesResponse } = useGetFavoriteDicos(userId);
+
+	// Compute favorite state
+	const favoriteState: FavoriteState = useMemo(() => {
+		if (!favoritesResponse?.data?.[0]) {
+			return { isFavorite: false, favoriteIds: [], favoriteDataId: null };
+		}
+		const favData = favoritesResponse.data[0];
+		const ids = favData.attributes.words.data.map((item) => item.id);
+		return {
+			isFavorite: ids.includes(dicoId),
+			favoriteIds: ids,
+			favoriteDataId: favData.id,
+		};
+	}, [favoritesResponse, dicoId]);
+
+	// Setup mutation
+	const handleMutationSuccess = useCallback(() => {
 		queryClient.refetchQueries({ queryKey: ["DicoFavorites", userId] });
-	};
-
-	const mutation = useAddFavoriteDico(handleSuccess);
-
-	useEffect(() => {
-		if (favoritesRespons?.data[0]) {
-			const newArray = favoritesRespons?.data[0].attributes.words.data.map(
-				(item) => item.id
-			);
-			setIdArray(newArray);
-		}
-	}, [favoritesRespons?.data]);
-
-	useEffect(() => {
-		if (idArray) {
-			const doesItExist = idArray.some((id) => id === dicoId);
-			if (doesItExist) {
-				setFilterIfFavoriteExists(true);
-			} else {
-				setFilterIfFavoriteExists(false);
-			}
-		}
-	}, [idArray, dicoId]);
-
-	useEffect(() => {
-		if (isFetchFavorites && favoritesRespons.data[0]) {
-			setDataId(favoritesRespons.data[0].id);
-		}
-	}, [isFetchFavorites, favoritesRespons]);
+	}, [userId]);
+	const mutation = useAddFavoriteDico(handleMutationSuccess);
 
 	const handleAddFavorite = useCallback(() => {
-		if (filterIfFavoriteExists) {
-			const updatedIdArray = idArray.filter((id) => id !== dicoId);
-			const updatedFavoriteDicos = [...updatedIdArray];
-			mutation.mutate({ dataId, updatedFavoriteDicos, token });
+		const { isFavorite, favoriteIds, favoriteDataId } = favoriteState;
+		let updatedIds: number[];
+		if (isFavorite) {
+			updatedIds = favoriteIds.filter((i) => i !== dicoId);
+			mutation.mutate({
+				dataId: favoriteDataId!,
+				updatedFavoriteDicos: updatedIds,
+				token,
+			});
 		} else {
-			const updatedFavoriteDicos = [...idArray, dicoId];
-			if (!dataId) {
-				mutation.mutate({ userId, updatedFavoriteDicos, token });
-			} else {
-				mutation.mutate({ dataId, updatedFavoriteDicos, token });
-			}
+			updatedIds = [...favoriteIds, dicoId];
+			const params = favoriteDataId
+				? { dataId: favoriteDataId, updatedFavoriteDicos: updatedIds, token }
+				: { userId, updatedFavoriteDicos: updatedIds, token };
+			mutation.mutate(params);
 		}
-	}, [
-		dataId,
-		filterIfFavoriteExists,
-		idArray,
-		dicoId,
-		mutation,
-		token,
-		userId,
-	]);
+	}, [favoriteState, dicoId, mutation, token, userId]);
 
-	if (!data) {
+	const handleModalOpen = useCallback(() => setModalVisible(true), []);
+	const handleModalClose = useCallback(() => setModalVisible(false), []);
+
+	// Parse categories
+	const categories = useMemo(() => {
+		const s = dicoData?.data?.attributes?.Categories;
+		return s ? s.split(",").map((c) => parseInt(c.trim(), 10)) : [];
+	}, [dicoData?.data?.attributes?.Categories]);
+
+	if (!dicoData) {
 		return <Loader />;
 	}
+
+	const { Word, Definition, extraContext } = dicoData.data.attributes;
+
 	return (
 		<SwipeToGoBack>
 			<View
@@ -120,65 +170,93 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 						paddingBottom: isAndroid ? 70 : 20,
 					},
 				]}>
+				{/* Header */}
 				<View style={styles.headerContainer}>
 					<ReturnButton />
-					<ScreenHeaders content={data?.data.attributes.Word} />
+					<ScreenHeaders content={Word} />
 				</View>
 
-				<ScrollView
-					style={styles.contentContainer}
-					showsVerticalScrollIndicator={false}>
-					<View style={styles.wrapperIcons}>
-						<View style={styles.containerIcons}>
-							{data.data.attributes.Categories !== undefined &&
-							data.data.attributes.Categories !== null
-								? data.data.attributes.Categories.split(",").map(
-										(cat, index) => {
-											const categoryNumber = parseInt(cat, 10); // Convert string to number
-											return (
-												<View key={index} style={{ marginRight: 8 }}>
-													<SmallCategroieIcons
-														key={categoryNumber}
-														cats={categoryNumber}
-													/>
-												</View>
-											);
-										}
-								  )
-								: ""}
+				{/* Content */}
+				<ScrollView style={styles.contentContainer}>
+					{/* Category & Action Icons */}
+					<View style={styles.iconsWrapper}>
+						<View style={styles.iconsContainer}>
+							{categories.map((cat) => (
+								<View key={cat} style={styles.categoryIconWrapper}>
+									<SmallCategroieIcons cats={cat} />
+								</View>
+							))}
 						</View>
-						<View style={styles.containerIcons}>
-							<Pressable onPress={() => setModalVisible(true)}>
-								<Image
-									source={Plus}
-									style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-									resizeMode='contain'
-								/>
-							</Pressable>
-							<Pressable onPress={() => handleAddFavorite()}>
-								<Image
-									source={filterIfFavoriteExists ? HeartFull : Heart}
-									style={styles.catIcons as ImageStyle}
-									resizeMode='contain'
-								/>
-							</Pressable>
+						<View style={styles.iconsContainer}>
+							<ActionButton
+								onPress={handleModalOpen}
+								source={Plus}
+								style={styles.addButton}
+							/>
+							<ActionButton
+								onPress={handleAddFavorite}
+								source={favoriteState.isFavorite ? HeartFull : Heart}
+							/>
 						</View>
 					</View>
-					<View style={styles.containerDefintion}>
-						<Text style={styles.textDefinition}>
-							{data.data.attributes.Definition}
-						</Text>
+					{/* Definition #1 */}
+					<View
+						style={styles.definitionContainer}
+						onLayout={(e: LayoutChangeEvent) =>
+							setDef1Height(e.nativeEvent.layout.height)
+						}>
+						<Text style={styles.definitionText}>{Definition}</Text>
 					</View>
+					{/* Definition #2 */}
+					{extraContext && (
+						<View
+							style={styles.definitionContainer}
+							onLayout={(e: LayoutChangeEvent) =>
+								setDef2Height(e.nativeEvent.layout.height)
+							}>
+							<Text style={styles.definitionText}>{extraContext}</Text>
+						</View>
+					)}
 				</ScrollView>
 
+				{/* Animated arrow if definitions too tall */}
+				{defsTooTall && (
+					<Animated.View
+						style={[
+							styles.arrowDown,
+							{ transform: [{ translateY: arrowAnim }] },
+						]}>
+						<Entypo name='chevron-down' size={40} color='rgba(0,0,0,0.7)' />
+					</Animated.View>
+				)}
+
+				{/* Modal */}
 				<AddToPlaylistModal
 					visible={modalVisible}
-					onClose={() => setModalVisible(false)}
+					onClose={handleModalClose}
 					elementId={dicoId}
-					type={"dico"}
+					type='dico'
 				/>
 			</View>
 		</SwipeToGoBack>
+	);
+}
+
+interface ActionButtonProps {
+	onPress: () => void;
+	source: any;
+	style?: ImageStyle;
+}
+
+function ActionButton({ onPress, source, style }: ActionButtonProps) {
+	return (
+		<Pressable onPress={onPress}>
+			<Image
+				source={source}
+				style={[styles.actionIcon, style]}
+				resizeMode='contain'
+			/>
+		</Pressable>
 	);
 }
 
@@ -193,53 +271,46 @@ const styles = StyleSheet.create({
 	contentContainer: {
 		marginBottom: 100,
 	},
-	wrapperIcons: {
+	iconsWrapper: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		paddingHorizontal: 30,
 		marginVertical: 10,
 	},
-	containerIcons: {
+	iconsContainer: {
 		flexDirection: "row",
 		marginBottom: 50,
 	},
-	catIcons: {
+	categoryIconWrapper: {
+		marginRight: 8,
+	},
+	actionIcon: {
 		width: 24,
 		height: 24,
 		aspectRatio: 1,
 		marginRight: 5,
 	},
-	containerDefintion: {
+	addButton: {
+		marginRight: 20,
+	},
+	definitionContainer: {
 		backgroundColor: colorWhite,
 		borderRadius: 25,
 		marginHorizontal: 20,
+		marginBottom: 20,
 		paddingHorizontal: 20,
 		paddingVertical: 30,
 	},
-	textDefinition: {
+	definitionText: {
 		fontSize: FontSize16,
 		lineHeight: 20,
 	},
-	containerSatisfaction: {
-		flexDirection: "row",
+	arrowDown: {
+		position: "absolute",
+		bottom: 90,
+		left: 0,
+		right: 0,
 		alignItems: "center",
-		paddingHorizontal: 30,
-		paddingTop: 100,
-		paddingBottom: 80,
-	},
-	ttlSatisfaction: {
-		fontSize: FontSize12,
-		fontWeight: "bold",
-		marginRight: 20,
-	},
-	btnSatisfaction: {
-		backgroundColor: colorWhite,
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 50,
-		marginHorizontal: 10,
-	},
-	textSatisfaction: {
-		fontWeight: "bold",
+		zIndex: 10,
 	},
 });
