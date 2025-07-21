@@ -146,6 +146,22 @@ const _layout: React.FC = () => {
 						href: null,
 					}}
 				/>
+				<Tabs.Screen
+					name='trenteSecondes'
+					options={{
+						tabBarLabel: "3 Secondes",
+						headerShown: false,
+						href: null,
+					}}
+				/>
+				<Tabs.Screen
+					name='topDesFlops'
+					options={{
+						tabBarLabel: "Top des Flops",
+						headerShown: false,
+						href: null,
+					}}
+				/>
 			</Tabs>
 
 			{/* The BannerContainer manages the lifecycle of the BannerFree */}

@@ -18,12 +18,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const LesPetitesHistoires = () => {
+const TrenteSecondes = () => {
 	const { token } = useJwtToken();
-	const { data, isLoading } = useGetMediaList("petites-histoires", token);
+	const { data, isLoading } = useGetMediaList("trentes-secondes", token);
 	const insets = useSafeAreaInsets();
 
-	useTrackPageMetrics({ page: "PetiteHistoires" });
+	useTrackPageMetrics({ page: "TrenteSecondes" });
 
 	// Compute dimensions for videos
 	const { width } = Dimensions.get("window");
@@ -106,8 +106,6 @@ const LesPetitesHistoires = () => {
 			const videoUri = `${process.env.EXPO_PUBLIC_URL}${item.attributes.videoUri}`;
 			const isFocused = focusedIndexRef.current === index;
 
-			console.log("videoUri", videoUri);
-
 			if (!fadeAnim[index]) {
 				fadeAnim[index] = new Animated.Value(
 					isFirstRender && index === 0 ? 0 : 1
@@ -179,7 +177,7 @@ const LesPetitesHistoires = () => {
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerPadding}>
-				<ScreenHeaders content='La petite histoire' />
+				<ScreenHeaders content='30s top chrono' />
 			</View>
 
 			<Animated.FlatList
@@ -263,4 +261,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default LesPetitesHistoires;
+export default TrenteSecondes;

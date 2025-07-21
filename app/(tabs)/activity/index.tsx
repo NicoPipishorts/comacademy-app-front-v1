@@ -385,7 +385,9 @@ const HomeScreen = () => {
 
 							{/* 3à Secondes Chrono */}
 							<View>
-								<TouchableOpacity style={styles.cardsButton}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("trenteSecondes")}>
 									<View style={styles.imageContainer}>
 										<Image
 											source={trentes}
@@ -410,7 +412,9 @@ const HomeScreen = () => {
 
 							{/* Les Flops Card */}
 							<View>
-								<TouchableOpacity style={styles.cardsButton}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("topDesFlops")}>
 									<View style={styles.imageContainer}>
 										<Image
 											source={topFlops}

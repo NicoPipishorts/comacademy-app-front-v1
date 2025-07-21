@@ -1,0 +1,74 @@
+// src/hooks/useGetMediaList.ts
+import { useQuery } from "@tanstack/react-query";
+
+export type MediaRoute =
+	| "petites-histoires"
+	| "trentes-secondes"
+	| "top-des-flops";
+
+export interface VideoUri {
+	data: {
+		id: number;
+		attributes: {
+			name: string;
+			url: string;
+		};
+	};
+}
+
+export interface MediaItem {
+	id: number;
+	attributes: {
+		titre: string;
+		videoUri: VideoUri;
+		videoId: string | null;
+		videoLink: string | null;
+		visible: boolean | null;
+		createdAt: string;
+		updatedAt: string;
+	};
+}
+
+export interface MediaListResponse {
+	data: MediaItem[];
+	meta: {
+		pagination: {
+			page: number;
+			pageSize: number;
+			pageCount: number;
+			total: number;
+		};
+	};
+}
+
+const fetchMediaList = async (
+	route: MediaRoute,
+	token: string
+): Promise<MediaListResponse> => {
+	const url = new URL(`${process.env.EXPO_PUBLIC_API_URL}/${route}`);
+
+	const res = await fetch(url.toString(), {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!res.ok) {
+		const text = await res.text();
+		console.error(`[fetchMediaList:${route}]`, res.status, text);
+		throw new Error(`Failed to fetch ${route}: ${res.status}`);
+	}
+
+	return res.json();
+};
+
+export const useGetMediaList = (route: MediaRoute, token: string) => {
+	return useQuery<MediaListResponse>({
+		queryKey: ["mediaList", route],
+		queryFn: () => fetchMediaList(route, token),
+		enabled: !!token && !!route,
+		staleTime: 5_000,
+	});
+};
+
+export default useGetMediaList;
