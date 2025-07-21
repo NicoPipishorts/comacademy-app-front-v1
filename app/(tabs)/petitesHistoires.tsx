@@ -44,8 +44,8 @@ const LesPetitesHistoires = () => {
 	const onViewableItemsChanged = useCallback(
 		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
 			const newIndex = viewableItems[0]?.index;
-			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
-				const prev = focusedIndexRef.current;
+			if (newIndex !== undefined && newIndex !== focusedIndex) {
+				const prev = focusedIndex;
 
 				// Pause previous video and save its position
 				const prevRef = videoRefs.current[prev];
@@ -84,7 +84,7 @@ const LesPetitesHistoires = () => {
 				}).start();
 			}
 		},
-		[fadeAnim, isFirstRender]
+		[fadeAnim, focusedIndex, isFirstRender]
 	);
 
 	const viewabilityConfig = useMemo(
