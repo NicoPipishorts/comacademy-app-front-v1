@@ -15,7 +15,7 @@ import Animated, {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const OnboardingV1 = ({ onComplete }) => {
+const OnboardingV1 = ({ onComplete }: { onComplete?: () => void }) => {
 	const slides = [
 		{ id: "1", image: require("@/assets/imgs/onboarding/v1/Screen1.png") },
 		{ id: "2", image: require("@/assets/imgs/onboarding/v1/Screen2.png") },

@@ -1,5 +1,6 @@
 import { useAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
+import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import ChangeAvatar from "@/components/user/changeAvatar";
 import ShowNiveaux from "@/components/user/niveaux";
@@ -7,6 +8,7 @@ import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -39,6 +41,8 @@ export default function User() {
 	const [refreshing, setRefreshing] = useState(false);
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
+	const [showOnboarding, setShowOnboarding] = useState(false);
+	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
 	useTrackPageMetrics({ page: "User" });
 
@@ -123,6 +127,22 @@ export default function User() {
 
 					{scores && <UserStats categoriesScore={scores} />}
 
+					<View style={styles.cardWrapper}>
+						<View style={styles.cardTextContainer}>
+							<Text style={styles.cardText}>
+								Revoir la vitie guidée de l'appli
+							</Text>
+							<TouchableOpacity
+								style={styles.buttonBlack}
+								onPress={() => {
+									setShowOnboarding(true);
+									hideTabBar();
+								}}>
+								<Text style={styles.buttonText}>Voir</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+
 					<ChangeAvatar />
 
 					<UserAccount />
@@ -143,6 +163,18 @@ export default function User() {
 					</View>
 				</ScrollView>
 			</View>
+
+			{showOnboarding && (
+				<View style={{ flex: 1, position: "absolute", top: 0, left: 0 }}>
+					{/* Conditionally render onboarding or your main content */}
+					<OnboardingV1
+						onComplete={() => {
+							setShowOnboarding(false);
+							showTabBar();
+						}}
+					/>
+				</View>
+			)}
 		</KeyboardAvoidingView>
 	);
 }
@@ -182,5 +214,40 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 30,
 		paddingVertical: 10,
 		borderRadius: 50,
+	},
+	cardWrapper: {
+		display: "flex",
+		flexDirection: "column",
+		marginBottom: 40,
+		width: "100%",
+		borderRadius: 25,
+		paddingHorizontal: 20,
+		paddingVertical: 30,
+		backgroundColor: colorWhite,
+	},
+	cardTextContainer: {
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		width: "100%",
+	},
+	cardText: {
+		flexShrink: 1,
+		marginRight: 20,
+		fontSize: FontSize16,
+		fontWeight: "bold",
+		flexGrow: 1,
+		maxWidth: "50%",
+	},
+	buttonBlack: {
+		backgroundColor: colorBlack,
+		paddingVertical: 10,
+		paddingHorizontal: 35,
+		borderRadius: 50,
+	},
+	buttonText: {
+		color: colorWhite,
+		fontWeight: "bold",
 	},
 });

@@ -19,21 +19,16 @@ export default function AvatarInitials({ size }: Props) {
 		return <Loader />;
 	}
 
-	if (data?.data[0].attributes.avatarBackgroundColor === null) {
+	if (!data?.data?.attributes.avatarBackgroundColor) {
 		backgroundColor = colorYellow;
 	} else {
-		backgroundColor = data?.data[0].attributes.avatarBackgroundColor;
+		backgroundColor = data?.data?.attributes.avatarBackgroundColor;
 	}
 
 	const initials = () => {
 		const firstLetter =
-			data?.data[0]?.attributes.user_id.data.attributes.firstName?.split(
-				""
-			)[0] || "";
-		const lastLetter =
-			data?.data[0]?.attributes.user_id.data.attributes.lastName?.split(
-				""
-			)[0] || "";
+			data?.data?.attributes.user.firstName?.split("")[0] || "";
+		const lastLetter = data?.data?.attributes.user.lastName?.split("")[0] || "";
 
 		return firstLetter + lastLetter;
 	};

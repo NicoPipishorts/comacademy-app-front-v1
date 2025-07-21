@@ -7,8 +7,7 @@ import playlistsIcon from "@/assets/imgs/icons/playlists.png";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Href } from 'expo-router';
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -36,7 +35,6 @@ export default function CustomTabBar({
 	navigation,
 }: BottomTabBarProps) {
 	const router = useRouter();
-	const currentRouteName = state.routes[state.index]?.name;
 
 	// order and filter
 	const ordered = state.routes
@@ -79,7 +77,7 @@ export default function CustomTabBar({
 						if (route.name === "activity") {
 							router.replace("/activity");
 						} else if (route.name === "leJeu") {
-							router.push('/leJeu' as Href<string>);
+							router.push("/leJeu" as Href<string>);
 						} else {
 							router.push(`/${route.name}` as Href<string>);
 						}

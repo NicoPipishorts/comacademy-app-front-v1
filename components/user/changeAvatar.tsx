@@ -1,4 +1,4 @@
-import { UpdateUserPreferences } from "@/api/updateUserPreferences";
+import useUpdateUserPreferences from "@/api/updateUserPreferences";
 import {
 	colorBlack,
 	colorBlue,
@@ -13,7 +13,6 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import useGetUserPreferences from "@/hooks/useGetUserPreferences";
-import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -34,10 +33,9 @@ export const colorArray = [
 ];
 
 export default function ChangeAvatar() {
-	const { token } = useJwtToken();
 	const { userId } = useUserId();
 
-	const updatePreferences = UpdateUserPreferences();
+	const updatePreferences = useUpdateUserPreferences();
 	const { data, isFetched } = useGetUserPreferences(userId);
 
 	if (!isFetched) {
@@ -45,15 +43,18 @@ export default function ChangeAvatar() {
 	}
 
 	const onPress = (color: string) => {
-		updatePreferences.mutate({ avatarBackgroundColor: color, token, userId });
+		updatePreferences.mutate({
+			avatarBackgroundColor: color,
+			userId: data?.data.id,
+		});
 	};
 
 	let userSelectedBgColor: string;
 
-	if (data.data.length <= 0) {
+	if (!data?.data) {
 		userSelectedBgColor = colorYellow;
 	} else {
-		userSelectedBgColor = data.data[0].attributes.avatarBackgroundColor;
+		userSelectedBgColor = data?.data.attributes.avatarBackgroundColor;
 	}
 
 	return (
