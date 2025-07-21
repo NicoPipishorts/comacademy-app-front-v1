@@ -100,6 +100,14 @@ const _layout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
+					name='feedback'
+					options={{
+						tabBarLabel: "Feedback",
+						headerShown: false,
+						unmountOnBlur: true,
+					}}
+				/>
+				<Tabs.Screen
 					name='metiers'
 					options={{
 						tabBarLabel: "Metiers",

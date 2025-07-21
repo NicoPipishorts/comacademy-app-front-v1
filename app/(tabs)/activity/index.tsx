@@ -15,6 +15,7 @@ import secrets from "@/assets/imgs/cards/home_3_secrets.png";
 import lesCitations from "@/assets/imgs/cards/home_citations.png";
 import dico from "@/assets/imgs/cards/home_dico.png";
 import feed from "@/assets/imgs/cards/home_feed.png";
+import feedback from "@/assets/imgs/cards/home_feedback.png";
 import topFlops from "@/assets/imgs/cards/home_flops_dis.png";
 import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
@@ -241,7 +242,7 @@ const HomeScreen = () => {
 							</View>
 
 							{/* Feedback Card */}
-							{/* <View>
+							<View>
 								<TouchableOpacity
 									style={styles.cardsButton}
 									onPress={() => navigation.navigate("feedback")}>
@@ -265,7 +266,7 @@ const HomeScreen = () => {
 										Votre voix compte
 									</Text>
 								</View>
-							</View> */}
+							</View>
 						</View>
 					</ScrollView>
 
