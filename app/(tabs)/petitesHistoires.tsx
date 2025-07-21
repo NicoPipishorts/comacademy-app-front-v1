@@ -1,3 +1,4 @@
+// File: src/components/leJeu/LesPetitesHistoires.tsx
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
@@ -24,53 +25,60 @@ const LesPetitesHistoires = () => {
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
 
+	// Compute dimensions for videos
 	const { width } = Dimensions.get("window");
 	const videoWidth = Math.floor(width * 0.8);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
-	const videoRefs = useRef({});
-	const videoPositions = useRef({});
-	const fadeAnim = useRef({}).current;
+	// Refs for controlling videos and fade animations
+	const videoRefs = useRef<Record<number, any>>({});
+	const videoPositions = useRef<Record<number, number>>({});
+	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
+
+	// State to trigger rerenders
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
+	// When viewable item changes, pause previous video, save position, fade overlay
 	const onViewableItemsChanged = useCallback(
-		async ({ viewableItems }) => {
-			const visibleIndex = viewableItems[0]?.index;
+		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
+			const newIndex = viewableItems[0]?.index;
+			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
+				const prev = focusedIndexRef.current;
 
-			if (
-				visibleIndex !== undefined &&
-				visibleIndex !== focusedIndexRef.current
-			) {
-				if (videoRefs.current[focusedIndexRef.current]) {
-					const status = await videoRefs.current[
-						focusedIndexRef.current
-					].getStatusAsync();
+				// Pause previous video and save its position
+				const prevRef = videoRefs.current[prev];
+				if (prevRef) {
+					const status = await prevRef.getStatusAsync();
 					if (status.isLoaded) {
-						videoPositions.current[focusedIndexRef.current] =
-							status.positionMillis;
-						videoRefs.current[focusedIndexRef.current].pauseAsync();
+						videoPositions.current[prev] = status.positionMillis;
+						prevRef.pauseAsync();
 					}
 				}
 
-				if (fadeAnim[focusedIndexRef.current]) {
-					Animated.timing(fadeAnim[focusedIndexRef.current], {
-						toValue: 1, // Show splash screen when scrolling away
+				// Fade in the splash on previous
+				const prevAnim = fadeAnim[prev];
+				if (prevAnim) {
+					Animated.timing(prevAnim, {
+						toValue: 1,
 						duration: 300,
 						useNativeDriver: true,
 					}).start();
 				}
 
-				focusedIndexRef.current = visibleIndex;
-				setFocusedIndex(visibleIndex);
+				// Switch focus
+				focusedIndexRef.current = newIndex;
+				setFocusedIndex(newIndex);
 				setIsFirstRender(false);
 
-				if (!fadeAnim[visibleIndex]) {
-					fadeAnim[visibleIndex] = new Animated.Value(isFirstRender ? 0 : 1);
+				// Initialize fadeAnim for new index if needed
+				if (!fadeAnim[newIndex]) {
+					fadeAnim[newIndex] = new Animated.Value(isFirstRender ? 0 : 1);
 				}
-				Animated.timing(fadeAnim[visibleIndex], {
-					toValue: 0, // Hide splash screen when video is in focus
+				// Fade out splash on new
+				Animated.timing(fadeAnim[newIndex], {
+					toValue: 0,
 					duration: 400,
 					useNativeDriver: true,
 				}).start();
@@ -86,8 +94,15 @@ const LesPetitesHistoires = () => {
 		[]
 	);
 
+	// Reverse the list so the newest appears first
+	const reversedStories = useMemo(
+		() => (data?.data ? [...data.data].reverse() : []),
+		[data]
+	);
+
+	// Render each item
 	const renderItem = useCallback(
-		({ item, index }) => {
+		({ item, index }: { item: any; index: number }) => {
 			const videoUri = `${process.env.EXPO_PUBLIC_URL}${item.attributes.videoUri.data.attributes.url}`;
 			const isFocused = focusedIndexRef.current === index;
 
@@ -102,7 +117,7 @@ const LesPetitesHistoires = () => {
 					key={item.id}
 					style={[
 						styles.cardWrapper,
-						{ height: videoHeight, width: videoWidth },
+						{ width: videoWidth, height: videoHeight },
 					]}>
 					<View style={styles.videoContainer}>
 						<Video
@@ -116,10 +131,13 @@ const LesPetitesHistoires = () => {
 							useNativeControls
 						/>
 
-						{/* Splash Screen (Covers only when video is NOT focused) */}
 						{!isFocused && (
 							<Animated.View
-								style={[styles.overlayContainer, { opacity: fadeAnim[index] }]}>
+								style={[
+									StyleSheet.absoluteFillObject,
+									styles.overlayContainer,
+									{ opacity: fadeAnim[index] },
+								]}>
 								<Image
 									source={SplashScreen}
 									style={styles.thumbnail}
@@ -137,7 +155,7 @@ const LesPetitesHistoires = () => {
 				</Animated.View>
 			);
 		},
-		[fadeAnim, videoHeight, videoWidth, isFirstRender]
+		[fadeAnim, isFirstRender, videoHeight, videoWidth]
 	);
 
 	if (isLoading) {
@@ -158,18 +176,18 @@ const LesPetitesHistoires = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={{ paddingHorizontal: 30 }}>
+			<View style={styles.headerPadding}>
 				<ScreenHeaders content='La petite histoire' />
 			</View>
 
 			<Animated.FlatList
-				style={{ marginTop: 30, paddingHorizontal: 30 }}
-				data={data.data}
+				style={styles.list}
+				data={reversedStories}
 				renderItem={renderItem}
-				horizontal={true}
+				horizontal
 				showsHorizontalScrollIndicator={false}
 				keyExtractor={(item) => item.id.toString()}
-				contentContainerStyle={{ paddingRight: 25 }}
+				contentContainerStyle={styles.contentPadding}
 				onViewableItemsChanged={onViewableItemsChanged}
 				viewabilityConfig={viewabilityConfig}
 				scrollEventThrottle={16}
@@ -182,6 +200,16 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: "#f0f0f0",
+	},
+	headerPadding: {
+		paddingHorizontal: 30,
+	},
+	list: {
+		marginTop: 30,
+		paddingHorizontal: 30,
+	},
+	contentPadding: {
+		paddingRight: 25,
 	},
 	loaderContainer: {
 		flex: 1,
@@ -210,7 +238,6 @@ const styles = StyleSheet.create({
 		height: "100%",
 	},
 	overlayContainer: {
-		...StyleSheet.absoluteFillObject, // Covers entire video
 		justifyContent: "center",
 		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0, 0.5)",
