@@ -106,8 +106,6 @@ const LesPetitesHistoires = () => {
 			const videoUri = `${process.env.EXPO_PUBLIC_URL}${item.attributes.videoUri}`;
 			const isFocused = focusedIndexRef.current === index;
 
-			console.log("videoUri", videoUri);
-
 			if (!fadeAnim[index]) {
 				fadeAnim[index] = new Animated.Value(
 					isFirstRender && index === 0 ? 0 : 1

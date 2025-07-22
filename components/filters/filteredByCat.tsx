@@ -22,8 +22,6 @@ export default function FilteredByCat({
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
-	console.log(categories);
-
 	// figure out the display title & id
 	let title: string;
 	if (typeof categories === "string") {

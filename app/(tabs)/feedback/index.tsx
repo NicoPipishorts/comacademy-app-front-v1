@@ -34,7 +34,6 @@ export default function Feedback() {
 	const [message, setMessage] = useState("");
 
 	const handleSubmit = () => {
-		console.log({ feedbackType, message });
 		Alert.alert("Merci !", "Votre retour a bien été envoyé.");
 		setFeedbackType(null);
 		setMessage("");
