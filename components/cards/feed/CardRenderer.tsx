@@ -12,6 +12,7 @@ import { FeedItem } from "@/types/feed";
 import React from "react";
 import FeedCardActusBref from "./CardActusBref";
 import FeedCardCardComAcademy from "./CardComAcademy";
+import FeedCardCultureCom from "./CardCultureCom";
 import FeedCardLol from "./CardLol";
 import FeedCardVideo from "./CardVideo";
 
@@ -47,6 +48,9 @@ const CardRenderer = ({
 		),
 		"feed-post-comAcademy": (
 			<FeedCardCardComAcademy data={data} elementId={elementId} />
+		),
+		"feed-post-cultureCom": (
+			<FeedCardCultureCom data={data} elementId={elementId} />
 		),
 		"feed-post-actusBref": (
 			<FeedCardActusBref data={data} elementId={elementId} />
