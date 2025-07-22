@@ -103,7 +103,7 @@ const LesPetitesHistoires = () => {
 	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
-			const videoUri = `${process.env.EXPO_PUBLIC_URL}${item.attributes.videoUri}`;
+			const videoUri = item.attributes.videoUri;
 			const isFocused = focusedIndexRef.current === index;
 
 			if (!fadeAnim[index]) {
