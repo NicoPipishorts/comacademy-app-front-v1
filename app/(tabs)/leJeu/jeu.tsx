@@ -35,7 +35,7 @@ export default function Jeu() {
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 
-	const { dataGame, setDataGame, sessionId, gameStatus } = useGameContext();
+	const { dataGame, sessionId, gameStatus } = useGameContext();
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
 	const insertPlayerAnswer = InsertAnswer();
