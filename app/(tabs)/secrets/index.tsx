@@ -29,8 +29,7 @@ export default function Secrets() {
 
 				{secrets?.data.map((secret) => {
 					const imageUrl =
-						secret.attributes.headerImage?.data?.attributes?.formats?.medium
-							?.url ??
+						secret.attributes.imageUrl ??
 						"https://fearless-comfort-efded67ed1.media.strapiapp.com/3secrets_placeholder_e0a32b6000.png";
 
 					return (

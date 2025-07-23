@@ -38,23 +38,19 @@ const CardRenderer = ({
 		secret: <FeedCard3Secrets data={data} elementId={elementId} />,
 		metier: <FeedCardMetier data={data} elementId={elementId} />,
 		chiffre: <FeedCardNumber data={data} elementId={elementId} />,
-		"feed-post-argh": <FeedCardArgh data={data} elementId={elementId} />,
-		"feed-post-image": <FeedCardImage data={data} elementId={elementId} />,
-		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
-		"feed-post-lol": <FeedCardLol data={data} elementId={elementId} />,
-		"feed-post-marqueMystere": (
+		argh: <FeedCardArgh data={data} elementId={elementId} />,
+		image: <FeedCardImage data={data} elementId={elementId} />,
+		vie: <FeedCardVie data={data} elementId={elementId} />,
+		lol: <FeedCardLol data={data} elementId={elementId} />,
+		marqueMystere: (
 			<FeedCardVideo
 				data={data}
 				elementId={elementId}
 				visibleItems={visibleItems}
 			/>
 		),
-		"feed-post-comAcademy": (
-			<FeedCardCardComAcademy data={data} elementId={elementId} />
-		),
-		"feed-post-cultureCom": (
-			<FeedCardCultureCom data={data} elementId={elementId} />
-		),
+		comAcademy: <FeedCardCardComAcademy data={data} elementId={elementId} />,
+		cultureCom: <FeedCardCultureCom data={data} elementId={elementId} />,
 		actusBref: <FeedCardActusBref data={data} elementId={elementId} />,
 		"feed-post-petitesHistoires": (
 			<FeedCardVideo

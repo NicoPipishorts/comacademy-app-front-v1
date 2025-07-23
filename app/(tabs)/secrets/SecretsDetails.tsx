@@ -49,7 +49,6 @@ const AnimatedCard = ({
 		return { transform: [{ scale }], opacity };
 	});
 
-	// wrap each card so we can give it width + spacing
 	const wrapperStyle = {
 		width: CARD_WIDTH,
 		marginRight: CARD_MARGIN * 2,
@@ -72,7 +71,6 @@ const AnimatedCard = ({
 	return (
 		<Animated.View style={[animatedStyle, wrapperStyle]}>
 			<SecretCard
-				key={item.index}
 				title={item.title}
 				text={item.text}
 				cardWidth={CARD_WIDTH}
@@ -84,13 +82,13 @@ const AnimatedCard = ({
 };
 
 interface SecretsDetailsProps {
-	itemId: number;
+	itemId?: number;
 }
 
 export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 	const { isAndroid } = useDeviceTypeCheckers();
 	const { itemId: paramId } = useLocalSearchParams();
-	const secretsId = paramId ? Number(paramId) : itemId;
+	const secretsId = paramId ? Number(paramId) : itemId!;
 
 	const { data: secretsData, isFetched } = useGetSecretById(secretsId);
 
@@ -121,15 +119,20 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 		return <Loader />;
 	}
 
-	const { Title, ...keys } = secretsData.data.attributes;
+	// Destructure Title + new Cards array
+	const { Title, Cards } = secretsData.data.attributes;
+
+	// Build the list of cards
 	const cardsData = [
+		// Always start with the title card
 		{ type: "TitleCard", title: Title },
-		...Object.keys(keys)
-			.filter((key) => key.startsWith("Key"))
-			.map((key, index) => {
-				const [title, text] = keys[key].split(/\r?\n/, 2);
-				return { type: "SecretCard", title, text, index };
-			}),
+		// Then map your API's Cards payload
+		...Cards.map((card: any, index: number) => ({
+			type: card.headerCard ? "TitleCard" : "SecretCard",
+			title: card.titre,
+			text: card.contenus,
+			index,
+		})),
 	];
 
 	return (
@@ -145,7 +148,7 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 				renderItem={({ item, index }) => (
 					<AnimatedCard item={item} index={index} scrollX={scrollX} />
 				)}
-				keyExtractor={(item, index) => `${item.type}-${index}`}
+				keyExtractor={(_, index) => `card-${index}`}
 				showsHorizontalScrollIndicator={false}
 				decelerationRate='fast'
 				snapToInterval={SNAP_INTERVAL}
@@ -161,8 +164,7 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 			/>
 
 			{isAndroid && (
-				<TouchableOpacity
-					style={[styles.backButton, { marginBottom: isAndroid ? 120 : 20 }]}>
+				<TouchableOpacity style={[styles.backButton, { marginBottom: 120 }]}>
 					<Text style={styles.backButtonText}>Retour</Text>
 				</TouchableOpacity>
 			)}
