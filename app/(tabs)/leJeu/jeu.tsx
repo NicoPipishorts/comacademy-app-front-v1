@@ -1,6 +1,6 @@
 // File: src/components/leJeu/Jeu.tsx
 import { useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 
@@ -34,23 +34,11 @@ export default function Jeu() {
 	const { token } = useJwtToken();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
-	const [swiperKey, setSwiperKey] = useState(0);
 
 	const { dataGame, setDataGame, sessionId, gameStatus } = useGameContext();
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
 	const insertPlayerAnswer = InsertAnswer();
-
-	const removeCardAndCheckEnd = useCallback(
-		(cardIndex: number) => {
-			setDataGame((prev) => prev.filter((_, i) => i !== cardIndex));
-		},
-		[setDataGame]
-	);
-
-	useEffect(() => {
-		setSwiperKey((k) => k + 1);
-	}, [dataGame]);
 
 	useEffect(() => {
 		hideTabBar();
@@ -91,7 +79,7 @@ export default function Jeu() {
 			token,
 		});
 
-		removeCardAndCheckEnd(cardIndex);
+		// ← no longer removing from dataGame; Swiper will advance internally
 	};
 
 	const overlayLabels = {
@@ -154,9 +142,7 @@ export default function Jeu() {
 
 			{gameStatus === "in_progress" && sessionId > 0 && (
 				<Swiper
-					key={swiperKey}
 					ref={swiperRef}
-					overlayLabels={overlayLabels}
 					cards={dataGame}
 					renderCard={(card, cardIndex) =>
 						card ? (
@@ -182,6 +168,10 @@ export default function Jeu() {
 					stackScale={5}
 					stackSeparation={24}
 					overlayOpacityHorizontalThreshold={20}
+					// — bonus: smooth fade in/out
+					animateCardOpacity
+					animateOverlayLabelsOpacity
+					overlayLabels={overlayLabels}
 				/>
 			)}
 
