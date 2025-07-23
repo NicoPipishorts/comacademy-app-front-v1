@@ -27,6 +27,9 @@ const CardRenderer = ({
 	elementId: number;
 	visibleItems: number[];
 }) => {
+	// console.log(
+	// 	data.payload.Type ? `${data.id} : ${type}-${data.payload.Type}` : ""
+	// );
 	const cardMap: { [key: string]: JSX.Element } = {
 		citation: <FeedCardCitations data={data} elementId={elementId} />,
 		commandement: <FeedCard10Commandements data={data} elementId={elementId} />,
@@ -34,7 +37,7 @@ const CardRenderer = ({
 		question: <FeedCardJeu data={data} elementId={elementId} />,
 		secret: <FeedCard3Secrets data={data} elementId={elementId} />,
 		metier: <FeedCardMetier data={data} elementId={elementId} />,
-		"feed-post-chiffre": <FeedCardNumber data={data} elementId={elementId} />,
+		chiffre: <FeedCardNumber data={data} elementId={elementId} />,
 		"feed-post-argh": <FeedCardArgh data={data} elementId={elementId} />,
 		"feed-post-image": <FeedCardImage data={data} elementId={elementId} />,
 		"feed-post-vie": <FeedCardVie data={data} elementId={elementId} />,
@@ -52,9 +55,7 @@ const CardRenderer = ({
 		"feed-post-cultureCom": (
 			<FeedCardCultureCom data={data} elementId={elementId} />
 		),
-		"feed-post-actusBref": (
-			<FeedCardActusBref data={data} elementId={elementId} />
-		),
+		actusBref: <FeedCardActusBref data={data} elementId={elementId} />,
 		"feed-post-petitesHistoires": (
 			<FeedCardVideo
 				data={data}

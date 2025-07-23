@@ -1,21 +1,22 @@
 {
-  "cli": {
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "preview": {
-      "distribution": "internal",
-      "autoIncrement": true,
-      "channel": "preview"
-    },
-    "production": {
-      "ios": {
-        "autoIncrement": true
-      },
-      "android": {
-        "autoIncrement": true
-      },
-      "channel": "production"
-    }
-  }
+	"cli": {
+		"appVersionSource": "remote"
+	},
+	"build": {
+		"preview": {
+			"distribution": "internal",
+			"autoIncrement": true,
+			"channel": "preview"
+		},
+		"production": {
+			"ios": {
+				"autoIncrement": true,
+				"image": "macos-sequoia-15.3-xcode-16.2"
+			},
+			"android": {
+				"autoIncrement": true
+			},
+			"channel": "production"
+		}
+	}
 }
