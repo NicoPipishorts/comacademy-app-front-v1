@@ -6,7 +6,6 @@ import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { useDicoIds } from "@/hooks/useGetDico";
 import { NavigationType } from "@/types/general";
-import { useQueryClient } from "@tanstack/react-query";
 import { useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -14,7 +13,6 @@ import CategoriesCards from "../../../components/categories/categories";
 import DicoList from "./list";
 
 const Dico = () => {
-	const queryClient = useQueryClient();
 	const navigation = useNavigation<NavigationType>();
 	const { openDetails } = useGlobalSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
@@ -30,10 +28,6 @@ const Dico = () => {
 			navigation.navigate("dicoDetails", { id: openDetails });
 		}
 	}, [openDetails, navigation]);
-
-	useEffect(() => {
-		queryClient.invalidateQueries({ queryKey: ["metiersList"] });
-	}, [filterByCat, queryClient]);
 
 	if (!dataDico || isLoadingData) {
 		return <Loader />;
