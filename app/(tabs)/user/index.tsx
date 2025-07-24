@@ -130,7 +130,7 @@ export default function User() {
 					<View style={styles.cardWrapper}>
 						<View style={styles.cardTextContainer}>
 							<Text style={styles.cardText}>
-								Revoir la vitie guidée de l'appli
+								Revoir la visite guidée de l’appli
 							</Text>
 							<TouchableOpacity
 								style={styles.buttonBlack}

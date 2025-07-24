@@ -35,7 +35,7 @@ export const useGetUserPreferences = (userId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<UserPreferencesResponse>({
-		queryKey: ["UserPreferences", userId],
+		queryKey: ["UserPreferences"],
 		queryFn: () => fetchUserPreferences(token, userId),
 		enabled: !!token && !!userId,
 	});

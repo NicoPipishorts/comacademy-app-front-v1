@@ -14,24 +14,18 @@ export default function FeedCardImage({ data, elementId }: Props) {
 	const [height, setHeight] = useState<number>(0);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 
-	// Function to calculate aspect ratio with a fallback
 	const aspectRatio = useCallback(() => {
 		const { width, height } = data.payload.Media || {};
-		// Fallback values if width or height is missing
-		const validWidth = width ?? 280; // Default width
-		const validHeight = height ?? 280; // Default height (square image)
+		const validWidth = width ?? 280;
+		const validHeight = height ?? 280;
 		if (validWidth <= 0 || validHeight <= 0) {
 			console.warn("Invalid width/height values:", { width, height });
-			return 1; // Default aspect ratio (square)
+			return 1;
 		}
 		return validWidth / validHeight;
 	}, [data.payload.Media]);
 
-	// Build the image URL and ensure it has a fallback
-	const baseUrl = process.env.EXPO_PUBLIC_URL;
-	const imageUrl = data.payload.Media?.url
-		? `${baseUrl}${data.payload.Media.url}`
-		: null;
+	const imageUrl = data.payload.Media?.url ? data.payload.Media.url : null;
 	const source = imageUrl ? { uri: imageUrl } : null;
 
 	useEffect(() => {
@@ -79,7 +73,7 @@ export default function FeedCardImage({ data, elementId }: Props) {
 					/>
 				</>
 			)}
-			{/* Render the like button */}
+
 			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);

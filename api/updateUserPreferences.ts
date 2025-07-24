@@ -39,9 +39,9 @@ export const useUpdateUserPreferences = () => {
 		},
 
 		// 2) onSuccess handler
-		onSuccess: (_data, { userId }) => {
+		onSuccess: (_data) => {
 			queryClient.invalidateQueries({
-				queryKey: ["UserPreferences", userId],
+				queryKey: ["UserPreferences"],
 			});
 		},
 

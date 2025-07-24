@@ -1,4 +1,5 @@
 // File: src/components/leJeu/FinishedSession.tsx
+import Foundation from "@expo/vector-icons/Foundation";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import React from "react";
@@ -76,7 +77,7 @@ export default function FinishedSession() {
 				</Text>
 			</View>
 
-			<View style={{ paddingTop: 40, flexDirection: "row" }}>
+			<View style={{ paddingTop: 10, flexDirection: "row" }}>
 				<View style={styles.levelRoundContainer}>
 					<Text style={styles.levelText}>Niveau: {currentNiveau}</Text>
 					<Text style={styles.levelText}>Round: {roundsPlayed}</Text>
@@ -113,11 +114,21 @@ export default function FinishedSession() {
 				</View>
 			</View>
 
-			<View style={[styles.containerButton, { bottom: 180 }]}>
+			<View style={[styles.containerBackButton, { bottom: 190, width: "80%" }]}>
 				<TouchableOpacity
 					style={styles.buttonTouchable}
 					onPress={() => router.replace("/leJeu/answersPostGame")}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
+				</TouchableOpacity>
+
+				<TouchableOpacity
+					style={styles.buttonResults}
+					onPress={() => router.replace("/leJeu/answersPostGame")}>
+					<Foundation
+						name='results-demographics'
+						size={24}
+						color={colorWhite}
+					/>
 				</TouchableOpacity>
 			</View>
 
@@ -236,6 +247,19 @@ const styles = StyleSheet.create({
 	},
 	buttonText: {
 		fontSize: FontSize16,
+		color: colorWhite,
+		fontWeight: "bold",
+	},
+	buttonResults: {
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: colorBlack,
+		borderRadius: 50,
+		padding: 10,
+		aspectRatio: 1,
+	},
+	buttonTextResults: {
+		fontSize: FontSize14,
 		color: colorWhite,
 		fontWeight: "bold",
 	},

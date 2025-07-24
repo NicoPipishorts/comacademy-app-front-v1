@@ -1,4 +1,3 @@
-// File: src/components/leJeu/LesPetitesHistoires.tsx
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
@@ -30,7 +29,7 @@ const LesPetitesHistoires = () => {
 	const videoWidth = Math.floor(width * 0.8);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
-	// Refs for controlling videos and fade animations
+	// Refs for controlling videos and animations
 	const videoRefs = useRef<Record<number, any>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
@@ -40,25 +39,25 @@ const LesPetitesHistoires = () => {
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
-	// When viewable item changes, pause previous video, save position, fade overlay
+	// When viewable item changes: pause old, fade, switch, resume new
 	const onViewableItemsChanged = useCallback(
 		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
 			const newIndex = viewableItems[0]?.index;
-			if (newIndex !== undefined && newIndex !== focusedIndex) {
-				const prev = focusedIndex;
+			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
+				const prevIndex = focusedIndexRef.current;
 
-				// Pause previous video and save its position
-				const prevRef = videoRefs.current[prev];
+				// 1) Pause previous video and save its position
+				const prevRef = videoRefs.current[prevIndex];
 				if (prevRef) {
 					const status = await prevRef.getStatusAsync();
 					if (status.isLoaded) {
-						videoPositions.current[prev] = status.positionMillis;
-						prevRef.pauseAsync();
+						videoPositions.current[prevIndex] = status.positionMillis;
+						await prevRef.pauseAsync();
 					}
 				}
 
-				// Fade in the splash on previous
-				const prevAnim = fadeAnim[prev];
+				// 2) Fade in splash overlay on previous
+				const prevAnim = fadeAnim[prevIndex];
 				if (prevAnim) {
 					Animated.timing(prevAnim, {
 						toValue: 1,
@@ -67,24 +66,33 @@ const LesPetitesHistoires = () => {
 					}).start();
 				}
 
-				// Switch focus
+				// 3) Switch focus
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
 				setIsFirstRender(false);
 
-				// Initialize fadeAnim for new index if needed
+				// 4) Initialize & fade out overlay on new
 				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(isFirstRender ? 0 : 1);
+					fadeAnim[newIndex] = new Animated.Value(1);
 				}
-				// Fade out splash on new
 				Animated.timing(fadeAnim[newIndex], {
 					toValue: 0,
 					duration: 400,
 					useNativeDriver: true,
 				}).start();
+
+				// 5) Resume and play new video
+				const newRef = videoRefs.current[newIndex];
+				if (newRef) {
+					const resumePosition = videoPositions.current[newIndex] || 0;
+					await newRef.setPositionAsync(resumePosition, {
+						toleranceMillis: 50,
+					});
+					await newRef.playAsync();
+				}
 			}
 		},
-		[fadeAnim, focusedIndex, isFirstRender]
+		[fadeAnim]
 	);
 
 	const viewabilityConfig = useMemo(
@@ -94,11 +102,8 @@ const LesPetitesHistoires = () => {
 		[]
 	);
 
-	// Reverse the list so the newest appears first
-	const reversedStories = useMemo(
-		() => (data?.data ? [...data.data].reverse() : []),
-		[data]
-	);
+	// Use server-provided order directly
+	const stories = useMemo(() => data?.data ?? [], [data]);
 
 	// Render each item
 	const renderItem = useCallback(
@@ -126,8 +131,6 @@ const LesPetitesHistoires = () => {
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							shouldPlay={isFocused}
-							positionMillis={videoPositions.current[index] || 0}
 							useNativeControls
 						/>
 
@@ -182,7 +185,7 @@ const LesPetitesHistoires = () => {
 
 			<Animated.FlatList
 				style={styles.list}
-				data={reversedStories}
+				data={stories}
 				renderItem={renderItem}
 				horizontal
 				showsHorizontalScrollIndicator={false}

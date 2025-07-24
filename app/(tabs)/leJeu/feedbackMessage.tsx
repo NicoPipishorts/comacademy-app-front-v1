@@ -1,6 +1,6 @@
 import { colorGreen, colorPink, colorWhite } from "@/constants/colors";
 import { Answer } from "@/types/enums";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, {
 	runOnJS,
@@ -22,13 +22,19 @@ export default function FeedbackMessage({
 }: FeedbackMessageProps) {
 	// Ensure starting off-screen each mount
 	const slideAnim = useSharedValue(250);
+	const timerRef = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
+		// Clear any existing timer
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+		}
+
 		// Slide in
 		slideAnim.value = withTiming(0, { duration: 250 });
 
 		// Auto-hide after 500ms
-		const timer = setTimeout(() => {
+		timerRef.current = setTimeout(() => {
 			slideAnim.value = withTiming(250, { duration: 250 }, (finished) => {
 				if (finished) {
 					runOnJS(onHide)();
@@ -36,12 +42,38 @@ export default function FeedbackMessage({
 			});
 		}, 500);
 
-		return () => clearTimeout(timer);
-	}, [slideAnim, onHide]);
+		// Cleanup function
+		return () => {
+			if (timerRef.current) {
+				clearTimeout(timerRef.current);
+				timerRef.current = null;
+			}
+		};
+	}, [answer, slideAnim, onHide]); // Added 'answer' to dependencies
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		transform: [{ translateY: slideAnim.value }],
 	}));
+
+	// Get background color based on answer
+	const getBackgroundColor = () => {
+		switch (answer) {
+			case Answer.true:
+				return colorGreen;
+			case Answer.false:
+				return colorPink;
+			default:
+				return colorPink; // fallback
+		}
+	};
+
+	// Format answer text for display
+	const getDisplayText = () => {
+		if (typeof answer === "string") {
+			return answer.charAt(0).toUpperCase() + answer.slice(1);
+		}
+		return String(answer);
+	};
 
 	return (
 		<Animated.View
@@ -49,11 +81,11 @@ export default function FeedbackMessage({
 				animatedStyle,
 				styles.feedbackContainer,
 				{
-					backgroundColor: answer === Answer.true ? colorGreen : colorPink,
+					backgroundColor: getBackgroundColor(),
 					height: isHomeButtonModel ? 200 : 300,
 				},
 			]}>
-			<Text style={styles.feedbackText}>{answer}</Text>
+			<Text style={styles.feedbackText}>{getDisplayText()}</Text>
 		</Animated.View>
 	);
 }
@@ -79,5 +111,6 @@ const styles = StyleSheet.create({
 		fontSize: 100,
 		color: colorWhite,
 		fontWeight: "bold",
+		textAlign: "center",
 	},
 });
