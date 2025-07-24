@@ -20,20 +20,16 @@ export default function FeedbackMessage({
 	onHide,
 	isHomeButtonModel,
 }: FeedbackMessageProps) {
-	// Ensure starting off-screen each mount
 	const slideAnim = useSharedValue(250);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
-		// Clear any existing timer
 		if (timerRef.current) {
 			clearTimeout(timerRef.current);
 		}
 
-		// Slide in
 		slideAnim.value = withTiming(0, { duration: 250 });
 
-		// Auto-hide after 500ms
 		timerRef.current = setTimeout(() => {
 			slideAnim.value = withTiming(250, { duration: 250 }, (finished) => {
 				if (finished) {
@@ -42,7 +38,6 @@ export default function FeedbackMessage({
 			});
 		}, 500);
 
-		// Cleanup function
 		return () => {
 			if (timerRef.current) {
 				clearTimeout(timerRef.current);

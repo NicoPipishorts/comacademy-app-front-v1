@@ -1,6 +1,6 @@
 // src/screens/Feedback.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
 	Alert,
 	KeyboardAvoidingView,
@@ -29,23 +29,51 @@ const feedbackOptions = [
 	{ label: "Signaler un bug", value: "bug" },
 ];
 
+const bugTemplate =
+	"Description du problème :\n\n\nRésultat attendu :\n\n\nComment le reproduire :";
+
 export default function Feedback() {
 	const [feedbackType, setFeedbackType] = useState<string | null>(null);
 	const [message, setMessage] = useState("");
+	const [isTemplateApplied, setIsTemplateApplied] = useState(false);
 
-	const handleSubmit = () => {
-		Alert.alert("Merci !", "Votre retour a bien été envoyé.");
-		setFeedbackType(null);
-		setMessage("");
+	const handleFeedbackTypeChange = (selectedType: string) => {
+		setFeedbackType(selectedType);
+
+		// Only apply template if it's a bug report and no custom message has been entered
+		if (selectedType === "bug" && message.trim() === "") {
+			setMessage(bugTemplate);
+			setIsTemplateApplied(true);
+		} else if (selectedType !== "bug") {
+			// Clear template if switching away from bug report
+			if (isTemplateApplied) {
+				setMessage("");
+				setIsTemplateApplied(false);
+			}
+		}
 	};
 
-	useEffect(() => {
-		if (feedbackType === "bug") {
-			setMessage(
-				"Description du problème :\n\n\n Rsultat attendu :\n\n\n Comment le reproduire :"
-			);
+	const handleMessageChange = (text: string) => {
+		setMessage(text);
+		// Mark that user has modified the template
+		if (isTemplateApplied && text !== bugTemplate) {
+			setIsTemplateApplied(false);
 		}
-	}, [feedbackType]);
+	};
+
+	const handleSubmit = () => {
+		if (!feedbackType || !message.trim()) {
+			Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+			return;
+		}
+
+		Alert.alert("Merci !", "Votre retour a bien été envoyé.");
+		setFeedbackType(null);
+		setMessage("");
+		setIsTemplateApplied(false);
+	};
+
+	const isSubmitDisabled = !feedbackType || !message.trim();
 
 	return (
 		<View style={styles.wrapper}>
@@ -53,9 +81,9 @@ export default function Feedback() {
 
 			<View style={styles.textContainer}>
 				{[
-					"Vous avez une idée d’amélioration ?",
-					"Un retour d’expérience ?",
-					"Un bug à signaler ?",
+					"Vous avez une idée d'amélioration ?",
+					"Un retour d'expérience ?",
+					"Un bug à signaler ?",
 					"Faites-nous en part, nous serons ravis de vous lire.",
 				].map((line, i) => (
 					<Text key={i} style={styles.presentationText}>
@@ -72,7 +100,7 @@ export default function Feedback() {
 						valueField='value'
 						placeholder='Sélectionnez un type de retour'
 						value={feedbackType}
-						onChange={(item) => setFeedbackType(item.value)}
+						onChange={(item) => handleFeedbackTypeChange(item.value)}
 						style={styles.dropdownBox}
 						containerStyle={styles.dropdownList}
 						placeholderStyle={styles.placeholderStyle}
@@ -87,17 +115,18 @@ export default function Feedback() {
 						multiline
 						placeholder='Votre message…'
 						value={message}
-						onChangeText={setMessage}
+						onChangeText={handleMessageChange}
 						textAlignVertical='top'
+						scrollEnabled={true}
 					/>
 
 					<TouchableOpacity
 						style={[
 							styles.submitButton,
-							(!feedbackType || !message) && styles.disabledButton,
+							isSubmitDisabled && styles.disabledButton,
 						]}
 						onPress={handleSubmit}
-						disabled={!feedbackType || !message}>
+						disabled={isSubmitDisabled}>
 						<Text style={styles.submitButtonText}>Envoyer</Text>
 					</TouchableOpacity>
 				</KeyboardAvoidingView>
