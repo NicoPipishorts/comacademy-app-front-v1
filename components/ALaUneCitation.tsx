@@ -11,7 +11,7 @@ import StyledButton from "./StyledButton";
 export default function ALaUneCitation() {
 	const { data, isFetched } = useDailyCitations();
 
-	if (!isFetched) {
+	if (!data || !isFetched) {
 		return null;
 	}
 
