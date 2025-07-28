@@ -1,7 +1,7 @@
 // File: src/components/leJeu/FinishedSession.tsx
 import Foundation from "@expo/vector-icons/Foundation";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useNavigation } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,7 +27,6 @@ import {
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 
 export default function FinishedSession() {
-	const navigation = useNavigation();
 	const insets = useSafeAreaInsets();
 	const { userId } = useUserId();
 	const { token } = useJwtToken();
@@ -51,6 +50,9 @@ export default function FinishedSession() {
 			if (action === "end") {
 				showTabBar();
 				router.replace("/user");
+			} else if (action === "leaderBoard") {
+				showTabBar();
+				router.replace(`/user?openModal=leaderBoard&timestamp=${Date.now()}`);
 			} else {
 				router.replace("/leJeu/jeu");
 			}
@@ -117,13 +119,15 @@ export default function FinishedSession() {
 			<View style={[styles.containerBackButton, { bottom: 190, width: "80%" }]}>
 				<TouchableOpacity
 					style={styles.buttonTouchable}
-					onPress={() => router.replace("/leJeu/answersPostGame")}>
+					onPress={() => router.push("/user")}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity
 					style={styles.buttonResults}
-					onPress={() => router.replace("/leJeu/answersPostGame")}>
+					onPress={() =>
+						sessionAction({ userId, token, action: "leaderBoard" })
+					}>
 					<Foundation
 						name='results-demographics'
 						size={24}

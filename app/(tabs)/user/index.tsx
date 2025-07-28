@@ -13,6 +13,7 @@ import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	Keyboard,
@@ -35,6 +36,8 @@ interface CategoryResult {
 export type ResultAccumulator = Record<number, CategoryResult>;
 
 export default function User() {
+	const router = useRouter();
+	const { openModal, timestamp } = useLocalSearchParams();
 	const { logout } = useAuth();
 	const { userId } = useUserId();
 	const insets = useSafeAreaInsets();
@@ -46,9 +49,16 @@ export default function User() {
 
 	useTrackPageMetrics({ page: "User" });
 
+	useEffect(() => {
+		if (openModal === "leaderBoard" && timestamp) {
+			setTimeout(() => {
+				router.push("/user/leaderBoard");
+			}, 100);
+		}
+	}, [openModal, timestamp, router]); // timestamp will always be different
+
 	const { data: scores, refetch } = useGetUserScore(token, userId);
 
-	// useRef to store the last fetch time
 	const lastFetchTimeRef = useRef<number>(Date.now());
 
 	useEffect(() => {

@@ -2,30 +2,29 @@ import CardLesCitations from "@/components/cards/CardLesCitations";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
+import { FontSize16 } from "@/constants/fontsizes";
+import useLesCitations from "@/hooks/Citations/useGetLesCitations";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useLesCitations from "@/hooks/useGetLesCitations";
-import useJwtToken from "@/hooks/useJwtToken";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const LesCitations = () => {
-	const { token } = useJwtToken();
-	const { data, isLoading } = useLesCitations(token);
+	const { citationCategory } = useLocalSearchParams();
+	const { data, isLoading } = useLesCitations(citationCategory as string);
 	const insets = useSafeAreaInsets();
-	const scrollViewRef = useRef(null); // Ref for ScrollView
+	const scrollViewRef = useRef(null);
 
 	useTrackPageMetrics({ page: "Citations" });
 
-	// Function to scroll to the end of the ScrollView (immediately)
 	const scrollToEnd = () => {
 		if (scrollViewRef.current) {
-			scrollViewRef.current.scrollToEnd({ animated: false }); // No animation
+			scrollViewRef.current.scrollToEnd({ animated: false });
 		}
 	};
 
 	useEffect(() => {
-		// Scroll to the end when data is available or updated
 		if (data) {
 			scrollToEnd();
 		}
@@ -34,7 +33,6 @@ const LesCitations = () => {
 	if (isLoading) {
 		return <Loader />;
 	}
-
 	if (!data) {
 		return (
 			<View style={styles.noDataContainer}>
@@ -43,22 +41,21 @@ const LesCitations = () => {
 		);
 	}
 
-	// Reverse the data so the oldest appears last (right side)
-	const reversedData = [...data.data].reverse();
+	const reversedData = [...data.data.results.data].reverse();
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={{ paddingHorizontal: 30 }}>
 				<ScreenHeaders content='Citations' />
+				<Text style={styles.categoryTitle}>{data.data.cat}</Text>
 			</View>
 			<ScrollView
 				ref={scrollViewRef}
 				style={styles.citationsWrapper}
 				horizontal={true}
 				showsHorizontalScrollIndicator={false}
-				onContentSizeChange={scrollToEnd} // Ensure scroll happens after content size is calculated
-				onLayout={scrollToEnd} // Ensure scroll happens after layout
-			>
+				onContentSizeChange={scrollToEnd}
+				onLayout={scrollToEnd}>
 				<View style={styles.citationsContainer}>
 					{reversedData.map((citation) => (
 						<CardLesCitations key={citation.id} citation={citation} />
@@ -78,6 +75,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
+	},
+	categoryTitle: {
+		marginTop: -10,
+		fontSize: FontSize16,
+		textTransform: "capitalize",
+		fontWeight: "bold",
 	},
 	citationsWrapper: {
 		flexGrow: 0,

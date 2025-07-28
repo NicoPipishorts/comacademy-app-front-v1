@@ -28,7 +28,6 @@ export default function Secrets() {
 				</View>
 
 				{secrets?.data.map((secret) => {
-					console.log(secret.attributes.imageUrl);
 					const imageUrl =
 						secret.attributes.imageUrl ??
 						"https://fearless-comfort-efded67ed1.media.strapiapp.com/3secrets_placeholder_e0a32b6000.png";

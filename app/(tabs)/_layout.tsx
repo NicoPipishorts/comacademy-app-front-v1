@@ -123,9 +123,9 @@ const _layout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
-					name='lesCitations'
+					name='citations'
 					options={{
-						tabBarLabel: "Les Citations",
+						tabBarLabel: "Citations",
 						headerShown: false,
 						unmountOnBlur: true,
 					}}

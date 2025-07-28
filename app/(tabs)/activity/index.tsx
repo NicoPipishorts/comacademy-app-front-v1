@@ -334,7 +334,7 @@ const HomeScreen = () => {
 							<View style={{ alignItems: "center" }}>
 								<TouchableOpacity
 									style={styles.cardsButton}
-									onPress={() => navigation.navigate("lesCitations")}>
+									onPress={() => navigation.navigate("citations")}>
 									<View style={styles.imageContainer}>
 										<Image
 											source={lesCitations}

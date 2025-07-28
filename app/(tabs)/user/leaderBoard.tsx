@@ -154,14 +154,13 @@ export default function LeaderBoard() {
 					styles.wrapper,
 					{
 						paddingTop: isAndroid ? insets.top : 20,
-						paddingBottom: isAndroid ? 20 : 60,
+						paddingBottom: isAndroid ? insets.bottom : 50,
 					},
 				]}>
 				<ScreenHeaders content='Classement' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					style={{
-						marginTop: 20,
 						backgroundColor: colorWhite,
 						borderRadius: 20,
 						flex: 1,
@@ -225,7 +224,7 @@ export default function LeaderBoard() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flexGrow: 1,
-		paddingHorizontal: 30,
+		paddingHorizontal: 20,
 	},
 	resultRow: {
 		flexDirection: "row",

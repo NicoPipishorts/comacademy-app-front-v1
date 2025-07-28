@@ -4,7 +4,7 @@ import { QuestionData } from "@/types/userGameSessionStatus";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-export type SessionAction = "new" | "end";
+export type SessionAction = "new" | "end" | "leaderBoard";
 
 export interface SessionActionPayload {
 	userId: number;

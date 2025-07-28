@@ -1,9 +1,7 @@
 import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
-import useLesCitations from "@/hooks/useGetLesCitations";
-import useJwtToken from "@/hooks/useJwtToken";
-import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
+import useDailyCitations from "@/hooks/Citations/useGetDailyCitations";
+import { router } from "expo-router";
 import moment from "moment";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -11,18 +9,19 @@ import Loader from "./experience/loader";
 import StyledButton from "./StyledButton";
 
 export default function ALaUneCitation() {
-	const navigation = useNavigation<NavigationType>();
-	const { token } = useJwtToken();
-	const { data, isFetched } = useLesCitations(token);
+	const { data, isFetched } = useDailyCitations();
 
 	if (!isFetched) {
 		return null;
 	}
 
-	const citation = data.data[0].attributes;
+	const citation = data.data;
 
 	const handlePress = () => {
-		navigation.navigate("lesCitations");
+		router.push({
+			pathname: "/citations",
+			params: { fromDaily: "true" },
+		});
 	};
 
 	return (

@@ -3,12 +3,15 @@
 import React, { useEffect, useState } from "react";
 import {
 	Alert,
+	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
 	TouchableOpacity,
+	TouchableWithoutFeedback,
 	View,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
@@ -21,7 +24,7 @@ import {
 	colorWhite,
 	primaryBackground,
 } from "@/constants/colors";
-import { FontSize14 } from "@/constants/fontsizes";
+import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 
 const feedbackOptions = [
 	{ label: "Idée d'amélioration", value: "improvement" },
@@ -42,73 +45,81 @@ export default function Feedback() {
 	useEffect(() => {
 		if (feedbackType === "bug") {
 			setMessage(
-				"Description du problème :\n\n\n Rsultat attendu :\n\n\n Comment le reproduire :"
+				"Description du problème :\n\n\n Résultat attendu :\n\n\n Comment le reproduire :"
 			);
 		}
 	}, [feedbackType]);
 
 	return (
-		<View style={styles.wrapper}>
-			<ScreenHeaders content='Feedback' />
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+			<KeyboardAvoidingView
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+				keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 10}
+				style={styles.container}>
+				<ScreenHeaders content='Feedback' />
 
-			<View style={styles.textContainer}>
-				{[
-					"Vous avez une idée d’amélioration ?",
-					"Un retour d’expérience ?",
-					"Un bug à signaler ?",
-					"Faites-nous en part, nous serons ravis de vous lire.",
-				].map((line, i) => (
-					<Text key={i} style={styles.presentationText}>
-						{line}
-					</Text>
-				))}
+				<ScrollView keyboardShouldPersistTaps='handled'>
+					<View style={styles.textContainer}>
+						{[
+							"Vous avez une idée d’amélioration ?",
+							"Un retour d’expérience ?",
+							"Un bug à signaler ?",
+							"Faites-nous en part, nous serons ravis de vous lire.",
+						].map((line, i) => (
+							<Text key={i} style={styles.presentationText}>
+								{line}
+							</Text>
+						))}
 
-				<KeyboardAvoidingView
-					behavior={Platform.select({ ios: "padding", android: undefined })}
-					style={styles.formContainer}>
-					<Dropdown
-						data={feedbackOptions}
-						labelField='label'
-						valueField='value'
-						placeholder='Sélectionnez un type de retour'
-						value={feedbackType}
-						onChange={(item) => setFeedbackType(item.value)}
-						style={styles.dropdownBox}
-						containerStyle={styles.dropdownList}
-						placeholderStyle={styles.placeholderStyle}
-						selectedTextStyle={styles.selectedTextStyle}
-						itemTextStyle={styles.itemTextStyle}
-						iconStyle={styles.iconStyle}
-						activeColor={colorLightGrey}
-					/>
+						<View style={styles.formContainer}>
+							<Dropdown
+								data={feedbackOptions}
+								labelField='label'
+								valueField='value'
+								placeholder='Sélectionnez un type de retour'
+								value={feedbackType}
+								onChange={(item) => setFeedbackType(item.value)}
+								style={styles.dropdownBox}
+								containerStyle={styles.dropdownList}
+								placeholderStyle={styles.placeholderStyle}
+								selectedTextStyle={styles.selectedTextStyle}
+								itemTextStyle={styles.itemTextStyle}
+								iconStyle={styles.iconStyle}
+								activeColor={colorLightGrey}
+							/>
 
-					<TextInput
-						style={styles.textarea}
-						multiline
-						placeholder='Votre message…'
-						value={message}
-						onChangeText={setMessage}
-						textAlignVertical='top'
-					/>
+							<TextInput
+								style={styles.textarea}
+								multiline
+								placeholder='Votre message…'
+								value={message}
+								onChangeText={setMessage}
+								textAlignVertical='top'
+							/>
 
-					<TouchableOpacity
-						style={[styles.submitButton]}
-						onPress={handleSubmit}
-						disabled={!feedbackType || !message}>
-						<Text style={styles.submitButtonText}>Envoyer</Text>
-					</TouchableOpacity>
-				</KeyboardAvoidingView>
-			</View>
-		</View>
+							<TouchableOpacity
+								style={[
+									styles.submitButton,
+									(!feedbackType || !message) && styles.disabledButton,
+								]}
+								onPress={handleSubmit}
+								disabled={!feedbackType || !message}>
+								<Text style={styles.submitButtonText}>Envoyer</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</ScrollView>
+			</KeyboardAvoidingView>
+		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
-	wrapper: {
+	container: {
 		flex: 1,
 		backgroundColor: primaryBackground,
-		padding: 25,
-		marginTop: 40,
+		paddingTop: 40,
+		paddingHorizontal: 25,
 	},
 	textContainer: {
 		marginVertical: 10,
@@ -153,9 +164,6 @@ const styles = StyleSheet.create({
 	itemTextStyle: {
 		fontSize: 16,
 	},
-	activeColor: {
-		color: colorBlack,
-	},
 	iconStyle: {
 		width: 20,
 		height: 20,
@@ -166,6 +174,8 @@ const styles = StyleSheet.create({
 		padding: 20,
 		minHeight: 320,
 		marginBottom: 20,
+		fontSize: FontSize16,
+		fontWeight: "bold",
 	},
 	submitButton: {
 		backgroundColor: colorBlack,

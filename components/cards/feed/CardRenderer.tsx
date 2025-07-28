@@ -27,9 +27,6 @@ const CardRenderer = ({
 	elementId: number;
 	visibleItems: number[];
 }) => {
-	// console.log(
-	// 	data.payload.Type ? `${data.id} : ${type}-${data.payload.Type}` : ""
-	// );
 	const cardMap: { [key: string]: JSX.Element } = {
 		citation: <FeedCardCitations data={data} elementId={elementId} />,
 		commandement: <FeedCard10Commandements data={data} elementId={elementId} />,
