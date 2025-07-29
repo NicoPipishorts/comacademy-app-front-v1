@@ -59,7 +59,7 @@ export default function TipsAndTactics() {
 			{commandements.data.length === 0 && (
 				<View
 					style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-					<Text>Aucune Tip and Tactics trouvée</Text>
+					<Text>Aucun Tip and Tactics trouvé</Text>
 				</View>
 			)}
 			<ScrollView

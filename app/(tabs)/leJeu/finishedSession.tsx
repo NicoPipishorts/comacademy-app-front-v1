@@ -100,9 +100,13 @@ export default function FinishedSession() {
 				<View style={styles.progressBarWrapper}>
 					<LinearGradient
 						colors={["rgba(139,246,153,0.2)", "rgba(12,162,204,0.2)"]}
+						start={{ x: 1, y: 0 }}
+						end={{ x: 0, y: 0 }}
 						style={styles.progressBarBG}>
 						<LinearGradient
 							colors={["#FF207B", "#5974C9"]}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 0 }}
 							style={[styles.progressBar, { width: `${roundedScore}%` }]}
 						/>
 					</LinearGradient>
@@ -119,7 +123,7 @@ export default function FinishedSession() {
 			<View style={[styles.containerBackButton, { bottom: 190, width: "80%" }]}>
 				<TouchableOpacity
 					style={styles.buttonTouchable}
-					onPress={() => router.push("/user")}>
+					onPress={() => router.push("/leJeu/answersPostGame")}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
 				</TouchableOpacity>
 

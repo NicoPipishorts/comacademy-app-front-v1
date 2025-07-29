@@ -39,7 +39,7 @@ import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 
 // Constants
-import { colorWhite, primaryBackground } from "@/constants/colors";
+import { colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 
 // Icons
@@ -47,6 +47,7 @@ import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import { Entypo } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface Props {
 	dicoId?: number;
@@ -209,13 +210,23 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 					</View>
 					{/* Definition #2 */}
 					{extraContext && (
-						<View
+						<LinearGradient
+							colors={[colorYellow, "#FCA9AC"]}
+							start={{ x: 0, y: 0 }} // Start from the left
+							end={{ x: 0, y: 1 }} // End at the right
 							style={styles.definitionContainer}
 							onLayout={(e: LayoutChangeEvent) =>
 								setDef2Height(e.nativeEvent.layout.height)
 							}>
+							<Text
+								style={[
+									styles.definitionText,
+									{ fontWeight: "bold", marginBottom: 10 },
+								]}>
+								En savoir +
+							</Text>
 							<Text style={styles.definitionText}>{extraContext}</Text>
-						</View>
+						</LinearGradient>
 					)}
 				</ScrollView>
 

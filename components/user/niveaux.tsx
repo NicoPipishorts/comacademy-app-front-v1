@@ -29,13 +29,10 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 
 	// Calculate the round index based on totalPoints
 	const calculateRoundIndex = (niveau: number, points: number): number => {
-		if (niveau <= 1) {
+		if (niveau === 0) {
 			return Math.min(Math.floor(points / 15), niveaux.data.length - 1);
 		} else {
-			return Math.min(
-				Math.floor((points - (niveau - 1) * 15) / 15),
-				niveaux.data.length - 1
-			);
+			return Math.floor((points - niveau * 150) / 15);
 		}
 	};
 
@@ -88,7 +85,7 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 					<View style={styles.niveauRoundRow}>
 						<Text style={styles.niveauLabel}>Round</Text>
 						<Text style={styles.niveauNumber}>
-							1{calculateRoundIndex(niveauNumber, totalPoints)}
+							{calculateRoundIndex(niveauNumber, totalPoints)}
 						</Text>
 					</View>
 				</LinearGradient>

@@ -109,7 +109,7 @@ export default function FeedCardHeader({ data }: Props) {
 		<View>
 			<View style={styles.container}>
 				<Image source={typeIcon} style={styles.icon} resizeMode='contain' />
-				{data.type !== "feed-post" && (
+				{destination && (
 					<Pressable style={styles.pressable} onPress={handleNavigation}>
 						<Image
 							source={require("@/assets/imgs/icons/plus-circle.png")}

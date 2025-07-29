@@ -90,6 +90,7 @@ const AnimatedCard: React.FC<{
 				index={item.index}
 				title={item.title}
 				text={item.text}
+				cta={item.cta}
 				cardWidth={CARD_WIDTH}
 				cardMargin={0}
 			/>
@@ -136,7 +137,7 @@ export default function CommandementsDetails() {
 	let commandIndex = 0;
 	const cardsData: CardItem[] = [
 		{
-			type: "TitleCard", // TS knows this matches CardType
+			type: "TitleCard",
 			theme: Theme,
 			title: "", // ignored for overall theme
 			text: "",
@@ -157,7 +158,7 @@ export default function CommandementsDetails() {
 				};
 			} else {
 				// normal cards increment their own index
-				const idx = commandIndex++;
+				const idx = 1 + commandIndex++;
 				return {
 					type: "CommandementCard" as CardType,
 					theme: Theme,
@@ -215,13 +216,13 @@ const styles = StyleSheet.create({
 	headerText: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
-		marginVertical: 20,
+		marginTop: 20,
+		marginBottom: -40,
 	},
 	backButton: {
 		backgroundColor: colorBlack,
 		paddingHorizontal: 30,
 		paddingVertical: 10,
-		borderRadius: 50,
 		marginTop: 20,
 	},
 	backButtonText: {
