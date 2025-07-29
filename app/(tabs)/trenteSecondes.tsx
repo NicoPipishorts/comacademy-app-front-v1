@@ -1,10 +1,5 @@
-// File: src/components/leJeu/LesPetitesHistoires.tsx
-import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
-import ScreenHeaders from "@/components/ScreenHeaders";
-import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useGetMediaList from "@/hooks/useGetMediaList";
-import useJwtToken from "@/hooks/useJwtToken";
+// File: src/components/leJeu/TrenteSecondes.tsx
+import { useFocusEffect } from "@react-navigation/native";
 import { Video } from "expo-av";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -18,7 +13,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const TrenteSecondes = () => {
+import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
+import Loader from "@/components/experience/loader";
+import ScreenHeaders from "@/components/ScreenHeaders";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useGetMediaList from "@/hooks/useGetMediaList";
+import useJwtToken from "@/hooks/useJwtToken";
+
+const TrenteSecondes: React.FC = () => {
 	const { token } = useJwtToken();
 	const { data, isLoading } = useGetMediaList("trentes-secondes", token);
 	const insets = useSafeAreaInsets();
@@ -40,25 +42,53 @@ const TrenteSecondes = () => {
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
+	// Helper: pause all videos when screen blurs or unmounts
+	const pauseAllVideos = useCallback(async () => {
+		const refs = Object.values(videoRefs.current);
+		await Promise.all(
+			refs.map(async (ref) => {
+				if (ref) {
+					try {
+						const status = await ref.getStatusAsync();
+						if (status.isLoaded && status.isPlaying) {
+							await ref.pauseAsync();
+						}
+					} catch {
+						// ignore
+					}
+				}
+			})
+		);
+	}, []);
+
+	// Pause on blur/unmount
+	useFocusEffect(
+		useCallback(() => {
+			return () => {
+				pauseAllVideos();
+			};
+		}, [pauseAllVideos])
+	);
+
 	// When viewable item changes, pause previous video, save position, fade overlay
 	const onViewableItemsChanged = useCallback(
 		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
 			const newIndex = viewableItems[0]?.index;
-			if (newIndex !== undefined && newIndex !== focusedIndex) {
-				const prev = focusedIndex;
+			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
+				const prevIndex = focusedIndexRef.current;
 
-				// Pause previous video and save its position
-				const prevRef = videoRefs.current[prev];
+				// 1) Pause previous video and save its position
+				const prevRef = videoRefs.current[prevIndex];
 				if (prevRef) {
 					const status = await prevRef.getStatusAsync();
 					if (status.isLoaded) {
-						videoPositions.current[prev] = status.positionMillis;
-						prevRef.pauseAsync();
+						videoPositions.current[prevIndex] = status.positionMillis;
+						await prevRef.pauseAsync();
 					}
 				}
 
-				// Fade in the splash on previous
-				const prevAnim = fadeAnim[prev];
+				// 2) Fade in splash on previous
+				const prevAnim = fadeAnim[prevIndex];
 				if (prevAnim) {
 					Animated.timing(prevAnim, {
 						toValue: 1,
@@ -67,16 +97,18 @@ const TrenteSecondes = () => {
 					}).start();
 				}
 
-				// Switch focus
+				// 3) Switch focus
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
 				setIsFirstRender(false);
 
-				// Initialize fadeAnim for new index if needed
+				// 4) Init fadeAnim for new index if needed
 				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(isFirstRender ? 0 : 1);
+					fadeAnim[newIndex] = new Animated.Value(
+						isFirstRender && newIndex === 0 ? 0 : 1
+					);
 				}
-				// Fade out splash on new
+				// 5) Fade out splash on new
 				Animated.timing(fadeAnim[newIndex], {
 					toValue: 0,
 					duration: 400,
@@ -84,7 +116,7 @@ const TrenteSecondes = () => {
 				}).start();
 			}
 		},
-		[fadeAnim, focusedIndex, isFirstRender]
+		[fadeAnim, isFirstRender]
 	);
 
 	const viewabilityConfig = useMemo(

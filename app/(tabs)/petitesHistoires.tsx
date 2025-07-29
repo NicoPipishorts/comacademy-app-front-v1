@@ -1,9 +1,5 @@
-import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
-import ScreenHeaders from "@/components/ScreenHeaders";
-import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useGetMediaList from "@/hooks/useGetMediaList";
-import useJwtToken from "@/hooks/useJwtToken";
+// File: src/screens/LesPetitesHistoires.tsx
+import { useFocusEffect } from "@react-navigation/native";
 import { Video } from "expo-av";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -17,36 +13,69 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const LesPetitesHistoires = () => {
+import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
+import Loader from "@/components/experience/loader";
+import ScreenHeaders from "@/components/ScreenHeaders";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useGetMediaList from "@/hooks/useGetMediaList";
+import useJwtToken from "@/hooks/useJwtToken";
+
+const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
 	const { data, isLoading } = useGetMediaList("petites-histoires", token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
 
-	// Compute dimensions for videos
+	// Dimensions for videos
 	const { width } = Dimensions.get("window");
 	const videoWidth = Math.floor(width * 0.8);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
-	// Refs for controlling videos and animations
+	// Refs for videos, positions, fade animations
 	const videoRefs = useRef<Record<number, any>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
 
-	// State to trigger rerenders
+	// Local state
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
-	// When viewable item changes: pause old, fade, switch, resume new
+	// Pause all videos helper
+	const pauseAllVideos = useCallback(async () => {
+		const refs = Object.values(videoRefs.current);
+		await Promise.all(
+			refs.map(async (ref) => {
+				if (ref) {
+					try {
+						const status = await ref.getStatusAsync();
+						if (status.isLoaded && status.isPlaying) {
+							await ref.pauseAsync();
+						}
+					} catch {
+						// ignore
+					}
+				}
+			})
+		);
+	}, []);
+
+	// Pause whenever screen loses focus or unmounts
+	useFocusEffect(
+		useCallback(() => {
+			return () => {
+				pauseAllVideos();
+			};
+		}, [pauseAllVideos])
+	);
+
+	// When the visible item changes, pause the old and play the new
 	const onViewableItemsChanged = useCallback(
 		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
 			const newIndex = viewableItems[0]?.index;
 			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
 				const prevIndex = focusedIndexRef.current;
-
-				// 1) Pause previous video and save its position
 				const prevRef = videoRefs.current[prevIndex];
 				if (prevRef) {
 					const status = await prevRef.getStatusAsync();
@@ -56,7 +85,6 @@ const LesPetitesHistoires = () => {
 					}
 				}
 
-				// 2) Fade in splash overlay on previous
 				const prevAnim = fadeAnim[prevIndex];
 				if (prevAnim) {
 					Animated.timing(prevAnim, {
@@ -66,12 +94,10 @@ const LesPetitesHistoires = () => {
 					}).start();
 				}
 
-				// 3) Switch focus
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
 				setIsFirstRender(false);
 
-				// 4) Initialize & fade out overlay on new
 				if (!fadeAnim[newIndex]) {
 					fadeAnim[newIndex] = new Animated.Value(1);
 				}
@@ -81,7 +107,6 @@ const LesPetitesHistoires = () => {
 					useNativeDriver: true,
 				}).start();
 
-				// 5) Resume and play new video
 				const newRef = videoRefs.current[newIndex];
 				if (newRef) {
 					const resumePosition = videoPositions.current[newIndex] || 0;
@@ -96,21 +121,16 @@ const LesPetitesHistoires = () => {
 	);
 
 	const viewabilityConfig = useMemo(
-		() => ({
-			itemVisiblePercentThreshold: 70,
-		}),
+		() => ({ itemVisiblePercentThreshold: 70 }),
 		[]
 	);
 
-	// Use server-provided order directly
 	const stories = useMemo(() => data?.data ?? [], [data]);
 
-	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
 			const videoUri = item.attributes.videoUri;
 			const isFocused = focusedIndexRef.current === index;
-
 			if (!fadeAnim[index]) {
 				fadeAnim[index] = new Animated.Value(
 					isFirstRender && index === 0 ? 0 : 1
@@ -182,7 +202,6 @@ const LesPetitesHistoires = () => {
 			<View style={styles.headerPadding}>
 				<ScreenHeaders content='La petite histoire' />
 			</View>
-
 			<Animated.FlatList
 				style={styles.list}
 				data={stories}
