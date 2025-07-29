@@ -100,8 +100,6 @@ const TrenteSecondes = () => {
 		[data]
 	);
 
-	console.log(reversedStories);
-
 	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
