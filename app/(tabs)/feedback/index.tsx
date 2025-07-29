@@ -1,5 +1,3 @@
-// src/screens/Feedback.tsx
-
 import React, { useEffect, useState } from "react";
 import {
 	Alert,
@@ -26,6 +24,10 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 
+// Import your feedback mutation hook
+import { useSendFeedback } from "@/api/feedback/sendFeedback";
+import useUserId from "@/hooks/useUserId";
+
 const feedbackOptions = [
 	{ label: "Idée d'amélioration", value: "improvement" },
 	{ label: "Retour d'expérience", value: "feedback" },
@@ -35,12 +37,20 @@ const feedbackOptions = [
 export default function Feedback() {
 	const [feedbackType, setFeedbackType] = useState<string | null>(null);
 	const [message, setMessage] = useState("");
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const { userId } = useUserId();
 
-	const handleSubmit = () => {
-		Alert.alert("Merci !", "Votre retour a bien été envoyé.");
-		setFeedbackType(null);
-		setMessage("");
-	};
+	// Initialize the mutation
+	const { mutate: sendFeedback } = useSendFeedback(
+		(data) => {
+			setSuccessMessage(data.message);
+			setFeedbackType(null);
+			setMessage("");
+		},
+		(errorMsg) => {
+			Alert.alert("Erreur", errorMsg);
+		}
+	);
 
 	useEffect(() => {
 		if (feedbackType === "bug") {
@@ -50,6 +60,19 @@ export default function Feedback() {
 		}
 	}, [feedbackType]);
 
+	const handleSubmit = () => {
+		Keyboard.dismiss();
+		// Derive the subject from the selected feedback type
+		const subject =
+			feedbackOptions.find((o) => o.value === feedbackType)?.label || "";
+
+		sendFeedback({
+			userId,
+			subject,
+			message,
+		});
+	};
+
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
 			<KeyboardAvoidingView
@@ -58,57 +81,63 @@ export default function Feedback() {
 				style={styles.container}>
 				<ScreenHeaders content='Feedback' />
 
-				<ScrollView keyboardShouldPersistTaps='handled'>
-					<View style={styles.textContainer}>
-						{[
-							"Vous avez une idée d’amélioration ?",
-							"Un retour d’expérience ?",
-							"Un bug à signaler ?",
-							"Faites-nous en part, nous serons ravis de vous lire.",
-						].map((line, i) => (
-							<Text key={i} style={styles.presentationText}>
-								{line}
-							</Text>
-						))}
-
-						<View style={styles.formContainer}>
-							<Dropdown
-								data={feedbackOptions}
-								labelField='label'
-								valueField='value'
-								placeholder='Sélectionnez un type de retour'
-								value={feedbackType}
-								onChange={(item) => setFeedbackType(item.value)}
-								style={styles.dropdownBox}
-								containerStyle={styles.dropdownList}
-								placeholderStyle={styles.placeholderStyle}
-								selectedTextStyle={styles.selectedTextStyle}
-								itemTextStyle={styles.itemTextStyle}
-								iconStyle={styles.iconStyle}
-								activeColor={colorLightGrey}
-							/>
-
-							<TextInput
-								style={styles.textarea}
-								multiline
-								placeholder='Votre message…'
-								value={message}
-								onChangeText={setMessage}
-								textAlignVertical='top'
-							/>
-
-							<TouchableOpacity
-								style={[
-									styles.submitButton,
-									(!feedbackType || !message) && styles.disabledButton,
-								]}
-								onPress={handleSubmit}
-								disabled={!feedbackType || !message}>
-								<Text style={styles.submitButtonText}>Envoyer</Text>
-							</TouchableOpacity>
-						</View>
+				{successMessage ? (
+					<View style={styles.successContainer}>
+						<Text style={styles.successText}>{successMessage}</Text>
 					</View>
-				</ScrollView>
+				) : (
+					<ScrollView keyboardShouldPersistTaps='handled'>
+						<View style={styles.textContainer}>
+							{[
+								"Vous avez une idée d’amélioration ?",
+								"Un retour d’expérience ?",
+								"Un bug à signaler ?",
+								"Faites-nous en part, nous serons ravis de vous lire.",
+							].map((line, i) => (
+								<Text key={i} style={styles.presentationText}>
+									{line}
+								</Text>
+							))}
+
+							<View style={styles.formContainer}>
+								<Dropdown
+									data={feedbackOptions}
+									labelField='label'
+									valueField='value'
+									placeholder='Sélectionnez un type de retour'
+									value={feedbackType}
+									onChange={(item) => setFeedbackType(item.value)}
+									style={styles.dropdownBox}
+									containerStyle={styles.dropdownList}
+									placeholderStyle={styles.placeholderStyle}
+									selectedTextStyle={styles.selectedTextStyle}
+									itemTextStyle={styles.itemTextStyle}
+									iconStyle={styles.iconStyle}
+									activeColor={colorLightGrey}
+								/>
+
+								<TextInput
+									style={styles.textarea}
+									multiline
+									placeholder='Votre message…'
+									value={message}
+									onChangeText={setMessage}
+									textAlignVertical='top'
+								/>
+
+								<TouchableOpacity
+									style={[
+										styles.submitButton,
+										(!feedbackType || !message) && styles.disabledButton,
+									]}
+									onPress={handleSubmit}
+									disabled={!feedbackType || !message}>
+									<Text style={styles.submitButtonText}>Envoyer</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</ScrollView>
+				)}
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
@@ -172,7 +201,7 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		backgroundColor: colorWhite,
 		padding: 20,
-		minHeight: 320,
+		height: 320,
 		marginBottom: 20,
 		fontSize: FontSize16,
 		fontWeight: "bold",
@@ -190,5 +219,15 @@ const styles = StyleSheet.create({
 		color: colorWhite,
 		fontWeight: "bold",
 		fontSize: 16,
+	},
+	successContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	successText: {
+		fontSize: 18,
+		fontWeight: "bold",
+		textAlign: "center",
 	},
 });
