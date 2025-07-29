@@ -130,7 +130,7 @@ export default function LeJeu() {
 				/>
 			)}
 
-			{activeTab === 1 && (
+			{activeTab === 1 && !isEnabled && (
 				<View style={styles.categoryWrapper}>
 					<CategoriesCards
 						setFilterByCat={setFilterByCat}
