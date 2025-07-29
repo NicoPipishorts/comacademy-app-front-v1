@@ -103,7 +103,7 @@ export default function LeJeu() {
 	}, [navigation]);
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
+		<View style={[styles.wrapper, { paddingTop: insets.top + 0 }]}>
 			<View style={styles.containerHeader}>
 				<Text style={styles.headerMainText}>Le jeu</Text>
 				<View style={styles.containerSwitch}>

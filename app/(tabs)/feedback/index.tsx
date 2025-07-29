@@ -39,6 +39,7 @@ export default function Feedback() {
 	const [message, setMessage] = useState("");
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const { userId } = useUserId();
+	const [isSending, setIsSending] = useState(false);
 
 	// Initialize the mutation
 	const { mutate: sendFeedback } = useSendFeedback(
@@ -46,6 +47,7 @@ export default function Feedback() {
 			setSuccessMessage(data.message);
 			setFeedbackType(null);
 			setMessage("");
+			setIsSending(false);
 		},
 		(errorMsg) => {
 			Alert.alert("Erreur", errorMsg);
@@ -62,9 +64,10 @@ export default function Feedback() {
 
 	const handleSubmit = () => {
 		Keyboard.dismiss();
-		// Derive the subject from the selected feedback type
 		const subject =
 			feedbackOptions.find((o) => o.value === feedbackType)?.label || "";
+
+		setIsSending(true);
 
 		sendFeedback({
 			userId,
@@ -128,11 +131,14 @@ export default function Feedback() {
 								<TouchableOpacity
 									style={[
 										styles.submitButton,
-										(!feedbackType || !message) && styles.disabledButton,
+										(!feedbackType || !message || isSending) &&
+											styles.disabledButton,
 									]}
 									onPress={handleSubmit}
-									disabled={!feedbackType || !message}>
-									<Text style={styles.submitButtonText}>Envoyer</Text>
+									disabled={!feedbackType || !message || isSending}>
+									<Text style={styles.submitButtonText}>
+										{isSending ? "Envoi en cours..." : "Envoyer"}
+									</Text>
 								</TouchableOpacity>
 							</View>
 						</View>
@@ -147,7 +153,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: primaryBackground,
-		paddingTop: 40,
+		paddingTop: 60,
 		paddingHorizontal: 25,
 	},
 	textContainer: {
