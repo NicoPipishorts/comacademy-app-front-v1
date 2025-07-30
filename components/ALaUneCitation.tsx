@@ -19,7 +19,7 @@ export default function ALaUneCitation() {
 
 	const handlePress = () => {
 		router.push({
-			pathname: "/citations",
+			pathname: "/activity/CitationSolo",
 			params: { fromDaily: "true" },
 		});
 	};

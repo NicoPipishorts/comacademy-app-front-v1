@@ -11,6 +11,14 @@ const ActivityLayout = () => {
 					headerTitle: "Feed",
 				}}
 			/>
+			<Stack.Screen
+				name='CitationSolo'
+				options={{
+					headerShown: false,
+					headerTitle: "Citation",
+					presentation: "modal",
+				}}
+			/>
 		</Stack>
 	);
 };

@@ -6,7 +6,7 @@ import { FontSize16 } from "@/constants/fontsizes";
 import useLesCitations from "@/hooks/Citations/useGetLesCitations";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,18 +17,6 @@ const LesCitations = () => {
 	const scrollViewRef = useRef(null);
 
 	useTrackPageMetrics({ page: "Citations" });
-
-	const scrollToEnd = () => {
-		if (scrollViewRef.current) {
-			scrollViewRef.current.scrollToEnd({ animated: false });
-		}
-	};
-
-	useEffect(() => {
-		if (data) {
-			scrollToEnd();
-		}
-	}, [data]);
 
 	if (isLoading) {
 		return <Loader />;
@@ -41,7 +29,7 @@ const LesCitations = () => {
 		);
 	}
 
-	const reversedData = [...data.data.results.data].reverse();
+	const citationsData = [...data.data.results.data];
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -53,11 +41,9 @@ const LesCitations = () => {
 				ref={scrollViewRef}
 				style={styles.citationsWrapper}
 				horizontal={true}
-				showsHorizontalScrollIndicator={false}
-				onContentSizeChange={scrollToEnd}
-				onLayout={scrollToEnd}>
+				showsHorizontalScrollIndicator={false}>
 				<View style={styles.citationsContainer}>
-					{reversedData.map((citation) => (
+					{citationsData.map((citation) => (
 						<CardLesCitations key={citation.id} citation={citation} />
 					))}
 				</View>

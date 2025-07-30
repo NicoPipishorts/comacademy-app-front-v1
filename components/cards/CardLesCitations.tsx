@@ -1,7 +1,6 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize14, FontSize16, FontSize22 } from "@/constants/fontsizes";
+import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import { CitationData } from "@/types/lesCitations";
-import moment from "moment";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 interface Props {
@@ -17,9 +16,9 @@ export default function CardLesCitations({ citation }: Props) {
 					paddingBottom: 5,
 					alignItems: "flex-end",
 				}}>
-				<Text style={{ fontSize: FontSize14, fontWeight: "bold" }}>
+				{/* <Text style={{ fontSize: FontSize14, fontWeight: "bold" }}>
 					{moment(citation.attributes.updatedAt).format("DD/MM/YYYY")}
-				</Text>
+				</Text> */}
 			</View>
 			<View style={styles.cardContainer}>
 				<Image
