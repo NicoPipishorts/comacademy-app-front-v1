@@ -78,9 +78,7 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 					style={styles.gradientBox}>
 					<View style={styles.niveauRoundRow}>
 						<Text style={[styles.niveauLabel]}>Niveau</Text>
-						<Text style={[styles.niveauNumber, { fontSize: 62 }]}>
-							{niveauNumber}
-						</Text>
+						<Text style={styles.niveauNumber}> {niveauNumber}</Text>
 					</View>
 					<View style={styles.niveauRoundRow}>
 						<Text style={styles.niveauLabel}>Round</Text>
@@ -91,7 +89,7 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 				</LinearGradient>
 
 				<View style={styles.niveauStatusBox}>
-					<Text style={styles.niveauLabel}>Statut</Text>
+					<Text style={[styles.niveauLabel, { fontSize: 16 }]}>Statut</Text>
 					<Text style={styles.niveauStatus}>{niveauStatut}</Text>
 				</View>
 			</View>
@@ -130,7 +128,6 @@ const styles = StyleSheet.create({
 		flexDirection: "column",
 		maxWidth: "48%",
 		padding: 10,
-		paddingHorizontal: 10,
 		borderRadius: 15,
 		justifyContent: "space-evenly",
 		aspectRatio: 1,
@@ -142,12 +139,12 @@ const styles = StyleSheet.create({
 		width: "100%",
 	},
 	niveauLabel: {
-		fontSize: 18,
+		fontSize: 22,
 		fontWeight: "bold",
 		color: "white",
 	},
 	niveauNumber: {
-		fontSize: 34,
+		fontSize: 58,
 		color: "white",
 		fontWeight: "bold",
 	},
