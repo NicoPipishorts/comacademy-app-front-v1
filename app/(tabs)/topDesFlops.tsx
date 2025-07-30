@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
+import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -41,6 +42,12 @@ const TopDesFlops: React.FC = () => {
 	// State to trigger rerenders
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
+
+	const handlePlaybackStatus = usePlaybackReset(
+		videoRefs,
+		videoPositions,
+		setFocusedIndex
+	);
 
 	// Helper: pause all videos when screen blurs or unmounts
 	const pauseAllVideos = useCallback(async () => {
@@ -161,6 +168,9 @@ const TopDesFlops: React.FC = () => {
 							shouldPlay={isFocused}
 							positionMillis={videoPositions.current[index] || 0}
 							useNativeControls
+							onPlaybackStatusUpdate={(status) =>
+								handlePlaybackStatus(status, index)
+							}
 						/>
 
 						{!isFocused && (

@@ -67,7 +67,8 @@ export const useGetMediaList = (route: MediaRoute, token: string) => {
 		queryKey: ["mediaList", route],
 		queryFn: () => fetchMediaList(route, token),
 		enabled: !!token && !!route,
-		staleTime: 5_000,
+		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
 	});
 };
 

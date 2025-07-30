@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
+import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -41,6 +42,12 @@ const LesPetitesHistoires: React.FC = () => {
 	// Local state
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
+
+	const handlePlaybackStatus = usePlaybackReset(
+		videoRefs,
+		videoPositions,
+		setFocusedIndex
+	);
 
 	// Pause all videos helper
 	const pauseAllVideos = useCallback(async () => {
@@ -152,6 +159,9 @@ const LesPetitesHistoires: React.FC = () => {
 							isMuted={false}
 							isLooping={false}
 							useNativeControls
+							onPlaybackStatusUpdate={(status) =>
+								handlePlaybackStatus(status, index)
+							}
 						/>
 
 						{!isFocused && (
