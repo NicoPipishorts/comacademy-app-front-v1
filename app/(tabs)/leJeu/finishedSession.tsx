@@ -82,7 +82,7 @@ export default function FinishedSession() {
 			<View style={{ paddingTop: 10, flexDirection: "row" }}>
 				<View style={styles.levelRoundContainer}>
 					<Text style={styles.levelText}>Niveau: {currentNiveau}</Text>
-					<Text style={styles.levelText}>Round: {roundsPlayed}</Text>
+					<Text style={styles.levelText}>Round: {roundsPlayed}/10</Text>
 				</View>
 			</View>
 
