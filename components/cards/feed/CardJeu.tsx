@@ -20,21 +20,15 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 		return null;
 	}
 
-	const splitCat = () => {
-		if (data.payload.CATEGORIE.split(",").length > 0) {
-			return data.payload.CATEGORIE.split(",")[0];
-		} else {
-			return data.payload.CATEGORIE;
-		}
-	};
-
 	const backGroundColor = () => {
-		return `#${categories.data[splitCat() - 1]?.attributes.backgroundColor}`;
+		return `#${
+			categories.data[data.payload.MainCat]?.attributes.backgroundColor
+		}`;
 	};
 
 	const smallIcon = () => {
-		return categories.data[splitCat() - 1]?.attributes.smallIcon.data.attributes
-			.url;
+		return categories.data[data.payload.MainCat]?.attributes.smallIcon.data
+			.attributes.url;
 	};
 
 	const renderStars = () => {

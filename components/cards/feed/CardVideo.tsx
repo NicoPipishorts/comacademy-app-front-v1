@@ -52,11 +52,11 @@ export default function FeedCardVideo({
 				<Video
 					ref={video}
 					source={{
-						uri: `${process.env.EXPO_PUBLIC_URL}${data.payload.Media.url}`,
+						uri: `${data.payload.Media.url}`,
 					}}
 					style={{
-						width: 275, // Fixed width
-						height: videoHeight, // Proportional height
+						width: 275,
+						height: videoHeight,
 						backgroundColor: primaryBackground,
 					}}
 					shouldPlay={visibleItems.includes(data.id)}

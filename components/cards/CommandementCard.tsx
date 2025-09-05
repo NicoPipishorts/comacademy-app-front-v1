@@ -77,7 +77,7 @@ export default function CommandementCard({
 				]}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 1 }}>
-				<Text style={styles.tinyTitle}>Tips and Tactics – {index}</Text>
+				<Text style={styles.tinyTitle}>Tips & Tactics – {index}</Text>
 				<Text style={styles.keyCardTitle}>{title} :</Text>
 
 				<View style={styles.cardContent}>

@@ -1,49 +1,56 @@
+// src/hooks/useGetFavoriteMetiers.ts
 import useJwtToken from "@/hooks/useJwtToken";
-import { FavoriteMetiers } from "@/types/metiers";
 import { useQuery } from "@tanstack/react-query";
 
-const fetchFavoriteQuestions = async (
+// If you have a type, keep it; otherwise `any` is fine
+export type FavoriteMetiersResponse = any;
+
+// Utility: build a clean URL
+const buildUrl = (
+	base: string,
+	qs: Record<string, string | number | boolean>
+) => {
+	const u = new URL(base);
+	Object.entries(qs).forEach(([k, v]) => u.searchParams.set(k, String(v)));
+	return u.toString();
+};
+
+const fetchFavoriteMetiers = async (
 	token: string,
 	userId: number
-): Promise<FavoriteMetiers> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/favorite-metiers?filters[userId][$eq]=${userId}&populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+): Promise<FavoriteMetiersResponse> => {
+	const base = `${process.env.EXPO_PUBLIC_API_URL}/favorite-metiers`;
+	const url = buildUrl(base, {
+		"filters[userId][$eq]": userId,
+		"fields[0]": "id",
+		publicationState: "live",
+		"populate[metiers][fields][0]": "id",
+		"populate[metiers][pagination][pageSize]": 1000, // ensure we get all ids
+	});
 
-		if (!response.ok) {
-			// Check if it's a 404 error and handle it gracefully
-			if (response.status === 404) {
-				return null;
-			}
+	const res = await fetch(url, {
+		headers: { Authorization: `Bearer ${token}` },
+	});
 
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error fetching Fav Metiers:", error);
-		throw error;
+	if (!res.ok) {
+		if (res.status === 404) return { data: [] } as any; // normalize
+		const text = await res.text();
+		console.error(`Fav Metiers HTTP ${res.status}`, text);
+		throw new Error(`HTTP ${res.status}`);
 	}
+
+	return res.json();
 };
 
 const useGetFavoriteMetiers = (userId: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<FavoriteMetiers>({
-		queryKey: ["FavoriteMetiers"],
-		queryFn: () => fetchFavoriteQuestions(token!, userId),
+	return useQuery<FavoriteMetiersResponse>({
+		queryKey: ["FavoriteMetiers", userId],
+		queryFn: () => fetchFavoriteMetiers(token!, userId),
 		enabled: !!token && !!userId,
+		refetchOnMount: "always",
+		staleTime: 0,
 	});
 };
 

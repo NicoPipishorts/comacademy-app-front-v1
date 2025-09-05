@@ -243,7 +243,6 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: 18,
 		fontWeight: "500",
-		textTransform: "capitalize",
 	},
 	sidebar: {
 		width: 30,

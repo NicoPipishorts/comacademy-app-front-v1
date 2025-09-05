@@ -197,7 +197,7 @@ const TopDesFlops: React.FC = () => {
 				</Animated.View>
 			);
 		},
-		[fadeAnim, isFirstRender, videoHeight, videoWidth]
+		[fadeAnim, handlePlaybackStatus, isFirstRender, videoHeight, videoWidth]
 	);
 
 	if (isLoading) {
@@ -219,7 +219,7 @@ const TopDesFlops: React.FC = () => {
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerPadding}>
-				<ScreenHeaders content='Les top des flops' />
+				<ScreenHeaders content='Le top des flops' />
 			</View>
 			<Animated.FlatList
 				style={styles.list}

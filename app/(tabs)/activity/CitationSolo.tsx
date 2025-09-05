@@ -1,16 +1,19 @@
+import React from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import Loader from "@/components/experience/loader";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import useDailyCitations from "@/hooks/Citations/useGetDailyCitations";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import { useLocalSearchParams } from "expo-router";
-import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
+// Generic favorite button + the citation adapter
+import citationFavoriteAdapter from "@/adapters/favorites/citationFavoriteAdapter";
+import FavoriteToggleButton from "@/components/buttons/favoriteToggleButton";
 
 const LesCitations: React.FC = () => {
-	const { citationCategory } = useLocalSearchParams();
 	const { data, isFetched } = useDailyCitations();
 	const citation = data?.data;
 
@@ -18,6 +21,17 @@ const LesCitations: React.FC = () => {
 
 	if (!isFetched) {
 		return <Loader />;
+	}
+
+	if (!citation?.id) {
+		return (
+			<SafeAreaView style={styles.wrapper}>
+				<ScreenHeaders content='La citation du jour' />
+				<View style={styles.centered}>
+					<Text style={styles.noDataText}>Aucune citation disponible.</Text>
+				</View>
+			</SafeAreaView>
+		);
 	}
 
 	return (
@@ -32,15 +46,24 @@ const LesCitations: React.FC = () => {
 						source={require("@/assets/imgs/icons/quote_open.png")}
 						style={styles.openIcon}
 					/>
+
 					<View style={styles.cardContent}>
 						<Text style={styles.citationText}>{citation.CITATION}</Text>
 					</View>
+
 					<Image
 						source={require("@/assets/imgs/icons/quote_close.png")}
 						style={styles.closeIcon}
 					/>
 					<Text style={styles.authorText}>{citation.AUTEUR}</Text>
 				</View>
+
+				<FavoriteToggleButton
+					targetId={citation.id}
+					adapter={citationFavoriteAdapter}
+					containerStyle={styles.heartButton}
+					imageStyle={{ width: 28, height: 28 }}
+				/>
 			</View>
 		</SafeAreaView>
 	);
@@ -68,7 +91,9 @@ const styles = StyleSheet.create({
 		minHeight: 250,
 		backgroundColor: colorBlack,
 		borderRadius: 20,
-		padding: 20,
+		paddingHorizontal: 20,
+		paddingTop: 75,
+		paddingBottom: 30,
 		shadowColor: colorBlack,
 		shadowOpacity: 0.35,
 		shadowRadius: 15,
@@ -106,6 +131,12 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		marginTop: 10,
 		textAlign: "center",
+	},
+	// Optional: uncomment to place the heart top-right inside card
+	heartButton: {
+		marginTop: 10,
+		width: "80%",
+		alignItems: "flex-end",
 	},
 });
 

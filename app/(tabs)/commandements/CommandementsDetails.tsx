@@ -178,7 +178,7 @@ export default function CommandementsDetails() {
 
 	return (
 		<View style={[styles.container, { paddingTop: isAndroid ? 40 : 20 }]}>
-			<Text style={styles.headerText}>Tips and tactics</Text>
+			<Text style={styles.headerText}>Tips & tactics</Text>
 			<Animated.FlatList
 				ref={listRef}
 				data={cardsData}
