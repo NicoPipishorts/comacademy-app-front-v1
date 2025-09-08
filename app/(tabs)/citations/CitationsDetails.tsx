@@ -1,7 +1,7 @@
 // src/app/(whatever)/LesCitations.tsx
 import { useLocalSearchParams } from "expo-router";
-import React, { useRef } from "react";
-import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ScreenHeaders from "@/components/ScreenHeaders";
@@ -17,7 +17,6 @@ const LesCitations = () => {
 	const { citationCategory } = useLocalSearchParams();
 	const { data, isLoading } = useLesCitations(citationCategory as string);
 	const insets = useSafeAreaInsets();
-	const scrollViewRef = useRef<ScrollView>(null);
 
 	useTrackPageMetrics({ page: "Citations" });
 

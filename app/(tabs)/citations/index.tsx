@@ -11,7 +11,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Citations = () => {
 	const { data, isLoading } = useGetCitationsMenu();
 	const insets = useSafeAreaInsets();
-	const { fromDaily } = useLocalSearchParams<{ fromDaily?: string }>();
+	const { fromDaily, citationCategory } = useLocalSearchParams<{
+		fromDaily?: string;
+		citationCategory?: string;
+	}>();
+
+	console.log(citationCategory);
 
 	useEffect(() => {
 		if (fromDaily === "true") {
@@ -20,7 +25,13 @@ const Citations = () => {
 				params: { citationCategory: "all" },
 			});
 		}
-	}, [fromDaily]);
+		if (citationCategory) {
+			router.push({
+				pathname: "/citations/CitationsDetails",
+				params: { citationCategory: "all" },
+			});
+		}
+	}, [citationCategory, fromDaily]);
 
 	if (isLoading) {
 		return <Loader />;

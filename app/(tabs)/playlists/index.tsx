@@ -136,6 +136,7 @@ const Playlist = () => {
 					<CardFavoritesList type='favorites' title='Questions ' />
 					<CardFavoritesList type='metiers' title='Metiers ' />
 					<CardFavoritesList type='dicos' title='Dico ' />
+					<CardFavoritesList type='citations' title='Citations ' />
 					{isFetched &&
 						playlistsData &&
 						playlistsData.data.map((playlist) => {

@@ -36,6 +36,14 @@ const LeJeuLayout = () => {
 				}}
 			/>
 			<Stack.Screen
+				name='citationsFavoritesList'
+				options={{
+					headerShown: false,
+					headerTitle: "Favorite Citations List",
+					presentation: "card",
+				}}
+			/>
+			<Stack.Screen
 				name='playlistList'
 				options={{
 					headerShown: false,

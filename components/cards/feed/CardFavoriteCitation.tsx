@@ -2,61 +2,39 @@ import Loader from "@/components/experience/loader";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH3 } from "@/constants/fontsizes";
 import { truncateString } from "@/helpers/truncateText";
-import { DicoFavoritesWord } from "@/types/dico";
-import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FavoriteCitationItemFull } from "@/hooks/Citations/useGetFavoriteCitationsFull";
+import { router } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
-	data: DicoFavoritesWord;
-	categoriesColors: { [key: number]: string };
-	categoriesIcons: { [key: number]: string };
+	data: FavoriteCitationItemFull;
 }
 
-export default function CardFavoriteMetier({
-	data,
-	categoriesColors,
-	categoriesIcons,
-}: Props) {
-	const navigation = useNavigation<NavigationType>();
-
+export default function CardFavoriteCitation({ data }: Props) {
 	if (!data) {
 		return <Loader />;
 	}
+
+	const handlePress = () => {
+		router.push({
+			pathname: "/citations",
+			params: { citationCategory: data.category },
+		});
+	};
+
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.cardContainer}>
 				<View style={styles.cardIcons}>
-					{data.attributes.Categories?.split(",").map((cat, index) => {
-						if (cat) {
-							return (
-								<Image
-									key={index}
-									style={[
-										styles.icon,
-										{ backgroundColor: `#${categoriesColors[cat]}` },
-									]}
-									source={{
-										uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons[cat]}`,
-									}}
-								/>
-							);
-						} else return null;
-					})}
+					<Text>{data.category}</Text>
 				</View>
 				<View style={styles.cardRowContent}>
 					<View style={{ flexShrink: 1 }}>
 						<Text style={{ fontSize: FontSizeH3, fontWeight: "bold" }}>
-							{truncateString(data.attributes.Word, 70)}
+							{truncateString(data.citation, 50)}
 						</Text>
 					</View>
-					<TouchableOpacity
-						style={styles.button}
-						onPress={() => {
-							navigation.navigate("favoriteDicoDetails", {
-								dicoId: data.id,
-							});
-						}}>
+					<TouchableOpacity style={styles.button} onPress={handlePress}>
 						<Text style={{ color: colorWhite }}>Voir</Text>
 					</TouchableOpacity>
 				</View>
