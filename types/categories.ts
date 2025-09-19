@@ -15,6 +15,7 @@ export interface CategoriesAttributes {
 	backgroundColor: string;
 	smallIcon: CategoriesIcon;
 	bigIcon: CategoriesIcon;
+	staticId: number;
 }
 
 export interface CategoriesIcon {
@@ -66,12 +67,15 @@ export interface CategroiesMenu {
 	}[];
 }
 
+export interface CategorieColorsAttributes {
+	backgroundColor: string;
+	smallIcon: CategoriesIcon;
+	staticId: number;
+}
+
 export interface CategorieColors {
 	data: {
 		id: number;
-		attributes: {
-			backgroundColor: string;
-			smallIcon: CategoriesIcon;
-		};
+		attributes: CategorieColorsAttributes;
 	}[];
 }

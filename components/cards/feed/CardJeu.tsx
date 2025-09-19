@@ -5,6 +5,7 @@ import useCategories from "@/hooks/useCategories";
 import { FeedItem } from "@/types/feed";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
+import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
@@ -16,25 +17,28 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 	const { data: categories, isFetched } = useCategories();
 	const navigation = useNavigation<NavigationType>();
 
-	if (!isFetched) {
-		return null;
-	}
+	// Find the category matching the feed item's MainCat (staticId)
+	const matchedCategory = useMemo(() => {
+		return categories?.data?.find(
+			(c: any) => c?.attributes?.staticId === data?.payload?.MainCat
+		);
+	}, [categories, data?.payload?.MainCat]);
 
+	// ---- DROP-IN: background color resolver
 	const backGroundColor = () => {
-		return `#${
-			categories.data[data.payload.MainCat]?.attributes.backgroundColor
-		}`;
+		const hex = matchedCategory?.attributes?.backgroundColor;
+		if (!hex) return "#fff";
+		return hex.startsWith("#") ? hex : `#${hex}`;
 	};
 
+	// ---- DROP-IN: icon url resolver by staticId
 	const smallIcon = () => {
-		return categories.data[data.payload.MainCat]?.attributes.smallIcon.data
-			.attributes.url;
+		return matchedCategory?.attributes?.smallIcon?.data?.attributes?.url ?? "";
 	};
 
 	const renderStars = () => {
 		const stars = [];
 		const coef = data.payload.COEF;
-
 		for (let i = 0; i < Math.min(coef, 3); i++) {
 			stars.push(
 				<Image
@@ -44,9 +48,10 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 				/>
 			);
 		}
-
 		return stars;
 	};
+
+	if (!isFetched) return null;
 
 	return (
 		<View style={styles.cardWrapper}>
@@ -55,23 +60,19 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 			</Text>
 
 			<View
-				style={[
-					{
-						backgroundColor: `${backGroundColor()}`,
-					},
-					styles.cardContainer,
-				]}>
+				style={[{ backgroundColor: backGroundColor() }, styles.cardContainer]}>
 				<View style={styles.containerTopRow}>
 					<View style={styles.containerCatIcon}>{renderStars()}</View>
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL}${smallIcon()}`,
+								uri: `${process.env.EXPO_PUBLIC_URL ?? ""}${smallIcon()}`,
 							}}
 							style={styles.catIcon}
 						/>
 					</View>
 				</View>
+
 				<View style={styles.containerText}>
 					<Text style={styles.textText}>{data.payload.QUESTION}</Text>
 				</View>
@@ -84,6 +85,7 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 					<Text style={{ color: colorWhite, fontWeight: "bold" }}>Jouer</Text>
 				</Pressable>
 			</View>
+
 			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
 		</View>
 	);
@@ -102,7 +104,6 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 		marginBottom: 20,
 	},
-
 	cardContainer: {
 		minWidth: "100%",
 		minHeight: 200,
@@ -160,12 +161,10 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 	},
-
 	buttonContainer: {
 		alignItems: "center",
 		marginTop: 20,
 	},
-
 	button: {
 		backgroundColor: colorBlack,
 		paddingVertical: 10,
