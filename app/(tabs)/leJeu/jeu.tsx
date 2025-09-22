@@ -8,12 +8,10 @@ import Loader from "@/components/experience/loader";
 import Card from "@/components/leJeu/Card";
 import FeedbackMessage from "./feedbackMessage";
 
-import { InsertAnswer } from "@/api/gameInsertAnswer";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
-import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
@@ -21,8 +19,11 @@ import { Answer } from "@/types/enums";
 import { NavigationType } from "@/types/general";
 import { QuestionData } from "@/types/userGameSessionStatus";
 
+import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
+import { QK } from "@/helpers/api/queryKeys";
+import { queryClient } from "@/hooks/reactQueryConfig";
 
 export default function Jeu() {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
@@ -31,14 +32,14 @@ export default function Jeu() {
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { userId } = useUserId();
-	const { token } = useJwtToken();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 
 	const { dataGame, sessionId, gameStatus } = useGameContext();
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
-	const insertPlayerAnswer = InsertAnswer();
+
+	const insertAnswer = useInsertAnswer();
 
 	useEffect(() => {
 		hideTabBar();
@@ -59,6 +60,10 @@ export default function Jeu() {
 	};
 
 	const handlePress = () => {
+		if (sessionId)
+			queryClient.invalidateQueries({ queryKey: QK.gameSession(sessionId) });
+		queryClient.invalidateQueries({ queryKey: QK.gameQuestions(userId, null) });
+
 		showTabBar();
 		setTimeout(() => navigation.navigate("index"), 100);
 	};
@@ -70,16 +75,13 @@ export default function Jeu() {
 		const correct = currentCard.attributes.ANSWER;
 		showFeedback(correct === answer ? Answer.true : Answer.false);
 
-		insertPlayerAnswer.mutate({
-			gameId: sessionId,
+		insertAnswer.mutate({
+			gameId: sessionId!,
 			userId,
 			questionId: currentCard.id,
-			answer,
 			categorie: currentCard.attributes.CATEGORIE,
-			token,
+			answer,
 		});
-
-		// ← no longer removing from dataGame; Swiper will advance internally
 	};
 
 	const overlayLabels = {
@@ -142,6 +144,7 @@ export default function Jeu() {
 
 			{gameStatus === "in_progress" && sessionId > 0 && (
 				<Swiper
+					key={`${sessionId}-${dataGame?.length ?? 0}`} // 👈 forces a fresh deck
 					ref={swiperRef}
 					cards={dataGame}
 					renderCard={(card, cardIndex) =>

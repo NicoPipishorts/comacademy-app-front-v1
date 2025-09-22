@@ -1,6 +1,5 @@
 // File: src/hooks/Game/useGameQuestions.ts
-
-import useJwtToken from "@/hooks/useJwtToken";
+import { QK } from "@/helpers/api/queryKeys";
 import { GameQuestionsResponse } from "@/types/userGameSessionStatus";
 import { useQuery } from "@tanstack/react-query";
 
@@ -8,13 +7,15 @@ export interface GameQuestions {
 	data: GameQuestionsResponse;
 }
 
+const authFrom = (token?: string | null) => (token ? `Bearer ${token}` : "");
+
 const fetchAllQuestions = async (
-	token: string,
+	auth: string,
 	userId: number
 ): Promise<GameQuestions> => {
 	const res = await fetch(
 		`${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}`,
-		{ headers: { Authorization: `Bearer ${token}` } }
+		{ headers: { Authorization: auth, Accept: "application/json" } }
 	);
 	if (!res.ok) {
 		const text = await res.text();
@@ -25,18 +26,17 @@ const fetchAllQuestions = async (
 		);
 		throw new Error(`HTTP ${res.status}`);
 	}
-	const payload = (await res.json()) as GameQuestions;
-	return payload;
+	return (await res.json()) as GameQuestions;
 };
 
 const fetchQuestionsByCat = async (
-	token: string,
+	auth: string,
 	userId: number,
 	categoryId: number
 ): Promise<GameQuestions> => {
 	const res = await fetch(
 		`${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/category/${categoryId}`,
-		{ headers: { Authorization: `Bearer ${token}` } }
+		{ headers: { Authorization: auth, Accept: "application/json" } }
 	);
 	if (!res.ok) {
 		const text = await res.text();
@@ -47,27 +47,36 @@ const fetchQuestionsByCat = async (
 		);
 		throw new Error(`HTTP ${res.status}`);
 	}
-	const payload = (await res.json()) as GameQuestions;
-	return payload;
+	return (await res.json()) as GameQuestions;
 };
 
+/**
+ * Pass token + loading from the parent. We won't fire until token is ready.
+ */
 export const useGameQuestions = (
 	userId: number,
-	filterByCat: number | null
+	filterByCat: number | null,
+	token: string | null,
+	loadingToken: boolean
 ) => {
-	const { token, loading } = useJwtToken();
+	const auth = authFrom(token);
+	const enabled = !!userId && !!auth && !loadingToken; // <-- gate query until JWT exists
 
 	return useQuery<GameQuestions>({
-		// include both userId & filterByCat in the key
-		queryKey: ["GameQuestions", userId, filterByCat],
-		queryFn: () => {
-			return filterByCat !== null
-				? fetchQuestionsByCat(token!, userId, filterByCat)
-				: fetchAllQuestions(token!, userId);
-		},
-		enabled: !loading && !!token && !!userId,
+		queryKey: QK.gameQuestions(userId, filterByCat),
+		enabled,
+		queryFn: () =>
+			filterByCat !== null
+				? fetchQuestionsByCat(auth, userId, filterByCat)
+				: fetchAllQuestions(auth, userId),
 		staleTime: 0,
 		refetchOnMount: "always",
+		refetchOnReconnect: true,
 		refetchOnWindowFocus: false,
+		retry: (failures, err: any) => {
+			const msg = String(err?.message || "");
+			if (msg.includes("HTTP 401") || msg.includes("HTTP 403")) return false;
+			return failures < 2;
+		},
 	});
 };

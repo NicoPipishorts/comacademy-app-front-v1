@@ -24,6 +24,7 @@ export const useEndSession = (
 	const { setDataGame, setSessionsId } = useGameContext();
 	return useMutation<EndResponse, AxiosError, EndSessionPayload>({
 		mutationFn: async ({ userId, token }) => {
+			console.log(userId);
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/end`;
 			const response: AxiosResponse<EndResponse> = await axios.post(
 				url,

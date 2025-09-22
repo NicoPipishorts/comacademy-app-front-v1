@@ -16,8 +16,6 @@ const Citations = () => {
 		citationCategory?: string;
 	}>();
 
-	console.log(citationCategory);
-
 	useEffect(() => {
 		if (fromDaily === "true") {
 			router.push({

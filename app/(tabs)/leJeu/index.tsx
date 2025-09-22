@@ -21,7 +21,7 @@ import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation } from "expo-router";
 
 import Answers from "./answers";
 import LetsPlay from "./play";
@@ -71,9 +71,20 @@ export default function LeJeu() {
 	}, [filterByCat, token, loadingToken, newSession, userId]);
 
 	// fetch either “all” or “by‑category”
-	const { data: sessionData, isLoading: loadingQuestions } = useGameQuestions(
-		userId,
-		filterByCat
+	// ⬇️ pass token + loading into the hook
+	const {
+		data: sessionData,
+		isLoading: loadingQuestions,
+		refetch,
+	} = useGameQuestions(userId, filterByCat, token, loadingToken);
+
+	// ⬇️ ONLY refetch on focus if the token is ready
+	useFocusEffect(
+		useCallback(() => {
+			if (!loadingToken && token) {
+				refetch();
+			}
+		}, [token, loadingToken, refetch])
 	);
 
 	// when the network fetch returns, update context
