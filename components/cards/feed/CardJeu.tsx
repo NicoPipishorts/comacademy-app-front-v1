@@ -4,8 +4,12 @@ import { FontSize14, FontSizeH3 } from "@/constants/fontsizes";
 import useCategories from "@/hooks/useCategories";
 import { FeedItem } from "@/types/feed";
 import { NavigationType } from "@/types/general";
+import {
+	getCategoryBackgroundColor,
+	getCategorySmallIcon,
+} from "@/utils/getCategoryBackgroundColor";
 import { useNavigation } from "expo-router";
-import React, { useMemo } from "react";
+import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
@@ -17,28 +21,22 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 	const { data: categories, isFetched } = useCategories();
 	const navigation = useNavigation<NavigationType>();
 
-	// Find the category matching the feed item's MainCat (staticId)
-	const matchedCategory = useMemo(() => {
-		return categories?.data?.find(
-			(c: any) => c?.attributes?.staticId === data?.payload?.MainCat
-		);
-	}, [categories, data?.payload?.MainCat]);
+	if (!isFetched) return null;
 
-	// ---- DROP-IN: background color resolver
-	const backGroundColor = () => {
-		const hex = matchedCategory?.attributes?.backgroundColor;
-		if (!hex) return "#fff";
-		return hex.startsWith("#") ? hex : `#${hex}`;
-	};
+	const bgColor = getCategoryBackgroundColor(
+		categories.data,
+		data.payload.MainCat
+	);
 
-	// ---- DROP-IN: icon url resolver by staticId
-	const smallIcon = () => {
-		return matchedCategory?.attributes?.smallIcon?.data?.attributes?.url ?? "";
-	};
+	const smallIconUrl = getCategorySmallIcon(
+		categories.data,
+		data.payload.MainCat
+	);
 
 	const renderStars = () => {
 		const stars = [];
 		const coef = data.payload.COEF;
+
 		for (let i = 0; i < Math.min(coef, 3); i++) {
 			stars.push(
 				<Image
@@ -51,22 +49,19 @@ export default function FeedCardJeu({ data, elementId }: Props) {
 		return stars;
 	};
 
-	if (!isFetched) return null;
-
 	return (
 		<View style={styles.cardWrapper}>
 			<Text style={styles.textTitle}>
 				A toi de jouer, viens voir ce que tu vaux : vrai ou faux ?
 			</Text>
 
-			<View
-				style={[{ backgroundColor: backGroundColor() }, styles.cardContainer]}>
+			<View style={[{ backgroundColor: bgColor }, styles.cardContainer]}>
 				<View style={styles.containerTopRow}>
 					<View style={styles.containerCatIcon}>{renderStars()}</View>
 					<View style={styles.containerCatIcon}>
 						<Image
 							source={{
-								uri: `${process.env.EXPO_PUBLIC_URL ?? ""}${smallIcon()}`,
+								uri: `${process.env.EXPO_PUBLIC_URL ?? ""}${smallIconUrl}`,
 							}}
 							style={styles.catIcon}
 						/>
@@ -124,7 +119,6 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 	},
 	containerCatIcon: {
-		display: "flex",
 		flexDirection: "row",
 		justifyContent: "flex-start",
 		paddingVertical: 15,

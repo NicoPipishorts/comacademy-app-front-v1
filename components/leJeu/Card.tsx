@@ -11,12 +11,16 @@ import Star from "@/assets/imgs/icons/jeu_star.png";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
 import { QuestionData } from "@/types/userGameSessionStatus";
+import {
+	getCategoryBackgroundColor,
+	getCategorySmallIcon,
+} from "@/utils/getCategoryBackgroundColor";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loader from "../experience/loader";
 
 interface CardProps {
 	data: QuestionData;
-	catColors: CategorieColors;
+	catColors: CategorieColors; // expects shape with .data (Strapi categories array)
 	onSwipeFalse: () => void;
 	onSwipeTrue: () => void;
 }
@@ -29,10 +33,16 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 		return <Loader />;
 	}
 
-	const selectedCategory = data.attributes.CATEGORIE - 1;
-	const backGroundColor = `#${catColors.data[selectedCategory].attributes.backgroundColor}`;
-	const smallIconUrl =
-		catColors.data[selectedCategory].attributes.smallIcon.data.attributes.url;
+	// Treat CATEGORIE as the category staticId
+	const staticId = data.attributes.CATEGORIE;
+
+	const backGroundColor = getCategoryBackgroundColor(
+		catColors.data,
+		staticId,
+		"#fff"
+	);
+
+	const smallIconUrl = getCategorySmallIcon(catColors.data, staticId);
 
 	const renderStars = () => {
 		const stars = [];
@@ -57,7 +67,9 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 					<View style={styles.containerCatIcon}>{renderStars()}</View>
 					<View style={styles.containerCatIcon}>
 						<Image
-							source={{ uri: `${process.env.EXPO_PUBLIC_URL}${smallIconUrl}` }}
+							source={{
+								uri: `${process.env.EXPO_PUBLIC_URL ?? ""}${smallIconUrl}`,
+							}}
 							style={styles.catIcon}
 						/>
 					</View>
