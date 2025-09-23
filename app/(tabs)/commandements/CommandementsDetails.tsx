@@ -1,14 +1,9 @@
-import CommandementCard from "@/components/cards/CommandementCard";
-import CommandementTitleCard from "@/components/cards/CommandementTitle";
-import Loader from "@/components/experience/loader";
-import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
-import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import useGetCommandementById from "@/hooks/Commandements/useGetCommandementById";
+// File: src/components/CommandementsDetails.tsx
 import { useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
 	Dimensions,
+	ListRenderItem,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -16,147 +11,195 @@ import {
 } from "react-native";
 import Animated, {
 	interpolate,
+	SharedValue,
 	useAnimatedScrollHandler,
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
 
-// Separate functional component to render each card
-const AnimatedCard = ({
-	item,
-	index,
-	cardWidth,
-	cardMargin,
-	scrollX,
-	screenWidth,
-}) => {
+import CommandementCard from "@/components/cards/CommandementCard";
+import CommandementTitleCard from "@/components/cards/CommandementTitle";
+import Loader from "@/components/experience/loader";
+import { colorBlack, colorWhite } from "@/constants/colors";
+import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
+import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import useGetCommandementById from "@/hooks/Commandements/useGetCommandementById";
+
+// Layout constants
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CARD_WIDTH = SCREEN_WIDTH * 0.85;
+const CARD_SPACING = 20;
+const SNAP_INTERVAL = CARD_WIDTH + CARD_SPACING;
+
+// Types
+type CardType = "TitleCard" | "CommandementCard";
+interface CardItem {
+	type: CardType;
+	title: string;
+	text: string;
+	index: number; // only meaningful for CommandementCard
+	cta: string;
+	headerCard: boolean; // flag from API
+	theme: string; // overall theme
+}
+
+// Animated card component
+const AnimatedCard: React.FC<{
+	item: CardItem;
+	index: number; // flat list position
+	scrollX: SharedValue<number>;
+}> = ({ item, index, scrollX }) => {
 	const inputRange = [
-		(index - 1) * (cardWidth + cardMargin * 2),
-		index * (cardWidth + cardMargin * 2),
-		(index + 1) * (cardWidth + cardMargin * 2),
+		(index - 1) * SNAP_INTERVAL,
+		index * SNAP_INTERVAL,
+		(index + 1) * SNAP_INTERVAL,
 	];
 
-	// Hook to calculate animated scale
 	const animatedStyle = useAnimatedStyle(() => {
 		const scale = interpolate(scrollX.value, inputRange, [0.92, 1, 0.92]);
-		return { transform: [{ scale }] };
+		const opacity = interpolate(scrollX.value, inputRange, [0.7, 1, 0.7]);
+		return { transform: [{ scale }], opacity };
 	});
+
+	const cardStyle = {
+		width: CARD_WIDTH,
+		alignItems: "center" as const,
+		justifyContent: "center" as const,
+		paddingHorizontal: 10,
+		marginRight: CARD_SPACING,
+	};
 
 	if (item.type === "TitleCard") {
+		// first card uses theme; any headerCard flag (if you ever want per-card titles) can be passed in item.title
+		const textToShow = item.headerCard ? item.title : item.theme;
 		return (
-			<Animated.View style={[animatedStyle]}>
+			<Animated.View style={[animatedStyle, cardStyle]}>
 				<CommandementTitleCard
-					cardMargin={cardMargin}
-					cardWidth={cardWidth}
-					theme={item.theme}
-					screenWidth={screenWidth}
+					cardMargin={0}
+					cardWidth={CARD_WIDTH}
+					theme={textToShow}
 				/>
 			</Animated.View>
 		);
 	}
-	if (item.type === "CommandementCard") {
-		return (
-			<Animated.View style={[animatedStyle]}>
-				<CommandementCard
-					key={item.index}
-					index={item.index}
-					title={item.title}
-					text={item.text}
-					cardWidth={cardWidth}
-					cardMargin={cardMargin}
-				/>
-			</Animated.View>
-		);
-	}
-	return null;
+
+	// CommandementCard: uses its own index (sequential, ignoring title cards)
+	return (
+		<Animated.View style={[animatedStyle, cardStyle]}>
+			<CommandementCard
+				index={item.index}
+				title={item.title}
+				text={item.text}
+				cta={item.cta}
+				cardWidth={CARD_WIDTH}
+				cardMargin={0}
+			/>
+		</Animated.View>
+	);
 };
 
-interface Props {
-	itemId: number;
-}
-export default function CommandementsDetails({ itemId }: Props) {
+export default function CommandementsDetails() {
 	const { itemId: paramId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
+	const commandementId = paramId ? Number(paramId) : undefined;
+	const { data: commandementData, isFetched } = useGetCommandementById(
+		commandementId!
+	);
 
-	// Screen and layout calculations
-	const screenWidth = Dimensions.get("window").width;
-	const cardWidth = screenWidth * 0.8; // 80% of screen width for the card
-	const cardMargin = Math.floor((screenWidth - cardWidth) / 3); // Adjust the margin for smoother centering
-
-	let commandementId: number;
-	if (paramId) {
-		commandementId = Number(paramId);
-	} else {
-		commandementId = itemId;
-	}
-
-	const { data: commandementData, isFetched } =
-		useGetCommandementById(commandementId);
-
-	// Shared value to keep track of the scroll position
 	const scrollX = useSharedValue(0);
-
-	// Use hooks outside of conditions
-	const scrollHandler = useAnimatedScrollHandler({
-		onScroll: (event) => {
-			scrollX.value = event.contentOffset.x;
-		},
+	const scrollHandler = useAnimatedScrollHandler((e) => {
+		scrollX.value = e.contentOffset.x;
 	});
 
-	// Early return in case of no data found
+	const listRef = useRef<Animated.FlatList<CardItem>>(null);
+	useEffect(() => {
+		const peek = SNAP_INTERVAL * 0.1;
+		const overshoot = peek * 1.5;
+		const t1 = setTimeout(() => {
+			listRef.current?.scrollToOffset({ offset: overshoot, animated: true });
+		}, 200);
+		const t2 = setTimeout(() => {
+			listRef.current?.scrollToOffset({ offset: 0, animated: true });
+		}, 500);
+		return () => {
+			clearTimeout(t1);
+			clearTimeout(t2);
+		};
+	}, []);
+
 	if (!commandementData || !isFetched) {
 		return <Loader />;
 	}
 
-	const { Theme, ...commandements } = commandementData.data.attributes;
+	const { Theme, cards } = commandementData.data.attributes;
 
-	// Prepare the data for FlatList
-	const cardsData = [
-		{ type: "TitleCard", theme: Theme },
-		...Object.keys(commandements)
-			.filter((key) => key.startsWith("Astuce_"))
-			.map((key, index) => {
-				const astuceValue = commandements[key];
-				if (!astuceValue) return null; // If astuceValue is null, return null
-				const [title, text] = astuceValue.split(/\r?\n/, 2); // Split at the first line break
-				return { type: "CommandementCard", title, text, index };
-			})
-			.filter(Boolean), // Remove any null or undefined items
+	// Build cardsData so that only CommandementCards increment an internal counter
+	let commandIndex = 0;
+	const cardsData: CardItem[] = [
+		{
+			type: "TitleCard",
+			theme: Theme,
+			title: "", // ignored for overall theme
+			text: "",
+			index: -1,
+			cta: "",
+			headerCard: false,
+		},
+		...cards.map((card) => {
+			if (card.headerCard) {
+				return {
+					type: "TitleCard" as CardType,
+					theme: Theme,
+					title: card.titre,
+					text: "",
+					index: -1,
+					cta: card.cta || "",
+					headerCard: true,
+				};
+			} else {
+				// normal cards increment their own index
+				const idx = 1 + commandIndex++;
+				return {
+					type: "CommandementCard" as CardType,
+					theme: Theme,
+					title: card.titre,
+					text: card.contenus,
+					index: idx,
+					cta: card.cta || "",
+					headerCard: false,
+				};
+			}
+		}),
 	];
 
-	// Render each card in FlatList
-	const renderItem = ({ item, index }) => (
-		<AnimatedCard
-			item={item}
-			index={index}
-			cardWidth={cardWidth}
-			cardMargin={cardMargin}
-			scrollX={scrollX}
-			screenWidth={screenWidth}
-		/>
+	const renderItem: ListRenderItem<CardItem> = ({ item, index }) => (
+		<AnimatedCard item={item} index={index} scrollX={scrollX} />
 	);
 
 	return (
-		<View style={[styles.cardsWrapper, { paddingTop: isAndroid ? 40 : 20 }]}>
-			<View style={styles.header}>
-				<Text style={styles.headerText}>10 Commandements</Text>
-			</View>
+		<View style={[styles.container, { paddingTop: isAndroid ? 40 : 20 }]}>
+			<Text style={styles.headerText}>Tips & tactics</Text>
 			<Animated.FlatList
+				ref={listRef}
 				data={cardsData}
 				horizontal
-				renderItem={renderItem}
-				keyExtractor={(item, index) => `${item.type}-${index}`}
+				keyExtractor={(_, i) => String(i)}
 				showsHorizontalScrollIndicator={false}
 				decelerationRate='fast'
-				snapToInterval={cardWidth + cardMargin * 2}
-				snapToAlignment='center'
+				snapToInterval={SNAP_INTERVAL}
+				snapToAlignment='start'
 				onScroll={scrollHandler}
 				scrollEventThrottle={16}
+				contentContainerStyle={{
+					paddingHorizontal: (SCREEN_WIDTH - CARD_WIDTH) / 2,
+				}}
+				renderItem={renderItem}
+				bounces
+				alwaysBounceHorizontal
+				overScrollMode='always'
 			/>
-
 			{isAndroid && (
-				<TouchableOpacity
-					style={[styles.backButton, { marginBottom: isAndroid ? 120 : 20 }]}>
+				<TouchableOpacity style={styles.backButton}>
 					<Text style={styles.backButtonText}>Retour</Text>
 				</TouchableOpacity>
 			)}
@@ -164,29 +207,23 @@ export default function CommandementsDetails({ itemId }: Props) {
 	);
 }
 
-// Styles
 const styles = StyleSheet.create({
-	cardsWrapper: {
-		flexShrink: 1,
-		justifyContent: "center",
+	container: {
+		flex: 1,
 		alignItems: "center",
-	},
-	header: {
-		padding: 30,
-		paddingBottom: 20,
+		backgroundColor: colorWhite,
 	},
 	headerText: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
-	},
-	flatListWrapper: {
-		alignItems: "center",
+		marginTop: 20,
+		marginBottom: -40,
 	},
 	backButton: {
 		backgroundColor: colorBlack,
 		paddingHorizontal: 30,
 		paddingVertical: 10,
-		borderRadius: 50,
+		marginTop: 20,
 	},
 	backButtonText: {
 		color: colorWhite,

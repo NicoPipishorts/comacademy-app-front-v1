@@ -1,66 +1,60 @@
-import activity from "@/assets/imgs/icons/activity.png";
-import dico from "@/assets/imgs/icons/dico.png";
-import feed from "@/assets/imgs/icons/feed.png";
-import le_jeu from "@/assets/imgs/icons/le_jeu.png";
-import playlists from "@/assets/imgs/icons/playlists.png";
+// File: src/components/CustomTabBar.tsx
+import activityIcon from "@/assets/imgs/icons/activity.png";
+import dicoIcon from "@/assets/imgs/icons/dico.png";
+import feedIcon from "@/assets/imgs/icons/feed.png";
+import leJeuIcon from "@/assets/imgs/icons/le_jeu.png";
+import playlistsIcon from "@/assets/imgs/icons/playlists.png";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { Href, useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
-	if (!state) {
-		return null; // or a fallback UI
-	}
+const icons: Record<string, any> = {
+	activity: activityIcon,
+	leJeu: leJeuIcon,
+	feed: feedIcon,
+	playlists: playlistsIcon,
+	dico: dicoIcon,
+};
 
-	const icons: { [key: string]: any } = {
-		activity: activity,
-		leJeu: le_jeu,
-		feed: feed,
-		dico: dico,
-		playlists: playlists,
-	};
+const labels: Record<string, string> = {
+	activity: "Rubriques",
+	leJeu: "Le Jeu",
+	feed: "Feed",
+	playlists: "Playlists",
+	dico: "Dico",
+};
 
-	const desiredOrder = ["activity", "leJeu", "feed", "playlists", "dico"];
-	const orderedRoutes = state.routes
-		.filter((route) => desiredOrder.includes(route.name))
+const desiredOrder = ["activity", "leJeu", "feed", "playlists", "dico"];
+
+export default function CustomTabBar({
+	state,
+	descriptors,
+	navigation,
+}: BottomTabBarProps) {
+	const router = useRouter();
+
+	// order and filter
+	const ordered = state.routes
+		.filter((r) => desiredOrder.includes(r.name))
 		.sort(
 			(a, b) => desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name)
 		);
 
-	// Define a custom label for each route if necessary
-	const customLabels: { [key: string]: string } = {
-		leJeu: "Le Jeu",
-		feed: "Feed",
-		dico: "Dico",
-		playlists: "Playlists",
-		activity: "Rubriques",
-	};
-
-	// Used to apply the BG or not to the tab bar.
-	const currentRouteName = state.routes[state.index].name;
-
 	return (
-		<View style={styles.tabbarContainer}>
+		<View style={styles.container}>
 			<View style={styles.tabbar}>
-				{orderedRoutes.map((route) => {
+				{ordered.map((route) => {
 					const descriptor = descriptors[route.key];
 					if (!descriptor) return null;
 
-					const { options } = descriptor;
-
-					// Logic to focus Accueil (index) if the current route is lesCitations or commandements
 					const isFocused =
 						state.index ===
-							state.routes.findIndex((r) => r.name === route.name) ||
-						(route.name === "activity" &&
-							(currentRouteName === "lesCitations" ||
-								currentRouteName === "commandements" ||
-								currentRouteName === "secrets" ||
-								currentRouteName === "petitesHistoires"));
-
-					const label = customLabels[route.name] || route.name;
+						state.routes.findIndex((r) => r.name === route.name);
+					const icon = icons[route.name]!;
+					const label = labels[route.name] || route.name;
 
 					const onPress = () => {
 						const event = navigation.emit({
@@ -69,16 +63,23 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							canPreventDefault: true,
 						});
 
-						// Reset to Accueil (index) if the Accueil button is pressed
+						// 1) if the event has been prevented, abort
+						if (event.defaultPrevented) {
+							return;
+						}
+
+						// 2) if already focused, do nothing
+						if (isFocused) {
+							return;
+						}
+
+						// 3) navigate or replace depending on tab
 						if (route.name === "activity") {
-							// Use reset to navigate back to the root screen
-							navigation.reset({
-								index: 0,
-								routes: [{ name: "activity" }], // Ensure you go back to the root of the home stack
-							});
-						} else if (!isFocused && !event.defaultPrevented) {
-							// Navigate normally to the selected tab
-							navigation.navigate(route.name);
+							router.replace("/activity");
+						} else if (route.name === "leJeu") {
+							router.push("/leJeu" as Href<string>);
+						} else {
+							router.push(`/${route.name}` as Href<string>);
 						}
 					};
 
@@ -87,71 +88,55 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 							key={route.name}
 							accessibilityRole='button'
 							accessibilityState={isFocused ? { selected: true } : {}}
-							testID={options.tabBarTestID}
 							onPress={onPress}
-							style={[styles.tabbarItem, styles.onTabBackground]}>
-							<Image
-								source={icons[route.name]}
-								style={styles.tabIcons}
-								resizeMode='contain'
-							/>
-							<Text style={styles.tabbarText}>{label}</Text>
-							{isFocused && <View style={styles.focusedTab} />}
+							style={styles.tabItem}>
+							<Image source={icon} style={styles.icon} resizeMode='contain' />
+							<Text style={styles.label}>{label}</Text>
+							{isFocused && <View style={styles.indicator} />}
 						</TouchableOpacity>
 					);
 				})}
 			</View>
 		</View>
 	);
-};
+}
 
 const styles = StyleSheet.create({
-	tabbarContainer: {
+	container: {
 		position: "absolute",
-		paddingBottom: 6,
 		bottom: 0,
 		width: "100%",
+		backgroundColor: primaryBackground,
+		paddingBottom: 6,
 		alignItems: "center",
-		backgroundColor: primaryBackground,
-	},
-	onTabBackground: {
-		paddingTop: 10,
-		backgroundColor: primaryBackground,
 	},
 	tabbar: {
 		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
 		width: "90%",
+		justifyContent: "space-between",
 		paddingVertical: 5,
 	},
-	tabbarItem: {
+	tabItem: {
 		flex: 1,
-		justifyContent: "center",
 		alignItems: "center",
+		paddingTop: 10,
 		paddingBottom: 22,
 	},
-	tabbarText: {
+	icon: {
+		width: 28,
+		height: 28,
+		marginBottom: 5,
+	},
+	label: {
 		fontSize: FontSizeTabbar,
 		fontWeight: "bold",
 	},
-	tabIcons: {
-		width: 28,
-		height: 28,
-		aspectRatio: 1,
-		marginBottom: 5,
-	},
-	tabLabel: {
-		borderBottomColor: "transparent",
-	},
-	focusedTab: {
+	indicator: {
+		position: "absolute",
+		bottom: 10,
 		width: "50%",
 		height: 4,
 		backgroundColor: colorBlack,
 		borderRadius: 2,
-		position: "absolute",
-		bottom: 10,
 	},
 });
-
-export default TabBar;

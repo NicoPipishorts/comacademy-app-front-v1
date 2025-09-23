@@ -1,10 +1,11 @@
 {
 	"name": "comacademy-app-api-front-v1",
 	"main": "expo-router/entry",
-	"version": "1.0.6",
+	"version": "1.1.3",
 	"scripts": {
 		"start": "expo start",
 		"reset-project": "node ./scripts/reset-project.js",
+		"strapi": "strapi",
 		"android": "expo start --android",
 		"ios": "expo start --ios",
 		"web": "expo start --web",
@@ -21,6 +22,7 @@
 		"@expo/vector-icons": "^14.0.2",
 		"@react-native-async-storage/async-storage": "1.23.1",
 		"@react-native-community/netinfo": "11.3.1",
+		"@react-native-picker/picker": "2.7.5",
 		"@react-navigation/native": "^6.1.17",
 		"@react-navigation/native-stack": "^6.10.0",
 		"@react-navigation/stack": "^6.4.0",
@@ -48,6 +50,7 @@
 		"react-dom": "18.2.0",
 		"react-native": "0.74.5",
 		"react-native-deck-swiper": "^2.0.17",
+		"react-native-element-dropdown": "^2.12.4",
 		"react-native-gesture-handler": "~2.16.1",
 		"react-native-keyboard-accessory": "^0.1.16",
 		"react-native-paper": "^5.12.5",

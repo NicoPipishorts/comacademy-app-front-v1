@@ -1,3 +1,4 @@
+import { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY } from "@/constants";
 import { LoginPayload } from "@/types/login";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode"; // Correct import
@@ -77,6 +78,20 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	useEffect(() => {
 		const initializeAuth = async () => {
+			// 1) See if we’ve already migrated
+			const seenVersion = await AsyncStorage.getItem(STORAGE_MIGRATION_KEY);
+			if (seenVersion !== SESSION_MIGRATION_VERSION) {
+				// first run after update → force logout
+				await AsyncStorage.removeItem("jwtToken");
+				setIsAuthenticated(false);
+				// mark that we’ve applied the migration
+				await AsyncStorage.setItem(
+					STORAGE_MIGRATION_KEY,
+					SESSION_MIGRATION_VERSION
+				);
+			}
+
+			// 2) Now do your usual login check
 			await checkLoggedIn();
 			setIsRegistering(false);
 		};

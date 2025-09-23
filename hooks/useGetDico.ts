@@ -82,6 +82,8 @@ const useDicoIds = (filterByCat: number | null) => {
 		queryKey: ["DicoIds", filterByCat],
 		queryFn: () => fetchDicoIds(token, filterByCat),
 		enabled: !!token,
+		staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+		gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
 	});
 };
 

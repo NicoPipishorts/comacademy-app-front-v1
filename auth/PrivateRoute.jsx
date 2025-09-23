@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 import React from "react";
-import LoginScreen from "../screens/LoginScreen";
+import SignIn from "../screens/Sign-in";
 import { useAuth } from "./AuthContext";
 
 const PrivateRoute = ({ name, component: Component, options }) => {
@@ -11,7 +11,7 @@ const PrivateRoute = ({ name, component: Component, options }) => {
 			<Stack>
 				<Stack.Screen
 					name='Login'
-					component={LoginScreen}
+					component={SignIn}
 					options={{ headerShown: true }} // Customize as needed
 				/>
 			</Stack>

@@ -2,21 +2,13 @@ import HR from "@/components/HR";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH2 } from "@/constants/fontsizes";
-import React, { useCallback, useEffect, useState } from "react";
-import {
-	Image,
-	ImageStyle,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from "react-native";
+import React, { useCallback, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 // Icons
-import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
-import HeartFull from "@/assets/imgs/icons/heart-full.png";
-import Heart from "@/assets/imgs/icons/heart.png";
+import metierFavoriteAdapter from "@/adapters/favorites/metierFavoriteAdapter";
 import Plus from "@/assets/imgs/icons/plus.png";
+import ActionIconButton from "@/components/buttons/actionIconButton";
+import FavoriteToggleButton from "@/components/buttons/favoriteToggleButton";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import GradientContainer from "@/components/GradientContainer";
@@ -25,19 +17,13 @@ import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import UnorderedList from "@/components/UnorderedList";
 import { colorWhite } from "@/constants/colors";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
-import { queryClient } from "@/hooks/reactQueryConfig";
-import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
-import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { useLocalSearchParams } from "expo-router";
 
 interface Props {
 	metierId: number;
 }
 export default function MetierDetails({ metierId: paramsMetierId }: Props) {
-	const { userId } = useUserId();
-	const { token } = useJwtToken();
 	const { id } = useLocalSearchParams();
 	const [modalVisible, setModalVisible] = useState(false);
 
@@ -45,70 +31,11 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const { isAndroid } = useDeviceTypeCheckers();
 
 	const { data } = useGetMetierById(metierId);
-	const { data: dataFavoritesMetier, isFetched: isFetchFavoritesMetier } =
-		useGetFavoriteMetiers(userId);
 
-	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
-		useState<boolean>(null);
-	const [idArray, setIdArray] = useState<number[]>([]);
-	const [dataId, setDataId] = useState<number>(null);
+	const handleModalOpen = useCallback(() => setModalVisible(true), []);
+	const handleModalClose = useCallback(() => setModalVisible(false), []);
 
-	const handleSuccess = () => {
-		queryClient.refetchQueries({ queryKey: ["FavoriteMetiers"] });
-	};
-
-	const mutation = useAddFavoritesMetierMutation(handleSuccess);
-
-	useEffect(() => {
-		if (dataFavoritesMetier?.data[0]) {
-			const newArray = dataFavoritesMetier?.data[0].attributes.metiers.data.map(
-				(item) => item.id
-			);
-			setIdArray(newArray);
-		}
-	}, [dataFavoritesMetier?.data]);
-
-	useEffect(() => {
-		if (idArray) {
-			const doesItExist = idArray.some((id) => id === metierId);
-			if (doesItExist) {
-				setFilterIfFavoriteExists(true);
-			} else {
-				setFilterIfFavoriteExists(false);
-			}
-		}
-	}, [idArray, metierId]);
-
-	useEffect(() => {
-		if (isFetchFavoritesMetier && dataFavoritesMetier.data[0]) {
-			setDataId(dataFavoritesMetier.data[0].id);
-		}
-	}, [isFetchFavoritesMetier, dataFavoritesMetier]);
-
-	const handleAddFavorite = useCallback(() => {
-		if (filterIfFavoriteExists) {
-			const updatedIdArray = idArray.filter((id) => id !== metierId);
-			const updatedFavoriteMetiers = [...updatedIdArray];
-			mutation.mutate({ dataId, updatedFavoriteMetiers, token });
-		} else {
-			const updatedFavoriteMetiers = [...idArray, metierId];
-			if (!dataId) {
-				mutation.mutate({ userId, updatedFavoriteMetiers, token });
-			} else {
-				mutation.mutate({ dataId, updatedFavoriteMetiers, token });
-			}
-		}
-	}, [
-		dataId,
-		filterIfFavoriteExists,
-		idArray,
-		metierId,
-		mutation,
-		token,
-		userId,
-	]);
-
-	if (!data || !dataFavoritesMetier || !isFetchFavoritesMetier) {
+	if (!data) {
 		return <Loader />;
 	}
 
@@ -147,20 +74,21 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 							: ""}
 					</View>
 					<View style={styles.containerIcons}>
-						<Pressable onPress={() => setModalVisible(true)}>
-							<Image
-								source={Plus}
-								style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-								resizeMode='contain'
-							/>
-						</Pressable>
-						<Pressable onPress={() => handleAddFavorite()}>
-							<Image
-								source={filterIfFavoriteExists ? HeartFull : Heart}
-								style={styles.catIcons as ImageStyle}
-								resizeMode='contain'
-							/>
-						</Pressable>
+						<ActionIconButton
+							onPress={handleModalOpen}
+							source={Plus}
+							containerStyle={[styles.actionIcon, styles.addButton]}
+							imageStyle={{ width: 28, height: 28 }}
+						/>
+
+						{/* Generic favorite toggle using the Dico adapter */}
+						<FavoriteToggleButton
+							key={`metier-heart-${metierId}`} // ⬅️ force remount on return/change
+							targetId={metierId}
+							adapter={metierFavoriteAdapter}
+							containerStyle={styles.actionIcon}
+							imageStyle={{ width: 28, height: 28 }}
+						/>
 					</View>
 				</View>
 
@@ -259,7 +187,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 			<AddToPlaylistModal
 				visible={modalVisible}
-				onClose={() => setModalVisible(false)}
+				onClose={handleModalClose}
 				elementId={metierId}
 				type='metier'
 			/>
@@ -278,6 +206,15 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		marginBottom: 100,
+	},
+	actionIcon: {
+		width: 24,
+		height: 24,
+		aspectRatio: 1,
+		marginRight: 5,
+	},
+	addButton: {
+		marginRight: 20,
 	},
 	wrapperIcons: {
 		flexDirection: "row",

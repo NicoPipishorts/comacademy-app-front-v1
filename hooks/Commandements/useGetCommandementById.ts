@@ -1,13 +1,13 @@
 // src/hooks/useCategories.ts
 
 import useJwtToken from "@/hooks/useJwtToken";
-import { CommandementPayload } from "@/types/commandements";
+import { SingleCommandementResponse } from "@/types/commandements";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchData = async (
 	token: string,
 	itemId: number
-): Promise<CommandementPayload> => {
+): Promise<SingleCommandementResponse> => {
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/commandements/${itemId}`,
@@ -37,7 +37,7 @@ const fetchData = async (
 const useGetCommandementById = (itemId: number) => {
 	const { token } = useJwtToken();
 
-	return useQuery<CommandementPayload>({
+	return useQuery<SingleCommandementResponse>({
 		queryKey: ["CommandementsById", itemId],
 		queryFn: () => fetchData(token, itemId),
 		enabled: !!token && !!itemId,

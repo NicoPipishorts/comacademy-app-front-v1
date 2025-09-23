@@ -22,7 +22,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ModalGestureLine from "../experience/modalGestureLine";
 import NewPlaylistModal from "./NewPlaylistModal";
 
@@ -39,7 +38,6 @@ export default function AddToPlaylistModal({
 	type,
 	elementId,
 }: Props) {
-	const insets = useSafeAreaInsets();
 	const slideAnim = useRef(new Animated.Value(300)).current;
 	const { userId } = useUserId();
 	const { token } = useJwtToken();

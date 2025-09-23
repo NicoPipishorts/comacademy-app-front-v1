@@ -15,6 +15,7 @@ import secrets from "@/assets/imgs/cards/home_3_secrets.png";
 import lesCitations from "@/assets/imgs/cards/home_citations.png";
 import dico from "@/assets/imgs/cards/home_dico.png";
 import feed from "@/assets/imgs/cards/home_feed.png";
+import feedback from "@/assets/imgs/cards/home_feedback.png";
 import topFlops from "@/assets/imgs/cards/home_flops_dis.png";
 import histoires from "@/assets/imgs/cards/home_histoire.png";
 import homeJouer from "@/assets/imgs/cards/home_jouer.png";
@@ -241,7 +242,7 @@ const HomeScreen = () => {
 							</View>
 
 							{/* Feedback Card */}
-							{/* <View>
+							<View>
 								<TouchableOpacity
 									style={styles.cardsButton}
 									onPress={() => navigation.navigate("feedback")}>
@@ -265,7 +266,7 @@ const HomeScreen = () => {
 										Votre voix compte
 									</Text>
 								</View>
-							</View> */}
+							</View>
 						</View>
 					</ScrollView>
 
@@ -294,7 +295,7 @@ const HomeScreen = () => {
 										marginLeft: -20,
 									}}>
 									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										10 commandements
+										Tips and tactics
 									</Text>
 									<Text style={{ fontSize: FontSize10 }}>
 										Astuces pour réussir
@@ -333,7 +334,7 @@ const HomeScreen = () => {
 							<View style={{ alignItems: "center" }}>
 								<TouchableOpacity
 									style={styles.cardsButton}
-									onPress={() => navigation.navigate("lesCitations")}>
+									onPress={() => navigation.navigate("citations")}>
 									<View style={styles.imageContainer}>
 										<Image
 											source={lesCitations}
@@ -385,7 +386,9 @@ const HomeScreen = () => {
 
 							{/* 3à Secondes Chrono */}
 							<View>
-								<TouchableOpacity style={styles.cardsButton}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("trenteSecondes")}>
 									<View style={styles.imageContainer}>
 										<Image
 											source={trentes}
@@ -410,7 +413,9 @@ const HomeScreen = () => {
 
 							{/* Les Flops Card */}
 							<View>
-								<TouchableOpacity style={styles.cardsButton}>
+								<TouchableOpacity
+									style={styles.cardsButton}
+									onPress={() => navigation.navigate("topDesFlops")}>
 									<View style={styles.imageContainer}>
 										<Image
 											source={topFlops}

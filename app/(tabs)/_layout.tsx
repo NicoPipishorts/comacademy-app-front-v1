@@ -30,9 +30,14 @@ const CustomTabBar: React.FC<any> = (props) => {
 	if (!isTabBarVisible) return null;
 
 	return <TabBar {...props} />;
-}; // Import the scheduler
+};
+
 const _layout: React.FC = () => {
-	const { isAuthenticated, isRegistering } = useAuth();
+	const { isAuthenticated, isRegistering, logout } = useAuth();
+
+	useEffect(() => {
+		logout();
+	}, []);
 
 	if (!isAuthenticated && !isRegistering) {
 		return <LoginScreen />;
@@ -95,6 +100,14 @@ const _layout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
+					name='feedback'
+					options={{
+						tabBarLabel: "Feedback",
+						headerShown: false,
+						unmountOnBlur: true,
+					}}
+				/>
+				<Tabs.Screen
 					name='metiers'
 					options={{
 						tabBarLabel: "Metiers",
@@ -110,9 +123,9 @@ const _layout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
-					name='lesCitations'
+					name='citations'
 					options={{
-						tabBarLabel: "Les Citations",
+						tabBarLabel: "Citations",
 						headerShown: false,
 						unmountOnBlur: true,
 					}}
@@ -137,6 +150,22 @@ const _layout: React.FC = () => {
 					name='petitesHistoires'
 					options={{
 						tabBarLabel: "Les Petites Histoires",
+						headerShown: false,
+						href: null,
+					}}
+				/>
+				<Tabs.Screen
+					name='trenteSecondes'
+					options={{
+						tabBarLabel: "3 Secondes",
+						headerShown: false,
+						href: null,
+					}}
+				/>
+				<Tabs.Screen
+					name='topDesFlops'
+					options={{
+						tabBarLabel: "Top des Flops",
 						headerShown: false,
 						href: null,
 					}}

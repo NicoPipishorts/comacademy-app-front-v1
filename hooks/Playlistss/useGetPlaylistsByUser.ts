@@ -8,7 +8,7 @@ const fetchData = async (
 ): Promise<PlaylistListResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/playlists?filters[userId]=${userId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/playlists/user/${userId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

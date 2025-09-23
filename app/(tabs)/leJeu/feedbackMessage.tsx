@@ -1,6 +1,6 @@
 import { colorGreen, colorPink, colorWhite } from "@/constants/colors";
 import { Answer } from "@/types/enums";
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, {
 	runOnJS,
@@ -20,38 +20,55 @@ export default function FeedbackMessage({
 	onHide,
 	isHomeButtonModel,
 }: FeedbackMessageProps) {
-	const height = useCallback(() => {
-		if (isHomeButtonModel) {
-			return 200;
-		} else {
-			return 300;
-		}
-	}, [isHomeButtonModel]);
-	const slideAnim = useSharedValue(250); // Initial position off-screen
+	const slideAnim = useSharedValue(250);
+	const timerRef = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
-		// Slide in animation
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+		}
+
 		slideAnim.value = withTiming(0, { duration: 250 });
 
-		// Auto-hide after 800ms
-		const timer = setTimeout(() => {
-			// Slide out before hiding
-			slideAnim.value = withTiming(250, { duration: 250 }, (isFinished) => {
-				if (isFinished) {
-					runOnJS(onHide)(); // Call onHide when animation finishes
+		timerRef.current = setTimeout(() => {
+			slideAnim.value = withTiming(250, { duration: 250 }, (finished) => {
+				if (finished) {
+					runOnJS(onHide)();
 				}
 			});
 		}, 500);
 
-		return () => clearTimeout(timer);
-	}, [slideAnim, onHide, height]);
-
-	// Animated styles for Reanimated
-	const animatedStyle = useAnimatedStyle(() => {
-		return {
-			transform: [{ translateY: slideAnim.value }],
+		return () => {
+			if (timerRef.current) {
+				clearTimeout(timerRef.current);
+				timerRef.current = null;
+			}
 		};
-	});
+	}, [answer, slideAnim, onHide]); // Added 'answer' to dependencies
+
+	const animatedStyle = useAnimatedStyle(() => ({
+		transform: [{ translateY: slideAnim.value }],
+	}));
+
+	// Get background color based on answer
+	const getBackgroundColor = () => {
+		switch (answer) {
+			case Answer.true:
+				return colorGreen;
+			case Answer.false:
+				return colorPink;
+			default:
+				return colorPink; // fallback
+		}
+	};
+
+	// Format answer text for display
+	const getDisplayText = () => {
+		if (typeof answer === "string") {
+			return answer.charAt(0).toUpperCase() + answer.slice(1);
+		}
+		return String(answer);
+	};
 
 	return (
 		<Animated.View
@@ -59,11 +76,11 @@ export default function FeedbackMessage({
 				animatedStyle,
 				styles.feedbackContainer,
 				{
-					backgroundColor: answer === Answer.true ? colorGreen : colorPink,
-					height: 250,
+					backgroundColor: getBackgroundColor(),
+					height: isHomeButtonModel ? 200 : 300,
 				},
 			]}>
-			<Text style={styles.feedbackText}>{answer}</Text>
+			<Text style={styles.feedbackText}>{getDisplayText()}</Text>
 		</Animated.View>
 	);
 }
@@ -80,10 +97,7 @@ const styles = StyleSheet.create({
 		borderTopLeftRadius: 30,
 		borderTopRightRadius: 30,
 		shadowColor: "rgb(0, 0, 0)",
-		shadowOffset: {
-			width: 0,
-			height: 5,
-		},
+		shadowOffset: { width: 0, height: 5 },
 		shadowOpacity: 0.4,
 		shadowRadius: 20,
 		elevation: 10,
@@ -92,5 +106,6 @@ const styles = StyleSheet.create({
 		fontSize: 100,
 		color: colorWhite,
 		fontWeight: "bold",
+		textAlign: "center",
 	},
 });

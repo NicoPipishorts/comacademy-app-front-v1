@@ -1,10 +1,13 @@
-import { CitationsResponse } from "@/types/lesCitations";
+import { DailyCitationResponse } from "@/types/lesCitations";
 import { useQuery } from "@tanstack/react-query";
+import useJwtToken from "../useJwtToken";
 
-const fetchCitations = async (token: string): Promise<CitationsResponse> => {
+const fetchCitations = async (
+	token: string
+): Promise<DailyCitationResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/citations?filters[VISIBLE][$eq]=true&sort=updatedAt:desc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/citations/daily`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -28,13 +31,14 @@ const fetchCitations = async (token: string): Promise<CitationsResponse> => {
 	}
 };
 
-const useLesCitations = (token: string) => {
-	return useQuery<CitationsResponse>({
-		queryKey: ["Citations"],
+const useDailyCitations = () => {
+	const { token } = useJwtToken();
+	return useQuery<DailyCitationResponse>({
+		queryKey: ["DailyCitations"],
 		queryFn: () => fetchCitations(token),
 		enabled: !!token,
 		staleTime: 5000,
 	});
 };
 
-export default useLesCitations;
+export default useDailyCitations;

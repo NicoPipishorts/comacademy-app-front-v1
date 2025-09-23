@@ -1,45 +1,53 @@
-export interface CommandementsCategories {
+// src/types/commandement.ts
+
+/** --- Shared --- */
+export interface CommandementCard {
 	id: number;
-	attributes: {
-		Name: string;
-		Description: string | null;
-		Title: string;
-		backgroundColor: string;
-		createdAt: string;
-		updatedAt: string;
-	};
+	titre: string;
+	contenus: string;
+	cta: string | null;
+	headerCard: boolean;
 }
 
-export interface CommandementsAttributes {
+/** --- Single‐item response --- */
+export interface SingleCommandementAttributes {
 	Theme: string;
-	Astuce_1: string;
-	Astuce_2: string;
-	Astuce_3: string;
-	Astuce_4: string;
-	Astuce_5: string;
-	Astuce_7: string;
-	Astuce_8: string;
-	Astuce_9: string;
-	Astuce_10: string;
-	Astuce_11: string;
 	Active: boolean;
-	createdAt: string;
-	updatedAt: string;
-	publishedAt: string;
-	Categories: {
-		data: CommandementsCategories[];
+	cards: CommandementCard[];
+}
+
+export interface SingleCommandementData {
+	id: number;
+	attributes: SingleCommandementAttributes;
+}
+
+export interface SingleCommandementResponse {
+	data: SingleCommandementData;
+}
+
+/** --- List response --- */
+export interface ListCommandementAttributes {
+	Theme: string;
+	Active: boolean;
+	imageUrl: string | null;
+	catName: string | null;
+}
+
+export interface ListCommandementData {
+	id: number;
+	attributes: ListCommandementAttributes;
+}
+
+export interface PaginationMeta {
+	pagination: {
+		page: number;
+		pageSize: number;
+		pageCount: number;
+		total: number;
 	};
 }
 
-export interface CommandementsData {
-	id: number;
-	attributes: CommandementsAttributes;
-}
-
-export interface CommandementsPayload {
-	data: CommandementsData[];
-}
-
-export interface CommandementPayload {
-	data: CommandementsData;
+export interface MultipleCommandementsResponse {
+	data: ListCommandementData[];
+	meta: PaginationMeta;
 }

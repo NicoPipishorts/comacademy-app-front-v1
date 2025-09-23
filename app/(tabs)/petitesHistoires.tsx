@@ -1,9 +1,5 @@
-import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
-import ScreenHeaders from "@/components/ScreenHeaders";
-import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useGetPetitesHistoires from "@/hooks/useGetPetitesHistoires";
-import useJwtToken from "@/hooks/useJwtToken";
+// File: src/screens/LesPetitesHistoires.tsx
+import { useFocusEffect } from "@react-navigation/native";
 import { Video } from "expo-av";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -17,80 +13,131 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const LesPetitesHistoires = () => {
+import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
+import Loader from "@/components/experience/loader";
+import ScreenHeaders from "@/components/ScreenHeaders";
+import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
+import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useGetMediaList from "@/hooks/useGetMediaList";
+import useJwtToken from "@/hooks/useJwtToken";
+
+const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
-	const { data, isLoading } = useGetPetitesHistoires(token);
+	const { data, isLoading } = useGetMediaList("petites-histoires", token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
 
+	// Dimensions for videos
 	const { width } = Dimensions.get("window");
 	const videoWidth = Math.floor(width * 0.8);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
-	const videoRefs = useRef({});
-	const videoPositions = useRef({});
-	const fadeAnim = useRef({}).current;
+	// Refs for videos, positions, fade animations
+	const videoRefs = useRef<Record<number, any>>({});
+	const videoPositions = useRef<Record<number, number>>({});
+	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
+
+	// Local state
 	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
-	const onViewableItemsChanged = useCallback(
-		async ({ viewableItems }) => {
-			const visibleIndex = viewableItems[0]?.index;
+	const handlePlaybackStatus = usePlaybackReset(
+		videoRefs,
+		videoPositions,
+		setFocusedIndex
+	);
 
-			if (
-				visibleIndex !== undefined &&
-				visibleIndex !== focusedIndexRef.current
-			) {
-				if (videoRefs.current[focusedIndexRef.current]) {
-					const status = await videoRefs.current[
-						focusedIndexRef.current
-					].getStatusAsync();
+	// Pause all videos helper
+	const pauseAllVideos = useCallback(async () => {
+		const refs = Object.values(videoRefs.current);
+		await Promise.all(
+			refs.map(async (ref) => {
+				if (ref) {
+					try {
+						const status = await ref.getStatusAsync();
+						if (status.isLoaded && status.isPlaying) {
+							await ref.pauseAsync();
+						}
+					} catch {
+						// ignore
+					}
+				}
+			})
+		);
+	}, []);
+
+	// Pause whenever screen loses focus or unmounts
+	useFocusEffect(
+		useCallback(() => {
+			return () => {
+				pauseAllVideos();
+			};
+		}, [pauseAllVideos])
+	);
+
+	// When the visible item changes, pause the old and play the new
+	const onViewableItemsChanged = useCallback(
+		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
+			const newIndex = viewableItems[0]?.index;
+			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
+				const prevIndex = focusedIndexRef.current;
+				const prevRef = videoRefs.current[prevIndex];
+				if (prevRef) {
+					const status = await prevRef.getStatusAsync();
 					if (status.isLoaded) {
-						videoPositions.current[focusedIndexRef.current] =
-							status.positionMillis;
-						videoRefs.current[focusedIndexRef.current].pauseAsync();
+						videoPositions.current[prevIndex] = status.positionMillis;
+						await prevRef.pauseAsync();
 					}
 				}
 
-				if (fadeAnim[focusedIndexRef.current]) {
-					Animated.timing(fadeAnim[focusedIndexRef.current], {
-						toValue: 1, // Show splash screen when scrolling away
+				const prevAnim = fadeAnim[prevIndex];
+				if (prevAnim) {
+					Animated.timing(prevAnim, {
+						toValue: 1,
 						duration: 300,
 						useNativeDriver: true,
 					}).start();
 				}
 
-				focusedIndexRef.current = visibleIndex;
-				setFocusedIndex(visibleIndex);
+				focusedIndexRef.current = newIndex;
+				setFocusedIndex(newIndex);
 				setIsFirstRender(false);
 
-				if (!fadeAnim[visibleIndex]) {
-					fadeAnim[visibleIndex] = new Animated.Value(isFirstRender ? 0 : 1);
+				if (!fadeAnim[newIndex]) {
+					fadeAnim[newIndex] = new Animated.Value(1);
 				}
-				Animated.timing(fadeAnim[visibleIndex], {
-					toValue: 0, // Hide splash screen when video is in focus
+				Animated.timing(fadeAnim[newIndex], {
+					toValue: 0,
 					duration: 400,
 					useNativeDriver: true,
 				}).start();
+
+				const newRef = videoRefs.current[newIndex];
+				if (newRef) {
+					const resumePosition = videoPositions.current[newIndex] || 0;
+					await newRef.setPositionAsync(resumePosition, {
+						toleranceMillis: 50,
+					});
+					await newRef.playAsync();
+				}
 			}
 		},
-		[fadeAnim, isFirstRender]
+		[fadeAnim]
 	);
 
 	const viewabilityConfig = useMemo(
-		() => ({
-			itemVisiblePercentThreshold: 70,
-		}),
+		() => ({ itemVisiblePercentThreshold: 70 }),
 		[]
 	);
 
-	const renderItem = useCallback(
-		({ item, index }) => {
-			const videoUri = `${process.env.EXPO_PUBLIC_URL}${item.attributes.videoUri.data.attributes.url}`;
-			const isFocused = focusedIndexRef.current === index;
+	const stories = useMemo(() => data?.data ?? [], [data]);
 
+	const renderItem = useCallback(
+		({ item, index }: { item: any; index: number }) => {
+			const videoUri = item.attributes.videoUri;
+			const isFocused = focusedIndexRef.current === index;
 			if (!fadeAnim[index]) {
 				fadeAnim[index] = new Animated.Value(
 					isFirstRender && index === 0 ? 0 : 1
@@ -102,7 +149,7 @@ const LesPetitesHistoires = () => {
 					key={item.id}
 					style={[
 						styles.cardWrapper,
-						{ height: videoHeight, width: videoWidth },
+						{ width: videoWidth, height: videoHeight },
 					]}>
 					<View style={styles.videoContainer}>
 						<Video
@@ -111,15 +158,19 @@ const LesPetitesHistoires = () => {
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							shouldPlay={isFocused}
-							positionMillis={videoPositions.current[index] || 0}
 							useNativeControls
+							onPlaybackStatusUpdate={(status) =>
+								handlePlaybackStatus(status, index)
+							}
 						/>
 
-						{/* Splash Screen (Covers only when video is NOT focused) */}
 						{!isFocused && (
 							<Animated.View
-								style={[styles.overlayContainer, { opacity: fadeAnim[index] }]}>
+								style={[
+									StyleSheet.absoluteFillObject,
+									styles.overlayContainer,
+									{ opacity: fadeAnim[index] },
+								]}>
 								<Image
 									source={SplashScreen}
 									style={styles.thumbnail}
@@ -137,7 +188,7 @@ const LesPetitesHistoires = () => {
 				</Animated.View>
 			);
 		},
-		[fadeAnim, videoHeight, videoWidth, isFirstRender]
+		[fadeAnim, isFirstRender, videoHeight, videoWidth]
 	);
 
 	if (isLoading) {
@@ -158,18 +209,17 @@ const LesPetitesHistoires = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={{ paddingHorizontal: 30 }}>
+			<View style={styles.headerPadding}>
 				<ScreenHeaders content='La petite histoire' />
 			</View>
-
 			<Animated.FlatList
-				style={{ marginTop: 30, paddingHorizontal: 30 }}
-				data={data.data}
+				style={styles.list}
+				data={stories}
 				renderItem={renderItem}
-				horizontal={true}
+				horizontal
 				showsHorizontalScrollIndicator={false}
 				keyExtractor={(item) => item.id.toString()}
-				contentContainerStyle={{ paddingRight: 25 }}
+				contentContainerStyle={styles.contentPadding}
 				onViewableItemsChanged={onViewableItemsChanged}
 				viewabilityConfig={viewabilityConfig}
 				scrollEventThrottle={16}
@@ -182,6 +232,16 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: "#f0f0f0",
+	},
+	headerPadding: {
+		paddingHorizontal: 30,
+	},
+	list: {
+		marginTop: 30,
+		paddingHorizontal: 30,
+	},
+	contentPadding: {
+		paddingRight: 25,
 	},
 	loaderContainer: {
 		flex: 1,
@@ -210,7 +270,6 @@ const styles = StyleSheet.create({
 		height: "100%",
 	},
 	overlayContainer: {
-		...StyleSheet.absoluteFillObject, // Covers entire video
 		justifyContent: "center",
 		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0, 0.5)",

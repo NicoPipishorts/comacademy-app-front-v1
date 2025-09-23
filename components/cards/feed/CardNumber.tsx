@@ -14,7 +14,14 @@ export default function FeedCardNumber({ data, elementId }: Props) {
 	return (
 		<View style={{ justifyContent: "flex-start" }}>
 			<View style={styles.cardContainer}>
-				<Text style={styles.textTitle}>{data.payload.Titre}</Text>
+				<Text
+					style={styles.textTitle}
+					numberOfLines={1}
+					adjustsFontSizeToFit
+					minimumFontScale={0.5}
+					ellipsizeMode='tail'>
+					{data.payload.Titre}
+				</Text>
 				<Text style={styles.textContent}>{data.payload.Text}</Text>
 			</View>
 			<ThumbLikeButton elementId={elementId} userLiked={data.userLiked} />
@@ -36,15 +43,11 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.35,
 		shadowRadius: 15,
 		shadowColor: colorBlack,
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
+		shadowOffset: { width: 0, height: 2 },
 	},
 	textTitle: {
-		alignSelf: "center",
-		minWidth: "100%",
-		fontSize: 78,
+		width: "100%", // constrain to card width
+		fontSize: 78, // starting size
 		fontWeight: "bold",
 		marginBottom: 15,
 		color: colorYellow,

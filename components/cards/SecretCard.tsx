@@ -21,7 +21,7 @@ export default function SecretCard({
 				]}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 1 }}>
-				<Text style={styles.keyCardTitle}>{title} :</Text>
+				<Text style={styles.keyCardTitle}>{title}</Text>
 				<View style={styles.cardContent}>
 					<Text style={styles.keyCardText}>{text}</Text>
 				</View>

@@ -32,7 +32,7 @@ export default function CardSimpleButtonSecrets({
 				}}>
 				<ImageBackground
 					source={{
-						uri: `${process.env.EXPO_PUBLIC_URL}${image}`,
+						uri: `${image}`,
 					}}
 					style={styles.cardBackgroundImage}
 					resizeMode='cover'>

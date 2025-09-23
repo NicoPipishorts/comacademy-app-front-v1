@@ -1,5 +1,12 @@
 import PlayButton from "@/assets/imgs/BigPlayButton.png";
-import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
+import { colorWhite } from "@/constants/colors";
+import {
+	FontSize16,
+	FontSize20,
+	FontSizeScreenTitles,
+} from "@/constants/fontsizes";
+import useCategoriesFull from "@/hooks/useCategoriesFull";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { Dispatch, SetStateAction } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -8,11 +15,50 @@ interface Props {
 	selectedTab: boolean;
 	setSelectedTab: Dispatch<SetStateAction<boolean>>;
 	disabled: boolean;
+	filterByCat: number | null;
+	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 }
 
-export default function LetsPlay({ handlePressPlay, disabled }: Props) {
+export default function LetsPlay({
+	handlePressPlay,
+	disabled,
+	filterByCat,
+	setFilterByCat,
+}: Props) {
+	const { data: dataCategory } = useCategoriesFull();
+
+	const cat = filterByCat - 1;
+
 	return (
 		<View style={styles.wrapperCenter}>
+			{filterByCat && (
+				<View
+					style={[
+						styles.card,
+						{
+							backgroundColor: `#${dataCategory?.data[cat].attributes.backgroundColor}`,
+						},
+					]}>
+					<TouchableOpacity
+						style={styles.closeButton}
+						onPress={() => setFilterByCat(null)}>
+						<MaterialCommunityIcons
+							name='close-circle-outline'
+							size={24}
+							color={colorWhite}
+						/>
+					</TouchableOpacity>
+					<Text style={styles.cardText}>
+						{dataCategory?.data[cat].attributes.Title}
+					</Text>
+					<Image
+						source={{
+							uri: `${dataCategory?.data[cat].attributes.smallIcon.data.attributes.url}`,
+						}}
+						style={styles.icon}
+					/>
+				</View>
+			)}
 			<View>
 				<Text style={styles.centerTitle}>A toi de jouer !</Text>
 			</View>
@@ -37,6 +83,18 @@ export default function LetsPlay({ handlePressPlay, disabled }: Props) {
 }
 
 const styles = StyleSheet.create({
+	closeButton: {
+		position: "absolute",
+		top: 8,
+		right: 10,
+	},
+	noInternetText: {
+		fontWeight: "bold",
+		fontSize: FontSize16,
+	},
+	noInternetContainer: {
+		paddingTop: 10,
+	},
 	wrapperCenter: {
 		flex: 1,
 		width: "100%",
@@ -69,5 +127,36 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		elevation: 5,
 		zIndex: 1,
+	},
+	card: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		width: "60%",
+		aspectRatio: 2 / 1,
+		paddingTop: 30,
+		marginTop: -70,
+		marginBottom: 40,
+		borderRadius: 20,
+		padding: 8,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 6,
+		elevation: 5,
+	},
+	icon: {
+		width: 45,
+		height: 45,
+	},
+	cardText: {
+		color: colorWhite,
+		fontSize: FontSize20,
+		fontWeight: "bold",
+		paddingHorizontal: 10,
+		flexShrink: 1,
 	},
 });

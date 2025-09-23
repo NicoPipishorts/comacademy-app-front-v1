@@ -28,7 +28,7 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
 		<>
 			<ScrollView contentContainerStyle={styles.wrapper}>
 				<View style={styles.cardContainer}>
-					{dataCategory.data.map((cat) => {
+					{dataCategory?.data.map((cat) => {
 						return (
 							<TouchableOpacity
 								key={cat.id}
@@ -39,7 +39,7 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
 								]}>
 								<Image
 									source={{
-										uri: `${process.env.EXPO_PUBLIC_URL}${cat.attributes.smallIcon.data.attributes.url}`,
+										uri: `${cat.attributes.smallIcon.data.attributes.url}`,
 									}}
 									style={styles.icon}
 								/>
