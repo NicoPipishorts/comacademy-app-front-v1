@@ -10,7 +10,7 @@ const fetchData = async (
 ): Promise<SecretResponse> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/secrets/${itemId}`,
+			`${process.env.EXPO_PUBLIC_API_URL}/secret/${itemId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

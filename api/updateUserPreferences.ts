@@ -1,91 +1,63 @@
-import { queryClient } from "@/hooks/reactQueryConfig";
-import { useMutation } from "@tanstack/react-query";
-import axios, { AxiosError, AxiosResponse } from "axios";
+// src/hooks/useUpdateUserPreferences.ts
 
-// Define the payload and response types
-interface FinishSessionPayload {
+import { queryClient } from "@/hooks/reactQueryConfig";
+import useJwtToken from "@/hooks/useJwtToken";
+import { UserPreferencesResponse } from "@/types/userPreferences";
+import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
+
+export interface UpdateUserPreferencesPayload {
 	userId: number;
 	avatarBackgroundColor: string;
-	token: string;
 }
 
-interface SuccessPayload {
-	data: any;
-}
+export const useUpdateUserPreferences = () => {
+	const { token } = useJwtToken();
 
-// Custom hook to update user preferences
-export const UpdateUserPreferences = () => {
-	return useMutation<SuccessPayload, AxiosError, FinishSessionPayload>({
-		mutationFn: async ({
-			userId,
-			avatarBackgroundColor,
-			token,
-		}: FinishSessionPayload) => {
-			const payload = {
-				data: {
-					avatarBackgroundColor,
-				},
-			};
-
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences?filters[user_id]=${userId}`;
-			const postUrl = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences`;
-
-			try {
-				// First, check if the preferences for the user exist by making a GET request
-				const getResponse = await axios.get(url, {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-
-				// Check if there are existing preferences for the user
-				if (getResponse.data.data.length > 0) {
-					// Extract the ID of the existing preference (assuming it's in getResponse.data.data[0].id)
-					const existingPreferenceId = getResponse.data.data[0].id;
-					const putUrl = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences/${existingPreferenceId}`;
-
-					const putResponse: AxiosResponse<SuccessPayload> = await axios({
-						method: "PUT",
-						url: putUrl,
-						data: payload,
-						headers: {
-							"Content-Type": "application/json",
-							Authorization: `Bearer ${token}`,
-						},
-					});
-					return putResponse.data;
-				} else {
-					const postResponse: AxiosResponse<SuccessPayload> = await axios({
-						method: "POST",
-						url: postUrl,
-						data: { data: { user_id: userId, avatarBackgroundColor } },
-						headers: {
-							"Content-Type": "application/json",
-							Authorization: `Bearer ${token}`,
-						},
-					});
-					return postResponse.data;
-				}
-			} catch (error) {
-				if (axios.isAxiosError(error)) {
-					throw error;
-				} else {
-					throw new Error("An unexpected error occurred");
-				}
+	return useMutation<
+		UserPreferencesResponse,
+		AxiosError,
+		UpdateUserPreferencesPayload
+	>({
+		// 1) mutation function embedded in options
+		mutationFn: async ({ userId, avatarBackgroundColor }) => {
+			if (!token) {
+				throw new Error("Missing authentication token");
 			}
+
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences/${userId}`;
+			const payload = { data: { avatarBackgroundColor } };
+
+			const response = await axios.put<UserPreferencesResponse>(url, payload, {
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			return response.data;
 		},
-		onSuccess: () => {
-			queryClient.refetchQueries({
+
+		// 2) onSuccess handler
+		onSuccess: (_data) => {
+			queryClient.invalidateQueries({
 				queryKey: ["UserPreferences"],
 			});
 		},
+
+		// 3) onError handler
 		onError: (error) => {
 			if (error.response) {
-				console.error("On Error: Error code:", error.response.status);
-				console.error("Response data:", error.response.data);
+				console.error(
+					"UpdateUserPreferences error:",
+					error.response.status,
+					error.response.data
+				);
 			} else {
-				console.error("An unexpected error occurred:", error.message);
+				console.error("Unexpected error:", error.message);
 			}
 		},
-	});
+	} as UseMutationOptions<UserPreferencesResponse, AxiosError, UpdateUserPreferencesPayload>);
 };
+
+export default useUpdateUserPreferences;

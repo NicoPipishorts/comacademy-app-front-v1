@@ -1,47 +1,32 @@
+// src/components/cards/CardLesCitations.tsx
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { FontSize14, FontSize16, FontSize22 } from "@/constants/fontsizes";
+import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import { CitationData } from "@/types/lesCitations";
-import moment from "moment";
+import React, { memo } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import CitationHeart from "../buttons/CitationHeart";
 
-interface Props {
+type Props = {
 	citation: CitationData;
-}
+	/** Optional: show a "+" action for this citation (e.g., add to playlist) */
+	onAddPress?: (citationId: number) => void;
+};
 
-export default function CardLesCitations({ citation }: Props) {
+function CardLesCitationsBase({ citation, onAddPress }: Props) {
 	return (
 		<View key={citation.id} style={styles.cardWrapper}>
-			<View
-				style={{
-					paddingRight: 50,
-					paddingBottom: 5,
-					alignItems: "flex-end",
-				}}>
-				<Text style={{ fontSize: FontSize14, fontWeight: "bold" }}>
-					{moment(citation.attributes.updatedAt).format("DD/MM/YYYY")}
-				</Text>
-			</View>
 			<View style={styles.cardContainer}>
+				{/* Decorative quotes */}
 				<Image
 					source={require("@/assets/imgs/icons/quote_close.png")}
-					style={{
-						position: "absolute",
-						bottom: 20,
-						right: 20,
-						width: 45,
-						height: 45,
-					}}
+					style={styles.closeIcon}
 				/>
 				<Image
 					source={require("@/assets/imgs/icons/quote_open.png")}
-					style={{
-						position: "absolute",
-						top: 20,
-						left: 20,
-						width: 45,
-						height: 45,
-					}}
+					style={styles.openIcon}
 				/>
+
+				{/* Content */}
 				<View style={styles.cardContent}>
 					<Text style={styles.cardTextCitation}>
 						{citation.attributes.CITATION}
@@ -53,12 +38,41 @@ export default function CardLesCitations({ citation }: Props) {
 					</Text>
 				</View>
 			</View>
+
+			{/* Action row (top-right): Plus (optional) + Heart */}
+			<View style={styles.actionsRow}>
+				<CitationHeart
+					id={citation.id}
+					containerStyle={styles.actionIconButton}
+					imageStyle={styles.actionIconImage}
+				/>
+			</View>
 		</View>
 	);
 }
 
+const propsAreEqual = (prev: Props, next: Props) => {
+	// Re-render only if relevant bits change
+	const p = prev.citation;
+	const n = next.citation;
+
+	const sameId = p.id === n.id;
+	const sameCitation = p.attributes?.CITATION === n.attributes?.CITATION;
+	const sameAuteur = p.attributes?.AUTEUR === n.attributes?.AUTEUR;
+
+	// If your API updates other visible fields, add them here as well.
+
+	const sameOnAddPress = prev.onAddPress === next.onAddPress;
+
+	return sameId && sameCitation && sameAuteur && sameOnAddPress;
+};
+
+const CardLesCitations = memo(CardLesCitationsBase, propsAreEqual);
+export default CardLesCitations;
+
 const styles = StyleSheet.create({
 	cardWrapper: {
+		marginTop: 60,
 		maxHeight: 420,
 	},
 	cardContainer: {
@@ -66,17 +80,43 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		maxWidth: 350,
 		minHeight: 250,
-		shadowOpacity: 0.35,
-		shadowRadius: 15,
-		elevation: 5,
 		backgroundColor: colorBlack,
 		marginHorizontal: 20,
 		borderRadius: 20,
 		shadowColor: colorBlack,
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
+		shadowOpacity: 0.35,
+		shadowRadius: 15,
+		shadowOffset: { width: 0, height: 2 },
+		elevation: 5,
+	},
+	openIcon: {
+		position: "absolute",
+		top: 20,
+		left: 20,
+		width: 45,
+		height: 45,
+	},
+	closeIcon: {
+		position: "absolute",
+		bottom: 20,
+		right: 20,
+		width: 45,
+		height: 45,
+	},
+	actionsRow: {
+		marginTop: 10,
+		width: "90%",
+		alignItems: "flex-end",
+	},
+	actionIconButton: {
+		width: 28,
+		height: 28,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	actionIconImage: {
+		width: 28,
+		height: 28,
 	},
 	cardContent: {
 		padding: 20,

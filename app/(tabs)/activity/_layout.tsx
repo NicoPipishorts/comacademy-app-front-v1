@@ -12,10 +12,10 @@ const ActivityLayout = () => {
 				}}
 			/>
 			<Stack.Screen
-				name='feedback'
+				name='CitationSolo'
 				options={{
 					headerShown: false,
-					headerTitle: "Feedback",
+					headerTitle: "Citation",
 					presentation: "modal",
 				}}
 			/>

@@ -18,6 +18,7 @@ const ICONS = {
 	argh: require("@/assets/imgs/icons/feed/argh.png"),
 	image: require("@/assets/imgs/icons/feed/image.png"),
 	vie: require("@/assets/imgs/icons/feed/vie.png"),
+	cultureCom: require("@/assets/imgs/icons/feed/cultureCom.png"),
 	actusBref: require("@/assets/imgs/icons/feed/actusBref.png"),
 	lol: require("@/assets/imgs/icons/feed/lol.png"),
 	comAcademy: require("@/assets/imgs/icons/feed/comAcademy.png"),
@@ -32,15 +33,16 @@ const TITLES = {
 	metier: "Les métiers de la com",
 	question: "Com'Academy : Le jeu",
 	commandement: "Les 10 commandements",
-	"feed-post-chiffre": "Le chiffre du jour",
-	"feed-post-argh": "AARRGHH !! ",
-	"feed-post-image": "Une image/ un métier",
-	"feed-post-vie": "Vie de com'",
-	"feed-post-actusBref": "Actus en bref",
-	"feed-post-lol": "LOL",
-	"feed-post-comAcademy": "Com'Academy",
-	"feed-post-marqueMystere": "Marque mystère",
-	"feed-post-petitesHistoires": "La petite histoire \ndes marques ",
+	chiffre: "Le chiffre du jour",
+	argh: "AARRGHH !! ",
+	image: "Une image/ un métier",
+	vie: "Vie de com'",
+	cultureCom: "Culture Com",
+	actusBref: "Actus en bref",
+	lol: "LOL",
+	comAcademy: "Com'Academy",
+	marqueMystere: "Marque mystère",
+	petitesHistoires: "La petite histoire \ndes marques ",
 };
 
 const SUB_TITLES = {
@@ -50,14 +52,15 @@ const SUB_TITLES = {
 	metier: "Focus",
 	question: "Alors, vrai ou faux?",
 	commandement: "Astuces pour réussir",
-	"feed-post-argh": "L’expression qui énerve",
-	"feed-post-petitesHistoires": "Anecdotes pour briller",
-	"feed-post-chiffre": "1 chiffre : 1 révélation",
-	"feed-post-vie": "Ca sent le vécu",
-	"feed-post-actusBref": "L'actu sans blabla",
-	"feed-post-comAcademy": "Le Boss",
-	"feed-post-image": "1 image vaut 1000 mots",
-	"feed-post-lol": "La pause café",
+	argh: "L’expression qui énerve",
+	petitesHistoires: "Anecdotes pour briller",
+	chiffre: "1 chiffre : 1 révélation",
+	vie: "Ca sent le vécu",
+	cultureCom: "Culture Com",
+	actusBref: "L'actu sans blabla",
+	comAcademy: "Le Boss",
+	image: "1 image vaut 1000 mots",
+	lol: "La pause café",
 };
 
 const DESTINATIONS = {
@@ -106,7 +109,7 @@ export default function FeedCardHeader({ data }: Props) {
 		<View>
 			<View style={styles.container}>
 				<Image source={typeIcon} style={styles.icon} resizeMode='contain' />
-				{data.type !== "feed-post" && (
+				{destination && (
 					<Pressable style={styles.pressable} onPress={handleNavigation}>
 						<Image
 							source={require("@/assets/imgs/icons/plus-circle.png")}

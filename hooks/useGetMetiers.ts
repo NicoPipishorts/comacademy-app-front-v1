@@ -82,6 +82,8 @@ const useGetMetiers = (filterByCat: number | null) => {
 		queryKey: ["metiersList", filterByCat],
 		queryFn: () => fetchMetiers(token, filterByCat),
 		enabled: !!token,
+		staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+		gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
 	});
 };
 

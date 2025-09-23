@@ -2,14 +2,7 @@ import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import {
-	Image,
-	LayoutAnimation,
-	StyleSheet,
-	Text,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 
 interface Props {
@@ -20,14 +13,28 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 	const { token } = useJwtToken();
 	const { data: niveaux } = useGetNiveaux(token);
 
-	const [textHeight, setTextHeight] = useState<number | "auto">(40);
-	const [isExpanded, setIsExpanded] = useState(false); // Track expansion state
+	// const [textHeight, setTextHeight] = useState<number | "auto">(40);
+	// const [isExpanded, setIsExpanded] = useState(false); // Track expansion state
 	const [niveauStatut, setNiveauStatut] = useState<string | null>(null);
 	const [niveauNumber, setNiveauNumber] = useState<number | null>(null);
 	const [niveauCitation, setNiveauCitation] = useState<string | null>(null);
 	const [niveauCommentaire, setNiveauCommentaire] = useState<string | null>(
 		null
 	);
+
+	// Calculate the niveau index based on totalPoints
+	const calculateNiveauIndex = (points: number): number => {
+		return Math.min(Math.floor(points / 150), niveaux.data.length - 1);
+	};
+
+	// Calculate the round index based on totalPoints
+	const calculateRoundIndex = (niveau: number, points: number): number => {
+		if (niveau === 0) {
+			return Math.min(Math.floor(points / 15), niveaux.data.length - 1);
+		} else {
+			return Math.floor((points - niveau * 150) / 15);
+		}
+	};
 
 	useEffect(() => {
 		if (niveaux) {
@@ -40,11 +47,6 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		return <Loader />;
 	}
 
-	// Calculate the niveau index based on totalPoints
-	const calculateNiveauIndex = (points: number): number => {
-		return Math.min(Math.floor(points / 150), niveaux.data.length - 1);
-	};
-
 	// Set niveau details based on the calculated index
 	const setNiveauDetails = (index: number) => {
 		const niveau = niveaux.data[index]?.attributes;
@@ -56,15 +58,15 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		}
 	};
 
-	const toggleCommentSection = () => {
-		LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-		if (isExpanded) {
-			setTextHeight(40); // Collapse the comment section
-		} else {
-			setTextHeight("auto"); // Expand the comment section
-		}
-		setIsExpanded(!isExpanded); // Toggle the expansion state
-	};
+	// const toggleCommentSection = () => {
+	// 	LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+	// 	if (isExpanded) {
+	// 		setTextHeight(40);
+	// 	} else {
+	// 		setTextHeight("auto");
+	// 	}
+	// 	setIsExpanded(!isExpanded);
+	// };
 
 	return (
 		<>
@@ -74,16 +76,31 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
 					style={styles.gradientBox}>
-					<View style={styles.niveauLabelContainer}>
-						<Text style={styles.niveauLabel}>Niveau</Text>
+					<View style={[styles.niveauRoundRow, { marginTop: -20 }]}>
+						<Text style={[styles.niveauLabel]}>Niveau</Text>
+						<Text style={styles.niveauNumber}> {niveauNumber}</Text>
 					</View>
-					<Text style={styles.niveauNumber}>{niveauNumber}</Text>
+					<View style={styles.niveauRoundRow}>
+						<Text style={styles.niveauLabel}>Round</Text>
+						<Text
+							style={[
+								styles.niveauNumber,
+								{ position: "absolute", right: 15, bottom: -20 },
+							]}>
+							{calculateRoundIndex(niveauNumber, totalPoints)}
+						</Text>
+						<Text
+							style={[
+								styles.niveauNumber,
+								{ position: "absolute", right: -4, bottom: 0, fontSize: 14 },
+							]}>
+							/10
+						</Text>
+					</View>
 				</LinearGradient>
 
 				<View style={styles.niveauStatusBox}>
-					<View style={styles.niveauLabelContainer}>
-						<Text style={styles.niveauLabel}>Statut</Text>
-					</View>
+					<Text style={[styles.niveauLabel, { fontSize: 16 }]}>Statut</Text>
 					<Text style={styles.niveauStatus}>{niveauStatut}</Text>
 				</View>
 			</View>
@@ -92,10 +109,10 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 				<View>
 					<Text style={styles.citationText}>{niveauCitation}</Text>
 				</View>
-				<View style={[styles.commentContainer, { height: textHeight }]}>
+				<View style={[styles.commentContainer, { height: "auto" }]}>
 					<Text>{niveauCommentaire}</Text>
 				</View>
-				<TouchableOpacity onPress={toggleCommentSection} style={{ zIndex: 10 }}>
+				{/* <TouchableOpacity onPress={toggleCommentSection} style={{ zIndex: 10 }}>
 					<Image
 						source={require("@/assets/imgs/icons/chevron-circle.png")}
 						style={{
@@ -107,7 +124,7 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 							height: 30,
 						}}
 					/>
-				</TouchableOpacity>
+				</TouchableOpacity> */}
 			</View>
 		</>
 	);
@@ -119,28 +136,30 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 	},
 	gradientBox: {
-		width: "48%",
+		flexDirection: "column",
+		maxWidth: "48%",
 		padding: 10,
-		paddingBottom: 0,
 		borderRadius: 15,
-		alignItems: "flex-end",
-		position: "relative",
+		justifyContent: "space-evenly",
+		aspectRatio: 1,
 	},
-	niveauLabelContainer: {
-		zIndex: 10,
-		position: "absolute",
-		top: 10,
-		left: 10,
+	niveauRoundRow: {
+		position: "relative",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		width: "100%",
 	},
 	niveauLabel: {
-		fontSize: 16,
+		fontSize: 20,
 		fontWeight: "bold",
 		color: "white",
 	},
 	niveauNumber: {
-		fontSize: 92,
-		fontWeight: "bold",
+		fontSize: 50,
 		color: "white",
+		fontWeight: "bold",
+		letterSpacing: -2,
 	},
 	niveauStatusBox: {
 		width: "48%",

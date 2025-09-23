@@ -1,4 +1,4 @@
-import { GameSessionQuestionData } from "@/types/game";
+import { QuestionData } from "@/types/userGameSessionStatus";
 import React, {
 	createContext,
 	PropsWithChildren,
@@ -8,20 +8,16 @@ import React, {
 
 // Define the shape of your context
 interface GameContextType {
-	sessionId: number;
-	setSessionsId: React.Dispatch<React.SetStateAction<number>>;
-	dataGame: GameSessionQuestionData[];
-	setDataGame: React.Dispatch<React.SetStateAction<GameSessionQuestionData[]>>;
-	questionsLeft: number;
-	setQuestionsLeft: React.Dispatch<React.SetStateAction<number>>;
-	currentCardId: number;
-	setCurrentCardId: React.Dispatch<React.SetStateAction<number>>;
-	playing: boolean;
-	setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
-	score: number;
-	setScore: React.Dispatch<React.SetStateAction<number>>;
-	showFinishedModal: boolean;
-	setShowFinishedModal: React.Dispatch<React.SetStateAction<boolean>>;
+	dataGame: QuestionData[];
+	setDataGame: React.Dispatch<React.SetStateAction<QuestionData[]>>;
+	sessionId: number | null;
+	setSessionsId: React.Dispatch<React.SetStateAction<number | null>>;
+	questionsLeft: number | null;
+	setQuestionsLeft: React.Dispatch<React.SetStateAction<number | null>>;
+	gameStatus: "in_progress" | "finished";
+	setGameStatus: React.Dispatch<
+		React.SetStateAction<"in_progress" | "finished">
+	>;
 }
 
 // Create the context
@@ -29,31 +25,24 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 // Define the provider using React.FC, which includes children by default
 export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
-	const [dataGame, setDataGame] = useState<GameSessionQuestionData[]>(null);
-	const [sessionId, setSessionsId] = useState<number>(null);
-	const [questionsLeft, setQuestionsLeft] = useState<number>(null);
-	const [currentCardId, setCurrentCardId] = useState<number>(null);
-	const [score, setScore] = useState<number | null>(null);
-	const [showFinishedModal, setShowFinishedModal] = useState<boolean>(false);
-	const [playing, setPlaying] = useState<boolean>(false);
+	const [dataGame, setDataGame] = useState<QuestionData[]>(null);
+	const [sessionId, setSessionsId] = useState<number | null>(null);
+	const [questionsLeft, setQuestionsLeft] = useState<number | null>(null);
+	const [gameStatus, setGameStatus] = useState<"in_progress" | "finished">(
+		"in_progress"
+	);
 
 	return (
 		<GameContext.Provider
 			value={{
-				sessionId,
-				setSessionsId,
+				gameStatus,
+				setGameStatus,
 				dataGame,
 				setDataGame,
+				sessionId,
+				setSessionsId,
 				questionsLeft,
 				setQuestionsLeft,
-				playing,
-				setPlaying,
-				score,
-				setScore,
-				showFinishedModal,
-				setShowFinishedModal,
-				currentCardId,
-				setCurrentCardId,
 			}}>
 			{children}
 		</GameContext.Provider>

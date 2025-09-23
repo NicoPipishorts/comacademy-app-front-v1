@@ -11,6 +11,7 @@ export interface DicoAttributes {
 	Categories: string;
 	Tags: string;
 	Word: string;
+	extraContext: string;
 	Definition: string;
 	isActive: boolean;
 	createdAt: string;

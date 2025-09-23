@@ -84,6 +84,11 @@ const PlaylistList = () => {
 					questionId: value,
 				});
 				break;
+			case "citation":
+				navigation.navigate("favoriteCitationDetails", {
+					citationId: value,
+				});
+				break;
 		}
 	};
 

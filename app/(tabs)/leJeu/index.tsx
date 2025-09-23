@@ -1,191 +1,168 @@
+// File: src/app/(tabs)/leJeu/index.tsx
 import {
 	colorBlack,
-	colorDarkGrey,
 	colorWhite,
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Assets
-import { StartNewGameSession } from "@/api/gameNewSession";
+import { useSessionAction } from "@/api/game/useNewSession";
+import CategoriesCards from "@/components/categories/categories";
+import FloatingTabBar from "@/components/FloatingTabBar";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useGameQuestions from "@/hooks/useGameQuestions";
-import useGameSessions from "@/hooks/useGameSessions";
-import useGameSessionsQuesions from "@/hooks/useGetCurrentQuestion";
 import useJwtToken from "@/hooks/useJwtToken";
 import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
-import { GameSessionQuestionData } from "@/types/game";
 import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect, useNavigation } from "expo-router";
+
 import Answers from "./answers";
 import LetsPlay from "./play";
 
-const LeJeu = () => {
+export default function LeJeu() {
 	const insets = useSafeAreaInsets();
-	const { isConnected } = useNetwork();
 	const navigation = useNavigation<NavigationType>();
+	const { isConnected } = useNetwork();
 	const { selectedTab, setSelectedTab } = useTab();
+
 	const [isEnabled, setIsEnabled] = useState(false);
+	const [activeTab, setActiveTab] = useState(0);
+	const [filterByCat, setFilterByCat] = useState<number | null>(null);
+
 	const { userId } = useUserId();
-	const { token } = useJwtToken();
-	const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+	const { token, loading: loadingToken } = useJwtToken();
+
+	const { setDataGame, setSessionsId, setGameStatus } = useGameContext();
+
+	// session‑restart mutation
+	const { mutate: newSession } = useSessionAction(
+		(payload) => {
+			setGameStatus(payload.status);
+			setSessionsId(payload.sessionId);
+			setDataGame(payload.questionsPool);
+		},
+		(err) => console.error("newSession failed:", err)
+	);
+
+	// ref to skip the very first render
+	const didMountRef = useRef(false);
+
+	// whenever filterByCat returns to null, restart the session
+	useEffect(() => {
+		// wait until token is loaded
+		if (loadingToken) return;
+
+		// skip initial mount
+		if (!didMountRef.current) {
+			didMountRef.current = true;
+			return;
+		}
+
+		if (filterByCat === null && token) {
+			newSession({ userId, token, action: "new" });
+		}
+	}, [filterByCat, token, loadingToken, newSession, userId]);
+
+	// fetch either “all” or “by‑category”
+	// ⬇️ pass token + loading into the hook
 	const {
-		dataGame,
+		data: sessionData,
+		isLoading: loadingQuestions,
+		refetch,
+	} = useGameQuestions(userId, filterByCat, token, loadingToken);
+
+	// ⬇️ ONLY refetch on focus if the token is ready
+	useFocusEffect(
+		useCallback(() => {
+			if (!loadingToken && token) {
+				refetch();
+			}
+		}, [token, loadingToken, refetch])
+	);
+
+	// when the network fetch returns, update context
+	useEffect(() => {
+		if (loadingQuestions || !sessionData) return;
+
+		setGameStatus(sessionData.data.status);
+		setSessionsId(sessionData.data.sessionId);
+		setDataGame(sessionData.data.questionsPool);
+	}, [
+		loadingQuestions,
+		sessionData,
 		setDataGame,
-		sessionId,
 		setSessionsId,
-		questionsLeft,
-		setQuestionsLeft,
-		playing,
-		setPlaying,
-	} = useGameContext();
+		setGameStatus,
+	]);
 
 	useTrackPageMetrics({ page: "Jeu" });
 
-	// Always call the hooks
-	const { data: gameSessions, isFetched: fetchedGameSessions } =
-		useGameSessions(userId);
-	const { data: fetchedDataGame } = useGameQuestions(userId);
-	const { data: currentQuestions, isFetched: fetchedCurrentQuestions } =
-		useGameSessionsQuesions(sessionId);
+	const toggleSwitch = useCallback(() => {
+		setActiveTab((t) => (t === 0 ? 1 : 0));
+		setIsEnabled((p) => !p);
+	}, []);
 
-	const handleSuccessNewGameSession = (data: any) => {
-		setSessionsId(data.data.id);
+	const handlePressPlay = useCallback(() => {
 		navigation.navigate("jeu");
-	};
-	const handleError = (error: any) => {
-		console.error(error);
-	};
-
-	const newGameSession = StartNewGameSession(
-		handleSuccessNewGameSession,
-		handleError
-	);
-
-	useEffect(() => {
-		if (!gameSessions?.data[0]?.id) setSessionsId(null);
-	}, [gameSessions?.data, setSessionsId]);
-
-	useEffect(() => {
-		if (fetchedGameSessions) {
-			if (gameSessions.data[0]?.attributes) {
-				setSessionsId(gameSessions.data[0]?.id);
-				const sessionQuestionsPool =
-					gameSessions.data[0]?.attributes.questionsPool;
-
-				const filteredQuestionsPool =
-					sessionQuestionsPool && questionsLeft > 0
-						? sessionQuestionsPool.slice(15 - questionsLeft)
-						: sessionQuestionsPool;
-
-				if (!playing) {
-					setDataGame(filteredQuestionsPool);
-				}
-			} else {
-				if (!playing) {
-					setQuestionsLeft(15);
-					setDataGame(
-						fetchedDataGame
-							? Object.keys(fetchedDataGame.data).map(
-									(key) => fetchedDataGame.data[key] as GameSessionQuestionData
-							  )
-							: null
-					);
-				}
-			}
-		}
-	}, [
-		fetchedDataGame,
-		fetchedGameSessions,
-		gameSessions?.data,
-		playing,
-		questionsLeft,
-		setDataGame,
-		setQuestionsLeft,
-		setSessionsId,
-	]);
-
-	useEffect(() => {
-		if (sessionId && fetchedCurrentQuestions) {
-			if (currentQuestions.meta.pagination.total > 0) {
-				if (!questionsLeft && !playing) {
-					setQuestionsLeft(15 - currentQuestions.meta.pagination.total);
-				}
-			} else {
-				if (!questionsLeft && !playing) {
-					setQuestionsLeft(15);
-				}
-				setDataGame(
-					fetchedDataGame
-						? Object.keys(fetchedDataGame.data).map(
-								(key) => fetchedDataGame.data[key] as GameSessionQuestionData
-						  )
-						: null
-				);
-			}
-		}
-	}, [
-		fetchedCurrentQuestions,
-		currentQuestions,
-		sessionId,
-		questionsLeft,
-		setQuestionsLeft,
-		setDataGame,
-		fetchedDataGame,
-		playing,
-	]);
-
-	const handlePressPlay = () => {
-		if (!sessionId) {
-			setPlaying(true);
-			newGameSession.mutate({ userId, token, questionsPool: dataGame });
-		} else {
-			setPlaying(true);
-			navigation.navigate("jeu");
-		}
-	};
+	}, [navigation]);
 
 	return (
-		<>
-			<View style={[styles.wrapper, { paddingTop: insets.top + 10 }]}>
-				<View style={styles.containerHeader}>
-					<View style={styles.header}>
-						<Text style={styles.headerMainText}>Le jeu</Text>
-					</View>
-					<View style={styles.containerSwitch}>
-						<Text style={styles.textJouer}>Jouer</Text>
-						<Switch
-							trackColor={{ false: colorBlack, true: colorYellow }}
-							ios_backgroundColor={colorBlack}
-							thumbColor={colorWhite}
-							onValueChange={toggleSwitch}
-							value={isEnabled}
-						/>
-						<Text style={styles.textReponses}>Réponses</Text>
-					</View>
-				</View>
-
-				{!isEnabled && (
-					<LetsPlay
-						setSelectedTab={setSelectedTab}
-						selectedTab={selectedTab}
-						handlePressPlay={handlePressPlay}
-						disabled={isConnected}
+		<View style={[styles.wrapper, { paddingTop: insets.top + 0 }]}>
+			<View style={styles.containerHeader}>
+				<Text style={styles.headerMainText}>Le jeu</Text>
+				<View style={styles.containerSwitch}>
+					<Text style={styles.textJouer}>Jouer</Text>
+					<Switch
+						trackColor={{ false: colorBlack, true: colorYellow }}
+						ios_backgroundColor={colorBlack}
+						thumbColor={colorWhite}
+						onValueChange={toggleSwitch}
+						value={isEnabled}
 					/>
-				)}
-
-				{isEnabled && <Answers />}
+					<Text style={styles.textReponses}>Réponses</Text>
+				</View>
 			</View>
-		</>
+
+			{activeTab === 0 && !isEnabled && (
+				<LetsPlay
+					setSelectedTab={setSelectedTab}
+					selectedTab={selectedTab}
+					handlePressPlay={handlePressPlay}
+					disabled={isConnected}
+					filterByCat={filterByCat}
+					setFilterByCat={setFilterByCat}
+				/>
+			)}
+
+			{activeTab === 1 && !isEnabled && (
+				<View style={styles.categoryWrapper}>
+					<CategoriesCards
+						setFilterByCat={setFilterByCat}
+						setActiveTab={setActiveTab}
+					/>
+				</View>
+			)}
+
+			<View style={styles.floatingTabbarContainer}>
+				<FloatingTabBar
+					activeTab={activeTab}
+					setActiveTab={setActiveTab}
+					handlePress={() => setActiveTab(activeTab === 0 ? 1 : 0)}
+					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
+				/>
+			</View>
+
+			{isEnabled && <Answers />}
+		</View>
 	);
-};
+}
 
 const styles = StyleSheet.create({
 	wrapper: {
@@ -196,10 +173,7 @@ const styles = StyleSheet.create({
 	containerHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignContent: "center",
-	},
-	header: {
-		paddingVertical: 15,
+		alignItems: "center",
 	},
 	headerMainText: {
 		fontSize: FontSizeScreenTitles,
@@ -207,7 +181,6 @@ const styles = StyleSheet.create({
 	},
 	containerSwitch: {
 		flexDirection: "row",
-		justifyContent: "flex-end",
 		alignItems: "center",
 	},
 	textJouer: {
@@ -218,18 +191,17 @@ const styles = StyleSheet.create({
 		paddingLeft: 8,
 		fontWeight: "bold",
 	},
-	finishedModal: {
-		position: "absolute",
-		backgroundColor: colorDarkGrey,
-		width: "90%",
-		height: "90%",
-		zIndex: 20,
+	categoryWrapper: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingTop: 35,
 	},
-	feedbackText: {
-		fontSize: 100,
-		color: colorWhite,
-		fontWeight: "bold",
+	floatingTabbarContainer: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 110,
+		alignItems: "center",
 	},
 });
-
-export default LeJeu;

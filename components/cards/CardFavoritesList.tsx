@@ -7,7 +7,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	title: string;
-	type: "favorites" | "metiers" | "dicos";
+	type: "favorites" | "metiers" | "dicos" | "citations";
 }
 
 export default function CardFavoritesList({ title, type }: Props) {
@@ -25,6 +25,9 @@ export default function CardFavoritesList({ title, type }: Props) {
 
 			case "dicos":
 				navigation.navigate("dicosFavoritesList");
+				break;
+			case "citations":
+				navigation.navigate("citationsFavoritesList");
 				break;
 		}
 	};
@@ -64,6 +67,19 @@ export default function CardFavoritesList({ title, type }: Props) {
 						</Text>
 						<Text style={{ fontSize: FontSize12 }}>
 							" A savoir par cœur ! ?! "
+						</Text>
+					</View>
+				</TouchableOpacity>
+			)}
+			{type === "citations" && (
+				<TouchableOpacity style={styles.wrapper} onPress={() => handlePress()}>
+					<Image source={FavoritePlaylist} style={styles.image} />
+					<View style={{ flexDirection: "column" }}>
+						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
+							{title}
+						</Text>
+						<Text style={{ fontSize: FontSize12 }}>
+							" Bol d'inspiration ! "
 						</Text>
 					</View>
 				</TouchableOpacity>

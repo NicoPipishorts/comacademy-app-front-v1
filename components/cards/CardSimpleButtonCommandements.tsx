@@ -1,16 +1,24 @@
-import { colorBlack, colorTurquoise, colorWhite } from "@/constants/colors";
-import { FontSizeScreenTitles } from "@/constants/fontsizes";
+import { colorBlack, colorWhite } from "@/constants/colors";
+import { FontSize22 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import { Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import { useNavigation } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+	ImageBackground,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 interface Props {
+	image: string;
 	content: string;
 	itemId: number;
 }
 
 export default function CardSimpleButtonCommandements({
+	image,
 	content,
 	itemId,
 }: Props) {
@@ -25,21 +33,30 @@ export default function CardSimpleButtonCommandements({
 
 	return (
 		<View style={styles.cardWrapper}>
-			<View style={styles.cardTextContainer}>
-				<Text style={styles.cardText}>{content}</Text>
-				<View
-					style={{
-						width: "100%",
-						alignItems: "flex-end",
-					}}>
-					<TouchableOpacity
-						style={styles.buttonBlack}
-						onPress={() =>
-							navigation.navigate("CommandementsDetails", { itemId })
-						}>
-						<Text style={styles.buttonText}>Voir</Text>
-					</TouchableOpacity>
-				</View>
+			<View
+				style={{
+					borderRadius: 25,
+					overflow: "hidden",
+				}}>
+				<ImageBackground
+					source={{
+						uri: `${image}`,
+					}}
+					style={styles.cardBackgroundImage}
+					resizeMode='cover'>
+					<View style={styles.cardTextContainer}>
+						<View style={styles.buttonContainer}>
+							<Text style={styles.cardText}>{content}</Text>
+							<TouchableOpacity
+								style={styles.buttonBlack}
+								onPress={() =>
+									navigation.navigate("CommandementsDetails", { itemId })
+								}>
+								<Text style={styles.buttonText}>Voir</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</ImageBackground>
 			</View>
 		</View>
 	);
@@ -49,32 +66,42 @@ const styles = StyleSheet.create({
 	cardWrapper: {
 		display: "flex",
 		flexDirection: "column",
-		marginBottom: 40,
-		width: "100%",
-		borderRadius: 25,
-		overflow: "hidden",
-		backgroundColor: colorBlack,
+		marginVertical: 20,
+		shadowColor: colorBlack,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.55,
+		shadowRadius: 10.84,
+	},
+	cardBackgroundImage: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	cardTextContainer: {
 		display: "flex",
-		flexDirection: "column",
+		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "flex-start",
+		alignItems: "flex-end",
 		maxWidth: "100%",
-		padding: 30,
-		height: 250,
+		height: 275,
 	},
 	cardText: {
-		color: colorWhite,
-		fontFamily: "Inter_700Bold",
-		fontSize: FontSizeScreenTitles,
+		width: "60%",
+		fontSize: FontSize22,
+		fontWeight: "bold",
 		flexGrow: 1,
-		lineHeight: 36,
+	},
+	buttonContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		padding: 20,
+		backgroundColor: colorWhite,
 	},
 	buttonBlack: {
-		backgroundColor: colorTurquoise,
+		backgroundColor: colorBlack,
 		paddingVertical: 10,
-		paddingHorizontal: 35,
+		paddingHorizontal: 25,
 		borderRadius: 50,
 	},
 	buttonText: {

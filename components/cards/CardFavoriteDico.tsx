@@ -1,3 +1,4 @@
+import Loader from "@/components/experience/loader";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH3 } from "@/constants/fontsizes";
 import { truncateString } from "@/helpers/truncateText";
@@ -5,7 +6,6 @@ import { DicoFavoritesWord } from "@/types/dico";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Loader from "../experience/loader";
 
 interface Props {
 	data: DicoFavoritesWord;
@@ -34,10 +34,10 @@ export default function CardFavoriteMetier({
 									key={index}
 									style={[
 										styles.icon,
-										{ backgroundColor: `#${categoriesColors[cat]}` },
+										{ backgroundColor: `${categoriesColors}` },
 									]}
 									source={{
-										uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons[cat]}`,
+										uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons}`,
 									}}
 								/>
 							);

@@ -19,8 +19,6 @@ const styles = StyleSheet.create({
 		minHeight: "100%",
 		justifyContent: "center",
 		alignItems: "center",
-		paddingLeft: 20,
-		marginRight: -20,
 	},
 	titleCardWrapper: {
 		justifyContent: "center",

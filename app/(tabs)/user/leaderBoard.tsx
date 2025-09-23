@@ -154,29 +154,19 @@ export default function LeaderBoard() {
 					styles.wrapper,
 					{
 						paddingTop: isAndroid ? insets.top : 20,
-						paddingBottom: isAndroid ? 20 : 60,
+						paddingBottom: isAndroid ? insets.bottom : 50,
 					},
 				]}>
 				<ScreenHeaders content='Classement' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					style={{
-						marginTop: 20,
 						backgroundColor: colorWhite,
 						borderRadius: 20,
 						flex: 1,
 					}}>
 					{filteredUsers.map((user, index) => {
 						const isSelected = currentUser === user.attributes.user.userId;
-
-						const firstName =
-							user.attributes.user.firstName.length > 10
-								? `${user.attributes.user.firstName.slice(0, 10)}...`
-								: user.attributes.user.firstName;
-						const lastName =
-							user.attributes.user.lastName.length > 10
-								? `${user.attributes.user.lastName.slice(0, 10)}...`
-								: user.attributes.user.lastName;
 
 						return (
 							<View
@@ -195,7 +185,7 @@ export default function LeaderBoard() {
 										<View style={{ flexDirection: "row", paddingLeft: 5 }}>
 											<Text style={styles.ranking}>{index + 1}</Text>
 											<Text style={[styles.resultsText, { color: colorWhite }]}>
-												{firstName} {lastName}
+												Moi
 											</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
@@ -212,7 +202,7 @@ export default function LeaderBoard() {
 											</Text>
 											<Text style={styles.resultsText}>
 												{user.attributes.user.firstName}{" "}
-												{user.attributes.user.lastName}
+												{user.attributes.user.lastName.slice(0, 1)}.
 											</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
@@ -234,7 +224,7 @@ export default function LeaderBoard() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flexGrow: 1,
-		paddingHorizontal: 30,
+		paddingHorizontal: 20,
 	},
 	resultRow: {
 		flexDirection: "row",
@@ -242,11 +232,13 @@ const styles = StyleSheet.create({
 		paddingVertical: 15,
 	},
 	resultRowSelected: {
+		width: "110%",
 		flexDirection: "row",
 		justifyContent: "space-between",
+		marginLeft: -15,
 		paddingVertical: 15,
-		borderRadius: 10,
-		paddingHorizontal: 5,
+		borderRadius: 15,
+		paddingHorizontal: 15,
 		marginBottom: 5,
 		marginTop: 5,
 	},

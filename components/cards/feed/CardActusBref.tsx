@@ -33,10 +33,7 @@ export default function FeedCardActusBref({ data, elementId }: Props) {
 	}, [data.payload.Media]);
 
 	// Build the image URL and ensure it has a fallback
-	const baseUrl = process.env.EXPO_PUBLIC_URL;
-	const imageUrl = data.payload.Media?.url
-		? `${baseUrl}${data.payload.Media.url}`
-		: null;
+	const imageUrl = data.payload.Media?.url ? `${data.payload.Media.url}` : null;
 	const source = imageUrl ? { uri: imageUrl } : null;
 
 	useEffect(() => {

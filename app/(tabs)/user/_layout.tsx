@@ -2,7 +2,7 @@ import { GameProvider } from "@/providers/gameDataContext";
 import { Stack } from "expo-router";
 import React from "react";
 
-const LeJeuLayout = () => {
+const UserLayout = () => {
 	return (
 		<GameProvider>
 			<Stack>
@@ -10,7 +10,7 @@ const LeJeuLayout = () => {
 					name='index'
 					options={{
 						headerShown: false,
-						headerTitle: "Le Jeu",
+						headerTitle: "User",
 					}}
 				/>
 				<Stack.Screen
@@ -26,4 +26,4 @@ const LeJeuLayout = () => {
 	);
 };
 
-export default LeJeuLayout;
+export default UserLayout;
