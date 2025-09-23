@@ -25,7 +25,9 @@ const fetchFavoriteMetiers = async (
 		"fields[0]": "id",
 		publicationState: "live",
 		"populate[metiers][fields][0]": "id",
-		"populate[metiers][pagination][pageSize]": 1000, // ensure we get all ids
+		"populate[metiers][fields][1]": "METIER",
+		"populate[metiers][fields][2]": "CATEGORIE",
+		"populate[metiers][pagination][pageSize]": 1000,
 	});
 
 	const res = await fetch(url, {

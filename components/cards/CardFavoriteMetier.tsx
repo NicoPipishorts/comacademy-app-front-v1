@@ -24,6 +24,8 @@ export default function CardFavoriteMetier({
 		return <Loader />;
 	}
 
+	console.log(categoriesIcons);
+
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.cardContainer}>
@@ -34,10 +36,10 @@ export default function CardFavoriteMetier({
 								key={index}
 								style={[
 									styles.icon,
-									{ backgroundColor: `#${categoriesColors[cat]}` },
+									{ backgroundColor: `${categoriesColors}` },
 								]}
 								source={{
-									uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons[cat]}`,
+									uri: `${process.env.EXPO_PUBLIC_URL}/${categoriesIcons}`,
 								}}
 							/>
 						);

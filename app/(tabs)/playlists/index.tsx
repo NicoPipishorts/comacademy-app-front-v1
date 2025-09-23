@@ -138,8 +138,8 @@ const Playlist = () => {
 					<CardFavoritesList type='dicos' title='Dico ' />
 					<CardFavoritesList type='citations' title='Citations ' />
 					{isFetched &&
-						playlistsData &&
-						playlistsData.data.map((playlist) => {
+						playlistsData?.data &&
+						playlistsData.data?.map((playlist) => {
 							const refKey = `swipeable-${playlist.id}`;
 							if (!swipeableRefs.current[refKey]) {
 								swipeableRefs.current[refKey] = React.createRef();

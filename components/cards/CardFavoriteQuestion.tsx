@@ -33,7 +33,7 @@ export default function CardFavoriteQuestion({
 								key={index}
 								style={[
 									styles.icon,
-									{ backgroundColor: `#${categoriesColors[cat]}` },
+									{ backgroundColor: `${categoriesColors}` },
 								]}
 								source={{
 									uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons[cat]}`,

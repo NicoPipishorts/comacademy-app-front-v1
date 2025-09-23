@@ -7,6 +7,7 @@ import {
 	FontSizeH3,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
+import { buildCategoryLookups } from "@/helpers/category/buildCategoryLookups";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import useUserId from "@/hooks/useUserId";
@@ -19,6 +20,7 @@ export default function QuestionsFavoritesList() {
 
 	const { data: favoriteResponse, isFetched } = useGetFavoriteDicos(userId);
 	const { data: categories } = useCategories();
+	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 
 	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
 	useEffect(() => {
@@ -38,18 +40,6 @@ export default function QuestionsFavoritesList() {
 		return <Loader />;
 	}
 
-	// Convert categories.data into a single color array
-	const categoriesColors = categories.data.reduce((acc, category) => {
-		acc[category.id - 6] = category.attributes.backgroundColor;
-		return acc;
-	}, {});
-
-	// Create categoriesIcons object
-	const categoriesIcons = categories.data.reduce((acc, category) => {
-		acc[category.id - 6] = category.attributes.smallIcon.data.attributes.url;
-		return acc;
-	}, {} as { [key: number]: string });
-
 	return (
 		<SwipeToGoBack>
 			<ScrollView contentContainerStyle={styles.wrapper}>
@@ -65,14 +55,20 @@ export default function QuestionsFavoritesList() {
 
 				<View>
 					{!isEmptyArray &&
-						favoriteResponse.data[0]?.attributes.words.data.map((word) => (
-							<CardFavoriteDico
-								key={word.id}
-								data={word}
-								categoriesColors={categoriesColors}
-								categoriesIcons={categoriesIcons}
-							/>
-						))}
+						favoriteResponse.data[0]?.attributes.words.data.map((word) => {
+							const categoriesColors =
+								colorByStaticId[word.attributes.Categories];
+							const categoriesIcons =
+								iconByStaticId[word.attributes.Categories];
+							return (
+								<CardFavoriteDico
+									key={word.id}
+									data={word}
+									categoriesColors={categoriesColors}
+									categoriesIcons={categoriesIcons}
+								/>
+							);
+						})}
 					{isEmptyArray && (
 						<View
 							style={{

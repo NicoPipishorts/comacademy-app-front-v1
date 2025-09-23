@@ -60,7 +60,7 @@ export const useCreateNewPlaylist = (
 					},
 					data: {
 						data: {
-							userId,
+							userId: userId,
 							name,
 							selectedColor,
 						},

@@ -7,6 +7,7 @@ import {
 	FontSizeH3,
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
+import { buildCategoryLookups } from "@/helpers/category/buildCategoryLookups";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useUserId from "@/hooks/useUserId";
@@ -19,6 +20,7 @@ export default function QuestionsFavoritesList() {
 
 	const { data: favoriteResponse, isFetched } = useGetFavoriteQuestions(userId);
 	const { data: categories } = useCategories();
+	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 
 	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
 	useEffect(() => {
@@ -42,17 +44,6 @@ export default function QuestionsFavoritesList() {
 		return <Loader />;
 	}
 
-	const categoriesColors = categories.data.reduce((acc, category) => {
-		acc[category.id - 6] = category.attributes.backgroundColor;
-		return acc;
-	}, {});
-
-	// Create categoriesIcons object
-	const categoriesIcons = categories.data.reduce((acc, category) => {
-		acc[category.id - 6] = category.attributes.smallIcon.data.attributes.url;
-		return acc;
-	}, {} as { [key: number]: string });
-
 	return (
 		<SwipeToGoBack>
 			<ScrollView contentContainerStyle={styles.wrapper}>
@@ -68,14 +59,21 @@ export default function QuestionsFavoritesList() {
 				<View>
 					{!isEmptyArray &&
 						favoriteResponse.data[0]?.attributes.questions.data.map(
-							(question) => (
-								<CardFavoriteQuestion
-									key={question.id}
-									data={question}
-									categoriesColors={categoriesColors}
-									categoriesIcons={categoriesIcons}
-								/>
-							)
+							(question) => {
+								const categoriesColors =
+									colorByStaticId[question.attributes.CATEGORIE];
+								const categoriesIcons =
+									iconByStaticId[question.attributes.CATEGORIE];
+
+								return (
+									<CardFavoriteQuestion
+										key={question.id}
+										data={question}
+										categoriesColors={categoriesColors}
+										categoriesIcons={categoriesIcons}
+									/>
+								);
+							}
 						)}
 					{isEmptyArray && (
 						<View
