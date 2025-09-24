@@ -1,7 +1,7 @@
 import { useLikePost } from "@/api/feed/likePost";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { Image, Pressable, StyleSheet } from "react-native";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function ThumbLikeButton({ elementId, userLiked }: Props) {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token: authToken } = useJwtToken();
 	const onSuccess = () => {
 		queryClient.refetchQueries({
@@ -21,7 +21,7 @@ export default function ThumbLikeButton({ elementId, userLiked }: Props) {
 	const { mutate: likePost } = useLikePost(onSuccess);
 
 	const handleLikePost = () => {
-		likePost({ elementId, userId, authToken });
+		likePost({ elementId, userId: auth?.user.id, authToken });
 	};
 
 	return (

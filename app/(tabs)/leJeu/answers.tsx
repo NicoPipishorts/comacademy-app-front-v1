@@ -9,22 +9,22 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserAnswers } from "@/hooks/useGetAllAnswers";
 
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function Answers() {
 	const { token } = useJwtToken();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 
 	useTrackPageMetrics({ page: "AllAnswers" });
 
-	const { data: all } = useGetUserAnswers(token, userId);
+	const { data: all } = useGetUserAnswers(token, auth?.user.id);
 
-	if (!userId || !all) {
+	if (!auth?.user.id || !all) {
 		return <Loader />;
 	}
 

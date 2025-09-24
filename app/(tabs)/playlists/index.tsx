@@ -12,8 +12,8 @@ import { useSnackbar } from "@/context/snackBar";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetPlaylistsByUser from "@/hooks/Playlistss/useGetPlaylistsByUser";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { AxiosError } from "axios";
 import React, { useRef, useState } from "react";
 import {
@@ -30,13 +30,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Playlist = () => {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState<boolean>(false);
 	const [modalType, setModalType] = useState<"new" | "edit">(null);
 	const [playlistId, setPlaylistId] = useState(null);
 
-	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(userId);
+	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(
+		auth?.user.id
+	);
 	useTrackPageMetrics({ page: "Playlists" });
 
 	// PlaylistCard Swipe Refs
@@ -68,7 +70,7 @@ const Playlist = () => {
 		createNewPlaylist({
 			name,
 			selectedColor,
-			userId,
+			userId: auth?.user.id,
 			authToken: token,
 			modalType,
 			playlistId,

@@ -4,10 +4,10 @@ import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useAuthSession from "@/hooks/useAuthSession";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
-import useUserId from "@/hooks/useUserId";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -16,7 +16,7 @@ import MetierList from "./list";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
@@ -26,7 +26,7 @@ const Metier = () => {
 	const { data: dataMetier, isLoading: isLoadingMetier } =
 		useGetMetiers(filterByCat);
 	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
-	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(userId);
+	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(auth?.user.id);
 
 	useEffect(() => {
 		queryClient.refetchQueries({ queryKey: ["metiersList"] });

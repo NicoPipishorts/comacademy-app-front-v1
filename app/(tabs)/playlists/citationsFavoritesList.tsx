@@ -8,17 +8,18 @@ import {
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 import useGetFavoriteCitationsFull from "@/hooks/Citations/useGetFavoriteCitationsFull";
+import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
-import useUserId from "@/hooks/useUserId";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function CitationsFavoritesList() {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 
-	const { data: favoriteResponse, isFetched } =
-		useGetFavoriteCitationsFull(userId);
+	const { data: favoriteResponse, isFetched } = useGetFavoriteCitationsFull(
+		auth?.user.id
+	);
 	const { data: categories } = useCategories();
 
 	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
@@ -35,18 +36,6 @@ export default function CitationsFavoritesList() {
 	if (!categories || !isFetched) {
 		return <Loader />;
 	}
-
-	// Convert categories.data into a single color array
-	const categoriesColors = categories.data.reduce((acc, category) => {
-		acc[category.id - 6] = category.attributes.backgroundColor;
-		return acc;
-	}, {});
-
-	// Create categoriesIcons object
-	const categoriesIcons = categories.data.reduce((acc, category) => {
-		acc[category.id - 6] = category.attributes.smallIcon.data.attributes.url;
-		return acc;
-	}, {} as { [key: number]: string });
 
 	return (
 		<SwipeToGoBack>

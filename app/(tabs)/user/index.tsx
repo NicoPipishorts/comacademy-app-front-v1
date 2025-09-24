@@ -10,9 +10,9 @@ import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -39,7 +39,7 @@ export default function User() {
 	const router = useRouter();
 	const { openModal, timestamp } = useLocalSearchParams();
 	const { logout } = useAuth();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const insets = useSafeAreaInsets();
 	const [refreshing, setRefreshing] = useState(false);
 	const { token, loading: tokenLoading } = useJwtToken();
@@ -57,7 +57,7 @@ export default function User() {
 		}
 	}, [openModal, timestamp, router]); // timestamp will always be different
 
-	const { data: scores, refetch } = useGetUserScore(token, userId);
+	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
 
 	const lastFetchTimeRef = useRef<number>(Date.now());
 

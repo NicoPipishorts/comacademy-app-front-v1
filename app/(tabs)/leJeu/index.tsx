@@ -17,12 +17,12 @@ import { useTab } from "@/context/floatingTabbarContext";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { NavigationType } from "@/types/general";
 import { useFocusEffect, useNavigation } from "expo-router";
 
+import useAuthSession from "@/hooks/useAuthSession";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
@@ -36,7 +36,7 @@ export default function LeJeu() {
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
 
 	const { setDataGame, setSessionsId, setGameStatus } = useGameContext();
@@ -65,10 +65,10 @@ export default function LeJeu() {
 			return;
 		}
 
-		if (filterByCat === null && token) {
-			newSession({ userId, token, action: "new" });
+		if (filterByCat === null && token && auth?.user.id) {
+			newSession({ userId: auth?.user.id, token, action: "new" });
 		}
-	}, [filterByCat, token, loadingToken, newSession, userId]);
+	}, [filterByCat, token, loadingToken, newSession, auth?.user.id]);
 
 	// fetch either “all” or “by‑category”
 	// ⬇️ pass token + loading into the hook
@@ -76,15 +76,15 @@ export default function LeJeu() {
 		data: sessionData,
 		isLoading: loadingQuestions,
 		refetch,
-	} = useGameQuestions(userId, filterByCat, token, loadingToken);
+	} = useGameQuestions(auth?.user.id, filterByCat, token, loadingToken);
 
 	// ⬇️ ONLY refetch on focus if the token is ready
 	useFocusEffect(
 		useCallback(() => {
-			if (!loadingToken && token) {
+			if (!loadingToken && token && auth?.user.id) {
 				refetch();
 			}
-		}, [token, loadingToken, refetch])
+		}, [loadingToken, token, auth?.user.id, refetch])
 	);
 
 	// when the network fetch returns, update context

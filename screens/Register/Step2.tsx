@@ -28,10 +28,10 @@ interface Props {
 	handleLogin: (formPayload: FormPayload) => void;
 }
 const OPTIONS = [
-	{ label: "Étudiant", value: "etudiant" },
-	{ label: "Enseignant", value: "enseignant" },
-	{ label: "Professionnel", value: "professionnel" },
-	{ label: "Passionné", value: "passionne" },
+	{ label: "Étudiant", value: 5 },
+	{ label: "Enseignant", value: 6 },
+	{ label: "Professionnel", value: 2 },
+	{ label: "Passionné", value: 1 },
 ];
 
 export default function RegisterStep2({
@@ -45,7 +45,7 @@ export default function RegisterStep2({
 	const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
 	const [showPasswordConfirm, setShowPasswordConfirm] =
 		useState<boolean>(false);
-	const [selectedOption, setSelectedOption] = useState<string | null>(null);
+	const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
 	// Reset the registered values if available
 	useEffect(() => {
@@ -72,7 +72,7 @@ export default function RegisterStep2({
 		}
 	};
 
-	const handleOptionPress = (option: string) => {
+	const handleOptionPress = (option: number) => {
 		if (selectedOption === option) {
 			setSelectedOption(null);
 		} else {
@@ -131,9 +131,6 @@ export default function RegisterStep2({
 				password: newPassword,
 			};
 
-			// Update the state
-			setFormPayload(updatedPayload);
-
 			// Use the updated payload directly for the next step
 			setErrors({});
 
@@ -159,7 +156,7 @@ export default function RegisterStep2({
 					]}>
 					{OPTIONS.map((option, index) => (
 						<TouchableOpacity
-							key={option.value} // Use value as the key
+							key={`${option.label}-${option.value}`}
 							style={[
 								styles.optionButton,
 								selectedOption === option.value && styles.selectedOptionButton,
@@ -248,7 +245,7 @@ export default function RegisterStep2({
 				</View>
 
 				{/* Password Requirements */}
-				<PasswordRequirements />
+				<PasswordRequirements password={newPassword} />
 
 				{/* Submit Button */}
 				<Pressable style={styles.buttonSubmit} onPress={handleNext}>

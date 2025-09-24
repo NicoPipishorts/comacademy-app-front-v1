@@ -1,31 +1,41 @@
-import { colorDarkGrey } from "@/constants/colors";
+import { colorDarkGrey, colorGreen } from "@/constants/colors";
+import { getPasswordRequirements } from "@/helpers/passwordRequirement";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-export default function PasswordRequirements() {
+interface Props {
+	password: string;
+}
+
+export default function PasswordRequirements({ password }: Props) {
+	// Compute once per password change
+	const req = getPasswordRequirements(password);
+
+	const items = [
+		{ key: "length", label: "Au moins 8 caractères" },
+		{ key: "uppercase", label: "Une majuscule" },
+		{ key: "lowercase", label: "Une minuscule" },
+		{ key: "number", label: "Un chiffre" },
+		{ key: "special", label: "Un caractère spécial (@$!%*?&)" },
+	] as const;
+
 	return (
-		<>
-			{/* Password Requirements */}
-			<View style={styles.requirementsContainer}>
-				<Text style={styles.requirementText}>Au moins 8 caractères</Text>
-				<Text style={styles.requirementText}>Une majuscule</Text>
-				<Text style={styles.requirementText}>Une minuscule</Text>
-				<Text style={styles.requirementText}>Un chiffre</Text>
-				<Text style={styles.requirementText}>
-					Un caractère spécial (@$!%*?&)
+		<View style={styles.requirementsContainer}>
+			{items.map(({ key, label }) => (
+				<Text
+					key={key}
+					style={[
+						styles.requirementText,
+						{ color: req[key] ? colorGreen : colorDarkGrey },
+					]}>
+					• {label}
 				</Text>
-			</View>
-		</>
+			))}
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	requirementsContainer: {
-		alignSelf: "flex-start",
-	},
-	requirementText: {
-		fontSize: 12,
-		marginVertical: 2,
-		color: colorDarkGrey,
-	},
+	requirementsContainer: { alignSelf: "flex-start" },
+	requirementText: { fontSize: 12, marginVertical: 2 },
 });

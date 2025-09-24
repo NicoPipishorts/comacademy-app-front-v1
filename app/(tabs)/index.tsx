@@ -1,6 +1,6 @@
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import useUserId from "@/hooks/useUserId";
+import useAuthSession from "@/hooks/useAuthSession";
 import {
 	getOnboardingStatus,
 	setOnboardingStatus,
@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 const HomeScreen: React.FC = () => {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const [isOnboardingComplete, setIsOnboardingComplete] = useState<
 		boolean | null
 	>(null);
@@ -19,20 +19,20 @@ const HomeScreen: React.FC = () => {
 
 	useEffect(() => {
 		const fetchOnboardingStatus = async (): Promise<void> => {
-			if (!userId) return; // Skip fetching if no user ID is available
-			const status = await getOnboardingStatus(userId);
+			if (!auth) return; // Skip fetching if no user ID is available
+			const status = await getOnboardingStatus(auth.user.id);
 			setIsOnboardingComplete(status);
 		};
 
 		fetchOnboardingStatus();
-	}, [userId]);
+	}, [auth]);
 
 	const handleOnboardingComplete = useCallback(async (): Promise<void> => {
-		if (!userId) return; // Ensure the user ID is available
-		await setOnboardingStatus(userId, true);
+		if (!auth) return; // Ensure the user ID is available
+		await setOnboardingStatus(auth.user.id, true);
 		setIsOnboardingComplete(true);
 		showTabBar();
-	}, [userId, showTabBar]);
+	}, [auth, showTabBar]);
 
 	useEffect(() => {
 		if (isOnboardingComplete === true) {
@@ -42,7 +42,7 @@ const HomeScreen: React.FC = () => {
 		}
 	}, [isOnboardingComplete, router, hideTabBar]);
 
-	if (!userId || isOnboardingComplete === null) {
+	if (!auth || isOnboardingComplete === null) {
 		return (
 			<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
 				<ActivityIndicator size='large' />

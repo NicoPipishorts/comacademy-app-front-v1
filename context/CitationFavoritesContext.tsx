@@ -2,8 +2,8 @@
 import { useCreateOrGetFavoriteCitation } from "@/api/citations/useCreateOrGetFavoriteCitation";
 import { useRemoveFavoriteCitation } from "@/api/citations/useRemoveFavoriteCitation";
 import useGetFavoriteCitations from "@/hooks/Citations/useGetFavoriteCitations";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useMemo } from "react";
 
@@ -19,21 +19,21 @@ const CitationFavoritesContext = createContext<Ctx | undefined>(undefined);
 export const CitationFavoritesProvider: React.FC<{
 	children: React.ReactNode;
 }> = ({ children }) => {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const qc = useQueryClient();
 
-	const { data } = useGetFavoriteCitations(userId);
+	const { data } = useGetFavoriteCitations(auth?.user.id);
 	const idsArray: number[] = (data?.data?.results?.data ?? []).map(
 		(x: { id: number }) => Number(x.id)
 	);
-	const ids = useMemo(() => new Set(idsArray), [idsArray.join(",")]);
+	const ids = useMemo(() => new Set(idsArray), [idsArray]);
 
 	const addMut = useCreateOrGetFavoriteCitation(() => {
-		qc.invalidateQueries({ queryKey: ["CitationsFavorites", userId] });
+		qc.invalidateQueries({ queryKey: ["CitationsFavorites", auth?.user.id] });
 	});
 	const delMut = useRemoveFavoriteCitation(() => {
-		qc.invalidateQueries({ queryKey: ["CitationsFavorites", userId] });
+		qc.invalidateQueries({ queryKey: ["CitationsFavorites", auth?.user.id] });
 	});
 
 	const isMutating = !!(addMut.isPending || delMut.isPending);
@@ -41,14 +41,14 @@ export const CitationFavoritesProvider: React.FC<{
 	const isFavorite = useCallback((id: number) => ids.has(id), [ids]);
 	const toggle = useCallback(
 		(id: number) => {
-			if (!userId || !token) return;
+			if (!auth?.user.id || !token) return;
 			if (ids.has(id)) {
-				delMut.mutate({ userId, citationId: id, token });
+				delMut.mutate({ userId: auth?.user.id, citationId: id, token });
 			} else {
-				addMut.mutate({ userId, citationId: id, token });
+				addMut.mutate({ userId: auth?.user.id, citationId: id, token });
 			}
 		},
-		[ids, userId, token, addMut, delMut]
+		[ids, auth?.user.id, token, addMut, delMut]
 	);
 
 	const value = useMemo<Ctx>(

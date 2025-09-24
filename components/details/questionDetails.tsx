@@ -4,11 +4,11 @@ import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
-import useUserId from "@/hooks/useUserId";
 import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
@@ -31,14 +31,14 @@ interface Props {
 }
 
 export default function QuestionDetails({ questionId, postGame }: Props) {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState(false);
 
 	const { data } = useQuestionById(questionId);
 	const { data: category } = useCategories();
 	const { data: userFavoriteQuestions, isFetched: userFavoriteIsFetched } =
-		useGetFavoriteQuestions(userId);
+		useGetFavoriteQuestions(auth?.user.id);
 
 	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
 		useState<boolean>(null);
@@ -46,7 +46,9 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 	const [dataId, setDataId] = useState<number>(null);
 
 	const handleSuccess = () => {
-		queryClient.refetchQueries({ queryKey: ["FavoriteQuestions", userId] });
+		queryClient.refetchQueries({
+			queryKey: ["FavoriteQuestions", auth?.user.id],
+		});
 	};
 
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess);
@@ -86,7 +88,11 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 		} else {
 			const updatedFavoriteQuestions = [...idArray, questionId];
 			if (!dataId) {
-				mutation.mutate({ userId, updatedFavoriteQuestions, token });
+				mutation.mutate({
+					userId: auth?.user.id,
+					updatedFavoriteQuestions,
+					token,
+				});
 			} else {
 				mutation.mutate({ dataId, updatedFavoriteQuestions, token });
 			}
@@ -98,7 +104,7 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 		mutation,
 		questionId,
 		token,
-		userId,
+		auth?.user.id,
 	]);
 
 	if (!data || !category || !userFavoriteIsFetched) {

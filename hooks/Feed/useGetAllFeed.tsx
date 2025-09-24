@@ -1,7 +1,7 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { FeedPayload } from "@/types/feed";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { QueryKey, useInfiniteQuery } from "@tanstack/react-query";
+import useAuthSession from "../useAuthSession";
 
 // Function to fetch feed data
 const fetchData = async ({
@@ -39,29 +39,29 @@ const fetchData = async ({
 // Custom hook for infinite scrolling
 const useGetFeed = ({ limit = 10 }: { limit?: number } = {}) => {
 	const { token } = useJwtToken();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 
-	return useInfiniteQuery<FeedPayload, Error>({
-		queryKey: ["Feed", userId],
-		queryFn: ({ pageParam = 0 }) => {
-			return fetchData({
+	return useInfiniteQuery<
+		FeedPayload, // TQueryFnData
+		Error, // TError
+		FeedPayload, // TData
+		QueryKey, // TQueryKey
+		number // TPageParam  <<— key part
+	>({
+		queryKey: ["Feed", auth?.user?.id],
+		initialPageParam: 0,
+		queryFn: ({ pageParam }) =>
+			fetchData({
 				token: token!,
-				userId,
+				userId: auth!.user.id as number,
 				pageParam,
 				limit,
-			});
-		},
-		enabled: !!token && !!userId,
+			}),
+		enabled: !!token && !!auth?.user?.id,
 		getNextPageParam: (lastPage) => {
 			const { start, limit, total } = lastPage.meta.pagination;
-
-			if (start + limit < total) {
-				return start + limit;
-			} else {
-				return undefined;
-			}
+			return start + limit < total ? start + limit : undefined;
 		},
-		initialPageParam: 0,
 		staleTime: 5 * 60 * 1000,
 	});
 };

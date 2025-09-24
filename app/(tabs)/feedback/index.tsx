@@ -26,7 +26,7 @@ import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 
 // Import your feedback mutation hook
 import { useSendFeedback } from "@/api/feedback/sendFeedback";
-import useUserId from "@/hooks/useUserId";
+import useAuthSession from "@/hooks/useAuthSession";
 
 const feedbackOptions = [
 	{ label: "Idée d'amélioration", value: "improvement" },
@@ -38,7 +38,7 @@ export default function Feedback() {
 	const [feedbackType, setFeedbackType] = useState<string | null>(null);
 	const [message, setMessage] = useState("");
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const [isSending, setIsSending] = useState(false);
 
 	// Initialize the mutation
@@ -70,7 +70,7 @@ export default function Feedback() {
 		setIsSending(true);
 
 		sendFeedback({
-			userId,
+			userId: auth?.user.id,
 			subject,
 			message,
 		});

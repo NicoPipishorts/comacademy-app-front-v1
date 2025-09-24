@@ -3,8 +3,8 @@ import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import ActionIconButton from "@/components/buttons/actionIconButton";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import React, {
 	useCallback,
 	useEffect,
@@ -63,11 +63,11 @@ export default function FavoriteToggleButton({
 	addA11yLabel = "Add to favorites",
 	removeA11yLabel = "Remove from favorites",
 }: Props) {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 
-	const queryKey = adapter.queryKey(userId);
-	const { data } = adapter.useFavorites(userId);
+	const queryKey = adapter.queryKey(auth?.user.id);
+	const { data } = adapter.useFavorites(auth?.user.id);
 	const favoriteIds = adapter.selectIds(data);
 	const dataId = adapter.selectDataId(data);
 
@@ -93,7 +93,7 @@ export default function FavoriteToggleButton({
 	// Reset any leftover desired state when the item/user changes
 	useEffect(() => {
 		setDesired(null);
-	}, [targetId, userId]);
+	}, [targetId, auth?.user.id]);
 
 	// For completeness: if the server ids set changes in any way,
 	// re-evaluate desired in the effect above; no extra handling needed here.
@@ -131,13 +131,21 @@ export default function FavoriteToggleButton({
 			: favoriteIds.filter((i) => i !== targetId);
 
 		mutation.mutate({
-			userId,
+			userId: auth?.user.id,
 			dataId: dataId ?? undefined,
 			updatedIds: updated,
 			token,
 			___internalTargetId: targetId,
 		});
-	}, [isFavorite, favoriteIds, targetId, mutation, userId, dataId, token]);
+	}, [
+		isFavorite,
+		favoriteIds,
+		targetId,
+		mutation,
+		auth?.user.id,
+		dataId,
+		token,
+	]);
 
 	return (
 		<ActionIconButton

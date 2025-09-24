@@ -4,6 +4,7 @@ import {
 	colorRed,
 	primaryBackground,
 } from "@/constants/colors";
+import { getPasswordRequirements } from "@/helpers/passwordRequirement";
 import React, { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
@@ -22,13 +23,7 @@ export default function PasswordStrengthMeter({ password }: Props) {
 	const barColor = useSharedValue("red");
 
 	// Validate password requirements
-	const passwordRequirements = {
-		length: password?.length >= 8,
-		uppercase: /[A-Z]/.test(password),
-		lowercase: /[a-z]/.test(password),
-		number: /[0-9]/.test(password),
-		special: /[@$!%*?&]/.test(password),
-	};
+	const passwordRequirements = getPasswordRequirements(password);
 
 	// Calculate password strength
 	const calculateStrength = () => {

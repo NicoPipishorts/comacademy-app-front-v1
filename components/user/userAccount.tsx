@@ -7,9 +7,9 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
+import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -17,10 +17,8 @@ import Loader from "../experience/loader";
 
 export default function UserAccount() {
 	const { token } = useJwtToken();
-	const { userId } = useUserId();
-	const { data: userData } = useGetUserInfo(userId);
-	// const [formFirstName, setFormFirstName] = useState<string>("");
-	// const [formLastName, setFormLastName] = useState<string>("");
+	const { auth } = useAuthSession();
+	const { data: userData } = useGetUserInfo(auth?.user.id);
 	const [currentPassword, setCurrentPassword] = useState<string>("");
 	const [newPassword, setNewPassword] = useState<string>("");
 	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
@@ -33,25 +31,6 @@ export default function UserAccount() {
 	const [passwordErrors, setPasswordError] = useState<string>(null);
 
 	const showSnackbar = useSnackbar(); // Use the snackbar context
-
-	// useEffect(() => {
-	// 	if (userData && userData.firstName) {
-	// 		setFormFirstName(userData.firstName);
-	// 	}
-	// 	if (userData && userData.lastName) {
-	// 		setFormLastName(userData.lastName);
-	// 	}
-	// }, [userData]);
-
-	// const changeInfo = useChangeUserInfo();
-
-	// const handleChangeInfo = () => {
-	// 	changeInfo.mutate({
-	// 		userId,
-	// 		firstName: formFirstName,
-	// 		lastName: formLastName,
-	// 	});
-	// };
 
 	const onPasswordChangeSuccess = () => {
 		setCurrentPassword(null);
@@ -143,48 +122,6 @@ export default function UserAccount() {
 	}
 	return (
 		<>
-			{/* <View style={styles.formsContainers}>
-				<View style={{ paddingBottom: 20 }}>
-					<Text style={styles.infoSmallTitles}>Tes informations.</Text>
-				</View>
-
-				<View>
-					<View style={styles.passwordInputContainer}>
-						<TextInput
-							style={[styles.input, { width: "100%" }]}
-							onChangeText={setFormFirstName}
-							value={formFirstName}
-							placeholder={formFirstName ? "" : "Prénom"} // Conditionally render placeholder
-							placeholderTextColor={colorBlack}
-							autoCapitalize='none'
-						/>
-					</View>
-					<View style={styles.passwordInputContainer}>
-						<TextInput
-							style={[styles.input, { width: "100%" }]}
-							onChangeText={setFormLastName}
-							value={formLastName}
-							placeholder={formLastName ? formLastName : "Nom"}
-							placeholderTextColor={colorBlack}
-							autoCapitalize='none'
-						/>
-					</View>
-				</View>
-
-				<TouchableOpacity
-					style={styles.buttons}
-					onPress={() => handleChangeInfo()}>
-					<Text
-						style={{
-							color: colorWhite,
-							fontSize: FontSize16,
-							fontWeight: "bold",
-						}}>
-						Valider
-					</Text>
-				</TouchableOpacity>
-			</View> */}
-
 			<View style={styles.formsContainers}>
 				<View style={{ paddingBottom: 20 }}>
 					<Text style={styles.infoSmallTitles}>Mot de Passe</Text>

@@ -1,4 +1,4 @@
-import useUpdateUserPreferences from "@/api/updateUserPreferences";
+import { useUpdateUserPreferences } from "@/api/updateUserPreferences";
 import {
 	colorBlack,
 	colorBlue,
@@ -12,8 +12,8 @@ import {
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
+import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserPreferences from "@/hooks/useGetUserPreferences";
-import useUserId from "@/hooks/useUserId";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
@@ -33,16 +33,17 @@ export const colorArray = [
 ];
 
 export default function ChangeAvatar() {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 
 	const updatePreferences = useUpdateUserPreferences();
-	const { data, isFetched } = useGetUserPreferences(userId);
+	const { data, isFetched } = useGetUserPreferences(auth?.user.id);
 
 	if (!isFetched) {
 		return <Loader />;
 	}
 
 	const onPress = (color: string) => {
+		console.log("pression icon button");
 		updatePreferences.mutate({
 			avatarBackgroundColor: color,
 			userId: data?.data.id,

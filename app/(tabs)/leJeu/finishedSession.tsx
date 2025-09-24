@@ -13,7 +13,6 @@ import {
 	useGetEndOfSessionResults,
 } from "@/hooks/useGetEndOfSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 
 import { useSessionAction } from "@/api/game/useNewSession";
@@ -25,16 +24,17 @@ import {
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import useAuthSession from "@/hooks/useAuthSession";
 
 export default function FinishedSession() {
 	const insets = useSafeAreaInsets();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const { showTabBar } = useTabBarVisibility();
 	const { sessionId, setDataGame, setSessionsId, setGameStatus } =
 		useGameContext();
 
-	const { data: gameComments } = useGetEndOfSession(userId);
+	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
 
 	const originalSessionIdRef = React.useRef(sessionId);
 	const { data: sessionResults } = useGetEndOfSessionResults(
@@ -130,7 +130,11 @@ export default function FinishedSession() {
 				<TouchableOpacity
 					style={styles.buttonResults}
 					onPress={() =>
-						sessionAction({ userId, token, action: "leaderBoard" })
+						sessionAction({
+							userId: auth?.user.id,
+							token,
+							action: "leaderBoard",
+						})
 					}>
 					<Foundation
 						name='results-demographics'
@@ -142,13 +146,17 @@ export default function FinishedSession() {
 
 			<View style={[styles.containerBackButton, { bottom: 60 }]}>
 				<TouchableOpacity
-					onPress={() => sessionAction({ userId, token, action: "end" })}
+					onPress={() =>
+						sessionAction({ userId: auth?.user.id, token, action: "end" })
+					}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity
-					onPress={() => sessionAction({ userId, token, action: "new" })}
+					onPress={() =>
+						sessionAction({ userId: auth?.user.id, token, action: "new" })
+					}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Suivant</Text>
 					<Ionicons name='arrow-forward' size={24} color={colorBlack} />

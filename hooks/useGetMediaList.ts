@@ -46,6 +46,7 @@ const fetchMediaList = async (
 	token: string
 ): Promise<MediaListResponse> => {
 	const url = new URL(`${process.env.EXPO_PUBLIC_API_URL}/${route}`);
+	console.log("[useGetMediaList] route =", route, "→", url.toString());
 
 	const res = await fetch(url.toString(), {
 		headers: {
@@ -64,7 +65,7 @@ const fetchMediaList = async (
 
 export const useGetMediaList = (route: MediaRoute, token: string) => {
 	return useQuery<MediaListResponse>({
-		queryKey: ["mediaList", route],
+		queryKey: ["mediaList", route, Boolean(token)],
 		queryFn: () => fetchMediaList(route, token),
 		enabled: !!token && !!route,
 		staleTime: 24 * 60 * 60 * 1000,

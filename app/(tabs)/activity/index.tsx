@@ -37,8 +37,8 @@ import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
-import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,8 +46,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const HomeScreen = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
-	const { userId } = useUserId();
-	const { data: userData } = useGetUserInfo(userId);
+	const { auth } = useAuthSession();
+	const { data: userData } = useGetUserInfo(auth?.user.id);
 
 	useTrackPageMetrics({ page: "Dashboard" });
 

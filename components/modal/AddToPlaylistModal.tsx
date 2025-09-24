@@ -6,8 +6,8 @@ import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import useGetPlaylistsForElement from "@/hooks/Playlistss/useGetPlaylistsByElement";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { AxiosError } from "axios";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -39,11 +39,11 @@ export default function AddToPlaylistModal({
 	elementId,
 }: Props) {
 	const slideAnim = useRef(new Animated.Value(300)).current;
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsForElement(
-		userId,
+		auth?.user.id,
 		type,
 		elementId
 	);
@@ -124,7 +124,7 @@ export default function AddToPlaylistModal({
 		createNewPlaylist({
 			name,
 			selectedColor,
-			userId,
+			userId: auth?.user.id,
 			authToken: token,
 			modalType,
 			playlistId,

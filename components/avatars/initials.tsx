@@ -1,6 +1,6 @@
 import { colorWhite, colorYellow } from "@/constants/colors";
+import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserPreferences from "@/hooks/useGetUserPreferences";
-import useUserId from "@/hooks/useUserId";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
@@ -10,9 +10,9 @@ interface Props {
 	size?: number;
 }
 export default function AvatarInitials({ size }: Props) {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const navigation = useNavigation<NavigationType>();
-	const { data, isFetched } = useGetUserPreferences(userId);
+	const { data, isFetched } = useGetUserPreferences(auth?.user.id);
 
 	let backgroundColor: string;
 	if (!isFetched) {
@@ -34,20 +34,6 @@ export default function AvatarInitials({ size }: Props) {
 	};
 
 	return (
-		// <Pressable onPress={() => navigation.navigate("user")}>
-		// 	<Image
-		// 		source={require("@/assets/imgs/avatar/2-y.png")}
-		// 		style={[
-		// 			styles.container,
-		// 			{
-		// 				backgroundColor: backgroundColor,
-		// 				height: size || 78,
-		// 				width: size || 78,
-		// 				borderRadius: size || 78,
-		// 			},
-		// 		]}
-		// 	/>
-		// </Pressable>
 		<TouchableOpacity
 			style={[
 				styles.container,

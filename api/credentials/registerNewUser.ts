@@ -9,8 +9,16 @@ export interface RegisterPayload {
 	user: {
 		id: string;
 		username: string;
+		firstName: string;
+		lastName: string;
 		email: string;
-		// Add any other fields returned by the API
+		confirmed: boolean;
+		blocked: boolean;
+		clients: { nom: string }[]; // array of client objects with "nom"
+		user_preference: {
+			avatarBackgroundColor: string;
+		} | null;
+		profile: string | null; // profile key (string) or null if none
 	};
 }
 
@@ -21,15 +29,16 @@ export const useRegisterNewUser = (
 	return useMutation<RegisterPayload, AxiosError, FormPayload>({
 		mutationFn: async (formPayload: FormPayload) => {
 			try {
+				console.log(formPayload);
 				const response: AxiosResponse<RegisterPayload> = await axios.post(
-					process.env.EXPO_PUBLIC_REGISTER_URL, // Update the URL to your actual Strapi endpoint
-					{ ...formPayload, confirmed: true } // Send the formPayload as the request body
+					process.env.EXPO_PUBLIC_REGISTER_URL,
+					{ ...formPayload, confirmed: true }
 				);
-				return response.data; // Extract and return the response data
+				return response.data;
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
 					const errorMessage = error.response?.data?.error?.message;
-					throw new Error(errorMessage); // Pass the error message to the caller
+					throw new Error(errorMessage);
 				}
 				throw error;
 			}
@@ -45,7 +54,7 @@ export const useRegisterNewUser = (
 					["jwtToken", data.jwt],
 					["userId", userId?.toString() || ""],
 				]);
-				onSuccess(data); // Call the provided onSuccess callback
+				onSuccess(data);
 			} catch (storageError) {
 				console.error("Failed to save the data to storage", storageError);
 				throw new Error("Failed to save the data to storage");
@@ -53,7 +62,7 @@ export const useRegisterNewUser = (
 		},
 		onError: (error) => {
 			console.error("Registration failed:", error);
-			onError(error); // Call the provided onError callback
+			onError(error);
 		},
 	});
 };
