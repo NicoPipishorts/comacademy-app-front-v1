@@ -23,7 +23,8 @@ import useJwtToken from "@/hooks/useJwtToken";
 
 const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
-	const { data, isLoading } = useGetMediaList("petites-histoires", token);
+	const routeKey = "petites-histoires";
+	const { data, isLoading } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
@@ -215,10 +216,11 @@ const LesPetitesHistoires: React.FC = () => {
 			<Animated.FlatList
 				style={styles.list}
 				data={stories}
+				key={routeKey}
+				keyExtractor={(item) => `${routeKey}-${item.id}`}
 				renderItem={renderItem}
 				horizontal
 				showsHorizontalScrollIndicator={false}
-				keyExtractor={(item) => item.id.toString()}
 				contentContainerStyle={styles.contentPadding}
 				onViewableItemsChanged={onViewableItemsChanged}
 				viewabilityConfig={viewabilityConfig}

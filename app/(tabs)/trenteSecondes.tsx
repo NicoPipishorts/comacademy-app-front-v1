@@ -23,7 +23,8 @@ import useJwtToken from "@/hooks/useJwtToken";
 
 const TrenteSecondes: React.FC = () => {
 	const { token } = useJwtToken();
-	const { data, isLoading } = useGetMediaList("trentes-secondes", token);
+	const routeKey = "trentes-secondes";
+	const { data, isLoading } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "TrenteSecondes" });
@@ -225,10 +226,11 @@ const TrenteSecondes: React.FC = () => {
 			<Animated.FlatList
 				style={styles.list}
 				data={reversedStories}
+				key={routeKey}
+				keyExtractor={(item) => `${routeKey}-${item.id}`}
 				renderItem={renderItem}
 				horizontal
 				showsHorizontalScrollIndicator={false}
-				keyExtractor={(item) => item.id.toString()}
 				contentContainerStyle={styles.contentPadding}
 				onViewableItemsChanged={onViewableItemsChanged}
 				viewabilityConfig={viewabilityConfig}
