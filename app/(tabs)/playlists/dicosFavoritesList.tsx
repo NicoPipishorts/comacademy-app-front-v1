@@ -8,17 +8,19 @@ import {
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 import { buildCategoryLookups } from "@/helpers/category/buildCategoryLookups";
+import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
-import useUserId from "@/hooks/useUserId";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function QuestionsFavoritesList() {
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 
-	const { data: favoriteResponse, isFetched } = useGetFavoriteDicos(userId);
+	const { data: favoriteResponse, isFetched } = useGetFavoriteDicos(
+		auth?.user.id
+	);
 	const { data: categories } = useCategories();
 	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 

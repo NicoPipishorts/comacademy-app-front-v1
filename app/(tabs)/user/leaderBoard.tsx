@@ -11,7 +11,6 @@ import {
 	UserScoreData,
 } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -19,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LeaderBoard() {
 	const { token } = useJwtToken();
-	const { userId: currentUser } = useUserId();
+	const { userId: currentUser } = useAuthSession();
 	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
 

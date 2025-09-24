@@ -10,8 +10,8 @@ import {
 } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { truncateString } from "@/helpers/truncateText";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import useUserId from "@/hooks/useUserId";
 import { Answer } from "@/types/enums";
 import { GameSessionQuestionData } from "@/types/game";
 import React, {
@@ -53,7 +53,7 @@ const AnswerModal = ({
 }: Props) => {
 	const [progress, setProgress] = useState(0);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const [favorite, setFavorite] = useState<boolean>(false);
 
@@ -91,13 +91,21 @@ const AnswerModal = ({
 			);
 			setFavoriteQuestions(updatedFavoriteQuestions);
 			setFavorite(false); // Set favorite to false
-			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+			mutation.mutate({
+				userId: auth?.user.id,
+				updatedFavoriteQuestions,
+				token,
+			});
 		} else {
 			// Add to favorites
 			const updatedFavoriteQuestions = [...favoriteQuestions, questionId];
 			setFavoriteQuestions(updatedFavoriteQuestions);
 			setFavorite(true); // Set favorite to true
-			mutation.mutate({ userId, updatedFavoriteQuestions, token });
+			mutation.mutate({
+				userId: auth?.user.id,
+				updatedFavoriteQuestions,
+				token,
+			});
 		}
 	};
 

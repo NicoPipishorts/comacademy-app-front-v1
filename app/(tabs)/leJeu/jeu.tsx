@@ -12,7 +12,6 @@ import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
-import useUserId from "@/hooks/useUserId";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { Answer } from "@/types/enums";
@@ -24,6 +23,7 @@ import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize20 } from "@/constants/fontsizes";
 import { QK } from "@/helpers/api/queryKeys";
 import { queryClient } from "@/hooks/reactQueryConfig";
+import useAuthSession from "@/hooks/useAuthSession";
 
 export default function Jeu() {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
@@ -31,13 +31,13 @@ export default function Jeu() {
 	const swiperRef = useRef<Swiper<QuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
-	const { userId } = useUserId();
+	const { auth } = useAuthSession();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 
 	const { dataGame, sessionId, gameStatus } = useGameContext();
 	const { data: catData } = useCategories();
-	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(userId);
+	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(auth?.user.id);
 
 	const insertAnswer = useInsertAnswer();
 
@@ -60,9 +60,11 @@ export default function Jeu() {
 	};
 
 	const handlePress = () => {
-		if (sessionId)
+		if (sessionId && auth?.user.id)
 			queryClient.invalidateQueries({ queryKey: QK.gameSession(sessionId) });
-		queryClient.invalidateQueries({ queryKey: QK.gameQuestions(userId, null) });
+		queryClient.invalidateQueries({
+			queryKey: QK.gameQuestions(auth?.user.id, null),
+		});
 
 		showTabBar();
 		setTimeout(() => navigation.navigate("index"), 100);
@@ -77,7 +79,7 @@ export default function Jeu() {
 
 		insertAnswer.mutate({
 			gameId: sessionId!,
-			userId,
+			userId: auth?.user.id,
 			questionId: currentCard.id,
 			categorie: currentCard.attributes.CATEGORIE,
 			answer,

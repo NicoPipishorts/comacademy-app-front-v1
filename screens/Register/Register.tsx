@@ -24,7 +24,7 @@ export interface FormPayload {
 	firstName: string;
 	lastName: string;
 	email: string;
-	profile: string;
+	profile: number;
 	password: string;
 	username: string;
 }
@@ -62,7 +62,10 @@ const Register = () => {
 			Alert.alert("Error", "Please complete all fields before proceeding.");
 			return;
 		}
-		mutation.mutate(formPayload);
+
+		const formPayloadToSubmit = { ...formPayload, profile: 2 };
+		console.log(formPayloadToSubmit);
+		mutation.mutate(formPayloadToSubmit);
 	};
 
 	useEffect(() => {
