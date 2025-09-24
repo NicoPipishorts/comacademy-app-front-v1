@@ -23,7 +23,8 @@ import useJwtToken from "@/hooks/useJwtToken";
 
 const TopDesFlops: React.FC = () => {
 	const { token } = useJwtToken();
-	const { data, isLoading } = useGetMediaList("top-des-flops", token);
+	const routeKey = "top-des-flops";
+	const { data, isLoading } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "TopDesFlops" });
@@ -215,7 +216,6 @@ const TopDesFlops: React.FC = () => {
 			</View>
 		);
 	}
-
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerPadding}>
@@ -224,10 +224,11 @@ const TopDesFlops: React.FC = () => {
 			<Animated.FlatList
 				style={styles.list}
 				data={reversedStories}
+				key={routeKey}
+				keyExtractor={(item) => `${routeKey}-${item.id}`}
 				renderItem={renderItem}
 				horizontal
 				showsHorizontalScrollIndicator={false}
-				keyExtractor={(item) => item.id.toString()}
 				contentContainerStyle={styles.contentPadding}
 				onViewableItemsChanged={onViewableItemsChanged}
 				viewabilityConfig={viewabilityConfig}
