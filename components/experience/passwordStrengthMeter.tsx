@@ -5,7 +5,7 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { getPasswordRequirements } from "@/helpers/passwordRequirement";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -22,31 +22,31 @@ export default function PasswordStrengthMeter({ password }: Props) {
 	const filledSections = useSharedValue(0);
 	const barColor = useSharedValue("red");
 
-	// Validate password requirements
-	const passwordRequirements = getPasswordRequirements(password);
+	const { score, color } = useMemo(() => {
+		const requirements = getPasswordRequirements(password);
+		const { length, uppercase, lowercase, number, special } = requirements;
+		const requirementChecks = [length, uppercase, lowercase, number, special];
+		const calculatedScore = requirementChecks.filter(Boolean).length;
 
-	// Calculate password strength
-	const calculateStrength = () => {
-		const { length, uppercase, lowercase, number, special } =
-			passwordRequirements;
-		const score = [length, uppercase, lowercase, number, special].filter(
-			Boolean
-		).length;
-
-		if (score <= 2) return { label: "Faible", score, color: colorRed };
-		if (score === 3) return { label: "Moyen", score, color: colorOrange };
-		if (score === 4) return { label: "Bon", score, color: colorOrange };
-		return { label: "Fort", score, color: colorGreen };
-	};
+		if (calculatedScore <= 2) {
+			return { label: "Faible", score: calculatedScore, color: colorRed };
+		}
+		if (calculatedScore === 3) {
+			return { label: "Moyen", score: calculatedScore, color: colorOrange };
+		}
+		if (calculatedScore === 4) {
+			return { label: "Bon", score: calculatedScore, color: colorOrange };
+		}
+		return { label: "Fort", score: calculatedScore, color: colorGreen };
+	}, [password]);
 
 	useEffect(() => {
 		// Update the shared values for animation
-		const { score, color } = calculateStrength();
 		filledSections.value = withTiming(score * sectionWidth, {
 			duration: 500,
 		});
 		barColor.value = color;
-	}, [password]);
+	}, [barColor, color, filledSections, score, sectionWidth]);
 
 	// Create derived values for the animated style
 	const animatedStyle = useAnimatedStyle(() => ({

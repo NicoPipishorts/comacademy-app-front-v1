@@ -41,7 +41,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const focusedIndexRef = useRef(0);
 
 	// Local state
-	const [focusedIndex, setFocusedIndex] = useState(0);
+	const [, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
 	const handlePlaybackStatus = usePlaybackReset(
@@ -125,7 +125,7 @@ const LesPetitesHistoires: React.FC = () => {
 				}
 			}
 		},
-		[fadeAnim]
+		[fadeAnim, isFirstRender, setFocusedIndex]
 	);
 
 	const viewabilityConfig = useMemo(
@@ -189,7 +189,14 @@ const LesPetitesHistoires: React.FC = () => {
 				</Animated.View>
 			);
 		},
-		[fadeAnim, isFirstRender, videoHeight, videoWidth]
+		[
+			fadeAnim,
+			handlePlaybackStatus,
+			isFirstRender,
+			setFocusedIndex,
+			videoHeight,
+			videoWidth,
+		]
 	);
 
 	if (isLoading) {
