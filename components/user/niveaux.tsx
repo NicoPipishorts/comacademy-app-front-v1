@@ -1,7 +1,7 @@
 import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 
@@ -22,51 +22,58 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		null
 	);
 
+	const niveauxLength = niveaux?.data?.length ?? 0;
+
 	// Calculate the niveau index based on totalPoints
-	const calculateNiveauIndex = (points: number): number => {
-		return Math.min(Math.floor(points / 150), niveaux.data.length - 1);
-	};
+	const calculateNiveauIndex = useCallback(
+		(points: number): number => {
+			if (!niveauxLength) {
+				return 0;
+			}
+			return Math.min(Math.floor(points / 150), niveauxLength - 1);
+		},
+		[niveauxLength]
+	);
 
 	// Calculate the round index based on totalPoints
-	const calculateRoundIndex = (niveau: number, points: number): number => {
-		if (niveau === 0) {
-			return Math.min(Math.floor(points / 15), niveaux.data.length - 1);
-		} else {
-			return Math.floor((points - niveau * 150) / 15);
-		}
-	};
+	const calculateRoundIndex = useCallback(
+		(niveau: number | null, points: number): number => {
+			if (niveau === null || niveauxLength === 0) {
+				return 0;
+			}
+			if (niveau === 0) {
+				const maxIndex = Math.max(niveauxLength - 1, 0);
+				return Math.min(Math.floor(points / 15), maxIndex);
+			}
+			return Math.max(0, Math.floor((points - niveau * 150) / 15));
+		},
+		[niveauxLength]
+	);
+
+	const setNiveauDetails = useCallback(
+		(index: number) => {
+			const niveau = niveaux?.data?.[index]?.attributes;
+			if (niveau) {
+				setNiveauStatut(niveau.statut);
+				setNiveauNumber(index);
+				setNiveauCitation(niveau.citation);
+				setNiveauCommentaire(niveau.commentaires);
+			}
+		},
+		[niveaux]
+	);
 
 	useEffect(() => {
-		if (niveaux) {
-			const index = calculateNiveauIndex(totalPoints);
-			setNiveauDetails(index);
+		if (!niveauxLength) {
+			return;
 		}
-	}, [niveaux, totalPoints]);
+		const index = calculateNiveauIndex(totalPoints);
+		setNiveauDetails(index);
+	}, [calculateNiveauIndex, niveauxLength, setNiveauDetails, totalPoints]);
 
 	if (!niveaux) {
 		return <Loader />;
 	}
-
-	// Set niveau details based on the calculated index
-	const setNiveauDetails = (index: number) => {
-		const niveau = niveaux.data[index]?.attributes;
-		if (niveau) {
-			setNiveauStatut(niveau.statut);
-			setNiveauNumber(index);
-			setNiveauCitation(niveau.citation);
-			setNiveauCommentaire(niveau.commentaires);
-		}
-	};
-
-	// const toggleCommentSection = () => {
-	// 	LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-	// 	if (isExpanded) {
-	// 		setTextHeight(40);
-	// 	} else {
-	// 		setTextHeight("auto");
-	// 	}
-	// 	setIsExpanded(!isExpanded);
-	// };
 
 	return (
 		<>

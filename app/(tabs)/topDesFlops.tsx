@@ -41,7 +41,7 @@ const TopDesFlops: React.FC = () => {
 	const focusedIndexRef = useRef(0);
 
 	// State to trigger rerenders
-	const [focusedIndex, setFocusedIndex] = useState(0);
+	const [, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
 	const handlePlaybackStatus = usePlaybackReset(

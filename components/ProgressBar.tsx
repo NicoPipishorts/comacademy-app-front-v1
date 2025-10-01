@@ -24,7 +24,7 @@ const ProgressBar = ({ progression, backgroundColor }) => {
 	// Animate the height when the progression changes
 	useEffect(() => {
 		animatedHeight.value = withTiming(progression, { duration: 1000 });
-	}, [progression]);
+	}, [animatedHeight, progression]);
 
 	const animatedStyle = useAnimatedStyle(() => {
 		return {

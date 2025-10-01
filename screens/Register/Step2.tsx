@@ -1,5 +1,5 @@
 import PasswordRequirements from "@/components/experience/passwordRequirements";
-import PasswordStrengthMeter from "@/components/experience/passwordStrengthMetter";
+import PasswordStrengthMeter from "@/components/experience/passwordStrengthMeter";
 import {
 	colorBlack,
 	colorGrey,
