@@ -71,7 +71,8 @@ const scheduleWeeklyNotifications = async () => {
 // Set the notification handler so that alerts are shown when notifications are received.
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
-		shouldShowAlert: true,
+		shouldShowBanner: true,
+		shouldShowList: true,
 		shouldPlaySound: true,
 		shouldSetBadge: false,
 	}),

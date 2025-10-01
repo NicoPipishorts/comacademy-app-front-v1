@@ -1,6 +1,5 @@
 // File: src/screens/LesPetitesHistoires.tsx
 import { useFocusEffect } from "@react-navigation/native";
-import { Video } from "expo-av";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
 	Animated,
@@ -15,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
+import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
@@ -35,7 +35,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
 	// Refs for videos, positions, fade animations
-	const videoRefs = useRef<Record<number, any>>({});
+	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
@@ -153,12 +153,14 @@ const LesPetitesHistoires: React.FC = () => {
 						{ width: videoWidth, height: videoHeight },
 					]}>
 					<View style={styles.videoContainer}>
-						<Video
+						<ExpoVideo
 							ref={(ref) => (videoRefs.current[index] = ref)}
 							source={{ uri: videoUri }}
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
+							shouldPlay={isFocused}
+							positionMillis={videoPositions.current[index] || 0}
 							useNativeControls
 							onPlaybackStatusUpdate={(status) =>
 								handlePlaybackStatus(status, index)

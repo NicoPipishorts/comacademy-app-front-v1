@@ -1,11 +1,11 @@
-import { AVPlaybackStatus, Video } from "expo-av";
+import { CompatVideoStatus, ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import { useCallback } from "react";
 
-type VideoRefs = Record<number, Video | null>;
+type VideoRefs = Record<number, ManagedVideoHandle | null>;
 type VideoPositions = Record<number, number>;
 
 type PlaybackResetHook = (
-	status: AVPlaybackStatus,
+	status: CompatVideoStatus,
 	index: number
 ) => Promise<void>;
 
@@ -24,7 +24,7 @@ export function usePlaybackReset(
 	setFocusedIndex: React.Dispatch<React.SetStateAction<number>>
 ): PlaybackResetHook {
 	return useCallback(
-		async (status: AVPlaybackStatus, index: number) => {
+		async (status: CompatVideoStatus, index: number) => {
 			if ("didJustFinish" in status && status.didJustFinish) {
 				const ref = videoRefs.current[index];
 				if (ref) {
