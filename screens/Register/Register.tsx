@@ -10,10 +10,10 @@ import {
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
-import { useAuth } from "../../auth/AuthContext";
 
 // Import Assets
 import { useRegisterNewUser } from "@/api/credentials/registerNewUser";
+import { useAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

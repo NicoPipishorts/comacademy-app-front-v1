@@ -1,7 +1,7 @@
 import ThumbLikeButton from "@/components/buttons/thumbLike";
 import { colorYellow, primaryBackground } from "@/constants/colors";
+import ExpoVideo, { CompatVideoStatus, ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import { FeedItem } from "@/types/feed";
-import { ResizeMode, Video } from "expo-av";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
@@ -16,8 +16,8 @@ export default function FeedCardVideo({
 	elementId,
 	visibleItems,
 }: Props) {
-	const video = React.useRef<Video | null>(null);
-	const [status, setStatus] = React.useState<any>({});
+	const video = React.useRef<ManagedVideoHandle | null>(null);
+	const [status, setStatus] = React.useState<CompatVideoStatus | null>(null);
 	const [videoDimensions, setVideoDimensions] = useState({
 		width: 0,
 		height: 0,
@@ -49,7 +49,7 @@ export default function FeedCardVideo({
 						/>
 					</View>
 				)}
-				<Video
+				<ExpoVideo
 					ref={video}
 					source={{
 						uri: `${data.payload.Media.url}`,
@@ -62,8 +62,8 @@ export default function FeedCardVideo({
 					shouldPlay={visibleItems.includes(data.id)}
 					isLooping={false}
 					useNativeControls={true}
-					resizeMode={ResizeMode.CONTAIN} // Maintain aspect ratio
-					onPlaybackStatusUpdate={(status) => setStatus(status)}
+					resizeMode='contain' // Maintain aspect ratio
+					onPlaybackStatusUpdate={(nextStatus) => setStatus(nextStatus)}
 					onLoadStart={() => setIsLoading(true)} // Show loader when loading starts
 					onReadyForDisplay={({ naturalSize }) => {
 						setIsLoading(false); // Hide loader when ready

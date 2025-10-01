@@ -1,7 +1,7 @@
 // File: src/components/leJeu/Jeu.tsx
 import { useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Swiper from "react-native-deck-swiper";
 
 import Loader from "@/components/experience/loader";
@@ -130,6 +130,9 @@ export default function Jeu() {
 	};
 
 	const swiperTopMargin = isHomeButtonModel ? -40 : 0;
+	const stackSize = Math.min(6, Math.max(1, dataGame.length));
+	const stackSeparation = stackSize > 3 ? 30 : 20;
+	const stackScale = stackSize > 3 ? 12 : 10;
 
 	return (
 		<View style={[styles.wrapper, { marginTop: swiperTopMargin }]}>
@@ -149,17 +152,26 @@ export default function Jeu() {
 					key={`${sessionId}-${dataGame?.length ?? 0}`} // 👈 forces a fresh deck
 					ref={swiperRef}
 					cards={dataGame}
-					renderCard={(card, cardIndex) =>
+					renderCard={(card) =>
 						card ? (
-							<Card
-								key={card.id}
-								catColors={catData}
-								data={card}
-								onSwipeFalse={() => swiperRef.current?.swipeLeft()}
-								onSwipeTrue={() => swiperRef.current?.swipeRight()}
-							/>
+							<View style={styles.swiperCardWrapper}>
+								<Card
+									key={card.id}
+									catColors={catData}
+									data={card}
+									onSwipeFalse={() => swiperRef.current?.swipeLeft()}
+									onSwipeTrue={() => swiperRef.current?.swipeRight()}
+								/>
+							</View>
 						) : null
 					}
+					stackSize={stackSize}
+					stackSeparation={stackSeparation}
+					stackScale={stackScale}
+					stackAnimationFriction={8}
+					stackAnimationTension={60}
+					secondCardZoom={0.88}
+					useViewOverflow
 					verticalSwipe={false}
 					onSwipedLeft={(i) => onSwipe(i, false)}
 					onSwipedRight={(i) => onSwipe(i, true)}
@@ -167,11 +179,10 @@ export default function Jeu() {
 						setTimeout(() => navigation.navigate("finishedSession"), 500)
 					}
 					backgroundColor='transparent'
-					cardVerticalMargin={100}
-					cardHorizontalMargin={30}
-					stackSize={5}
-					stackScale={5}
-					stackSeparation={24}
+					cardVerticalMargin={60}
+					cardHorizontalMargin={24}
+					containerStyle={styles.swiperContainer}
+					cardStyle={styles.deckCard}
 					overlayOpacityHorizontalThreshold={20}
 					// — bonus: smooth fade in/out
 					animateCardOpacity
@@ -204,6 +215,10 @@ const styles = StyleSheet.create({
 		backgroundColor: primaryBackground,
 		alignItems: "center",
 	},
+	swiperContainer: {
+		flex: 1,
+		width: "100%",
+	},
 	overlay: {
 		...StyleSheet.absoluteFillObject,
 		backgroundColor: "rgba(0,0,0,0.75)",
@@ -235,5 +250,19 @@ const styles = StyleSheet.create({
 		color: colorWhite,
 		fontSize: FontSize20,
 		fontWeight: "bold",
+	},
+	deckCard: {
+		borderRadius: 24,
+		overflow: "visible",
+		shadowColor: "rgba(0,0,0,0.25)",
+		shadowOffset: { width: 0, height: 12 },
+		shadowOpacity: 0.35,
+		shadowRadius: 16,
+		elevation: 12,
+	},
+	swiperCardWrapper: {
+		flex: 1,
+		borderRadius: 24,
+		overflow: "hidden",
 	},
 });

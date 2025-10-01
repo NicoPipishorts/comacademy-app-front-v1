@@ -1,7 +1,7 @@
+import { useAuth } from "@/auth/AuthContext";
 import { Stack } from "expo-router";
 import React from "react";
 import SignIn from "../screens/Sign-in";
-import { useAuth } from "./AuthContext";
 
 const PrivateRoute = ({ name, component: Component, options }) => {
 	const { isAuthenticated } = useAuth();

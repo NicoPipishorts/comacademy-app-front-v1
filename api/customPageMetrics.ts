@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse, isAxiosError } from "axios";
 
 // Define the payload and response types
 interface PageMetricsPayload {
@@ -26,23 +26,42 @@ export const useCustomPageMetrics = (
 ) => {
 	return useMutation<SuccessResponse, AxiosError, PageMetricsPayload>({
 		mutationFn: async ({ page, authToken }: PageMetricsPayload) => {
+			const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+			if (!baseUrl) {
+				throw new Error(
+					"EXPO_PUBLIC_API_URL is not configured. Unable to send page metrics."
+				);
+			}
+
+			const sanitizedBase = baseUrl.endsWith("/")
+				? baseUrl.slice(0, -1)
+				: baseUrl;
+			const targetUrl = `${sanitizedBase}/custom-metrics/page-metrics/${encodeURIComponent(
+				page
+			)}`;
+
 			try {
 				const response: AxiosResponse<SuccessResponse> = await axios({
 					method: "POST",
-					url: `${process.env.EXPO_PUBLIC_API_URL}/custom-metrics/page-metrics/${page}`,
+					url: targetUrl,
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${authToken}`, // Authorization token
+						Authorization: `Bearer ${authToken}`,
 					},
+					timeout: 5000,
+					data: {},
 				});
 
 				return response.data;
 			} catch (error: any) {
-				console.error(
-					"Error sending page metrics:",
-					error.response ? error.response.data : error.message
-				);
-				throw error;
+				if (isAxiosError(error)) {
+					const payload = error.response?.data ?? error.message;
+					console.error("Error sending page metrics:", payload);
+					throw error;
+				}
+
+				console.error("Unexpected error sending page metrics:", error);
+				throw new Error("Unexpected error while sending page metrics");
 			}
 		},
 		onSuccess,

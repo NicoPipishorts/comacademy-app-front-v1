@@ -13,10 +13,10 @@ import {
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
-import { useAuth } from "../auth/AuthContext";
 
 // Import Assets
 import { useLoginMutation } from "@/api/credentials/login";
+import { useAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import {
 	colorBlack,
