@@ -123,7 +123,9 @@ export default function CardPlaylist({
 		<View style={styles.container}>
 			<Swipeable
 				key={id}
-				ref={(ref) => (swipeableRefs.current[id] = ref)}
+				ref={(ref) => {
+					swipeableRefs.current[id] = ref;
+				}}
 				friction={2}
 				overshootRight={false}
 				rightThreshold={40}
