@@ -5,7 +5,6 @@ import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
 import React from "react";
 import {
-	Animated,
 	Image,
 	Pressable,
 	StyleSheet,
@@ -13,7 +12,12 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import Swipeable from "react-native-gesture-handler/Swipeable";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, {
+	SharedValue,
+	useAnimatedStyle,
+	interpolate,
+} from "react-native-reanimated";
 
 interface Props {
 	id: number;
@@ -51,34 +55,21 @@ export default function CardPlaylist({
 	};
 
 	const renderRightActions = (
-		progress: Animated.AnimatedInterpolation<number>,
-		_dragAnimatedValue: Animated.AnimatedInterpolation<number>
+		progress: SharedValue<number>,
+		_dragAnimatedValue: SharedValue<number>
 	) => {
-		const editTranslate = progress.interpolate({
-			inputRange: [0, 1],
-			outputRange: [80, 0],
-		});
+		const EditButton = () => {
+			const animatedStyle = useAnimatedStyle(() => {
+				const translateX = interpolate(progress.value, [0, 1], [80, 0]);
+				const scale = interpolate(progress.value, [0, 1], [0.8, 1]);
 
-		const deleteTranslate = progress.interpolate({
-			inputRange: [0, 1],
-			outputRange: [160, 0],
-		});
+				return {
+					transform: [{ translateX }, { scale }],
+				};
+			});
 
-		const scale = progress.interpolate({
-			inputRange: [0, 1],
-			outputRange: [0.8, 1],
-		});
-
-		return (
-			<View style={styles.rightActionContainer}>
-				<Animated.View
-					style={[
-						styles.actionButton,
-						styles.actionEdit,
-						{
-							transform: [{ translateX: editTranslate }, { scale }],
-						},
-					]}>
+			return (
+				<Animated.View style={[styles.actionButton, styles.actionEdit, animatedStyle]}>
 					<Pressable
 						style={styles.rightAction}
 						onPress={() => {
@@ -93,14 +84,21 @@ export default function CardPlaylist({
 						<Text style={styles.actionText}>Edit</Text>
 					</Pressable>
 				</Animated.View>
-				<Animated.View
-					style={[
-						styles.actionButton,
-						styles.actionDelete,
-						{
-							transform: [{ translateX: deleteTranslate }, { scale }],
-						},
-					]}>
+			);
+		};
+
+		const DeleteButton = () => {
+			const animatedStyle = useAnimatedStyle(() => {
+				const translateX = interpolate(progress.value, [0, 1], [160, 0]);
+				const scale = interpolate(progress.value, [0, 1], [0.8, 1]);
+
+				return {
+					transform: [{ translateX }, { scale }],
+				};
+			});
+
+			return (
+				<Animated.View style={[styles.actionButton, styles.actionDelete, animatedStyle]}>
 					<Pressable
 						style={styles.rightAction}
 						onPress={() => {
@@ -115,6 +113,13 @@ export default function CardPlaylist({
 						<Text style={styles.actionText}>Delete</Text>
 					</Pressable>
 				</Animated.View>
+			);
+		};
+
+		return (
+			<View style={styles.rightActionContainer}>
+				<EditButton />
+				<DeleteButton />
 			</View>
 		);
 	};
