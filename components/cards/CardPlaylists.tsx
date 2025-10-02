@@ -3,7 +3,8 @@ import { FontSize14, FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import type { ViewStyle } from "react-native";
 import {
 	Image,
 	Pressable,
@@ -14,9 +15,9 @@ import {
 } from "react-native";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
+	interpolate,
 	SharedValue,
 	useAnimatedStyle,
-	interpolate,
 } from "react-native-reanimated";
 
 interface Props {
@@ -42,6 +43,11 @@ export default function CardPlaylist({
 	handleEditPlaylist,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
+	const swipeableRef = useRef(null);
+
+	useEffect(() => {
+		swipeableRefs.current[id] = swipeableRef.current;
+	}, [id, swipeableRefs]);
 
 	const handlePress = () => {
 		navigation.navigate("playlistList", { playlistId: id });
@@ -59,8 +65,8 @@ export default function CardPlaylist({
 		_dragAnimatedValue: SharedValue<number>
 	) => {
 		const EditButton = () => {
-			const animatedStyle = useAnimatedStyle(() => {
-				const translateX = interpolate(progress.value, [0, 1], [80, 0]);
+			const animatedStyle = useAnimatedStyle<ViewStyle>(() => {
+				const translateX = interpolate(progress.value, [0, 1], [160, 0]);
 				const scale = interpolate(progress.value, [0, 1], [0.8, 1]);
 
 				return {
@@ -69,9 +75,9 @@ export default function CardPlaylist({
 			});
 
 			return (
-				<Animated.View style={[styles.actionButton, styles.actionEdit, animatedStyle]}>
+				<Animated.View style={[animatedStyle]}>
 					<Pressable
-						style={styles.rightAction}
+						style={[styles.actionButton, styles.actionEdit, styles.rightAction]}
 						onPress={() => {
 							handleEditPlaylist(id);
 							closeSwipeable();
@@ -88,7 +94,7 @@ export default function CardPlaylist({
 		};
 
 		const DeleteButton = () => {
-			const animatedStyle = useAnimatedStyle(() => {
+			const animatedStyle = useAnimatedStyle<ViewStyle>(() => {
 				const translateX = interpolate(progress.value, [0, 1], [160, 0]);
 				const scale = interpolate(progress.value, [0, 1], [0.8, 1]);
 
@@ -98,9 +104,13 @@ export default function CardPlaylist({
 			});
 
 			return (
-				<Animated.View style={[styles.actionButton, styles.actionDelete, animatedStyle]}>
+				<Animated.View style={[animatedStyle]}>
 					<Pressable
-						style={styles.rightAction}
+						style={[
+							styles.actionButton,
+							styles.actionDelete,
+							styles.rightAction,
+						]}
 						onPress={() => {
 							handDeletePlaylist(id);
 							closeSwipeable();
@@ -128,9 +138,7 @@ export default function CardPlaylist({
 		<View style={styles.container}>
 			<Swipeable
 				key={id}
-				ref={(ref) => {
-					swipeableRefs.current[id] = ref;
-				}}
+				ref={swipeableRef}
 				friction={2}
 				overshootRight={false}
 				rightThreshold={40}
@@ -201,17 +209,14 @@ const styles = StyleSheet.create({
 	},
 	actionButton: {
 		width: 80,
-		height: "100%",
+		height: 80, // <— was "100%"
 		justifyContent: "center",
 		alignItems: "center",
 		borderRadius: 12,
 	},
 	rightAction: {
-		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		width: "100%",
-		height: "100%",
 		paddingHorizontal: 12,
 	},
 	actionIcon: {
