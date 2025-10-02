@@ -1,4 +1,3 @@
-import Loader from "@/components/experience/loader";
 import FilteredByCat from "@/components/filters/filteredByCat";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack } from "@/constants/colors";
@@ -33,7 +32,7 @@ type Props = {
 const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
-	const sectionRefs = useRef<{ [key: string]: View | null }>({}).current;
+	const sectionRefs = useRef<Record<string, View | null>>({});
 	const [groupedData, setGroupedData] = useState<{
 		[key: string]: DicoSelected[];
 	}>({});
@@ -88,7 +87,7 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 	}
 
 	const scrollToSection = (letter: string) => {
-		const section = sectionRefs[letter];
+		const section = sectionRefs.current[letter];
 
 		if (section && scrollViewRef.current) {
 			const scrollView = scrollViewRef.current as unknown as any;
@@ -147,9 +146,7 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 		navigation.navigate("dicoDetails", { id });
 	};
 
-	if (!data) {
-		return <Loader />;
-	}
+	if (!data) return null;
 
 	return (
 		<>
@@ -187,7 +184,11 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 								</TouchableOpacity>
 						  ))
 						: alphabet.map((letter) => (
-								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
+				<View
+					key={letter}
+					ref={(el) => {
+						sectionRefs.current[letter] = el;
+					}}>
 									<Text style={styles.listHeader}>{letter}</Text>
 									{groupedData[letter]?.map((item, index) => (
 										<Text

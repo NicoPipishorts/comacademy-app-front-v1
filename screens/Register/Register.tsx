@@ -13,8 +13,9 @@ import {
 
 // Import Assets
 import { useRegisterNewUser } from "@/api/credentials/registerNewUser";
-import { useAuth } from "@/auth/AuthContext";
+import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
+import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RegisterStep1 from "./Step1";
@@ -32,13 +33,13 @@ export interface FormPayload {
 const Register = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
-	const { login, checkLoggedIn } = useAuth();
+	const { login, checkLoggedIn } = UseAuth();
 	const [formPayload, setFormPayload] = useState<FormPayload>();
 
 	const [step, setStep] = useState<number>(1);
 
-	const onSuccess = (data) => {
-		login(data);
+	const onSuccess = async (data: AuthResponse) => {
+		await login(data);
 		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
 	};
 
@@ -64,7 +65,6 @@ const Register = () => {
 		}
 
 		const formPayloadToSubmit = { ...formPayload, profile: 2 };
-		console.log(formPayloadToSubmit);
 		mutation.mutate(formPayloadToSubmit);
 	};
 

@@ -39,13 +39,52 @@ export default function LeJeu() {
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
 
-	const { setDataGame, setSessionsId, setGameStatus } = useGameContext();
+	const {
+		setDataGame,
+		setSessionsId,
+		setGameStatus,
+		setQuestionsLeft,
+		setAnsweredCount,
+		gameStatus,
+		sessionId,
+		answeredCount,
+	} =
+		useGameContext();
+
+	const sessionInProgress =
+		gameStatus === "in_progress" && !!sessionId && answeredCount > 0;
+	const [showSessionTooltip, setShowSessionTooltip] = useState(false);
+	const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const handleSessionBlockedAction = useCallback(() => {
+		setShowSessionTooltip(true);
+		if (tooltipTimeoutRef.current) {
+			clearTimeout(tooltipTimeoutRef.current);
+		}
+		tooltipTimeoutRef.current = setTimeout(() => {
+			setShowSessionTooltip(false);
+			tooltipTimeoutRef.current = null;
+		}, 2000);
+	}, []);
+
+	const handleTabChange = useCallback(
+		(nextTab: number) => {
+			if (sessionInProgress && nextTab === 1) {
+				handleSessionBlockedAction();
+				return false;
+			}
+			return true;
+		},
+		[sessionInProgress, handleSessionBlockedAction]
+	);
 
 	// session‑restart mutation
 	const { mutate: newSession } = useSessionAction(
 		(payload) => {
 			setGameStatus(payload.status);
 			setSessionsId(payload.sessionId);
+			setQuestionsLeft(payload.questionsLeft);
+			setAnsweredCount(payload.answeredCount);
 			setDataGame(payload.questionsPool);
 		},
 		(err) => console.error("newSession failed:", err)
@@ -70,6 +109,28 @@ export default function LeJeu() {
 		}
 	}, [filterByCat, token, loadingToken, newSession, auth?.user.id]);
 
+	useEffect(() => {
+		if (sessionInProgress && activeTab === 1) {
+			setActiveTab(0);
+		}
+	}, [sessionInProgress, activeTab, setActiveTab]);
+
+	useEffect(() => {
+		if (!sessionInProgress && tooltipTimeoutRef.current) {
+			clearTimeout(tooltipTimeoutRef.current);
+			tooltipTimeoutRef.current = null;
+			setShowSessionTooltip(false);
+		}
+	}, [sessionInProgress]);
+
+	useEffect(() => {
+		return () => {
+			if (tooltipTimeoutRef.current) {
+				clearTimeout(tooltipTimeoutRef.current);
+			}
+		};
+	}, []);
+
 	// fetch either “all” or “by‑category”
 	// ⬇️ pass token + loading into the hook
 	const {
@@ -93,6 +154,8 @@ export default function LeJeu() {
 
 		setGameStatus(sessionData.data.status);
 		setSessionsId(sessionData.data.sessionId);
+		setQuestionsLeft(sessionData.data.questionsLeft);
+		setAnsweredCount(sessionData.data.answeredCount);
 		setDataGame(sessionData.data.questionsPool);
 	}, [
 		loadingQuestions,
@@ -100,12 +163,13 @@ export default function LeJeu() {
 		setDataGame,
 		setSessionsId,
 		setGameStatus,
+		setQuestionsLeft,
+		setAnsweredCount,
 	]);
 
 	useTrackPageMetrics({ page: "Jeu" });
 
 	const toggleSwitch = useCallback(() => {
-		setActiveTab((t) => (t === 0 ? 1 : 0));
 		setIsEnabled((p) => !p);
 	}, []);
 
@@ -114,7 +178,7 @@ export default function LeJeu() {
 	}, [navigation]);
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top + 0 }]}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.containerHeader}>
 				<Text style={styles.headerMainText}>Le jeu</Text>
 				<View style={styles.containerSwitch}>
@@ -146,6 +210,7 @@ export default function LeJeu() {
 					<CategoriesCards
 						setFilterByCat={setFilterByCat}
 						setActiveTab={setActiveTab}
+						disabled={sessionInProgress}
 					/>
 				</View>
 			)}
@@ -154,10 +219,16 @@ export default function LeJeu() {
 				<FloatingTabBar
 					activeTab={activeTab}
 					setActiveTab={setActiveTab}
-					handlePress={() => setActiveTab(activeTab === 0 ? 1 : 0)}
+					handlePress={handleTabChange}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>
+
+			{showSessionTooltip && (
+				<View style={styles.tooltipContainer}>
+					<Text style={styles.tooltipText}>Une partie est en cours</Text>
+				</View>
+			)}
 
 			{isEnabled && <Answers />}
 		</View>
@@ -203,5 +274,20 @@ const styles = StyleSheet.create({
 		right: 0,
 		bottom: 110,
 		alignItems: "center",
+	},
+	tooltipContainer: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 170,
+		alignItems: "center",
+	},
+	tooltipText: {
+		backgroundColor: colorBlack,
+		color: colorWhite,
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 16,
+		fontWeight: "bold",
 	},
 });

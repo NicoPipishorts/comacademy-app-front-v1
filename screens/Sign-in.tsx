@@ -16,7 +16,7 @@ import {
 
 // Import Assets
 import { useLoginMutation } from "@/api/credentials/login";
-import { useAuth } from "@/auth/AuthContext";
+import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import {
 	colorBlack,
@@ -26,6 +26,7 @@ import {
 } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
+import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -37,14 +38,14 @@ const SignIn = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const { login, checkLoggedIn, setIsRegistering } = useAuth();
+	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
 
 	const toggleShowPassword = () => {
 		setShowPassword(!showPassword);
 	};
 
-	const onSuccess = (data) => {
-		login(data);
+	const onSuccess = async (data: AuthResponse) => {
+		await login(data);
 		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
 	};
 

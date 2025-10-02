@@ -21,13 +21,21 @@ import {
 } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
-import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-	Animated,
+	BottomSheetBackdrop,
+	BottomSheetBackdropProps,
+	BottomSheetModal,
+	BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import {
 	Image,
-	KeyboardAvoidingView,
-	Modal,
-	Platform,
 	Pressable,
 	ScrollView,
 	StyleSheet,
@@ -43,8 +51,27 @@ interface NewPlaylistModalProps {
 	visible: boolean;
 	onClose: () => void;
 	onSubmit: (name: string, selectedColor: string) => void;
-	playlistId: number;
+	playlistId?: number | null;
 }
+
+const IMAGE_OPTIONS = [
+	{ name: "1", image: Image1 },
+	{ name: "2", image: Image2 },
+	{ name: "3", image: Image3 },
+	{ name: "4", image: Image4 },
+	{ name: "5", image: Image5 },
+	{ name: "6", image: Image6 },
+	{ name: "7", image: Image7 },
+	{ name: "8", image: Image8 },
+	{ name: "9", image: Image9 },
+	{ name: "10", image: Image10 },
+	{ name: "11", image: Image11 },
+	{ name: "12", image: Image12 },
+	{ name: "13", image: Image13 },
+	{ name: "14", image: Image14 },
+];
+
+const SNAP_POINTS = ["60%"];
 
 const NewPlaylistModal = ({
 	visible,
@@ -52,276 +79,224 @@ const NewPlaylistModal = ({
 	onSubmit,
 	playlistId,
 }: NewPlaylistModalProps) => {
+	const bottomSheetRef = useRef<BottomSheetModal>(null);
+	const snapPoints = useMemo(() => SNAP_POINTS, []);
 	const [playlistName, setPlaylistName] = useState("");
-	const slideAnim = useRef(new Animated.Value(300)).current;
-	const [selectedColor, setSelectedColor] = useState<string>();
-	const [errorPlaylistName, setErrorPlaylistName] = useState<boolean>();
+	const [selectedColor, setSelectedColor] = useState<string | undefined>();
+	const [errorPlaylistName, setErrorPlaylistName] = useState(false);
 
-	const imageArray = [
-		{ name: "1", image: Image1 },
-		{ name: "2", image: Image2 },
-		{ name: "3", image: Image3 },
-		{ name: "4", image: Image4 },
-		{ name: "5", image: Image5 },
-		{ name: "6", image: Image6 },
-		{ name: "7", image: Image7 },
-		{ name: "8", image: Image8 },
-		{ name: "9", image: Image9 },
-		{ name: "10", image: Image10 },
-		{ name: "11", image: Image11 },
-		{ name: "12", image: Image12 },
-		{ name: "13", image: Image13 },
-		{ name: "14", image: Image14 },
-	];
+	const randomPool = useMemo(
+		() => [...IMAGE_OPTIONS.map((item) => item.name), ...colorArray],
+		[]
+	);
 
-	const { data: playlistData, isFetched } = useGetPlaylistById(playlistId);
+	const hasPlaylist = playlistId !== undefined && playlistId !== null;
+	const playlistQueryId = hasPlaylist ? playlistId! : 0;
+	const { data: playlistData, isFetched } = useGetPlaylistById(playlistQueryId);
+
+	const resetForm = useCallback(() => {
+		setPlaylistName("");
+		setSelectedColor(undefined);
+		setErrorPlaylistName(false);
+	}, []);
 
 	useEffect(() => {
-		if (playlistId && playlistData) {
-			setPlaylistName(playlistData.data.attributes.name);
-			setSelectedColor(playlistData.data.attributes.selectedColor);
+		if (hasPlaylist && playlistData) {
+			setPlaylistName(playlistData.data.attributes.name ?? "");
+			setSelectedColor(playlistData.data.attributes.selectedColor ?? undefined);
+			setErrorPlaylistName(false);
+		} else if (!hasPlaylist) {
+			resetForm();
 		}
-	}, [playlistData, playlistId]);
-
-	const showModal = useCallback(() => {
-		Animated.spring(slideAnim, {
-			toValue: 0,
-			useNativeDriver: true,
-		}).start();
-	}, [slideAnim]);
-
-	const hideModal = () => {
-		Animated.timing(slideAnim, {
-			toValue: 300,
-			duration: 200,
-			useNativeDriver: true,
-		}).start(() => {
-			onClose();
-			setPlaylistName(null);
-			setSelectedColor(null);
-		});
-	};
-
-	// Handle the form checks and submition if all is completed.
-	const handleSubmit = () => {
-		if (!playlistName) {
-			setErrorPlaylistName(true);
-			return;
-		}
-		const color = selectedColor ? selectedColor : getRandomValues();
-		onSubmit(playlistName, color);
-		setPlaylistName(null);
-		setSelectedColor(null);
-	};
+	}, [hasPlaylist, playlistData, resetForm]);
 
 	useEffect(() => {
 		if (visible) {
-			showModal();
+			bottomSheetRef.current?.present();
+		} else {
+			bottomSheetRef.current?.dismiss();
 		}
-	}, [showModal, visible]);
+	}, [visible]);
 
-	const onPress = (color: string) => {
+	const handleDismiss = useCallback(() => {
+		resetForm();
+		onClose();
+	}, [onClose, resetForm]);
+
+	const handleNameChange = useCallback(
+		(value: string) => {
+			setPlaylistName(value);
+			if (errorPlaylistName) {
+				setErrorPlaylistName(false);
+			}
+		},
+		[errorPlaylistName]
+	);
+
+	const handleSelectColor = useCallback((color: string) => {
 		setSelectedColor(color);
-	};
+	}, []);
 
-	const getRandomValues = () => {
-		// Combine both arrays into one
-		const combinedArray: string[] = [
-			...imageArray.map((item) => item.name), // Extract names from imageArray
-			...colorArray,
-		];
+	const handleSubmit = useCallback(() => {
+		const trimmedName = playlistName.trim();
+		if (!trimmedName) {
+			setErrorPlaylistName(true);
+			return;
+		}
+		const color =
+			selectedColor ??
+			randomPool[Math.floor(Math.random() * randomPool.length)];
+		onSubmit(trimmedName, color);
+		bottomSheetRef.current?.dismiss();
+	}, [onSubmit, playlistName, selectedColor, randomPool]);
 
-		// Pick a random value from the combined array
-		const randomValue =
-			combinedArray[Math.floor(Math.random() * combinedArray.length)];
-
-		return randomValue;
-	};
-
-	if (playlistId && !isFetched) {
-		return null;
-	}
+	const renderBackdrop = useCallback(
+		(props: BottomSheetBackdropProps) => (
+			<BottomSheetBackdrop
+				{...props}
+				appearsOnIndex={0}
+				disappearsOnIndex={-1}
+				pressBehavior='close'
+			/>
+		),
+		[]
+	);
 
 	return (
-		<Modal
-			animationType='none'
-			transparent={true}
-			visible={visible}
-			onRequestClose={hideModal}>
-			<TouchableOpacity
-				style={styles.modalOverlay}
-				activeOpacity={1}
-				onPress={hideModal}>
-				<View style={styles.modalWrapper}>
-					<KeyboardAvoidingView
-						style={styles.modalWrapper}
-						behavior={Platform.OS === "ios" ? "padding" : undefined}>
-						<Animated.View
-							style={[
-								styles.modalContent,
-								{
-									transform: [{ translateY: slideAnim }],
-									zIndex: 999,
-								},
-							]}>
-							<TouchableOpacity
-								activeOpacity={1}
-								onPress={(e) => e.stopPropagation()}>
-								<ModalGestureLine />
-								<Text style={styles.modalTitle}>
-									{playlistId
-										? "Modifier la playlist"
-										: "Créer une nouvelle playlist"}
-								</Text>
+		<BottomSheetModal
+			ref={bottomSheetRef}
+			index={0}
+			snapPoints={snapPoints}
+			backdropComponent={renderBackdrop}
+			backgroundStyle={styles.sheetBackground}
+			handleIndicatorStyle={styles.hiddenIndicator}
+			enablePanDownToClose
+			onDismiss={handleDismiss}>
+			<BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
+				<View style={styles.sheetInner}>
+					<ModalGestureLine />
+					<Text style={styles.title}>
+						{hasPlaylist
+							? "Modifier la playlist"
+							: "Créer une nouvelle playlist"}
+					</Text>
 
-								<TextInput
-									style={[
-										styles.input,
-										{
-											borderColor: errorPlaylistName ? colorRed : "",
-											borderWidth: errorPlaylistName ? 1 : 0,
-										},
-									]}
-									placeholder='Nom de la playlist'
-									value={playlistName}
-									onChangeText={setPlaylistName}
-								/>
+					<View style={styles.sectionSpacing}>
+						<TextInput
+							style={[styles.input, errorPlaylistName && styles.inputError]}
+							placeholder='Nom de la playlist'
+							value={playlistName}
+							onChangeText={handleNameChange}
+						/>
+					</View>
 
-								<ScrollView
-									horizontal
-									contentContainerStyle={styles.colorsContainer}
-									showsHorizontalScrollIndicator={false}>
-									{colorArray.map((color, index) => {
-										return (
-											<View
-												key={index}
-												style={{
-													justifyContent: "flex-start",
-													marginRight: 10,
-												}}>
-												<Pressable
-													style={[
-														styles.colorContainer,
-														{ backgroundColor: color },
-													]}
-													onPress={() => onPress(color)}
-												/>
-												<View
-													style={{
-														marginTop: 6,
-														marginLeft: 8,
-														width: 26,
-														minHeight: 4,
-														borderRadius: 2,
-														backgroundColor: selectedColor
-															? selectedColor === color
-																? colorBlack
-																: primaryBackground
-															: "",
-													}}
-												/>
-											</View>
-										);
-									})}
-								</ScrollView>
-
-								<ScrollView
-									horizontal
-									contentContainerStyle={styles.colorsContainer}
-									showsHorizontalScrollIndicator={false}>
-									{imageArray.map((image, index) => {
-										return (
-											<View
-												key={index}
-												style={{
-													justifyContent: "flex-start",
-													marginRight: 10,
-												}}>
-												<Pressable onPress={() => onPress(image.name)}>
-													<Image
-														source={image.image}
-														style={styles.colorContainer}
-													/>
-												</Pressable>
-												<View
-													style={{
-														marginTop: 6,
-														marginLeft: 8,
-														width: 26,
-														minHeight: 4,
-														borderRadius: 2,
-														backgroundColor: selectedColor
-															? selectedColor === image.name
-																? colorBlack
-																: primaryBackground
-															: "",
-													}}
-												/>
-											</View>
-										);
-									})}
-								</ScrollView>
-
-								<View style={styles.buttonContainer}>
-									<TouchableOpacity
-										style={styles.button}
-										onPress={handleSubmit}>
-										<Text style={styles.buttonText}>
-											{playlistId ? "Valider" : "Créer"}
-										</Text>
-									</TouchableOpacity>
+					<View style={styles.sectionSpacing}>
+						<ScrollView
+							horizontal
+							contentContainerStyle={styles.colorsContainer}
+							showsHorizontalScrollIndicator={false}>
+							{colorArray.map((color) => (
+								<View key={color} style={styles.optionWrapper}>
+									<Pressable
+										style={[styles.colorContainer, { backgroundColor: color }]}
+										onPress={() => handleSelectColor(color)}
+									/>
+									<View
+										style={[
+											styles.selectionIndicator,
+											{
+												backgroundColor:
+													selectedColor === color
+														? colorBlack
+														: primaryBackground,
+											},
+										]}
+									/>
 								</View>
-							</TouchableOpacity>
-						</Animated.View>
-					</KeyboardAvoidingView>
+							))}
+						</ScrollView>
+					</View>
+
+					<View style={styles.sectionSpacing}>
+						<ScrollView
+							horizontal
+							contentContainerStyle={styles.colorsContainer}
+							showsHorizontalScrollIndicator={false}>
+							{IMAGE_OPTIONS.map((icon) => (
+								<View key={icon.name} style={styles.optionWrapper}>
+									<Pressable onPress={() => handleSelectColor(icon.name)}>
+										<Image source={icon.image} style={styles.colorContainer} />
+									</Pressable>
+									<View
+										style={[
+											styles.selectionIndicator,
+											{
+												backgroundColor:
+													selectedColor === icon.name
+														? colorBlack
+														: primaryBackground,
+											},
+										]}
+									/>
+								</View>
+							))}
+						</ScrollView>
+					</View>
+
+					<View style={[styles.sectionSpacing, styles.buttonContainer]}>
+						<TouchableOpacity style={styles.button} onPress={handleSubmit}>
+							<Text style={styles.buttonText}>
+								{hasPlaylist ? "Valider" : "Créer"}
+							</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
-			</TouchableOpacity>
-		</Modal>
+			</BottomSheetScrollView>
+		</BottomSheetModal>
 	);
 };
 
 const styles = StyleSheet.create({
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
-	},
-	modalWrapper: {
-		flex: 1,
-		justifyContent: "flex-end",
-	},
-	modalContent: {
-		display: "flex",
-		justifyContent: "center",
+	sheetBackground: {
 		backgroundColor: primaryBackground,
 		borderTopLeftRadius: 20,
 		borderTopRightRadius: 20,
-		padding: 20,
-		height: 350,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: -2,
-		},
-		shadowOpacity: 0.25,
-		shadowRadius: 3.84,
-		elevation: 5,
-		zIndex: 999, // Ensure the modal has a lower zIndex than the Snackbar
 	},
-	modalTitle: {
+	hiddenIndicator: {
+		opacity: 0,
+		height: 0,
+	},
+	scrollContent: {
+		paddingHorizontal: 20,
+		paddingBottom: 24,
+	},
+	sheetInner: {
+		paddingTop: 12,
+	},
+	sectionSpacing: {
+		marginTop: 20,
+	},
+	title: {
 		fontSize: FontSize18,
 		fontWeight: "bold",
-		marginBottom: 20,
 		textAlign: "center",
 	},
 	input: {
-		backgroundColor: "#fff",
+		backgroundColor: colorWhite,
 		borderRadius: 50,
 		padding: 12,
-		marginBottom: 30,
 	},
-
+	inputError: {
+		borderWidth: 1,
+		borderColor: colorRed,
+	},
 	colorsContainer: {
 		paddingVertical: 5,
+		paddingBottom: 12,
+	},
+	optionWrapper: {
+		justifyContent: "flex-start",
+		marginRight: 10,
 	},
 	colorContainer: {
 		width: 40,
@@ -330,15 +305,19 @@ const styles = StyleSheet.create({
 		borderColor: colorBlack,
 		borderWidth: 1,
 	},
+	selectionIndicator: {
+		marginTop: 6,
+		marginLeft: 8,
+		width: 26,
+		minHeight: 4,
+		borderRadius: 2,
+	},
 	buttonContainer: {
 		flexDirection: "row",
 		justifyContent: "center",
-		marginTop: 10,
-		gap: 10,
 	},
 	button: {
 		backgroundColor: colorBlack,
-		marginBottom: 20,
 		paddingHorizontal: 30,
 		paddingVertical: 10,
 		borderRadius: 50,

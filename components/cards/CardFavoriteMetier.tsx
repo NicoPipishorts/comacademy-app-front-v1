@@ -24,8 +24,6 @@ export default function CardFavoriteMetier({
 		return <Loader />;
 	}
 
-	console.log(categoriesIcons);
-
 	return (
 		<View style={styles.wrapper}>
 			<View style={styles.cardContainer}>

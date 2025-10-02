@@ -1,4 +1,4 @@
-import { useAuth } from "@/auth/AuthContext";
+import { UseAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import ScreenHeaders from "@/components/ScreenHeaders";
@@ -38,7 +38,7 @@ export type ResultAccumulator = Record<number, CategoryResult>;
 export default function User() {
 	const router = useRouter();
 	const { openModal, timestamp } = useLocalSearchParams();
-	const { logout } = useAuth();
+	const { logout } = UseAuth();
 	const { auth } = useAuthSession();
 	const insets = useSafeAreaInsets();
 	const [refreshing, setRefreshing] = useState(false);
