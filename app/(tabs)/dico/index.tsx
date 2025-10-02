@@ -29,10 +29,6 @@ const Dico = () => {
 		}
 	}, [openDetails, navigation]);
 
-	if (!dataDico || isLoadingData) {
-		return <Loader />;
-	}
-
 	const toggleTab = (index: number) => {
 		setActiveTab(index);
 	};
@@ -40,9 +36,9 @@ const Dico = () => {
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Dico' />
-			{isLoadingCat && <Loader />}
 
-			{activeTab === 0 && (
+			{!dataDico && isLoadingCat && <Loader />}
+			{dataDico && activeTab === 0 && (
 				<DicoList
 					data={dataDico}
 					categories={dataCat}

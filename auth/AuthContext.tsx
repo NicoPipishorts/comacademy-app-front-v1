@@ -1,121 +1,272 @@
 import { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY } from "@/constants";
-import { LoginPayload } from "@/types/login";
+import { AuthResponse } from "@/types/credentials/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from "jwt-decode"; // Correct import
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
+import { jwtDecode } from "jwt-decode";
 import React, {
 	createContext,
 	Dispatch,
 	FunctionComponent,
 	ReactNode,
 	SetStateAction,
+	useCallback,
 	useContext,
 	useEffect,
+	useRef,
 	useState,
 } from "react";
+import { AppState, AppStateStatus } from "react-native";
 
-// Define the type for the Auth context state and its updater functions
+const AUTH_STORAGE_KEY = "auth";
+const TOKEN_STORAGE_KEY = "jwtToken";
+
+type DecodedToken = {
+	exp?: number;
+};
+
 interface AuthContextType {
 	isAuthenticated: boolean;
-	login: (data: LoginPayload) => void;
-	logout: () => void;
+	session: AuthResponse | null;
+	token: string | null;
+	loading: boolean;
+	login: (data: AuthResponse) => Promise<void>;
+	logout: () => Promise<void>;
 	checkLoggedIn: () => Promise<boolean>;
 	isRegistering: boolean;
 	setIsRegistering: Dispatch<SetStateAction<boolean>>;
 }
 
-// Create the context with an initial undefined type, which will be set in the provider
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Define the props for the AuthProvider component
 interface AuthProviderProps {
 	children: ReactNode;
 }
 
-// AuthProvider with typed props
+const setAxiosAuthHeader = (value: string | null) => {
+	if (value) {
+		axios.defaults.headers.common.Authorization = `Bearer ${value}`;
+	} else {
+		delete axios.defaults.headers.common.Authorization;
+	}
+};
+
+const persistToken = async (token: string) => {
+	let storedSecurely = false;
+	try {
+		if (await SecureStore.isAvailableAsync()) {
+			await SecureStore.setItemAsync(TOKEN_STORAGE_KEY, token);
+			storedSecurely = true;
+		}
+	} catch (error) {
+		console.error("Failed to store token in SecureStore", error);
+	}
+
+	if (!storedSecurely) {
+		await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+	} else {
+		await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+	}
+};
+
+const readStoredToken = async (): Promise<string | null> => {
+	try {
+		if (await SecureStore.isAvailableAsync()) {
+			const secureToken = await SecureStore.getItemAsync(TOKEN_STORAGE_KEY);
+			if (secureToken) {
+				return secureToken;
+			}
+		}
+	} catch (error) {
+		console.error("Failed to read token from SecureStore", error);
+	}
+
+	try {
+		return await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
+	} catch (error) {
+		console.error("Failed to read token from AsyncStorage", error);
+		return null;
+	}
+};
+
+const removeStoredToken = async () => {
+	try {
+		if (await SecureStore.isAvailableAsync()) {
+			await SecureStore.deleteItemAsync(TOKEN_STORAGE_KEY);
+		}
+	} catch (error) {
+		console.error("Failed to delete token from SecureStore", error);
+	}
+
+	try {
+		await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+	} catch (error) {
+		console.error("Failed to remove token from AsyncStorage", error);
+	}
+};
+
 export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	children,
 }) => {
-	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+	const [session, setSession] = useState<AuthResponse | null>(null);
+	const [token, setToken] = useState<string | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 	const [isRegistering, setIsRegistering] = useState<boolean>(false);
 
-	const login = async (data: LoginPayload) => {
-		setIsAuthenticated(true);
-		setIsRegistering(false);
-		await AsyncStorage.setItem("jwtToken", data.jwt);
-	};
+	const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const logout = async () => {
-		setIsAuthenticated(false);
-		setIsRegistering(false);
-		await AsyncStorage.removeItem("jwtToken");
-		// Cleanup or additional logout tasks
-	};
+	const clearExpiryTimer = useCallback(() => {
+		if (expiryTimerRef.current) {
+			clearTimeout(expiryTimerRef.current);
+			expiryTimerRef.current = null;
+		}
+	}, []);
 
-	const checkLoggedIn = async (): Promise<boolean> => {
-		const token = await AsyncStorage.getItem("jwtToken");
-		if (token) {
+	const clearPersistedSession = useCallback(async () => {
+		clearExpiryTimer();
+		setSession(null);
+		setToken(null);
+		setAxiosAuthHeader(null);
+		await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+		await removeStoredToken();
+	}, [clearExpiryTimer]);
+
+	const scheduleTokenExpiryCheck = useCallback(
+		(currentToken: string | null) => {
+			clearExpiryTimer();
+			if (!currentToken) return;
+
 			try {
-				const decodedToken: { exp: number } = jwtDecode(token);
-				const currentTime = Date.now() / 1000;
-				if (decodedToken.exp < currentTime) {
-					setIsAuthenticated(false);
-					await AsyncStorage.removeItem("jwtToken");
-					return false;
+				const decoded = jwtDecode<DecodedToken>(currentToken);
+				if (!decoded.exp) return;
+
+				const msUntilExpiry = decoded.exp * 1000 - Date.now();
+				if (msUntilExpiry <= 0) {
+					void clearPersistedSession();
+					return;
 				}
-				setIsAuthenticated(true);
-				return true;
+
+				expiryTimerRef.current = setTimeout(() => {
+					void clearPersistedSession();
+				}, msUntilExpiry);
 			} catch (error) {
-				console.log(error);
-				setIsAuthenticated(false);
-				await AsyncStorage.removeItem("jwtToken");
-				return false;
+				console.error("Failed to schedule token expiry check", error);
+				void clearPersistedSession();
 			}
-		} else {
-			setIsAuthenticated(false);
+		},
+		[clearExpiryTimer, clearPersistedSession]
+	);
+
+	const hydrateFromStorage = useCallback(async () => {
+		const [[, rawSession]] = await AsyncStorage.multiGet([AUTH_STORAGE_KEY]);
+		const storedToken = await readStoredToken();
+
+		if (!rawSession || !storedToken) {
+			await clearPersistedSession();
 			return false;
 		}
-	};
+
+		try {
+			const parsedSession = JSON.parse(rawSession) as AuthResponse;
+			const decoded = jwtDecode<DecodedToken>(storedToken);
+			if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+				await clearPersistedSession();
+				return false;
+			}
+
+			setSession(parsedSession);
+			setToken(storedToken);
+			setAxiosAuthHeader(storedToken);
+			scheduleTokenExpiryCheck(storedToken);
+			return true;
+		} catch (error) {
+			console.error("Failed to hydrate auth session", error);
+			await clearPersistedSession();
+			return false;
+		}
+	}, [clearPersistedSession, scheduleTokenExpiryCheck]);
+
+	const checkLoggedIn = useCallback(async () => {
+		const isValid = await hydrateFromStorage();
+		return isValid;
+	}, [hydrateFromStorage]);
+
+	const login = useCallback(
+		async (data: AuthResponse) => {
+			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+			await persistToken(data.jwt);
+			setSession(data);
+			setToken(data.jwt);
+			setIsRegistering(false);
+			setAxiosAuthHeader(data.jwt);
+			scheduleTokenExpiryCheck(data.jwt);
+		},
+		[scheduleTokenExpiryCheck]
+	);
+
+	const logout = useCallback(async () => {
+		await clearPersistedSession();
+		setIsRegistering(false);
+	}, [clearPersistedSession]);
 
 	useEffect(() => {
 		const initializeAuth = async () => {
-			// 1) See if we’ve already migrated
 			const seenVersion = await AsyncStorage.getItem(STORAGE_MIGRATION_KEY);
 			if (seenVersion !== SESSION_MIGRATION_VERSION) {
-				// first run after update → force logout
-				await AsyncStorage.removeItem("jwtToken");
-				setIsAuthenticated(false);
-				// mark that we’ve applied the migration
+				await clearPersistedSession();
 				await AsyncStorage.setItem(
 					STORAGE_MIGRATION_KEY,
 					SESSION_MIGRATION_VERSION
 				);
 			}
 
-			// 2) Now do your usual login check
-			await checkLoggedIn();
+			await hydrateFromStorage();
 			setIsRegistering(false);
+			setLoading(false);
 		};
 
 		initializeAuth();
-	}, []);
+	}, [clearPersistedSession, hydrateFromStorage]);
+
+	useEffect(() => {
+		const handleAppStateChange = (nextAppState: AppStateStatus) => {
+			if (nextAppState === "active") {
+				void checkLoggedIn();
+			}
+		};
+
+		const subscription = AppState.addEventListener(
+			"change",
+			handleAppStateChange
+		);
+
+		return () => {
+			subscription.remove();
+		};
+	}, [checkLoggedIn]);
+
+	useEffect(() => {
+		scheduleTokenExpiryCheck(token);
+	}, [token, scheduleTokenExpiryCheck]);
+
+	const contextValue: AuthContextType = {
+		isAuthenticated: !!token,
+		session,
+		token,
+		loading,
+		login,
+		logout,
+		checkLoggedIn,
+		isRegistering,
+		setIsRegistering,
+	};
 
 	return (
-		<AuthContext.Provider
-			value={{
-				isAuthenticated,
-				login,
-				logout,
-				checkLoggedIn,
-				isRegistering,
-				setIsRegistering,
-			}}>
-			{children}
-		</AuthContext.Provider>
+		<AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 	);
 };
 
-// Custom hook useAuth with proper typing
-export const useAuth = (): AuthContextType => {
+export const UseAuth = (): AuthContextType => {
 	const context = useContext(AuthContext);
 	if (context === undefined) {
 		throw new Error("useAuth must be used within an AuthProvider");

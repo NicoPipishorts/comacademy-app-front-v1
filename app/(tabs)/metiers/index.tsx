@@ -8,8 +8,7 @@ import useAuthSession from "@/hooks/useAuthSession";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
-import { useQueryClient } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
@@ -17,7 +16,6 @@ import MetierList from "./list";
 const Metier = () => {
 	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
-	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
 
@@ -27,10 +25,6 @@ const Metier = () => {
 		useGetMetiers(filterByCat);
 	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
 	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(auth?.user.id);
-
-	useEffect(() => {
-		queryClient.refetchQueries({ queryKey: ["metiersList"] });
-	}, [filterByCat, queryClient]);
 
 	if (
 		isLoadingMetier ||

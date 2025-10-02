@@ -5,13 +5,15 @@ import { useEffect, useRef, useState } from "react";
 export function useNotificationHandlers() {
 	const [notification, setNotification] =
 		useState<Notifications.Notification | null>(null);
-	const notificationListener = useRef<any>();
-	const responseListener = useRef<any>();
+	const notificationListener = useRef<Notifications.EventSubscription | null>(
+		null
+	);
+	const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
 	useEffect(() => {
 		notificationListener.current =
-			Notifications.addNotificationReceivedListener((notification) => {
-				setNotification(notification);
+			Notifications.addNotificationReceivedListener((incomingNotification) => {
+				setNotification(incomingNotification);
 			});
 
 		responseListener.current =
@@ -20,10 +22,8 @@ export function useNotificationHandlers() {
 			});
 
 		return () => {
-			Notifications.removeNotificationSubscription(
-				notificationListener.current
-			);
-			Notifications.removeNotificationSubscription(responseListener.current);
+			notificationListener.current?.remove();
+			responseListener.current?.remove();
 		};
 	}, []);
 

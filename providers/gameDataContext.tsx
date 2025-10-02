@@ -18,6 +18,8 @@ interface GameContextType {
 	setGameStatus: React.Dispatch<
 		React.SetStateAction<"in_progress" | "finished">
 	>;
+	answeredCount: number;
+	setAnsweredCount: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // Create the context
@@ -29,8 +31,9 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 	const [sessionId, setSessionsId] = useState<number | null>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number | null>(null);
 	const [gameStatus, setGameStatus] = useState<"in_progress" | "finished">(
-		"in_progress"
+		"finished"
 	);
+	const [answeredCount, setAnsweredCount] = useState<number>(0);
 
 	return (
 		<GameContext.Provider
@@ -43,6 +46,8 @@ export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
 				setSessionsId,
 				questionsLeft,
 				setQuestionsLeft,
+				answeredCount,
+				setAnsweredCount,
 			}}>
 			{children}
 		</GameContext.Provider>

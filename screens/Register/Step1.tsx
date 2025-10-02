@@ -1,4 +1,4 @@
-import { useAuth } from "@/auth/AuthContext";
+import { UseAuth } from "@/auth/AuthContext";
 import {
 	colorBlack,
 	colorGrey,
@@ -37,7 +37,7 @@ export default function RegisterStep1({
 	const [lastName, setLastName] = useState<string>("");
 	const [username, setUsername] = useState<string>("");
 	const [email, setEmail] = useState<string>("");
-	const { setIsRegistering } = useAuth();
+	const { setIsRegistering } = UseAuth();
 
 	// Reset the registered values if available
 	useEffect(() => {

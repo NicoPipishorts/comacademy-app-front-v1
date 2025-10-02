@@ -7,8 +7,8 @@ interface payload {
 	name: string;
 	selectedColor: string | number;
 	authToken: string;
-	modalType: "new" | "edit";
-	playlistId: number;
+	modalType?: "new" | "edit";
+	playlistId?: number | null;
 }
 
 interface SuccessResponse {
@@ -36,27 +36,22 @@ export const useCreateNewPlaylist = (
 			modalType,
 			playlistId,
 		}: payload) => {
-			let method: string;
-			let url: string;
-			let message: string;
-
-			if (modalType === "new") {
-				method = "POST";
-				url = `${process.env.EXPO_PUBLIC_API_URL}/playlists`;
-				message = "La playlist a été créée";
-			} else {
-				method = "PUT";
-				url = `${process.env.EXPO_PUBLIC_API_URL}/playlists/${playlistId}`;
-				message = "La playlist a été modifiée";
-			}
+			const isEdit = modalType === "edit" && playlistId != null;
+			const method = isEdit ? "PUT" : "POST";
+			const url = isEdit
+				? `${process.env.EXPO_PUBLIC_API_URL}/playlists/${playlistId}`
+				: `${process.env.EXPO_PUBLIC_API_URL}/playlists`;
+			const message = isEdit
+				? "La playlist a été modifiée"
+				: "La playlist a été créée";
 
 			try {
-				const response: AxiosResponse<SuccessResponse> = await axios({
-					method: method,
-					url: url,
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${authToken}`,
+			const response: AxiosResponse<SuccessResponse> = await axios({
+				method: method,
+				url: url,
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${authToken}`,
 					},
 					data: {
 						data: {

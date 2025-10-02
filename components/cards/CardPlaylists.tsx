@@ -1,5 +1,5 @@
-import { colorBlue, colorRed } from "@/constants/colors";
-import { FontSize18 } from "@/constants/fontsizes";
+import { colorBlue, colorRed, colorWhite } from "@/constants/colors";
+import { FontSize14, FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
@@ -51,50 +51,68 @@ export default function CardPlaylist({
 	};
 
 	const renderRightActions = (
-		progress: Animated.AnimatedInterpolation<number>
+		progress: Animated.AnimatedInterpolation<number>,
+		_dragAnimatedValue: Animated.AnimatedInterpolation<number>
 	) => {
-		// Animate the buttons as you swipe
-		const translateX = progress.interpolate({
+		const editTranslate = progress.interpolate({
 			inputRange: [0, 1],
-			outputRange: [160, 0], // Buttons slide in from the right
+			outputRange: [80, 0],
+		});
+
+		const deleteTranslate = progress.interpolate({
+			inputRange: [0, 1],
+			outputRange: [160, 0],
+		});
+
+		const scale = progress.interpolate({
+			inputRange: [0, 1],
+			outputRange: [0.8, 1],
 		});
 
 		return (
 			<View style={styles.rightActionContainer}>
 				<Animated.View
 					style={[
-						styles.actionEdit,
 						styles.actionButton,
-						{ transform: [{ translateX }] },
+						styles.actionEdit,
+						{
+							transform: [{ translateX: editTranslate }, { scale }],
+						},
 					]}>
 					<Pressable
 						style={styles.rightAction}
 						onPress={() => {
 							handleEditPlaylist(id);
 							closeSwipeable();
-						}}>
+						}}
+						android_ripple={{ color: "rgba(255, 255, 255, 0.3)" }}>
 						<Image
 							source={require("@/assets/imgs/icons/pencil_white.png")}
-							style={{ width: 24, height: 24 }}
+							style={styles.actionIcon}
 						/>
+						<Text style={styles.actionText}>Edit</Text>
 					</Pressable>
 				</Animated.View>
 				<Animated.View
 					style={[
-						styles.actionDelete,
 						styles.actionButton,
-						{ transform: [{ translateX }] },
+						styles.actionDelete,
+						{
+							transform: [{ translateX: deleteTranslate }, { scale }],
+						},
 					]}>
 					<Pressable
 						style={styles.rightAction}
 						onPress={() => {
 							handDeletePlaylist(id);
 							closeSwipeable();
-						}}>
+						}}
+						android_ripple={{ color: "rgba(255, 255, 255, 0.3)" }}>
 						<Image
 							source={require("@/assets/imgs/icons/trash_white.png")}
-							style={{ width: 24, height: 24 }}
+							style={styles.actionIcon}
 						/>
+						<Text style={styles.actionText}>Delete</Text>
 					</Pressable>
 				</Animated.View>
 			</View>
@@ -102,16 +120,14 @@ export default function CardPlaylist({
 	};
 
 	return (
-		<View
-			style={{
-				flex: 1,
-			}}>
+		<View style={styles.container}>
 			<Swipeable
 				key={id}
 				ref={(ref) => (swipeableRefs.current[id] = ref)}
 				friction={2}
+				overshootRight={false}
 				rightThreshold={40}
-				renderRightActions={(progress) => renderRightActions(progress)}
+				renderRightActions={renderRightActions}
 				onSwipeableWillOpen={() => {
 					if (
 						openedSwipeable &&
@@ -125,21 +141,22 @@ export default function CardPlaylist({
 					setOpenedSwipeable(null);
 				}}>
 				<TouchableOpacity
-					style={styles.wrapper}
+					style={styles.cardContainer}
+					activeOpacity={0.7}
 					onPress={() => {
 						handlePress();
-						closeSwipeable(); // Close swipeable when card is pressed
+						closeSwipeable();
 					}}>
-					<PlaylistDisplayImage
-						title={title}
-						image={color}
-						width={70}
-						height={70}
-					/>
-					<View style={{ flexDirection: "column" }}>
-						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
-							{title}
-						</Text>
+					<View style={styles.cardContent}>
+						<PlaylistDisplayImage
+							title={title}
+							image={color}
+							width={70}
+							height={70}
+						/>
+						<View style={styles.textContainer}>
+							<Text style={styles.title}>{title}</Text>
+						</View>
 					</View>
 				</TouchableOpacity>
 			</Swipeable>
@@ -148,32 +165,63 @@ export default function CardPlaylist({
 }
 
 const styles = StyleSheet.create({
+	container: {
+		marginBottom: 8,
+	},
+	cardContainer: {
+		backgroundColor: "transparent",
+		borderRadius: 12,
+	},
+	cardContent: {
+		flexDirection: "row",
+		alignItems: "center",
+		padding: 16,
+		paddingLeft: 0,
+	},
+	textContainer: {
+		flex: 1,
+		marginLeft: 16,
+	},
+	title: {
+		fontSize: FontSize18,
+		fontWeight: "600",
+		color: "#000",
+	},
 	rightActionContainer: {
 		flexDirection: "row",
-		maxWidth: 160,
-	},
-	rightAction: {
-		display: "flex",
-		justifyContent: "center",
 		alignItems: "center",
-		minHeight: "100%",
-		minWidth: "100%",
+		marginLeft: 8,
 	},
 	actionButton: {
-		width: "50%",
-		borderRadius: 5,
-		marginVertical: 10,
+		width: 80,
+		height: "100%",
 		justifyContent: "center",
+		alignItems: "center",
+		borderRadius: 12,
 	},
-	actionDelete: {
-		backgroundColor: colorRed,
+	rightAction: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		width: "100%",
+		height: "100%",
+		paddingHorizontal: 12,
+	},
+	actionIcon: {
+		width: 22,
+		height: 22,
+		marginBottom: 4,
+	},
+	actionText: {
+		color: colorWhite,
+		fontSize: FontSize14,
+		fontWeight: "600",
 	},
 	actionEdit: {
 		backgroundColor: colorBlue,
+		marginRight: 4,
 	},
-	wrapper: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginVertical: 12,
+	actionDelete: {
+		backgroundColor: colorRed,
 	},
 });

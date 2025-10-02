@@ -1,7 +1,10 @@
+import "react-native-reanimated";
+
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import { NetworkProvider } from "@/providers/NetworkProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { setAudioModeAsync } from "expo-audio";
 import { Stack } from "expo-router";
 import React from "react";
@@ -19,21 +22,23 @@ export default function RootLayout() {
 	return (
 		<AuthProvider>
 			<QueryClientProvider client={queryClient}>
-				<GestureHandlerRootView>
-					<PaperProvider>
-						<SnackbarProvider>
-							<NetworkProvider>
-								<TabProvider>
-									<Stack screenOptions={{ animation: "none" }}>
-										<Stack.Screen
-											name='(tabs)'
-											options={{ headerShown: false }}
-										/>
-									</Stack>
-								</TabProvider>
-							</NetworkProvider>
-						</SnackbarProvider>
-					</PaperProvider>
+				<GestureHandlerRootView style={{ flex: 1 }}>
+					<BottomSheetModalProvider>
+						<PaperProvider>
+							<SnackbarProvider>
+								<NetworkProvider>
+									<TabProvider>
+										<Stack screenOptions={{ animation: "none" }}>
+											<Stack.Screen
+												name='(tabs)'
+												options={{ headerShown: false }}
+											/>
+										</Stack>
+									</TabProvider>
+								</NetworkProvider>
+							</SnackbarProvider>
+						</PaperProvider>
+					</BottomSheetModalProvider>
 				</GestureHandlerRootView>
 			</QueryClientProvider>
 		</AuthProvider>

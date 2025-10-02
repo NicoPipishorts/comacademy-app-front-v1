@@ -1,25 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { UseAuth } from "@/auth/AuthContext";
 
 const useJwtToken = () => {
-	const [token, setToken] = useState<string | null>(null);
-	const [loading, setLoading] = useState<boolean>(true);
-
-	useEffect(() => {
-		const fetchToken = async () => {
-			try {
-				const storedToken = await AsyncStorage.getItem("jwtToken");
-				setToken(storedToken);
-			} catch (error) {
-				console.error("Failed to retrieve token", error);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchToken();
-	}, []);
-
+	const { token, loading } = UseAuth();
 	return { token, loading };
 };
 

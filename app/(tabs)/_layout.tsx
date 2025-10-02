@@ -1,5 +1,5 @@
 // app/(tabs)/_layout.tsx
-import { useAuth } from "@/auth/AuthContext";
+import { UseAuth } from "@/auth/AuthContext";
 import BannerContainer from "@/components/banners/bannerContainer";
 import TabBar from "@/components/TabBar";
 import {
@@ -33,12 +33,8 @@ const CustomTabBar: React.FC<any> = (props) => {
 	return <TabBar {...props} />;
 };
 
-const _layout: React.FC = () => {
-	const { isAuthenticated, isRegistering, logout } = useAuth();
-
-	// useEffect(() => {
-	// 	logout();
-	// }, []);
+const TabsLayout: React.FC = () => {
+	const { isAuthenticated, isRegistering } = UseAuth();
 
 	if (!isAuthenticated && !isRegistering) {
 		return <LoginScreen />;
@@ -81,7 +77,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "Feed",
 						headerShown: false,
-						unmountOnBlur: true,
 					}}
 				/>
 				<Tabs.Screen
@@ -89,7 +84,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "Playlists",
 						headerShown: false,
-						unmountOnBlur: true,
 					}}
 				/>
 				<Tabs.Screen
@@ -97,7 +91,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "Dico",
 						headerShown: false,
-						unmountOnBlur: true,
 					}}
 				/>
 				<Tabs.Screen
@@ -105,7 +98,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "Feedback",
 						headerShown: false,
-						unmountOnBlur: true,
 					}}
 				/>
 				<Tabs.Screen
@@ -113,7 +105,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "Metiers",
 						headerShown: false,
-						unmountOnBlur: true,
 					}}
 				/>
 				<Tabs.Screen
@@ -128,7 +119,6 @@ const _layout: React.FC = () => {
 					options={{
 						tabBarLabel: "Citations",
 						headerShown: false,
-						unmountOnBlur: true,
 					}}
 				/>
 				<Tabs.Screen
@@ -179,4 +169,4 @@ const _layout: React.FC = () => {
 	);
 };
 
-export default _layout;
+export default TabsLayout;
