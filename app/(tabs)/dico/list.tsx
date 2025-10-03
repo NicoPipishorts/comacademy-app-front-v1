@@ -1,7 +1,9 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
 import Searchbar from "@/components/Searchbar";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { CategoriePayload } from "@/types/categories";
 import { DicoLists, DicoSelected } from "@/types/dico";
 import { NavigationType } from "@/types/general";
@@ -38,6 +40,13 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 	}>({});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredData, setFilteredData] = useState<DicoSelected[]>([]);
+
+	const {
+		isItemLocked,
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+	} = useSubscriptionLimit({ freeLimit: 10 });
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -142,7 +151,11 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 		[data]
 	);
 
-	const handlePress = (id: number) => {
+	const handlePress = (id: number, index: number) => {
+		if (isItemLocked(index)) {
+			handleLockedItemPress();
+			return;
+		}
 		navigation.navigate("dicoDetails", { id });
 	};
 
@@ -153,6 +166,12 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 			<View style={{ paddingTop: 30 }}>
 				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
+
+			<UpgradeSubscriptionModal
+				visible={showUpgradeModal}
+				onClose={closeUpgradeModal}
+				message="Les 10 premiers mots du dictionnaire sont gratuits. Passez à un abonnement premium pour accéder à l'intégralité du dictionnaire."
+			/>
 
 			<View style={styles.contentContainer}>
 				<ScrollView
@@ -176,30 +195,48 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 						</View>
 					)}
 					{searchQuery
-						? filteredData.map((item, index) => (
-								<TouchableOpacity
-									key={index}
-									onPress={() => handlePress(item.id)}>
-									<Text style={styles.listItem}>{item.Word}</Text>
-								</TouchableOpacity>
-						  ))
-						: alphabet.map((letter) => (
-				<View
-					key={letter}
-					ref={(el) => {
-						sectionRefs.current[letter] = el;
-					}}>
-									<Text style={styles.listHeader}>{letter}</Text>
-									{groupedData[letter]?.map((item, index) => (
+						? filteredData.map((item, index) => {
+								const locked = isItemLocked(index);
+								return (
+									<TouchableOpacity
+										key={index}
+										onPress={() => handlePress(item.id, index)}>
 										<Text
-											key={index}
-											style={styles.listItem}
-											onPress={() => handlePress(item.id)}>
+											style={[styles.listItem, locked && styles.lockedItem]}>
 											{item.Word}
 										</Text>
-									))}
-								</View>
-						  ))}
+									</TouchableOpacity>
+								);
+						  })
+						: (() => {
+								let globalIndex = 0;
+								return alphabet.map((letter) => (
+									<View
+										key={letter}
+										ref={(el) => {
+											sectionRefs.current[letter] = el;
+										}}>
+										<Text style={styles.listHeader}>{letter}</Text>
+										{groupedData[letter]?.map((item, localIndex) => {
+											const currentIndex = globalIndex++;
+											const locked = isItemLocked(currentIndex);
+											return (
+												<Text
+													key={localIndex}
+													style={[
+														styles.listItem,
+														locked && styles.lockedItem,
+													]}
+													onPress={() =>
+														handlePress(item.id, currentIndex)
+													}>
+													{item.Word}
+												</Text>
+											);
+										})}
+									</View>
+								));
+						  })()}
 				</ScrollView>
 
 				{!searchQuery && filteredData.length > 0 && (
@@ -244,6 +281,9 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: 18,
 		fontWeight: "500",
+	},
+	lockedItem: {
+		opacity: 0.4,
 	},
 	sidebar: {
 		width: 30,

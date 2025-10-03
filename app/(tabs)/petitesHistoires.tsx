@@ -1,6 +1,17 @@
 // File: src/screens/LesPetitesHistoires.tsx
-import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+	useFocusEffect,
+	useIsFocused,
+	useNavigation,
+} from "@react-navigation/native";
+import { BlurView } from "expo-blur";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	Animated,
 	Dimensions,
@@ -15,11 +26,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
 import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 
 const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
@@ -28,6 +41,16 @@ const LesPetitesHistoires: React.FC = () => {
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
+
+	const {
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+		isFreeUser,
+	} = useSubscriptionLimit({ freeLimit: 5 });
+
+	const isScreenFocused = useIsFocused();
+	const navigation = useNavigation();
 
 	// Dimensions for videos
 	const { width } = Dimensions.get("window");
@@ -41,7 +64,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const focusedIndexRef = useRef(0);
 
 	// Local state
-	const [, setFocusedIndex] = useState(0);
+	const [focusedIndex, setFocusedIndex] = useState(0);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
 	const handlePlaybackStatus = usePlaybackReset(
@@ -69,7 +92,7 @@ const LesPetitesHistoires: React.FC = () => {
 		);
 	}, []);
 
-	// Pause whenever screen loses focus or unmounts
+	// Pause whenever screen loses focus or unmounts (navigation blur)
 	useFocusEffect(
 		useCallback(() => {
 			return () => {
@@ -77,6 +100,21 @@ const LesPetitesHistoires: React.FC = () => {
 			};
 		}, [pauseAllVideos])
 	);
+
+	// EXTRA: also pause on tab blur explicitly
+	useEffect(() => {
+		const unsub = navigation.addListener("blur", () => {
+			pauseAllVideos();
+		});
+		return unsub;
+	}, [navigation, pauseAllVideos]);
+
+	// EXTRA: pause when focus flag flips to false (some routers keep screen mounted)
+	useEffect(() => {
+		if (!isScreenFocused) {
+			pauseAllVideos();
+		}
+	}, [isScreenFocused, pauseAllVideos]);
 
 	// When the visible item changes, pause the old and play the new
 	const onViewableItemsChanged = useCallback(
@@ -106,26 +144,33 @@ const LesPetitesHistoires: React.FC = () => {
 				setFocusedIndex(newIndex);
 				setIsFirstRender(false);
 
+				// Check if new index is locked
+				const isNewIndexLocked = isFreeUser && newIndex >= 5;
+
 				if (!fadeAnim[newIndex]) {
 					fadeAnim[newIndex] = new Animated.Value(1);
 				}
-				Animated.timing(fadeAnim[newIndex], {
-					toValue: 0,
-					duration: 400,
-					useNativeDriver: true,
-				}).start();
 
-				const newRef = videoRefs.current[newIndex];
-				if (newRef) {
-					const resumePosition = videoPositions.current[newIndex] || 0;
-					await newRef.setPositionAsync(resumePosition, {
-						toleranceMillis: 50,
-					});
-					await newRef.playAsync();
+				// Only fade out and play if not locked
+				if (!isNewIndexLocked) {
+					Animated.timing(fadeAnim[newIndex], {
+						toValue: 0,
+						duration: 400,
+						useNativeDriver: true,
+					}).start();
+
+					const newRef = videoRefs.current[newIndex];
+					if (newRef) {
+						const resumePosition = videoPositions.current[newIndex] || 0;
+						await newRef.setPositionAsync(resumePosition, {
+							toleranceMillis: 50,
+						});
+						await newRef.playAsync();
+					}
 				}
 			}
 		},
-		[fadeAnim, isFirstRender, setFocusedIndex]
+		[fadeAnim, isFirstRender, setFocusedIndex, isFreeUser]
 	);
 
 	const viewabilityConfig = useMemo(
@@ -135,10 +180,49 @@ const LesPetitesHistoires: React.FC = () => {
 
 	const stories = useMemo(() => data?.data ?? [], [data]);
 
+	// OPTIONAL (parity with TrenteSecondes): autoplay first item on mount; pause on hard unmount
+	useEffect(() => {
+		if (isLoading) return;
+		if (!stories.length) return;
+
+		const initialIndex = 0;
+		const locked = isFreeUser && initialIndex >= 5;
+
+		focusedIndexRef.current = initialIndex;
+		setFocusedIndex(initialIndex);
+		setIsFirstRender(false);
+
+		if (!fadeAnim[initialIndex]) {
+			fadeAnim[initialIndex] = new Animated.Value(0);
+		} else {
+			fadeAnim[initialIndex].setValue(0);
+		}
+
+		if (!locked) {
+			const tryPlay = () => {
+				const ref = videoRefs.current[initialIndex];
+				if (ref) {
+					ref.playAsync().catch(() => {});
+				} else {
+					requestAnimationFrame(tryPlay);
+				}
+			};
+			tryPlay();
+		}
+
+		return () => {
+			pauseAllVideos();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isLoading, isFreeUser, stories.length, pauseAllVideos]);
+
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
 			const videoUri = item.attributes.videoUri;
-			const isFocused = focusedIndexRef.current === index;
+			const isFocused = focusedIndex === index;
+			const isLocked = isFreeUser && index >= 5;
+			const shouldPlayVideo = isScreenFocused && isFocused && !isLocked;
+
 			if (!fadeAnim[index]) {
 				fadeAnim[index] = new Animated.Value(
 					isFirstRender && index === 0 ? 0 : 1
@@ -154,14 +238,16 @@ const LesPetitesHistoires: React.FC = () => {
 					]}>
 					<View style={styles.videoContainer}>
 						<ExpoVideo
-							ref={(ref) => (videoRefs.current[index] = ref)}
+							ref={(ref: ManagedVideoHandle | null) => {
+								videoRefs.current[index] = ref;
+							}}
 							source={{ uri: videoUri }}
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							shouldPlay={isFocused}
+							shouldPlay={shouldPlayVideo}
 							positionMillis={videoPositions.current[index] || 0}
-							useNativeControls
+							useNativeControls={!isLocked}
 							onPlaybackStatusUpdate={(status) =>
 								handlePlaybackStatus(status, index)
 							}
@@ -187,6 +273,23 @@ const LesPetitesHistoires: React.FC = () => {
 								</TouchableOpacity>
 							</Animated.View>
 						)}
+
+						{isLocked && (
+							<TouchableOpacity
+								activeOpacity={1}
+								onPress={handleLockedItemPress}
+								style={[StyleSheet.absoluteFillObject]}>
+								<BlurView intensity={80} style={styles.lockedOverlay}>
+									<View style={styles.lockedContent}>
+										<Text style={styles.lockIcon}>🔒</Text>
+										<Text style={styles.lockedText}>Contenu Premium</Text>
+										<Text style={styles.lockedSubtext}>
+											Passez à Premium pour accéder
+										</Text>
+									</View>
+								</BlurView>
+							</TouchableOpacity>
+						)}
 					</View>
 				</Animated.View>
 			);
@@ -195,9 +298,12 @@ const LesPetitesHistoires: React.FC = () => {
 			fadeAnim,
 			handlePlaybackStatus,
 			isFirstRender,
-			setFocusedIndex,
+			focusedIndex,
 			videoHeight,
 			videoWidth,
+			isFreeUser,
+			handleLockedItemPress,
+			isScreenFocused,
 		]
 	);
 
@@ -222,6 +328,13 @@ const LesPetitesHistoires: React.FC = () => {
 			<View style={styles.headerPadding}>
 				<ScreenHeaders content='La petite histoire' />
 			</View>
+
+			<UpgradeSubscriptionModal
+				visible={showUpgradeModal}
+				onClose={closeUpgradeModal}
+				message='Les 5 premières vidéos La petite histoire des marques sont gratuites. Passez à un abonnement premium pour accéder à toutes les vidéos.'
+			/>
+
 			<Animated.FlatList
 				style={styles.list}
 				data={stories}
@@ -301,6 +414,32 @@ const styles = StyleSheet.create({
 	playIcon: {
 		color: "#FFF",
 		fontSize: 30,
+	},
+	lockedOverlay: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+	},
+	lockedContent: {
+		alignItems: "center",
+		padding: 20,
+	},
+	lockIcon: {
+		fontSize: 48,
+		marginBottom: 16,
+	},
+	lockedText: {
+		color: "#FFF",
+		fontSize: 20,
+		fontWeight: "bold",
+		marginBottom: 8,
+		textAlign: "center",
+	},
+	lockedSubtext: {
+		color: "#CCC",
+		fontSize: 14,
+		textAlign: "center",
 	},
 });
 
