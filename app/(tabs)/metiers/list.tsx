@@ -1,7 +1,9 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
 import Searchbar from "@/components/Searchbar";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { CategoriePayload } from "@/types/categories";
 import { NavigationType } from "@/types/general";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
@@ -43,6 +45,22 @@ const MetierList = ({
 	}>({});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredData, setFilteredData] = useState<SelectedMetier[]>([]);
+
+	const {
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+		isFreeUser,
+	} = useSubscriptionLimit({ freeLimit: 0 }); // Not using index-based locking for metiers
+
+	// Custom logic: Lock items after the first one in each letter group
+	const isMetierLocked = useCallback(
+		(indexInGroup: number): boolean => {
+			if (!isFreeUser) return false;
+			return indexInGroup > 0; // Lock all items except the first in each group
+		},
+		[isFreeUser]
+	);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -149,7 +167,11 @@ const MetierList = ({
 		[data]
 	);
 
-	const handlePress = (id: number) => {
+	const handlePress = (id: number, indexInGroup: number) => {
+		if (isMetierLocked(indexInGroup)) {
+			handleLockedItemPress();
+			return;
+		}
 		navigation.navigate("metierDetails", { id });
 	};
 
@@ -162,6 +184,12 @@ const MetierList = ({
 					onChangeText={handleSearch} // Pass the handleSearch function to the Searchbar
 				/>
 			</View>
+
+			<UpgradeSubscriptionModal
+				visible={showUpgradeModal}
+				onClose={closeUpgradeModal}
+				message="Un métier de chaque lettre est gratuit. Passez à un abonnement premium pour accéder à tous les métiers."
+			/>
 
 			{filteredData.length <= 0 && (
 				<View style={styles.noDataContainer}>
@@ -187,23 +215,37 @@ const MetierList = ({
 
 					{/* If search query is active, render filtered data, else render grouped data */}
 					{searchQuery
-						? filteredData.map((item, index) => (
-								<TouchableOpacity
-									key={index}
-									onPress={() => handlePress(item.id)}>
-									<Text style={styles.listItem}>{item.METIER}</Text>
-								</TouchableOpacity>
-						  ))
+						? filteredData.map((item, index) => {
+								const locked = isMetierLocked(index);
+								return (
+									<TouchableOpacity
+										key={index}
+										onPress={() => handlePress(item.id, index)}>
+										<Text style={[styles.listItem, locked && styles.lockedItem]}>
+											{item.METIER}
+										</Text>
+									</TouchableOpacity>
+								);
+						  })
 						: alphabet.map((letter) => (
 								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
 									<Text style={styles.listHeader}>{letter}</Text>
-									{groupedData[letter]?.map((item, index) => (
-										<TouchableOpacity
-											key={index}
-											onPress={() => handlePress(item.id)}>
-											<Text style={styles.listItem}>{item.METIER}</Text>
-										</TouchableOpacity>
-									))}
+									{groupedData[letter]?.map((item, indexInGroup) => {
+										const locked = isMetierLocked(indexInGroup);
+										return (
+											<TouchableOpacity
+												key={indexInGroup}
+												onPress={() => handlePress(item.id, indexInGroup)}>
+												<Text
+													style={[
+														styles.listItem,
+														locked && styles.lockedItem,
+													]}>
+													{item.METIER}
+												</Text>
+											</TouchableOpacity>
+										);
+									})}
 								</View>
 						  ))}
 				</ScrollView>
@@ -267,6 +309,9 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: 18,
 		fontWeight: "500",
+	},
+	lockedItem: {
+		opacity: 0.4,
 	},
 	sidebar: {
 		width: 30,

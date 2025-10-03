@@ -15,14 +15,28 @@ interface Props {
 	image: string;
 	content: string;
 	category: string;
+	onPress?: () => void;
+	locked?: boolean;
 }
 
 export default function CardSimpleButtonCitrationsMenu({
 	image,
 	content,
 	category,
+	onPress,
+	locked = false,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
+
+	const handlePress = () => {
+		if (onPress) {
+			onPress();
+		} else {
+			navigation.navigate("CitationsDetails", {
+				citationCategory: category,
+			});
+		}
+	};
 	let [fontsLoaded] = useFonts({
 		Inter_700Bold,
 	});
@@ -32,7 +46,10 @@ export default function CardSimpleButtonCitrationsMenu({
 	}
 
 	return (
-		<View style={styles.cardWrapper}>
+		<TouchableOpacity
+			style={[styles.cardWrapper, locked && styles.lockedCard]}
+			onPress={handlePress}
+			activeOpacity={0.8}>
 			<View
 				style={{
 					borderRadius: 25,
@@ -47,20 +64,14 @@ export default function CardSimpleButtonCitrationsMenu({
 					<View style={styles.cardTextContainer}>
 						<View style={styles.buttonContainer}>
 							<Text style={styles.cardText}>{content}</Text>
-							<TouchableOpacity
-								style={styles.buttonBlack}
-								onPress={() =>
-									navigation.navigate("CitationsDetails", {
-										citationCategory: category,
-									})
-								}>
+							<View style={styles.buttonBlack}>
 								<Text style={styles.buttonText}>Voir</Text>
-							</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				</ImageBackground>
 			</View>
-		</View>
+		</TouchableOpacity>
 	);
 }
 
@@ -109,5 +120,8 @@ const styles = StyleSheet.create({
 	buttonText: {
 		color: colorWhite,
 		fontWeight: "bold",
+	},
+	lockedCard: {
+		opacity: 0.4,
 	},
 });
