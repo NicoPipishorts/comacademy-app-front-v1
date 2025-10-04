@@ -9,7 +9,7 @@
 		"userInterfaceStyle": "automatic",
 
 		"splash": {
-			"image": "./assets/imgs/splash/splashscreen_logo.png",
+			"image": "./assets/imgs/icons/favicon.png",
 			"resizeMode": "contain",
 			"backgroundColor": "#f5f5f5"
 		},
@@ -35,7 +35,7 @@
 			},
 			"package": "com.nicopipishorts.comacademy",
 			"splash": {
-				"image": "./assets/imgs/splash/splashscreen_logo.png",
+				"image": "./assets/imgs/icons/favicon.png",
 				"resizeMode": "contain",
 				"backgroundColor": "#f5f5f5"
 			}
@@ -48,21 +48,13 @@
 		},
 
 		"plugins": ["expo-router", "expo-font"],
-		"experiments": {
-			"typedRoutes": true
-		},
+		"experiments": { "typedRoutes": true },
 		"extra": {
-			"router": {
-				"origin": false
-			},
-			"eas": {
-				"projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
-			}
+			"router": { "origin": false },
+			"eas": { "projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e" }
 		},
 		"owner": "nicopipishorts",
-		"runtimeVersion": {
-			"policy": "appVersion"
-		},
+		"runtimeVersion": { "policy": "appVersion" },
 		"updates": {
 			"url": "https://u.expo.dev/0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
 		}
