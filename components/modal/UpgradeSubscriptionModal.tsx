@@ -89,19 +89,22 @@ export default function UpgradeSubscriptionModal({
 			ref={bottomSheetRef}
 			index={0}
 			snapPoints={snapPoints}
-			backdropComponent={(props) => <BlurBackdrop {...props} />}
-			backgroundStyle={styles.sheetBackground}
+			backdropComponent={(props) => <BlurBackdrop {...props} />} // ← custom blurred, tappable backdrop
+			backgroundStyle={styles.sheetBackground} // ← OPAQUE sheet stays
 			handleIndicatorStyle={styles.hiddenIndicator}
 			enablePanDownToClose
-			onDismiss={handleDismiss}>
+			onDismiss={handleDismiss} // onClose runs AFTER animation
+		>
 			<BottomSheetView style={styles.contentContainer}>
 				<ModalGestureLine />
 				<View style={styles.content}>
 					<Text style={styles.title}>Abonnement Premium requis</Text>
 					<Text style={styles.message}>{displayMessage}</Text>
-					<TouchableOpacity style={buttonBlack} onPress={handleUpgradePress}>
-						<Text style={styles.upgradeButtonText}>Passer à Premium</Text>
-					</TouchableOpacity>
+					<View style={styles.buttonContainer}>
+						<TouchableOpacity style={buttonBlack} onPress={handleUpgradePress}>
+							<Text style={styles.upgradeButtonText}>Passer à Premium</Text>
+						</TouchableOpacity>
+					</View>
 					<TouchableOpacity style={styles.cancelButton} onPress={onClose}>
 						<Text style={styles.cancelButtonText}>Plus tard</Text>
 					</TouchableOpacity>
@@ -112,6 +115,11 @@ export default function UpgradeSubscriptionModal({
 }
 
 const styles = StyleSheet.create({
+	transparentSheetBackground: {
+		backgroundColor: "rgba(0,0,0,0.2)", // subtle overlay inside the modal
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+	},
 	sheetBackground: {
 		backgroundColor: primaryBackground,
 		borderTopLeftRadius: 20,
@@ -164,5 +172,9 @@ const styles = StyleSheet.create({
 	cancelButtonText: {
 		color: "#666666",
 		fontSize: FontSize16,
+	},
+	buttonContainer: {
+		alignItems: "center",
+		width: "100%",
 	},
 });

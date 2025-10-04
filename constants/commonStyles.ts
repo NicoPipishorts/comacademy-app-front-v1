@@ -1,4 +1,4 @@
-import { ViewStyle, TextStyle, ImageStyle } from "react-native";
+import { ImageStyle, TextStyle, ViewStyle } from "react-native";
 import { colorBlack, colorWhite, primaryBackground } from "./colors";
 
 // ===== BUTTON STYLES =====
@@ -8,7 +8,7 @@ export const buttonBlack: ViewStyle = {
 	paddingVertical: 10,
 	paddingHorizontal: 35,
 	borderRadius: 50,
-	alignSelf: "flex-start",
+	alignSelf: "center",
 };
 
 export const smallButton: ViewStyle = {
