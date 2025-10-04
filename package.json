@@ -15,6 +15,9 @@
 	"jest": {
 		"preset": "jest-expo"
 	},
+	"engines": {
+		"node": ">=20.19.4"
+	},
 	"dependencies": {
 		"@babel/preset-env": "^7.28.3",
 		"@expo-google-fonts/inter": "^0.2.3",
