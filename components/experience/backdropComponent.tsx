@@ -3,9 +3,15 @@ import {
 	useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import { BlurView } from "expo-blur";
-import React, { useCallback } from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+	Extrapolation,
+	interpolate,
+	runOnJS,
+	useAnimatedReaction,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -14,30 +20,49 @@ export default function BlurBackdrop({
 	style,
 }: BottomSheetBackdropProps) {
 	const { dismiss } = useBottomSheetModal();
+	const [interactive, setInteractive] = useState(false);
 
-	// Fade the blur with the sheet
-	const animatedStyle = useAnimatedStyle(() => {
-		return { opacity: animatedIndex.value > -1 ? 1 : 0 };
-	});
+	// Toggle touch only while visible so it doesn't block the app after close
+	useAnimatedReaction(
+		() => animatedIndex.value > -1,
+		(isVisible) => runOnJS(setInteractive)(isVisible),
+		[animatedIndex]
+	);
 
-	// Wrap dismiss (boolean return) into a void-returning handler
-	const handlePress = useCallback(() => {
-		dismiss(); // ignore boolean; we don't need the return value
-	}, [dismiss]);
+	// Fade *with* the sheet's animation to avoid the 1s lag
+	const rStyle = useAnimatedStyle(() => ({
+		opacity: interpolate(
+			animatedIndex.value,
+			[-1, 0],
+			[0, 1],
+			Extrapolation.CLAMP
+		),
+	}));
 
 	return (
-		<Pressable
-			style={StyleSheet.absoluteFill}
-			onPress={handlePress}
-			// ensure the pressable sits above content behind
-			pointerEvents='auto'>
-			<AnimatedBlurView
-				style={[StyleSheet.absoluteFill, style, animatedStyle]}
-				tint='dark'
-				intensity={40}
-				// For Android SDK 51+, you can try:
-				// experimentalBlurMethod="dimezisBlurView"
-			/>
-		</Pressable>
+		<Animated.View
+			// Ensure full-screen coverage regardless of library internals
+			style={[StyleSheet.absoluteFill, style, rStyle]}
+			pointerEvents={interactive ? "auto" : "none"}>
+			{/* Tap outside closes by calling the sheet's own dismiss (keeps timing in sync) */}
+			<Pressable style={StyleSheet.absoluteFill} onPress={() => dismiss()}>
+				<AnimatedBlurView
+					style={StyleSheet.absoluteFill}
+					tint='dark'
+					intensity={60}
+					// If Android blur is faint, try:
+					// experimentalBlurMethod="dimezisBlurView"
+				/>
+				{/* Optional subtle dim so blur reads better */}
+				<Animated.View
+					pointerEvents='none'
+					style={[
+						StyleSheet.absoluteFill,
+						rStyle,
+						{ backgroundColor: "rgba(0,0,0,0.15)" },
+					]}
+				/>
+			</Pressable>
+		</Animated.View>
 	);
 }

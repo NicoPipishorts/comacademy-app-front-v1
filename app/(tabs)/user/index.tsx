@@ -1,5 +1,6 @@
 import { UseAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import ChangeAvatar from "@/components/user/changeAvatar";
@@ -14,6 +15,7 @@ import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useSubscriptionPrompt } from "@/hooks/useSubscriptionPrompt";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -59,6 +61,12 @@ export default function User() {
 	}, [openModal, timestamp, router]); // timestamp will always be different
 
 	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
+
+	// Subscription prompt hook
+	const totalAnsweredQuestions =
+		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
+	const { shouldShowModal, dismissModal } =
+		useSubscriptionPrompt(totalAnsweredQuestions);
 
 	const lastFetchTimeRef = useRef<number>(Date.now());
 
@@ -186,6 +194,12 @@ export default function User() {
 					/>
 				</View>
 			)}
+
+			<UpgradeSubscriptionModal
+				visible={shouldShowModal}
+				onClose={dismissModal}
+				message="Félicitations ! Tu as atteint le niveau 1 ! Continue ton aventure avec un abonnement Premium pour débloquer tout le contenu."
+			/>
 		</KeyboardAvoidingView>
 	);
 }

@@ -12,17 +12,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSessionAction } from "@/api/game/useNewSession";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useAuthSession from "@/hooks/useAuthSession";
+import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { NavigationType } from "@/types/general";
 import { useFocusEffect, useNavigation } from "expo-router";
-
-import useAuthSession from "@/hooks/useAuthSession";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
@@ -35,9 +36,15 @@ export default function LeJeu() {
 	const [isEnabled, setIsEnabled] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
+	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
+
+	// Get user score to check level
+	const { data: scores } = useGetUserScore(token, auth?.user.id);
+	const totalAnsweredQuestions =
+		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
 
 	const {
 		setDataGame,
@@ -48,8 +55,7 @@ export default function LeJeu() {
 		gameStatus,
 		sessionId,
 		answeredCount,
-	} =
-		useGameContext();
+	} = useGameContext();
 
 	const sessionInProgress =
 		gameStatus === "in_progress" && !!sessionId && answeredCount > 0;
@@ -174,8 +180,17 @@ export default function LeJeu() {
 	}, []);
 
 	const handlePressPlay = useCallback(() => {
+		// Check if user has reached level 1 (150+ questions)
+		const currentLevel = Math.floor(totalAnsweredQuestions / 150);
+
+		if (currentLevel >= 1) {
+			// Show subscription modal instead of starting game
+			setShowSubscriptionModal(true);
+			return;
+		}
+
 		navigation.navigate("jeu");
-	}, [navigation]);
+	}, [navigation, totalAnsweredQuestions]);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -231,6 +246,12 @@ export default function LeJeu() {
 			)}
 
 			{isEnabled && <Answers />}
+
+			<UpgradeSubscriptionModal
+				visible={showSubscriptionModal}
+				onClose={() => setShowSubscriptionModal(false)}
+				message='Bravo ! Tu as terminé le niveau 0 avec 150 questions répondues ! Pour continuer ton aventure et débloquer tous les contenus, passe à la version Premium.'
+			/>
 		</View>
 	);
 }
