@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import Loader from "@/components/experience/loader";
+import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
 import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import ScreenHeaders from "@/components/ScreenHeaders";
@@ -280,20 +281,9 @@ const TrenteSecondes: React.FC = () => {
 						)}
 
 						{isLocked && (
-							<TouchableOpacity
-								activeOpacity={1}
-								onPress={handleLockedItemPress}
-								style={[StyleSheet.absoluteFillObject]}>
-								<BlurView intensity={80} style={styles.lockedOverlay}>
-									<View style={styles.lockedContent}>
-										<Text style={styles.lockIcon}>🔒</Text>
-										<Text style={styles.lockedText}>Contenu Premium</Text>
-										<Text style={styles.lockedSubtext}>
-											Passez à Premium pour accéder
-										</Text>
-									</View>
-								</BlurView>
-							</TouchableOpacity>
+							<View style={[StyleSheet.absoluteFillObject]}>
+								<LockedVideoOverlay onUpgradePress={handleLockedItemPress} />
+							</View>
 						)}
 					</View>
 				</Animated.View>
@@ -337,7 +327,6 @@ const TrenteSecondes: React.FC = () => {
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
-				message='Les 5 premières vidéos 30 secondes chrono sont gratuites. Passez à un abonnement premium pour accéder à toutes les vidéos.'
 			/>
 
 			<Animated.FlatList
@@ -389,22 +378,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	playIcon: { color: "#FFF", fontSize: 30 },
-	lockedOverlay: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
-	},
-	lockedContent: { alignItems: "center", padding: 20 },
-	lockIcon: { fontSize: 48, marginBottom: 16 },
-	lockedText: {
-		color: "#FFF",
-		fontSize: 20,
-		fontWeight: "bold",
-		marginBottom: 8,
-		textAlign: "center",
-	},
-	lockedSubtext: { color: "#CCC", fontSize: 14, textAlign: "center" },
 });
 
 export default TrenteSecondes;

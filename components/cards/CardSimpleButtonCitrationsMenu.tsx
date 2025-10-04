@@ -1,5 +1,6 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
+import { buttonBlack } from "@/constants/commonStyles";
 import { NavigationType } from "@/types/general";
 import { Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import { useNavigation } from "expo-router";
@@ -64,7 +65,7 @@ export default function CardSimpleButtonCitrationsMenu({
 					<View style={styles.cardTextContainer}>
 						<View style={styles.buttonContainer}>
 							<Text style={styles.cardText}>{content}</Text>
-							<View style={styles.buttonBlack}>
+							<View style={buttonBlack}>
 								<Text style={styles.buttonText}>Voir</Text>
 							</View>
 						</View>
@@ -110,12 +111,6 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		padding: 20,
 		backgroundColor: colorWhite,
-	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 25,
-		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,

@@ -3,9 +3,9 @@ import "react-native-reanimated";
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import { NetworkProvider } from "@/providers/NetworkProvider";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { setAudioModeAsync } from "expo-audio";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Audio } from "expo-av";
 import { Stack } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
@@ -15,7 +15,9 @@ import { AuthProvider } from "../auth/AuthContext";
 import { queryClient } from "../hooks/reactQueryConfig";
 
 if (Platform.OS === "ios") {
-	void setAudioModeAsync({ playsInSilentModeIOS: true });
+	void Audio.setAudioModeAsync({
+		playsInSilentModeIOS: true,
+	});
 }
 
 export default function RootLayout() {
