@@ -1,5 +1,6 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
+import { buttonBlack } from "@/constants/commonStyles";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import {
@@ -60,7 +61,7 @@ export default function CardSimpleButtonSecrets({
 								backgroundColor: colorWhite,
 							}}>
 							<Text style={styles.cardText}>{content}</Text>
-							<View style={styles.buttonBlack}>
+							<View style={buttonBlack}>
 								<Text style={styles.buttonText}>Voir</Text>
 							</View>
 						</View>
@@ -100,12 +101,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize22,
 		fontWeight: "bold",
 		flexGrow: 1,
-	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 35,
-		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,

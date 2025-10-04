@@ -1,5 +1,6 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import { buttonBlack } from "@/constants/commonStyles";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function UserResultsByCat() {
@@ -9,7 +10,7 @@ export default function UserResultsByCat() {
 				<Text style={styles.cardText}>
 					Découvre tes résultats selon les catégories
 				</Text>
-				<TouchableOpacity style={styles.buttonBlack}>
+				<TouchableOpacity style={buttonBlack}>
 					<Text style={styles.buttonText}>Voir</Text>
 				</TouchableOpacity>
 			</View>
@@ -39,12 +40,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize16,
 		fontWeight: "bold",
 		flexGrow: 1,
-	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 35,
-		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,

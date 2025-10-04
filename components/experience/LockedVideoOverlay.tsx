@@ -1,19 +1,9 @@
-import { primaryBackground } from "@/constants/colors";
+import { colorYellow } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
-import { FontSize16, FontSize18 } from "@/constants/fontsizes";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { BlurView } from "expo-blur";
+import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import BlurBackdrop from "../experience/backdropComponent";
-import ModalGestureLine from "../experience/modalGestureLine";
-
-interface Props {
-	visible: boolean;
-	onClose: () => void;
-	message?: string;
-}
-
-const SNAP_POINTS = ["40%"];
 
 const SUBSCRIPTION_MESSAGES = [
 	"La version gratuite, c'est bien pour tester. Mais toi t'es pas là pour tester, t'es là pour briller non ? Abonnes-toi",
@@ -49,120 +39,78 @@ const SUBSCRIPTION_MESSAGES = [
 	"T'as du goût, on le sent. Maintenant il te manque juste le menu complet. Abonne-toi ici",
 ];
 
-const getRandomSubscriptionMessage = () => {
+const getRandomMessage = () => {
 	return SUBSCRIPTION_MESSAGES[
 		Math.floor(Math.random() * SUBSCRIPTION_MESSAGES.length)
 	];
 };
 
-export default function UpgradeSubscriptionModal({
-	visible,
-	onClose,
-	message,
-}: Props) {
-	const displayMessage = useMemo(() => {
-		return message || getRandomSubscriptionMessage();
-	}, [message]);
-	const bottomSheetRef = useRef<BottomSheetModal>(null);
-	const snapPoints = useMemo(() => SNAP_POINTS, []);
+interface LockedVideoOverlayProps {
+	onUpgradePress: () => void;
+}
 
-	useEffect(() => {
-		if (visible) {
-			bottomSheetRef.current?.present();
-		} else {
-			bottomSheetRef.current?.dismiss();
-		}
-	}, [visible]);
-
-	const handleDismiss = useCallback(() => {
-		onClose();
-	}, [onClose]);
-
-	const handleUpgradePress = useCallback(() => {
-		// TODO: Navigate to subscription/payment page
-		// navigation.navigate("subscription");
-		onClose();
-	}, [onClose]);
+export default function LockedVideoOverlay({
+	onUpgradePress,
+}: LockedVideoOverlayProps) {
+	const randomMessage = useMemo(() => getRandomMessage(), []);
 
 	return (
-		<BottomSheetModal
-			ref={bottomSheetRef}
-			index={0}
-			snapPoints={snapPoints}
-			backdropComponent={(props) => <BlurBackdrop {...props} />}
-			backgroundStyle={styles.sheetBackground}
-			handleIndicatorStyle={styles.hiddenIndicator}
-			enablePanDownToClose
-			onDismiss={handleDismiss}>
-			<BottomSheetView style={styles.contentContainer}>
-				<ModalGestureLine />
-				<View style={styles.content}>
-					<Text style={styles.title}>Abonnement Premium requis</Text>
-					<Text style={styles.message}>{displayMessage}</Text>
-					<TouchableOpacity style={buttonBlack} onPress={handleUpgradePress}>
-						<Text style={styles.upgradeButtonText}>Passer à Premium</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-						<Text style={styles.cancelButtonText}>Plus tard</Text>
-					</TouchableOpacity>
-				</View>
-			</BottomSheetView>
-		</BottomSheetModal>
+		<BlurView intensity={80} style={styles.lockedOverlay}>
+			<View style={styles.lockedContent}>
+				<FontAwesome6 name='lock' size={38} color={colorYellow} />
+				{/* <Text style={styles.lockedText}>Contenu Premium</Text> */}
+				<Text style={styles.messageText}>{randomMessage}</Text>
+				<TouchableOpacity
+					style={buttonBlack}
+					onPress={onUpgradePress}
+					activeOpacity={0.8}>
+					<Text style={styles.upgradeButtonText}>Passer à Premium</Text>
+				</TouchableOpacity>
+			</View>
+		</BlurView>
 	);
 }
 
 const styles = StyleSheet.create({
-	sheetBackground: {
-		backgroundColor: primaryBackground,
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-	},
-	hiddenIndicator: {
-		opacity: 0,
-		height: 0,
-	},
-	contentContainer: {
+	lockedOverlay: {
 		flex: 1,
-		paddingHorizontal: 20,
-		paddingBottom: 24,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
 	},
-	content: {
-		flexDirection: "column",
-		gap: 16,
-		paddingTop: 12,
+	lockedContent: {
+		alignItems: "center",
+		padding: 20,
+		gap: 20,
+		maxWidth: "90%",
 	},
-	title: {
-		fontSize: FontSize18,
+	lockIcon: {
+		marginBottom: 16,
+	},
+	lockedText: {
+		color: "#FFF",
+		fontSize: 20,
 		fontWeight: "bold",
+		marginBottom: 16,
 		textAlign: "center",
-		marginTop: 10,
 	},
-	message: {
-		fontSize: FontSize16,
+	messageText: {
+		color: "#E0E0E0",
+		fontSize: 16,
 		textAlign: "center",
 		lineHeight: 24,
-		paddingHorizontal: 10,
+		marginBottom: 24,
 	},
 	upgradeButton: {
 		backgroundColor: "#007AFF",
 		paddingVertical: 14,
-		paddingHorizontal: 24,
+		paddingHorizontal: 32,
 		borderRadius: 12,
-		marginTop: 20,
 		alignItems: "center",
 	},
 	upgradeButtonText: {
 		color: "#FFFFFF",
-		fontSize: FontSize16,
+		fontSize: 16,
 		fontWeight: "bold",
-	},
-	cancelButton: {
-		paddingVertical: 12,
-		paddingHorizontal: 24,
-		alignItems: "center",
-	},
-	cancelButtonText: {
-		color: "#666666",
-		fontSize: FontSize16,
 	},
 });

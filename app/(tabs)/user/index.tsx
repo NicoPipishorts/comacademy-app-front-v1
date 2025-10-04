@@ -7,6 +7,7 @@ import ShowNiveaux from "@/components/user/niveaux";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
@@ -143,7 +144,7 @@ export default function User() {
 								Revoir la visite guidée de l’appli
 							</Text>
 							<TouchableOpacity
-								style={styles.buttonBlack}
+								style={buttonBlack}
 								onPress={() => {
 									setShowOnboarding(true);
 									hideTabBar();
@@ -249,12 +250,6 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		flexGrow: 1,
 		maxWidth: "50%",
-	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 35,
-		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,
