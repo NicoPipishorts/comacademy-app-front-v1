@@ -114,6 +114,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const [isRegistering, setIsRegistering] = useState<boolean>(false);
 
 	const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const interceptorRef = useRef<number | null>(null);
 
 	const clearExpiryTimer = useCallback(() => {
 		if (expiryTimerRef.current) {
@@ -248,6 +249,32 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	useEffect(() => {
 		scheduleTokenExpiryCheck(token);
 	}, [token, scheduleTokenExpiryCheck]);
+
+	useEffect(() => {
+		// Setup axios response interceptor to handle 401/403 errors
+		const interceptor = axios.interceptors.response.use(
+			(response) => response,
+			async (error) => {
+				// Check if it's an auth error (401 Unauthorized or 403 Forbidden)
+				if (error.response?.status === 401 || error.response?.status === 403) {
+					console.log(
+						`[AuthContext] Received ${error.response.status}, logging out...`
+					);
+					await clearPersistedSession();
+				}
+				return Promise.reject(error);
+			}
+		);
+
+		interceptorRef.current = interceptor;
+
+		// Cleanup: eject the interceptor when component unmounts
+		return () => {
+			if (interceptorRef.current !== null) {
+				axios.interceptors.response.eject(interceptorRef.current);
+			}
+		};
+	}, [clearPersistedSession]);
 
 	const contextValue: AuthContextType = {
 		isAuthenticated: !!token,
