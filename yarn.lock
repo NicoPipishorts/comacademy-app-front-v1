@@ -7772,6 +7772,11 @@ react-native-gesture-handler@~2.28.0:
     hoist-non-react-statics "^3.3.0"
     invariant "^2.2.4"
 
+react-native-iap@^14.4.12:
+  version "14.4.12"
+  resolved "https://registry.yarnpkg.com/react-native-iap/-/react-native-iap-14.4.12.tgz#bfabfc4522933819c83ed6b38e056bcb80ba1221"
+  integrity sha512-/ZLjEbpeqi8cWaiP88OUXWhgSUqGs3270uyR1YEjD6MratGJlLT0ekn/cwYVYd8SVhvmZHKP3PIXXNlrhfWdEA==
+
 react-native-is-edge-to-edge@^1.1.6, react-native-is-edge-to-edge@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.2.1.tgz#64e10851abd9d176cbf2b40562f751622bde3358"
