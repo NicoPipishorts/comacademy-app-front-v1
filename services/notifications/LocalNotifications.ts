@@ -6,7 +6,6 @@ import { Platform } from "react-native";
 
 const LAST_NOTIFICATION_SCHEDULE_KEY = "lastNotificationSchedule";
 
-// Update the getRandomNotification function to also handle "random" messages.
 const getRandomNotification = (day: "lundi" | "vendredi" | "random") => {
 	const messages = localNotifications[day] || [];
 	if (messages.length === 0) return "Default notification message.";
@@ -14,51 +13,48 @@ const getRandomNotification = (day: "lundi" | "vendredi" | "random") => {
 	return messages[randomIndex];
 };
 
-// Function to check if notifications need to be rescheduled
 const shouldRescheduleNotifications = async (): Promise<boolean> => {
 	try {
-		const lastSchedule = await AsyncStorage.getItem(LAST_NOTIFICATION_SCHEDULE_KEY);
+		const lastSchedule = await AsyncStorage.getItem(
+			LAST_NOTIFICATION_SCHEDULE_KEY
+		);
+		if (!lastSchedule) return true;
 
-		if (!lastSchedule) {
-			return true; // First time, schedule notifications
-		}
+		const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+		if (scheduled.length === 0) return true;
 
-		const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-
-		// If there are no scheduled notifications, we need to reschedule
-		if (scheduledNotifications.length === 0) {
-			return true;
-		}
-
-		// Check if it's been more than 7 days since last schedule
 		const lastScheduleDate = new Date(lastSchedule);
 		const now = new Date();
-		const daysSinceLastSchedule = (now.getTime() - lastScheduleDate.getTime()) / (1000 * 60 * 60 * 24);
+		const daysSinceLast =
+			(now.getTime() - lastScheduleDate.getTime()) / (1000 * 60 * 60 * 24);
 
-		// Reschedule if it's been more than 7 days
-		return daysSinceLastSchedule > 7;
+		return daysSinceLast > 7;
 	} catch (error) {
 		console.error("Error checking notification schedule:", error);
-		return true; // On error, reschedule to be safe
+		return true;
 	}
 };
 
-// Function to schedule weekly notifications
-const scheduleWeeklyNotifications = async () => {
-	// Check if we need to reschedule
-	const needsReschedule = await shouldRescheduleNotifications();
+const ensureAndroidChannel = async () => {
+	if (Platform.OS !== "android") return;
+	await Notifications.setNotificationChannelAsync("default", {
+		name: "Default",
+		importance: Notifications.AndroidImportance.DEFAULT,
+	});
+};
 
+const scheduleWeeklyNotifications = async () => {
+	const needsReschedule = await shouldRescheduleNotifications();
 	if (!needsReschedule) {
 		console.log("Notifications already scheduled, skipping...");
 		return;
 	}
 
 	console.log("Scheduling weekly notifications...");
-
-	// Cancel existing notifications to avoid duplicates
+	await ensureAndroidChannel();
 	await Notifications.cancelAllScheduledNotificationsAsync();
 
-	// Schedule Monday notification at 9 AM
+	// Monday 09:00 (weekly repeats implicitly)
 	await Notifications.scheduleNotificationAsync({
 		content: {
 			title: "Inspiration du Lundi 🌟",
@@ -66,14 +62,14 @@ const scheduleWeeklyNotifications = async () => {
 			data: { path: "/lesCitations" },
 		},
 		trigger: {
-			weekday: 2, // Monday
+			type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+			weekday: 2, // 1=Sun..7=Sat
 			hour: 9,
 			minute: 0,
-			repeats: true,
 		},
 	});
 
-	// Schedule Friday notification at 12 PM
+	// Friday 12:00
 	await Notifications.scheduleNotificationAsync({
 		content: {
 			title: "Définition du Vendredi 📚",
@@ -81,18 +77,17 @@ const scheduleWeeklyNotifications = async () => {
 			data: { path: "/activity" },
 		},
 		trigger: {
-			weekday: 6, // Friday
+			type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+			weekday: 6,
 			hour: 12,
 			minute: 0,
-			repeats: true,
 		},
 	});
 
-	// Schedule a random weekday notification for every weekday (Monday=2 to Friday=6).
-	// The time is selected randomly between 9 AM and 5 PM.
+	// Random weekday (Mon–Fri) notification at random time 09:00–16:59
 	for (let weekday = 2; weekday <= 6; weekday++) {
-		const randomHour = Math.floor(Math.random() * (17 - 9)) + 9; // Hour between 9 (inclusive) and 17 (exclusive)
-		const randomMinute = Math.floor(Math.random() * 60); // Minute between 0 and 59
+		const randomHour = Math.floor(Math.random() * (17 - 9)) + 9; // 9..16
+		const randomMinute = Math.floor(Math.random() * 60);
 
 		await Notifications.scheduleNotificationAsync({
 			content: {
@@ -101,20 +96,22 @@ const scheduleWeeklyNotifications = async () => {
 				data: { path: "/index" },
 			},
 			trigger: {
+				type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
 				weekday,
 				hour: randomHour,
 				minute: randomMinute,
-				repeats: true,
 			},
 		});
 	}
 
-	// Save the current date as the last schedule time
-	await AsyncStorage.setItem(LAST_NOTIFICATION_SCHEDULE_KEY, new Date().toISOString());
+	await AsyncStorage.setItem(
+		LAST_NOTIFICATION_SCHEDULE_KEY,
+		new Date().toISOString()
+	);
 	console.log("Notifications scheduled successfully");
 };
 
-// Set the notification handler so that alerts are shown when notifications are received.
+// Foreground behavior
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
 		shouldShowBanner: true,
@@ -124,8 +121,8 @@ Notifications.setNotificationHandler({
 	}),
 });
 
-// Notification scheduler component
-const NotificationScheduler: React.FC = () => {
+// ✅ Component that returns JSX (not void)
+const NotificationScheduler = (): JSX.Element | null => {
 	useEffect(() => {
 		const setupNotifications = async () => {
 			const { status } = await Notifications.requestPermissionsAsync();
@@ -133,16 +130,16 @@ const NotificationScheduler: React.FC = () => {
 				console.warn("Permission not granted for notifications");
 				return;
 			}
-
 			await scheduleWeeklyNotifications();
 		};
 
+		// ✅ fixed extra parenthesis
 		if (Platform.OS === "ios" || Platform.OS === "android") {
 			setupNotifications();
 		}
 	}, []);
 
-	return null; // No UI needed for this component
+	return null; // headless side-effect component
 };
 
 export default NotificationScheduler;
