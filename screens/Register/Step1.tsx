@@ -154,11 +154,11 @@ export default function RegisterStep1({
 					]}>
 					<TextInput
 						style={styles.input}
-						onChangeText={(text) => setFirstName(CapitalizeFirstLetter(text))}
+						onChangeText={setFirstName}
 						value={firstName}
 						placeholder='Prénom'
 						placeholderTextColor={colorBlack}
-						autoCapitalize='none'
+						autoCapitalize='words'
 					/>
 				</View>
 
@@ -177,11 +177,11 @@ export default function RegisterStep1({
 					]}>
 					<TextInput
 						style={styles.input}
-						onChangeText={(text) => setLastName(CapitalizeFirstLetter(text))}
+						onChangeText={setLastName}
 						value={lastName}
 						placeholder='Nom'
 						placeholderTextColor={colorBlack}
-						autoCapitalize='none'
+						autoCapitalize='words'
 					/>
 				</View>
 
@@ -225,12 +225,13 @@ export default function RegisterStep1({
 					<TextInput
 						value={email}
 						autoCorrect={false}
-						onChangeText={(text) => setEmail(LowerCaseFirstLetter(text))}
+						onChangeText={(text) => setEmail(text.toLowerCase())}
 						style={styles.input}
 						placeholder='Email'
 						placeholderTextColor={colorBlack}
 						keyboardType='email-address'
 						textContentType='emailAddress'
+						autoCapitalize='none'
 					/>
 				</View>
 
@@ -268,11 +269,12 @@ export default function RegisterStep1({
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
+		width: "100%",
 		justifyContent: "flex-start",
 		alignItems: "center",
 		backgroundColor: primaryBackground,
 		paddingTop: 20,
+		paddingBottom: 20,
 	},
 	title: {
 		fontSize: FontSizeH1,

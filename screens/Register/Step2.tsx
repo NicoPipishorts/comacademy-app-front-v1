@@ -263,11 +263,11 @@ export default function RegisterStep2({
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
 		width: "100%",
 		justifyContent: "flex-start",
 		alignItems: "center",
 		paddingTop: 20,
+		paddingBottom: 20,
 	},
 	passwordInputContainer: {
 		flexDirection: "row",

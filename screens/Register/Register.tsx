@@ -83,20 +83,21 @@ const Register = () => {
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 			<KeyboardAvoidingView
 				style={styles.container}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-				keyboardVerticalOffset={0}>
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
 				<ScrollView
 					contentContainerStyle={[
 						styles.scrollContainer,
-						{ paddingTop: insets.top },
+						{ paddingTop: insets.top, paddingBottom: 40 },
 					]}
-					keyboardShouldPersistTaps='handled'>
+					keyboardShouldPersistTaps='handled'
+					showsVerticalScrollIndicator={false}>
 					<View style={[styles.logoContainer]}>
 						<LogoPageTop />
 					</View>
 
 					<View
-						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+						style={{ width: "100%", alignItems: "center" }}>
 						{step === 1 && (
 							<RegisterStep1
 								setStep={setStep}
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
 		padding: 20,
 	},
 	scrollContainer: {
-		flex: 1,
+		flexGrow: 1,
 		minWidth: "100%",
 		alignItems: "center",
 	},
