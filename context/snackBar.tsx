@@ -46,6 +46,8 @@ export const SnackbarProvider = ({ children }) => {
 					{
 						backgroundColor:
 							snackbarType === "success" ? colorGreen : colorPink,
+						zIndex: 9999,
+						elevation: 9999,
 					}, // Dynamic background based on type
 				]}>
 				<Text style={styles.snackbarText}>{snackbarMessage} </Text>
