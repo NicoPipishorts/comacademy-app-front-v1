@@ -143,7 +143,7 @@ export default function RegisterStep1({
 				<ScrollView
 					contentContainerStyle={[
 						styles.scrollContent,
-						{ paddingTop: 20, paddingBottom: 120 },
+						{ paddingTop: 20, paddingBottom: insets.bottom + 20 },
 					]}
 					keyboardShouldPersistTaps='handled'
 					showsVerticalScrollIndicator={false}>
@@ -269,11 +269,12 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		flexGrow: 1,
 		justifyContent: "center",
+		minWidth: "100%",
 	},
 	container: {
 		width: "100%",
 		alignItems: "center",
-		paddingHorizontal: 20,
+		paddingHorizontal: 10,
 	},
 	title: {
 		fontSize: FontSizeH1,
