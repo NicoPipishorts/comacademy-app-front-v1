@@ -11,7 +11,7 @@ import {
 	CapitalizeFirstLetter,
 	LowerCaseFirstLetter,
 } from "@/helpers/capitalizeFirstLetter";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import {
 	Image,
 	Pressable,
@@ -33,19 +33,11 @@ export default function RegisterStep1({
 	formPayload,
 	setFormPayload,
 }: Props) {
-	const [firstName, setFirstName] = useState<string>("");
-	const [lastName, setLastName] = useState<string>("");
-	const [username, setUsername] = useState<string>("");
-	const [email, setEmail] = useState<string>("");
+	const [firstName, setFirstName] = useState<string>(formPayload?.firstName || "");
+	const [lastName, setLastName] = useState<string>(formPayload?.lastName || "");
+	const [username, setUsername] = useState<string>(formPayload?.username || "");
+	const [email, setEmail] = useState<string>(formPayload?.email || "");
 	const { setIsRegistering } = UseAuth();
-
-	// Reset the registered values if available
-	useEffect(() => {
-		if (formPayload?.firstName) setFirstName(formPayload.firstName);
-		if (formPayload?.lastName) setLastName(formPayload.lastName);
-		if (formPayload?.username) setUsername(formPayload.username);
-		if (formPayload?.email) setEmail(formPayload.email);
-	}, [formPayload]);
 
 	// Validation error messages
 	const [errors, setErrors] = useState<{
@@ -303,7 +295,6 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: FontSize16,
 		fontWeight: "bold",
-		textTransform: "lowercase",
 	},
 	buttonContainer: {
 		marginTop: 40,
