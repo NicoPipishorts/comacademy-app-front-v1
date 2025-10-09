@@ -144,7 +144,15 @@ const SignIn = () => {
 		}) => {
 			const { password: newPassword, passwordConfirmation, code } = payload;
 
+			console.log("[Reset Password] Submit called with:", {
+				code,
+				hasPassword: !!newPassword,
+				hasConfirmation: !!passwordConfirmation,
+			});
+			console.log("[Reset Password] resetPasswordUrl:", resetPasswordUrl);
+
 			if (!code) {
+				console.log("[Reset Password] Error: No code provided");
 				showSnackbar(
 					"Le lien de réinitialisation est invalide ou expiré.",
 					"error"
@@ -152,6 +160,7 @@ const SignIn = () => {
 				return;
 			}
 
+			console.log("[Reset Password] Calling mutation...");
 			latestResetPasswordRef.current = newPassword;
 			setPendingResetCode(code);
 			resetPasswordMutation.mutate({
@@ -160,7 +169,7 @@ const SignIn = () => {
 				code,
 			});
 		},
-		[resetPasswordMutation, showSnackbar]
+		[resetPasswordMutation, showSnackbar, resetPasswordUrl]
 	);
 
 	const handleForgotSheetDismiss = useCallback(() => {
@@ -184,10 +193,10 @@ const SignIn = () => {
 				typeof queryParams?.code === "string"
 					? queryParams.code
 					: typeof queryParams?.token === "string"
-						? queryParams.token
-						: typeof queryParams?.reset_code === "string"
-							? queryParams.reset_code
-							: null;
+					? queryParams.token
+					: typeof queryParams?.reset_code === "string"
+					? queryParams.reset_code
+					: null;
 
 			if (!codeParam) return;
 
@@ -234,11 +243,11 @@ const SignIn = () => {
 		};
 	}, [handleDeepLink]);
 
-useEffect(() => {
-	(async () => {
-		const loggedIn = await checkLoggedIn();
-		if (loggedIn) navigation.navigate("(tabs)");
-	})();
+	useEffect(() => {
+		(async () => {
+			const loggedIn = await checkLoggedIn();
+			if (loggedIn) navigation.navigate("(tabs)");
+		})();
 	}, [navigation, checkLoggedIn]);
 
 	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
