@@ -134,7 +134,11 @@ const SignIn = () => {
 					</View>
 				</ScrollView>
 				<View
-					style={{ flexDirection: "row", position: "absolute", bottom: 40 }}>
+					style={{
+						flexDirection: "row",
+						position: "absolute",
+						bottom: Math.max(insets.bottom, 20) + 20
+					}}>
 					<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
 					<Pressable onPress={() => setIsRegistering(true)}>
 						<Text style={{ fontWeight: "bold" }}> S'inscrire</Text>
