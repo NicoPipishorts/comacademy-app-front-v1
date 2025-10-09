@@ -275,11 +275,12 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		flexGrow: 1,
 		justifyContent: "center",
+		minWidth: "100%",
 	},
 	container: {
 		width: "100%",
 		alignItems: "center",
-		paddingHorizontal: 20,
+		paddingHorizontal: 10,
 	},
 	passwordInputContainer: {
 		flexDirection: "row",
