@@ -195,7 +195,8 @@ const SignIn = () => {
 			if (
 				normalizedPath &&
 				!normalizedPath.includes("reset-password") &&
-				!normalizedPath.includes("password-reset")
+				!normalizedPath.includes("password-reset") &&
+				!normalizedPath.includes("auth/reset-password")
 			) {
 				return;
 			}
