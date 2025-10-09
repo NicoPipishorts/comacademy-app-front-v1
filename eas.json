@@ -12,7 +12,7 @@
 			"node": "20.19.4",
 			"ios": {
 				"autoIncrement": true,
-				"image": "macos-sequoia-15.3-xcode-16.2"
+				"image": "latest"
 			},
 			"android": {
 				"autoIncrement": true
