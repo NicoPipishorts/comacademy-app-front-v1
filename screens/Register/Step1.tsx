@@ -10,12 +10,18 @@ import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import {
 	Image,
+	Keyboard,
+	KeyboardAvoidingView,
+	Platform,
 	Pressable,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
+	TouchableWithoutFeedback,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FormPayload } from "./Register";
 
 interface Props {
@@ -29,6 +35,7 @@ export default function RegisterStep1({
 	formPayload,
 	setFormPayload,
 }: Props) {
+	const insets = useSafeAreaInsets();
 	const [firstName, setFirstName] = useState<string>(
 		formPayload?.firstName || ""
 	);
@@ -39,16 +46,11 @@ export default function RegisterStep1({
 
 	// Validation error messages
 	const [errors, setErrors] = useState<{
-		firstName?: string;
-		lastName?: string;
-		email?: string;
-		username?: string;
-	}>({
-		firstName: undefined,
-		lastName: undefined,
-		email: undefined,
-		username: undefined,
-	});
+		firstName?: string | null;
+		lastName?: string | null;
+		email?: string | null;
+		username?: string | null;
+	}>({});
 
 	const validateForm = () => {
 		let valid = true;
@@ -59,42 +61,36 @@ export default function RegisterStep1({
 			email?: string;
 		} = {};
 
-		// Regex for first name and last name (allows letters, accented characters, dashes, and spaces)
+		// Regex for first name and last name (letters, accented, dashes, spaces)
 		const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ\- ]+$/;
 
-		// Validate first name
 		if (!firstName.trim()) {
 			newErrors.firstName = "Prénom est requis.";
 			valid = false;
 		} else if (!nameRegex.test(firstName)) {
 			newErrors.firstName =
-				"Doit contenir que des lettres, des tirets ou des espaces.";
+				"Doit contenir des lettres, des tirets ou des espaces.";
 			valid = false;
 		}
 
-		// Validate last name
 		if (!lastName.trim()) {
 			newErrors.lastName = "Nom est requis.";
 			valid = false;
 		} else if (!nameRegex.test(lastName)) {
 			newErrors.lastName =
-				"Doit contenir que des lettres, des tirets ou des espaces.";
+				"Doit contenir des lettres, des tirets ou des espaces.";
 			valid = false;
 		}
-
-		// Validate last name
 
 		const usernameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ0-9\-]+$/;
 		if (!username.trim()) {
 			newErrors.username = "Le pseudo est requis.";
 			valid = false;
 		} else if (!usernameRegex.test(username)) {
-			newErrors.username =
-				"Doit contenir que des lettres, des tirets ou des espaces.";
+			newErrors.username = "Doit contenir lettres, chiffres ou tirets.";
 			valid = false;
 		}
 
-		// Validate email
 		const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 		if (!email.trim()) {
 			newErrors.email = "Email est requis.";
@@ -110,8 +106,12 @@ export default function RegisterStep1({
 
 	const handleNext = () => {
 		if (validateForm()) {
-			// Proceed to the next step
-			setErrors({ firstName: null, lastName: null, email: null });
+			setErrors({
+				firstName: null,
+				lastName: null,
+				email: null,
+				username: null,
+			});
 			setFormPayload({
 				...formPayload,
 				firstName,
@@ -124,154 +124,156 @@ export default function RegisterStep1({
 	};
 
 	const handleCancle = () => {
-		setFormPayload(null);
+		setFormPayload(null as unknown as FormPayload);
 		setIsRegistering(false);
 	};
 
+	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
+		| "padding"
+		| "height"
+		| "position"
+		| undefined;
+
 	return (
-		<>
-			<View style={styles.container}>
-				<View
-					style={{
-						backgroundColor: primaryBackground,
-					}}>
-					<Text style={styles.title}>Venez com' vous êtes !</Text>
-				</View>
-				{errors.firstName && (
-					<View>
-						<Text style={styles.errorText}>{errors.firstName}</Text>
-					</View>
-				)}
-				<View
-					style={[
-						styles.inputContainer,
-						{
-							borderBottomColor:
-								errors.firstName === undefined ? colorGrey : colorRed,
-						},
-					]}>
-					<TextInput
-						style={styles.input}
-						onChangeText={setFirstName}
-						value={firstName}
-						placeholder='Prénom'
-						placeholderTextColor={colorBlack}
-						autoCapitalize='words'
-					/>
-				</View>
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+			<KeyboardAvoidingView
+				style={{ flex: 1 }}
+				behavior={behavior}
+				keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
+				<ScrollView
+					contentContainerStyle={[
+						styles.scrollContent,
+						{ paddingTop: 20, paddingBottom: 120 },
+					]}
+					keyboardShouldPersistTaps='handled'
+					showsVerticalScrollIndicator={false}>
+					<View style={styles.container}>
+						<View style={{ backgroundColor: primaryBackground }}>
+							<Text style={styles.title}>Venez com' vous êtes !</Text>
+						</View>
 
-				{errors.lastName && (
-					<View>
-						<Text style={styles.errorText}>{errors.lastName}</Text>
-					</View>
-				)}
-				<View
-					style={[
-						styles.inputContainer,
-						{
-							borderBottomColor:
-								errors.lastName === undefined ? colorGrey : colorRed,
-						},
-					]}>
-					<TextInput
-						style={styles.input}
-						onChangeText={setLastName}
-						value={lastName}
-						placeholder='Nom'
-						placeholderTextColor={colorBlack}
-						autoCapitalize='words'
-					/>
-				</View>
+						{errors.firstName ? (
+							<Text style={styles.errorText}>{errors.firstName}</Text>
+						) : null}
+						<View
+							style={[
+								styles.inputContainer,
+								{ borderBottomColor: errors.firstName ? colorRed : colorGrey },
+							]}>
+							<TextInput
+								style={styles.input}
+								onChangeText={setFirstName}
+								value={firstName}
+								placeholder='Prénom'
+								placeholderTextColor={colorBlack}
+								autoCapitalize='words'
+								returnKeyType='next'
+							/>
+						</View>
 
-				{errors.username && (
-					<View>
-						<Text style={styles.errorText}>{errors.username}</Text>
-					</View>
-				)}
-				<View
-					style={[
-						styles.inputContainer,
-						{
-							borderBottomColor:
-								errors.lastName === undefined ? colorGrey : colorRed,
-						},
-					]}>
-					<TextInput
-						style={styles.input}
-						onChangeText={setUsername}
-						value={username}
-						autoCorrect={false}
-						placeholder='Pseudo'
-						placeholderTextColor={colorBlack}
-						autoCapitalize='none'
-					/>
-				</View>
+						{errors.lastName ? (
+							<Text style={styles.errorText}>{errors.lastName}</Text>
+						) : null}
+						<View
+							style={[
+								styles.inputContainer,
+								{ borderBottomColor: errors.lastName ? colorRed : colorGrey },
+							]}>
+							<TextInput
+								style={styles.input}
+								onChangeText={setLastName}
+								value={lastName}
+								placeholder='Nom'
+								placeholderTextColor={colorBlack}
+								autoCapitalize='words'
+								returnKeyType='next'
+							/>
+						</View>
 
-				{errors.email && (
-					<View>
-						<Text style={styles.errorText}>{errors.email}</Text>
-					</View>
-				)}
-				<View
-					style={[
-						styles.inputContainer,
-						{
-							borderBottomColor:
-								errors.lastName === undefined ? colorGrey : colorRed,
-						},
-					]}>
-					<TextInput
-						value={email}
-						autoCorrect={false}
-						onChangeText={(text) => setEmail(text.toLowerCase())}
-						style={styles.input}
-						placeholder='Email'
-						placeholderTextColor={colorBlack}
-						keyboardType='email-address'
-						textContentType='emailAddress'
-						autoCapitalize='none'
-					/>
-				</View>
+						{errors.username ? (
+							<Text style={styles.errorText}>{errors.username}</Text>
+						) : null}
+						<View
+							style={[
+								styles.inputContainer,
+								{ borderBottomColor: errors.username ? colorRed : colorGrey },
+							]}>
+							<TextInput
+								style={styles.input}
+								onChangeText={setUsername}
+								value={username}
+								autoCorrect={false}
+								placeholder='Pseudo'
+								placeholderTextColor={colorBlack}
+								autoCapitalize='none'
+								returnKeyType='next'
+							/>
+						</View>
 
-				<Pressable style={styles.buttonContainer} onPress={handleNext}>
-					<Text style={styles.buttonText}>Suivant</Text>
-					<View
-						style={{
-							justifyContent: "center",
-							alignContent: "center",
-							backgroundColor: colorBlack,
-							borderRadius: 16,
-							padding: 5,
-							marginLeft: 10,
-						}}>
-						<Image
-							source={require("@/assets/imgs/icons/chevron_white.png")}
-							style={{
-								width: 18,
-								height: 18,
-								transform: [{ rotate: "180deg" }],
-								marginLeft: 2,
-							}}
-						/>
-					</View>
-				</Pressable>
+						{errors.email ? (
+							<Text style={styles.errorText}>{errors.email}</Text>
+						) : null}
+						<View
+							style={[
+								styles.inputContainer,
+								{ borderBottomColor: errors.email ? colorRed : colorGrey },
+							]}>
+							<TextInput
+								value={email}
+								autoCorrect={false}
+								onChangeText={(text) => setEmail(text.toLowerCase())}
+								style={styles.input}
+								placeholder='Email'
+								placeholderTextColor={colorBlack}
+								keyboardType='email-address'
+								textContentType='emailAddress'
+								autoCapitalize='none'
+								returnKeyType='done'
+							/>
+						</View>
 
-				{/* Return Button */}
-				<Pressable style={styles.buttonRevenir} onPress={handleCancle}>
-					<Text style={styles.buttonTextRevenir}>Annuler</Text>
-				</Pressable>
-			</View>
-		</>
+						<Pressable style={styles.buttonContainer} onPress={handleNext}>
+							<Text style={styles.buttonText}>Suivant</Text>
+							<View
+								style={{
+									justifyContent: "center",
+									alignContent: "center",
+									backgroundColor: colorBlack,
+									borderRadius: 16,
+									padding: 5,
+									marginLeft: 10,
+								}}>
+								<Image
+									source={require("@/assets/imgs/icons/chevron_white.png")}
+									style={{
+										width: 18,
+										height: 18,
+										transform: [{ rotate: "180deg" }],
+										marginLeft: 2,
+									}}
+								/>
+							</View>
+						</Pressable>
+
+						<Pressable style={styles.buttonRevenir} onPress={handleCancle}>
+							<Text style={styles.buttonTextRevenir}>Annuler</Text>
+						</Pressable>
+					</View>
+				</ScrollView>
+			</KeyboardAvoidingView>
+		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
+	scrollContent: {
+		flexGrow: 1,
+		justifyContent: "center",
+	},
 	container: {
 		width: "100%",
-		justifyContent: "flex-start",
 		alignItems: "center",
-		paddingTop: 20,
-		paddingBottom: 20,
+		paddingHorizontal: 20,
 	},
 	title: {
 		fontSize: FontSizeH1,
@@ -288,6 +290,7 @@ const styles = StyleSheet.create({
 		borderWidth: 0,
 		paddingBottom: 20,
 		borderBottomWidth: 1,
+		width: "100%",
 	},
 	input: {
 		flex: 1,
