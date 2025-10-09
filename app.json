@@ -5,7 +5,7 @@
 		"version": "1.2.0",
 		"orientation": "portrait",
 		"icon": "./assets/imgs/icons/favicon.png",
-		"scheme": "myapp",
+		"scheme": "comacademy",
 		"userInterfaceStyle": "automatic",
 
 		"splash": {
