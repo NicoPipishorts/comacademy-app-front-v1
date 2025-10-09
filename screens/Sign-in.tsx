@@ -13,43 +13,37 @@ import {
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Import Assets
 import { useLoginMutation } from "@/api/credentials/login";
 import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
-import {
-	colorBlack,
-	colorDarkGrey,
-	colorGrey,
-	colorWhite,
-} from "@/constants/colors";
-import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
+import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
+import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SignIn = () => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
+
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
+
 	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
 
-	const toggleShowPassword = () => {
-		setShowPassword(!showPassword);
-	};
+	const toggleShowPassword = () => setShowPassword((v) => !v);
 
 	const onSuccess = async (data: AuthResponse) => {
 		await login(data);
-		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
+		navigation.navigate("(tabs)");
 	};
 
-	const onError = (error) => {
+	const onError = () => {
 		showSnackbar(
 			"Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.",
 			"error"
@@ -57,46 +51,44 @@ const SignIn = () => {
 	};
 
 	const mutation = useLoginMutation(authUrl, onSuccess, onError);
-
 	const handleLogin = () => {
-		mutation.mutate({ identifier: email, password: password });
+		mutation.mutate({ identifier: email, password });
 	};
 
 	useEffect(() => {
-		const checkIfLoggedIn = async () => {
+		(async () => {
 			const loggedIn = await checkLoggedIn();
-			if (loggedIn) {
-				navigation.navigate("(tabs)");
-			}
-		};
-
-		checkIfLoggedIn();
+			if (loggedIn) navigation.navigate("(tabs)");
+		})();
 	}, [navigation, checkLoggedIn]);
+
+	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
+		| "padding"
+		| "height"
+		| "position"
+		| undefined;
 
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 			<KeyboardAvoidingView
 				style={styles.container}
-				behavior={Platform.OS === "ios" ? "padding" : "height"}
-				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
+				behavior={behavior}
+				// Lift content just below the iOS notch/header; no offset for Android
+				keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
 				<ScrollView
 					contentContainerStyle={[
 						styles.scrollContainer,
-						{ paddingTop: insets.top, paddingBottom: 40 },
+						{ paddingTop: insets.top, paddingBottom: 120 },
 					]}
 					keyboardShouldPersistTaps='handled'
-					showsVerticalScrollIndicator={false}>
+					showsVerticalScrollIndicator={false}
+					// Helps Android not “fight” with SafeArea/Insets
+					contentInsetAdjustmentBehavior='never'>
 					<LogoPageTop />
-					<View
-						style={{
-							width: "100%",
-							marginTop: 40,
-							alignItems: "center",
-							justifyContent: "center",
-						}}>
-						<View>
-							<Text style={styles.title}>C'est bon de se revoir !</Text>
-						</View>
+					{/* Main content wrapper stays perfectly centered */}
+					<View style={styles.centerWrap}>
+						<Text style={styles.title}>C'est bon de se revoir !</Text>
+
 						<View style={styles.passwordInputContainer}>
 							<TextInput
 								style={styles.input}
@@ -108,8 +100,10 @@ const SignIn = () => {
 								autoCapitalize='none'
 								keyboardType='email-address'
 								textContentType='emailAddress'
+								returnKeyType='next'
 							/>
 						</View>
+
 						<View style={styles.passwordInputContainer}>
 							<TextInput
 								secureTextEntry={!showPassword}
@@ -121,6 +115,7 @@ const SignIn = () => {
 								placeholderTextColor={colorBlack}
 								keyboardType='default'
 								textContentType='password'
+								returnKeyType='done'
 							/>
 							<MaterialCommunityIcons
 								name={showPassword ? "eye-off" : "eye"}
@@ -130,17 +125,19 @@ const SignIn = () => {
 								onPress={toggleShowPassword}
 							/>
 						</View>
+
 						<Pressable style={styles.buttonContainer} onPress={handleLogin}>
 							<Text style={styles.buttonText}>Se connecter</Text>
 						</Pressable>
 					</View>
 				</ScrollView>
+
+				{/* Bottom sticky register row – will rise above the keyboard on Android due to behavior="padding" */}
 				<View
-					style={{
-						flexDirection: "row",
-						position: "absolute",
-						bottom: Math.max(insets.bottom, 20) + 20,
-					}}>
+					style={[
+						styles.registerRow,
+						{ bottom: Math.max(insets.bottom, 20) + 20 },
+					]}>
 					<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
 					<Pressable onPress={() => setIsRegistering(true)}>
 						<Text style={{ fontWeight: "bold" }}> S'inscrire</Text>
@@ -154,32 +151,22 @@ const SignIn = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-		padding: 20,
+		// remove alignItems center here so ScrollView can use full width, we’ll center inner content
+		paddingHorizontal: 20,
 	},
-
 	scrollContainer: {
 		flexGrow: 1,
 		minWidth: "100%",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-
-	logo: {
-		width: 150,
-		height: 60,
-	},
-	containerDots: {
-		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
 	},
-	dot: {
-		width: 10,
-		height: 10,
-		marginHorizontal: 8,
-		borderRadius: 50,
+	centerWrap: {
+		// true vertical center for logo + text + form + button
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 0,
+		width: "100%",
+		marginTop: 40,
 	},
 	title: {
 		fontSize: FontSizeH1,
@@ -193,10 +180,9 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 		paddingHorizontal: 10,
 		marginBottom: 20,
-		borderWidth: 0,
-		paddingBottom: 16,
 		borderBottomWidth: 2,
 		borderBottomColor: colorGrey,
+		paddingBottom: 16,
 	},
 	input: {
 		flex: 1,
@@ -208,29 +194,23 @@ const styles = StyleSheet.create({
 	eyeIcon: {
 		marginLeft: 10,
 	},
-	containerForgot: {
-		minWidth: "100%",
-		justifyContent: "flex-end",
-		alignItems: "flex-end",
-		marginBottom: 50,
-		paddingRight: 10,
-	},
-	textForgot: {
-		color: colorDarkGrey,
-		fontWeight: "bold",
-		fontSize: FontSize14,
-	},
 	buttonContainer: {
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,
-		color: colorWhite,
-		fontWeight: "bold",
 		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,
 		fontWeight: "bold",
+	},
+	registerRow: {
+		position: "absolute",
+		left: 20,
+		right: 20,
+		flexDirection: "row",
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });
 
