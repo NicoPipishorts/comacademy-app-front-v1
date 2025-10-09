@@ -77,18 +77,23 @@ const SignIn = () => {
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 			<KeyboardAvoidingView
 				style={styles.container}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-				keyboardVerticalOffset={0} // Adjust this offset as needed
-			>
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
 				<ScrollView
 					contentContainerStyle={[
 						styles.scrollContainer,
-						{ marginTop: insets.top },
+						{ paddingTop: insets.top, paddingBottom: 40 },
 					]}
-					keyboardShouldPersistTaps='handled'>
+					keyboardShouldPersistTaps='handled'
+					showsVerticalScrollIndicator={false}>
 					<LogoPageTop />
 					<View
-						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+						style={{
+							width: "100%",
+							marginTop: 40,
+							alignItems: "center",
+							justifyContent: "center",
+						}}>
 						<View>
 							<Text style={styles.title}>C'est bon de se revoir !</Text>
 						</View>
@@ -125,9 +130,6 @@ const SignIn = () => {
 								onPress={toggleShowPassword}
 							/>
 						</View>
-						<Pressable style={styles.containerForgot}>
-							<Text style={styles.textForgot}>Mot de passe oublié?</Text>
-						</Pressable>
 						<Pressable style={styles.buttonContainer} onPress={handleLogin}>
 							<Text style={styles.buttonText}>Se connecter</Text>
 						</Pressable>
@@ -137,7 +139,7 @@ const SignIn = () => {
 					style={{
 						flexDirection: "row",
 						position: "absolute",
-						bottom: Math.max(insets.bottom, 20) + 20
+						bottom: Math.max(insets.bottom, 20) + 20,
 					}}>
 					<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
 					<Pressable onPress={() => setIsRegistering(true)}>
@@ -152,7 +154,7 @@ const SignIn = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "flex-start",
+		justifyContent: "center",
 		alignItems: "center",
 		padding: 20,
 	},
@@ -160,8 +162,8 @@ const styles = StyleSheet.create({
 	scrollContainer: {
 		flexGrow: 1,
 		minWidth: "100%",
-		justifyContent: "space-between",
 		alignItems: "center",
+		justifyContent: "center",
 	},
 
 	logo: {

@@ -7,10 +7,6 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
-import {
-	CapitalizeFirstLetter,
-	LowerCaseFirstLetter,
-} from "@/helpers/capitalizeFirstLetter";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import {
 	Image,
@@ -33,7 +29,9 @@ export default function RegisterStep1({
 	formPayload,
 	setFormPayload,
 }: Props) {
-	const [firstName, setFirstName] = useState<string>(formPayload?.firstName || "");
+	const [firstName, setFirstName] = useState<string>(
+		formPayload?.firstName || ""
+	);
 	const [lastName, setLastName] = useState<string>(formPayload?.lastName || "");
 	const [username, setUsername] = useState<string>(formPayload?.username || "");
 	const [email, setEmail] = useState<string>(formPayload?.email || "");
@@ -272,7 +270,6 @@ const styles = StyleSheet.create({
 		width: "100%",
 		justifyContent: "flex-start",
 		alignItems: "center",
-		backgroundColor: primaryBackground,
 		paddingTop: 20,
 		paddingBottom: 20,
 	},
