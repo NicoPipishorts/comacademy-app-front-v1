@@ -1,7 +1,10 @@
 import { localNotifications } from "@/data/localNotifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
 import { Platform } from "react-native";
+
+const LAST_NOTIFICATION_SCHEDULE_KEY = "lastNotificationSchedule";
 
 // Update the getRandomNotification function to also handle "random" messages.
 const getRandomNotification = (day: "lundi" | "vendredi" | "random") => {
@@ -11,8 +14,47 @@ const getRandomNotification = (day: "lundi" | "vendredi" | "random") => {
 	return messages[randomIndex];
 };
 
+// Function to check if notifications need to be rescheduled
+const shouldRescheduleNotifications = async (): Promise<boolean> => {
+	try {
+		const lastSchedule = await AsyncStorage.getItem(LAST_NOTIFICATION_SCHEDULE_KEY);
+
+		if (!lastSchedule) {
+			return true; // First time, schedule notifications
+		}
+
+		const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+
+		// If there are no scheduled notifications, we need to reschedule
+		if (scheduledNotifications.length === 0) {
+			return true;
+		}
+
+		// Check if it's been more than 7 days since last schedule
+		const lastScheduleDate = new Date(lastSchedule);
+		const now = new Date();
+		const daysSinceLastSchedule = (now.getTime() - lastScheduleDate.getTime()) / (1000 * 60 * 60 * 24);
+
+		// Reschedule if it's been more than 7 days
+		return daysSinceLastSchedule > 7;
+	} catch (error) {
+		console.error("Error checking notification schedule:", error);
+		return true; // On error, reschedule to be safe
+	}
+};
+
 // Function to schedule weekly notifications
 const scheduleWeeklyNotifications = async () => {
+	// Check if we need to reschedule
+	const needsReschedule = await shouldRescheduleNotifications();
+
+	if (!needsReschedule) {
+		console.log("Notifications already scheduled, skipping...");
+		return;
+	}
+
+	console.log("Scheduling weekly notifications...");
+
 	// Cancel existing notifications to avoid duplicates
 	await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -66,6 +108,10 @@ const scheduleWeeklyNotifications = async () => {
 			},
 		});
 	}
+
+	// Save the current date as the last schedule time
+	await AsyncStorage.setItem(LAST_NOTIFICATION_SCHEDULE_KEY, new Date().toISOString());
+	console.log("Notifications scheduled successfully");
 };
 
 // Set the notification handler so that alerts are shown when notifications are received.
