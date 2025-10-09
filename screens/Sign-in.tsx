@@ -1,14 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import * as Linking from "expo-linking";
 import { useNavigation } from "expo-router";
-import React, {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-	ActivityIndicator,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -22,20 +17,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-	BottomSheetBackdrop,
-	BottomSheetBackdropProps,
-	BottomSheetModal,
-	BottomSheetView,
-} from "@gorhom/bottom-sheet";
-
 import { useForgotPasswordMutation } from "@/api/credentials/forgotPassword";
 import { useLoginMutation } from "@/api/credentials/login";
+import { useResetPasswordMutation } from "@/api/credentials/resetPassword";
 import { UseAuth } from "@/auth/AuthContext";
-import ModalGestureLine from "@/components/experience/modalGestureLine";
 import LogoPageTop from "@/components/headers/LogoPageTop";
+import ForgotPasswordSheet from "@/components/modal/ForgotPasswordSheet";
+import ResetPasswordSheet from "@/components/modal/ResetPasswordSheet";
 import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
-import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { AuthResponse } from "@/types/credentials/auth";
@@ -47,13 +36,17 @@ const SignIn = () => {
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
 	const forgotPasswordUrl = process.env.EXPO_PUBLIC_FORGOT_PASSWORD_URL;
+	const resetPasswordUrl = process.env.EXPO_PUBLIC_RESET_PASSWORD_URL;
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
-	const bottomSheetRef = useRef<BottomSheetModal>(null);
-	const snapPoints = useMemo(() => ["45%"], []);
+	const [forgotPrefillEmail, setForgotPrefillEmail] = useState("");
+	const [pendingResetCode, setPendingResetCode] = useState<string | null>(null);
+
+	const forgotPasswordSheetRef = useRef<BottomSheetModal>(null);
+	const resetPasswordSheetRef = useRef<BottomSheetModal>(null);
+	const latestResetPasswordRef = useRef<string>("");
 
 	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
 
@@ -79,8 +72,8 @@ const SignIn = () => {
 				"Si un compte est associé à cet email, un lien de réinitialisation a été envoyé.",
 				"success"
 			);
-			setForgotPasswordEmail("");
-			bottomSheetRef.current?.dismiss();
+			setForgotPrefillEmail("");
+			forgotPasswordSheetRef.current?.dismiss();
 		},
 		(error) => {
 			const fallbackMessage =
@@ -91,53 +84,160 @@ const SignIn = () => {
 		}
 	);
 
-	const renderForgotBackdrop = useCallback(
-		(props: BottomSheetBackdropProps) => (
-			<BottomSheetBackdrop
-				{...props}
-				appearsOnIndex={0}
-				disappearsOnIndex={-1}
-				pressBehavior='close'
-			/>
-		),
-		[]
-	);
-
 	const openForgotPasswordSheet = useCallback(() => {
 		const trimmedEmail = email.trim();
-		setForgotPasswordEmail(trimmedEmail);
+		setForgotPrefillEmail(trimmedEmail);
 		forgotPasswordMutation.reset();
-		bottomSheetRef.current?.present();
+		forgotPasswordSheetRef.current?.present();
 	}, [email, forgotPasswordMutation]);
+
+	const resetPasswordMutation = useResetPasswordMutation(
+		resetPasswordUrl,
+		() => {
+			showSnackbar(
+				"Ton mot de passe a bien été réinitialisé. Tu peux te connecter avec celui-ci.",
+				"success"
+			);
+			const latestPassword = latestResetPasswordRef.current;
+			if (latestPassword) {
+				setPassword(latestPassword);
+			}
+			setPendingResetCode(null);
+			resetPasswordSheetRef.current?.dismiss();
+		},
+		(error) => {
+			const fallbackMessage =
+				error instanceof Error && error.message
+					? error.message
+					: "Impossible de mettre à jour le mot de passe pour le moment.";
+			showSnackbar(fallbackMessage, "error");
+		}
+	);
 
 	const handleLogin = () => {
 		loginMutation.mutate({ identifier: email, password });
 	};
 
-	const handleForgotPasswordSubmit = () => {
-		const trimmedEmail = forgotPasswordEmail.trim();
+	const handleForgotPasswordSubmit = useCallback(
+		(targetEmail: string) => {
+			const trimmedEmail = targetEmail.trim();
+			setForgotPrefillEmail(trimmedEmail);
 
-		if (!trimmedEmail) {
-			showSnackbar(
-				"Veuillez renseigner votre adresse email avant de continuer.",
-				"error"
-			);
-			return;
-		}
+			if (!trimmedEmail) {
+				showSnackbar(
+					"Veuillez renseigner votre adresse email avant de continuer.",
+					"error"
+				);
+				return;
+			}
 
-		forgotPasswordMutation.mutate({ email: trimmedEmail });
-	};
+			forgotPasswordMutation.mutate({ email: trimmedEmail });
+		},
+		[forgotPasswordMutation, showSnackbar]
+	);
 
-	const handleForgotPasswordDismiss = useCallback(() => {
-		setForgotPasswordEmail("");
+	const handleResetPasswordSubmit = useCallback(
+		(payload: {
+			password: string;
+			passwordConfirmation: string;
+			code: string;
+		}) => {
+			const { password: newPassword, passwordConfirmation, code } = payload;
+
+			if (!code) {
+				showSnackbar(
+					"Le lien de réinitialisation est invalide ou expiré.",
+					"error"
+				);
+				return;
+			}
+
+			latestResetPasswordRef.current = newPassword;
+			setPendingResetCode(code);
+			resetPasswordMutation.mutate({
+				password: newPassword,
+				passwordConfirmation,
+				code,
+			});
+		},
+		[resetPasswordMutation, showSnackbar]
+	);
+
+	const handleForgotSheetDismiss = useCallback(() => {
+		setForgotPrefillEmail("");
 		forgotPasswordMutation.reset();
 	}, [forgotPasswordMutation]);
 
+	const handleResetSheetDismiss = useCallback(() => {
+		setPendingResetCode(null);
+		resetPasswordMutation.reset();
+		latestResetPasswordRef.current = "";
+	}, [resetPasswordMutation]);
+
+	const handleDeepLink = useCallback(
+		(url: string | null) => {
+			if (!url) return;
+
+			const parsed = Linking.parse(url);
+			const { path, queryParams } = parsed;
+			const codeParam =
+				typeof queryParams?.code === "string"
+					? queryParams.code
+					: typeof queryParams?.token === "string"
+						? queryParams.token
+						: typeof queryParams?.reset_code === "string"
+							? queryParams.reset_code
+							: null;
+
+			if (!codeParam) return;
+
+			const normalizedPath = path?.toLowerCase() ?? "";
+			if (
+				normalizedPath &&
+				!normalizedPath.includes("reset-password") &&
+				!normalizedPath.includes("password-reset")
+			) {
+				return;
+			}
+
+			if (typeof queryParams?.email === "string") {
+				setEmail(queryParams.email);
+			}
+
+			setPendingResetCode(codeParam);
+			resetPasswordMutation.reset();
+			latestResetPasswordRef.current = "";
+			resetPasswordSheetRef.current?.present();
+		},
+		[resetPasswordMutation]
+	);
+
 	useEffect(() => {
-		(async () => {
-			const loggedIn = await checkLoggedIn();
-			if (loggedIn) navigation.navigate("(tabs)");
-		})();
+		const fetchInitialUrl = async () => {
+			try {
+				const initialUrl = await Linking.getInitialURL();
+				handleDeepLink(initialUrl);
+			} catch (error) {
+				console.error("Failed to get initial URL", error);
+			}
+		};
+
+		void fetchInitialUrl();
+
+		const subscription = Linking.addEventListener("url", ({ url }) =>
+			handleDeepLink(url)
+		);
+
+		return () => {
+			subscription.remove();
+		};
+	}, [handleDeepLink]);
+
+useEffect(() => {
+	(async () => {
+		const loggedIn = await checkLoggedIn();
+		if (loggedIn) navigation.navigate("(tabs)");
+	})();
 	}, [navigation, checkLoggedIn]);
 
 	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
@@ -235,47 +335,21 @@ const SignIn = () => {
 				</KeyboardAvoidingView>
 			</TouchableWithoutFeedback>
 
-			<BottomSheetModal
-				ref={bottomSheetRef}
-				index={0}
-				snapPoints={snapPoints}
-				backgroundStyle={styles.sheetBackground}
-				handleIndicatorStyle={styles.hiddenIndicator}
-				enablePanDownToClose
-				onDismiss={handleForgotPasswordDismiss}
-				backdropComponent={renderForgotBackdrop}>
-				<BottomSheetView style={styles.sheetContent}>
-					<ModalGestureLine />
-					<Text style={styles.sheetTitle}>Mot de passe oublié</Text>
-					<Text style={styles.sheetDescription}>
-						Entrez l'email associé à votre compte pour recevoir un lien de
-						réinitialisation.
-					</Text>
-					<TextInput
-						style={styles.sheetInput}
-						value={forgotPasswordEmail}
-						onChangeText={setForgotPasswordEmail}
-						placeholder='Email'
-						placeholderTextColor={colorGrey}
-						autoCapitalize='none'
-						keyboardType='email-address'
-						textContentType='emailAddress'
-					/>
-					<Pressable
-						onPress={handleForgotPasswordSubmit}
-						disabled={forgotPasswordMutation.isPending}
-						style={[
-							buttonBlack,
-							forgotPasswordMutation.isPending && styles.resetButtonDisabled,
-						]}>
-						{forgotPasswordMutation.isPending ? (
-							<ActivityIndicator color={colorWhite} />
-						) : (
-							<Text style={styles.resetButtonText}>Reset</Text>
-						)}
-					</Pressable>
-				</BottomSheetView>
-			</BottomSheetModal>
+			<ForgotPasswordSheet
+				ref={forgotPasswordSheetRef}
+				initialEmail={forgotPrefillEmail}
+				isSubmitting={forgotPasswordMutation.isPending}
+				onSubmit={handleForgotPasswordSubmit}
+				onDismiss={handleForgotSheetDismiss}
+			/>
+
+			<ResetPasswordSheet
+				ref={resetPasswordSheetRef}
+				resetCode={pendingResetCode}
+				isSubmitting={resetPasswordMutation.isPending}
+				onSubmit={handleResetPasswordSubmit}
+				onDismiss={handleResetSheetDismiss}
+			/>
 		</>
 	);
 };
@@ -352,56 +426,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
-	},
-	sheetBackground: {
-		backgroundColor: colorWhite,
-		borderTopLeftRadius: 24,
-		borderTopRightRadius: 24,
-	},
-	hiddenIndicator: {
-		backgroundColor: "transparent",
-	},
-	sheetContent: {
-		paddingHorizontal: 24,
-		paddingTop: 8,
-		paddingBottom: 24,
-		gap: 20,
-	},
-	sheetTitle: {
-		fontSize: FontSizeH1,
-		fontWeight: "bold",
-		color: colorBlack,
-	},
-	sheetDescription: {
-		fontSize: FontSize16,
-		color: colorBlack,
-	},
-	sheetInput: {
-		width: "100%",
-		borderWidth: 1,
-		borderColor: colorGrey,
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		paddingVertical: 14,
-		fontSize: FontSize16,
-		fontWeight: "bold",
-		color: colorBlack,
-	},
-	resetButton: {
-		backgroundColor: colorBlack,
-		paddingVertical: 16,
-		borderRadius: 12,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	resetButtonDisabled: {
-		opacity: 0.6,
-	},
-	resetButtonText: {
-		color: colorWhite,
-		fontWeight: "bold",
-		fontSize: FontSize16,
-		textTransform: "uppercase",
 	},
 });
 
