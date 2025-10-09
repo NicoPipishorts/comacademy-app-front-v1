@@ -269,9 +269,10 @@ export default function RegisterStep1({
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "center",
+		justifyContent: "flex-start",
 		alignItems: "center",
 		backgroundColor: primaryBackground,
+		paddingTop: 20,
 	},
 	title: {
 		fontSize: FontSizeH1,

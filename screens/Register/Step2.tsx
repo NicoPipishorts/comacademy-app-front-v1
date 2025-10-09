@@ -265,8 +265,9 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		width: "100%",
-		justifyContent: "center",
+		justifyContent: "flex-start",
 		alignItems: "center",
+		paddingTop: 20,
 	},
 	passwordInputContainer: {
 		flexDirection: "row",
