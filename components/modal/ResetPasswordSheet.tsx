@@ -13,7 +13,8 @@ import {
 	BottomSheetBackdrop,
 	BottomSheetBackdropProps,
 	BottomSheetModal,
-	BottomSheetView,
+	BottomSheetScrollView,
+	BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import React, {
 	forwardRef,
@@ -27,7 +28,6 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
-	TextInput,
 	View,
 } from "react-native";
 
@@ -121,15 +121,21 @@ const ResetPasswordSheet = forwardRef<BottomSheetModal, ResetPasswordSheetProps>
 				handleIndicatorStyle={styles.hiddenIndicator}
 				enablePanDownToClose
 				backdropComponent={renderBackdrop}
-				onDismiss={handleDismiss}>
-				<BottomSheetView style={styles.sheetContent}>
+				onDismiss={handleDismiss}
+				keyboardBehavior="interactive"
+				keyboardBlurBehavior="restore"
+				android_keyboardInputMode="adjustResize">
+				<BottomSheetScrollView
+					style={styles.sheetContent}
+					contentContainerStyle={styles.scrollContentContainer}
+					keyboardShouldPersistTaps="handled">
 					<ModalGestureLine />
 					<Text style={styles.sheetTitle}>{title}</Text>
 					<Text style={styles.sheetDescription}>{description}</Text>
 
 					<View>
 						<View style={styles.inputWrapper}>
-							<TextInput
+							<BottomSheetTextInput
 								style={styles.sheetInput}
 								value={password}
 								onChangeText={setPassword}
@@ -155,7 +161,7 @@ const ResetPasswordSheet = forwardRef<BottomSheetModal, ResetPasswordSheetProps>
 
 					<View>
 						<View style={styles.inputWrapper}>
-							<TextInput
+							<BottomSheetTextInput
 								style={styles.sheetInput}
 								value={confirmPassword}
 								onChangeText={setConfirmPassword}
@@ -194,7 +200,7 @@ const ResetPasswordSheet = forwardRef<BottomSheetModal, ResetPasswordSheetProps>
 							<Text style={styles.resetButtonText}>Reset</Text>
 						)}
 					</Pressable>
-				</BottomSheetView>
+				</BottomSheetScrollView>
 			</BottomSheetModal>
 		);
 	}
@@ -213,6 +219,8 @@ const styles = StyleSheet.create({
 	},
 	sheetContent: {
 		paddingHorizontal: 24,
+	},
+	scrollContentContainer: {
 		paddingTop: 8,
 		paddingBottom: 24,
 		gap: 20,

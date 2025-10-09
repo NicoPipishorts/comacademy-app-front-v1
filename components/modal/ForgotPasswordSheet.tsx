@@ -5,7 +5,8 @@ import {
 	BottomSheetBackdrop,
 	BottomSheetBackdropProps,
 	BottomSheetModal,
-	BottomSheetView,
+	BottomSheetScrollView,
+	BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -13,7 +14,6 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
-	TextInput,
 } from "react-native";
 
 interface ForgotPasswordSheetProps {
@@ -80,12 +80,18 @@ const ForgotPasswordSheet = forwardRef<BottomSheetModal, ForgotPasswordSheetProp
 				handleIndicatorStyle={styles.hiddenIndicator}
 				enablePanDownToClose
 				backdropComponent={renderBackdrop}
-				onDismiss={handleDismiss}>
-				<BottomSheetView style={styles.sheetContent}>
+				onDismiss={handleDismiss}
+				keyboardBehavior="interactive"
+				keyboardBlurBehavior="restore"
+				android_keyboardInputMode="adjustResize">
+				<BottomSheetScrollView
+					style={styles.sheetContent}
+					contentContainerStyle={styles.scrollContentContainer}
+					keyboardShouldPersistTaps="handled">
 					<ModalGestureLine />
 					<Text style={styles.sheetTitle}>{title}</Text>
 					<Text style={styles.sheetDescription}>{description}</Text>
-					<TextInput
+					<BottomSheetTextInput
 						style={styles.sheetInput}
 						value={email}
 						onChangeText={setEmail}
@@ -106,7 +112,7 @@ const ForgotPasswordSheet = forwardRef<BottomSheetModal, ForgotPasswordSheetProp
 							<Text style={styles.resetButtonText}>Envoyer</Text>
 						)}
 					</Pressable>
-				</BottomSheetView>
+				</BottomSheetScrollView>
 			</BottomSheetModal>
 		);
 	}
@@ -125,6 +131,8 @@ const styles = StyleSheet.create({
 	},
 	sheetContent: {
 		paddingHorizontal: 24,
+	},
+	scrollContentContainer: {
 		paddingTop: 8,
 		paddingBottom: 24,
 		gap: 20,
