@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
 		flexGrow: 1,
 		minWidth: "100%",
 		alignItems: "center",
+		justifyContent: "center",
 	},
 	logoContainer: {
 		marginBottom: 20,
