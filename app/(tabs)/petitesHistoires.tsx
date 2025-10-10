@@ -24,7 +24,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
 import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
 import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
@@ -34,11 +33,12 @@ import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
+import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
 const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
 	const routeKey = "petites-histoires";
-	const { data, isLoading } = useGetMediaList(routeKey, token);
+	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
@@ -181,6 +181,9 @@ const LesPetitesHistoires: React.FC = () => {
 
 	const stories = useMemo(() => data?.data ?? [], [data]);
 
+	const showSkeleton =
+		(!data || stories.length === 0) && (isLoading || isFetching);
+
 	// OPTIONAL (parity with TrenteSecondes): autoplay first item on mount; pause on hard unmount
 	useEffect(() => {
 		if (isLoading) return;
@@ -297,12 +300,8 @@ const LesPetitesHistoires: React.FC = () => {
 		]
 	);
 
-	if (isLoading) {
-		return (
-			<View style={styles.loaderContainer}>
-				<Loader />
-			</View>
-		);
+	if (showSkeleton) {
+		return <PetitesHistoiresSkeleton paddingTop={insets.top} />;
 	}
 
 	if (!data) {
@@ -355,11 +354,6 @@ const styles = StyleSheet.create({
 	},
 	contentPadding: {
 		paddingRight: 25,
-	},
-	loaderContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
 	},
 	noDataContainer: {
 		flex: 1,
