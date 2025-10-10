@@ -11,6 +11,14 @@ export const buttonBlack: ViewStyle = {
 	alignSelf: "center",
 };
 
+export const buttonWhite: ViewStyle = {
+	backgroundColor: colorWhite,
+	paddingVertical: 10,
+	paddingHorizontal: 35,
+	borderRadius: 50,
+	alignSelf: "center",
+};
+
 export const smallButton: ViewStyle = {
 	backgroundColor: colorBlack,
 	paddingHorizontal: 15,

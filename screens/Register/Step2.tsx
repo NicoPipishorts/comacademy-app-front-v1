@@ -8,6 +8,7 @@ import {
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -56,8 +57,8 @@ export default function RegisterStep2({
 	const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
 	useEffect(() => {
-		if (formPayload.profile != null) setSelectedOption(formPayload.profile);
-		if (formPayload.password != null) {
+		if (formPayload?.profile != null) setSelectedOption(formPayload.profile);
+		if (formPayload?.password != null) {
 			setNewPassword(formPayload.password);
 			setPasswordConfirm(formPayload.password);
 		}
@@ -77,7 +78,7 @@ export default function RegisterStep2({
 	const handleOptionPress = (option: number) => {
 		if (selectedOption === option) {
 			setSelectedOption(null);
-			setFormPayload({ ...formPayload, profile: null });
+			setFormPayload({ ...formPayload, profile: null as unknown as number });
 		} else {
 			setSelectedOption(option);
 			setFormPayload({ ...formPayload, profile: option });
@@ -124,7 +125,7 @@ export default function RegisterStep2({
 		if (validateForm()) {
 			const updatedPayload = {
 				...formPayload,
-				profile: selectedOption,
+				profile: selectedOption!,
 				password: newPassword,
 			};
 			setErrors({});
@@ -132,150 +133,156 @@ export default function RegisterStep2({
 		}
 	};
 
-	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
+	const behavior = (Platform.OS === "ios" ? "padding" : "height") as
 		| "padding"
 		| "height"
 		| "position"
 		| undefined;
+
 	const bottomInset = Math.max(insets.bottom, 20);
+	// Align with Step1: offset accounts for top inset + approx header/logo height
+	const keyboardOffset = (Platform.OS === "ios" ? insets.top : 0) + 80;
 
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
 			<KeyboardAvoidingView
 				style={styles.avoidingContainer}
 				behavior={behavior}
-				keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
-				<ScrollView
-					style={styles.formScroll}
-					contentContainerStyle={[
-						styles.scrollContent,
-						{
-							paddingTop: Math.max(insets.top, 20),
-							paddingBottom: 32,
-						},
-					]}
-					keyboardShouldPersistTaps='handled'
-					keyboardDismissMode='interactive'
-					showsVerticalScrollIndicator={false}
-					// 🔒 prevent rubber-band / overscroll that looks infinite
-					bounces={false}
-					overScrollMode='never'>
-					<View style={styles.formContainer}>
-						{/* Options */}
-						<View
-							style={[
-								styles.optionsContainer,
-								{
-									borderColor: errors.selectedOption
-										? "rgba(199, 62, 48, .5)"
-										: colorGrey,
-									borderWidth: errors.selectedOption ? 2 : 1,
-									borderRadius: 8,
-								},
-							]}>
-							{OPTIONS.map((option) => (
-								<TouchableOpacity
-									key={`${option.label}-${option.value}`}
-									style={[
-										styles.optionButton,
-										selectedOption === option.value &&
-											styles.selectedOptionButton,
-									]}
-									onPress={() => handleOptionPress(option.value)}
-									activeOpacity={0.8}>
-									<Text
+				keyboardVerticalOffset={keyboardOffset}>
+				<View style={{ flex: 1 }}>
+					<ScrollView
+						style={styles.formScroll}
+						contentContainerStyle={{
+							flexGrow: 1,
+							paddingHorizontal: 10,
+							paddingTop: 0,
+							// keep footer tappable when keyboard is open
+							paddingBottom: bottomInset + 20,
+						}}
+						keyboardShouldPersistTaps='never'
+						keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "on-drag"}
+						bounces={false}
+						overScrollMode='never'
+						showsVerticalScrollIndicator={false}>
+						<View style={styles.formContainer}>
+							{/* Options */}
+							<View
+								style={[
+									styles.optionsContainer,
+									{
+										borderColor: errors.selectedOption
+											? "rgba(199, 62, 48, .5)"
+											: colorGrey,
+										borderWidth: errors.selectedOption ? 2 : 1,
+										borderRadius: 8,
+									},
+								]}>
+								{OPTIONS.map((option) => (
+									<TouchableOpacity
+										key={`${option.label}-${option.value}`}
 										style={[
-											styles.optionText,
+											styles.optionButton,
 											selectedOption === option.value &&
-												styles.selectedOptionText,
-										]}>
-										{option.label}
-									</Text>
-								</TouchableOpacity>
-							))}
-							{errors.selectedOption ? (
-								<Text style={styles.errorText}>{errors.selectedOption}</Text>
+												styles.selectedOptionButton,
+										]}
+										onPress={() => handleOptionPress(option.value)}
+										activeOpacity={0.8}>
+										<Text
+											style={[
+												styles.optionText,
+												selectedOption === option.value &&
+													styles.selectedOptionText,
+											]}>
+											{option.label}
+										</Text>
+									</TouchableOpacity>
+								))}
+								{errors.selectedOption ? (
+									<Text style={styles.errorText}>{errors.selectedOption}</Text>
+								) : null}
+							</View>
+
+							{/* New Password */}
+							{errors.newPassword ? (
+								<Text style={styles.errorText}>{errors.newPassword}</Text>
 							) : null}
+							<View
+								style={[
+									styles.passwordInputContainer,
+									{
+										borderBottomColor: errors.newPassword
+											? colorRed
+											: colorGrey,
+									},
+								]}>
+								<TextInput
+									secureTextEntry={!showNewPassword}
+									value={newPassword}
+									onChangeText={setNewPassword}
+									style={styles.input}
+									placeholder='Nouveau Mot de Passe'
+									placeholderTextColor={colorBlack}
+									returnKeyType='next'
+								/>
+								<MaterialCommunityIcons
+									name={showNewPassword ? "eye-off" : "eye"}
+									size={24}
+									color={colorBlack}
+									style={styles.eyeIcon}
+									onPress={() => toggleShowPassword("new")}
+								/>
+							</View>
+
+							{/* Strength meter */}
+							<PasswordStrengthMeter password={newPassword} />
+
+							{/* Confirm Password */}
+							{errors.passwordConfirm ? (
+								<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+							) : null}
+							<View
+								style={[
+									styles.passwordInputContainer,
+									{
+										borderBottomColor: errors.passwordConfirm
+											? colorRed
+											: colorGrey,
+									},
+								]}>
+								<TextInput
+									secureTextEntry={!showPasswordConfirm}
+									value={passwordConfirm}
+									onChangeText={setPasswordConfirm}
+									style={styles.input}
+									placeholder='Confirmer le Mot de Passe'
+									placeholderTextColor={colorBlack}
+									returnKeyType='done'
+								/>
+								<MaterialCommunityIcons
+									name={showPasswordConfirm ? "eye-off" : "eye"}
+									size={24}
+									color={colorBlack}
+									style={styles.eyeIcon}
+									onPress={() => toggleShowPassword("confirm")}
+								/>
+							</View>
+
+							{/* Requirements */}
+							<PasswordRequirements password={newPassword} />
 						</View>
 
-						{/* New Password */}
-						{errors.newPassword ? (
-							<Text style={styles.errorText}>{errors.newPassword}</Text>
-						) : null}
-						<View
-							style={[
-								styles.passwordInputContainer,
-								{
-									borderBottomColor: errors.newPassword ? colorRed : colorGrey,
-								},
-							]}>
-							<TextInput
-								secureTextEntry={!showNewPassword}
-								value={newPassword}
-								onChangeText={setNewPassword}
-								style={styles.input}
-								placeholder='Nouveau Mot de Passe'
-								placeholderTextColor={colorBlack}
-								returnKeyType='next'
-							/>
-							<MaterialCommunityIcons
-								name={showNewPassword ? "eye-off" : "eye"}
-								size={24}
-								color={colorBlack}
-								style={styles.eyeIcon}
-								onPress={() => toggleShowPassword("new")}
-							/>
+						<View style={styles.footer}>
+							<Pressable style={buttonBlack} onPress={handleNext}>
+								<Text style={styles.buttonTextSubmit}>C'est parti</Text>
+							</Pressable>
+
+							<Pressable
+								style={styles.buttonRevenir}
+								onPress={() => setStep(1)}>
+								<Text style={styles.buttonTextRevenir}>Revenir</Text>
+							</Pressable>
 						</View>
-
-						{/* Strength meter */}
-						<PasswordStrengthMeter password={newPassword} />
-
-						{/* Confirm Password */}
-						{errors.passwordConfirm ? (
-							<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
-						) : null}
-						<View
-							style={[
-								styles.passwordInputContainer,
-								{
-									borderBottomColor: errors.passwordConfirm
-										? colorRed
-										: colorGrey,
-								},
-							]}>
-							<TextInput
-								secureTextEntry={!showPasswordConfirm}
-								value={passwordConfirm}
-								onChangeText={setPasswordConfirm}
-								style={styles.input}
-								placeholder='Confirmer le Mot de Passe'
-								placeholderTextColor={colorBlack}
-								returnKeyType='done'
-							/>
-							<MaterialCommunityIcons
-								name={showPasswordConfirm ? "eye-off" : "eye"}
-								size={24}
-								color={colorBlack}
-								style={styles.eyeIcon}
-								onPress={() => toggleShowPassword("confirm")}
-							/>
-						</View>
-
-						{/* Requirements */}
-						<PasswordRequirements password={newPassword} />
-					</View>
-				</ScrollView>
-
-				<View style={[styles.footer, { paddingBottom: bottomInset }]}>
-					{/* Submit */}
-					<Pressable style={styles.buttonSubmit} onPress={handleNext}>
-						<Text style={styles.buttonTextSubmit}>C'est parti</Text>
-					</Pressable>
-
-					{/* Back */}
-					<Pressable style={styles.buttonRevenir} onPress={() => setStep(1)}>
-						<Text style={styles.buttonTextRevenir}>Revenir</Text>
-					</Pressable>
+					</ScrollView>
 				</View>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
@@ -284,14 +291,10 @@ export default function RegisterStep2({
 
 const styles = StyleSheet.create({
 	avoidingContainer: {
-		flex: 1,
+		flex: 1, // KAV owns full height (no centering here)
 	},
 	formScroll: {
 		flex: 1,
-	},
-	scrollContent: {
-		// ❗️Removed flexGrow: 1 to avoid manufactured extra space when keyboard is visible
-		minWidth: "100%",
 	},
 	formContainer: {
 		width: "100%",
@@ -371,6 +374,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 24,
 		paddingVertical: 8,
 		borderRadius: 50,
+		alignSelf: "center",
 	},
 	buttonTextRevenir: {
 		color: colorBlack,
