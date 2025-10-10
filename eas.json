@@ -6,7 +6,11 @@
 		"preview": {
 			"distribution": "internal",
 			"autoIncrement": true,
-			"channel": "preview"
+			"channel": "preview",
+			"android": {
+				"buildType": "app-bundle",
+				"gradleCommand": ":app:bundleRelease"
+			}
 		},
 		"production": {
 			"node": "20.19.4",
@@ -15,7 +19,9 @@
 				"image": "latest"
 			},
 			"android": {
-				"autoIncrement": true
+				"autoIncrement": true,
+				"buildType": "app-bundle",
+				"gradleCommand": ":app:bundleRelease"
 			},
 			"channel": "production"
 		}

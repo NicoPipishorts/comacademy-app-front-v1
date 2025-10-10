@@ -2,7 +2,7 @@ import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
 import useDailyCitations from "@/hooks/Citations/useGetDailyCitations";
 import { router } from "expo-router";
-import moment from "moment";
+import { format } from "date-fns";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Loader from "./experience/loader";
@@ -27,7 +27,7 @@ export default function ALaUneCitation() {
 	return (
 		<TouchableOpacity style={styles.container}>
 			<Text style={styles.smallText}>
-				La citation du jour : {moment(citation.updatedAt).format("DD/MM/YYYY")}
+				La citation du jour : {format(new Date(citation.updatedAt), "dd/MM/yyyy")}
 			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}
