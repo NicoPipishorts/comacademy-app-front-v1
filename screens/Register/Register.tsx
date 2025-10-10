@@ -80,43 +80,29 @@ const Register = () => {
 	}, [navigation, checkLoggedIn]);
 
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<KeyboardAvoidingView
-				style={styles.container}
-				behavior={Platform.OS === "ios" ? "padding" : "height"}
-				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}>
-				<ScrollView
-					contentContainerStyle={[
-						styles.scrollContainer,
-						{ paddingTop: insets.top, paddingBottom: 40 },
-					]}
-					keyboardShouldPersistTaps='handled'
-					showsVerticalScrollIndicator={false}>
-					<View style={[styles.logoContainer]}>
-						<LogoPageTop />
-					</View>
+		<View style={styles.container}>
+			<View style={[styles.logoContainer, { paddingTop: insets.top }]}>
+				<LogoPageTop />
+			</View>
 
-					<View
-						style={{ width: "100%", alignItems: "center" }}>
-						{step === 1 && (
-							<RegisterStep1
-								setStep={setStep}
-								formPayload={formPayload}
-								setFormPayload={setFormPayload}
-							/>
-						)}
-						{step === 2 && (
-							<RegisterStep2
-								setStep={setStep}
-								formPayload={formPayload}
-								setFormPayload={setFormPayload}
-								handleLogin={handleLogin}
-							/>
-						)}
-					</View>
-				</ScrollView>
-			</KeyboardAvoidingView>
-		</TouchableWithoutFeedback>
+			<View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+				{step === 1 && (
+					<RegisterStep1
+						setStep={setStep}
+						formPayload={formPayload}
+						setFormPayload={setFormPayload}
+					/>
+				)}
+				{step === 2 && (
+					<RegisterStep2
+						setStep={setStep}
+						formPayload={formPayload}
+						setFormPayload={setFormPayload}
+						handleLogin={handleLogin}
+					/>
+				)}
+			</View>
+		</View>
 	);
 };
 

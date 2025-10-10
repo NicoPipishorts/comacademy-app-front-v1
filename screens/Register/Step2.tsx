@@ -137,21 +137,30 @@ export default function RegisterStep2({
 		| "height"
 		| "position"
 		| undefined;
+	const bottomInset = Math.max(insets.bottom, 20);
 
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 			<KeyboardAvoidingView
-				style={{ flex: 1 }}
+				style={styles.avoidingContainer}
 				behavior={behavior}
 				keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
 				<ScrollView
+					style={styles.formScroll}
 					contentContainerStyle={[
 						styles.scrollContent,
-						{ paddingTop: 20, paddingBottom: 120 },
+						{
+							paddingTop: Math.max(insets.top, 20),
+							paddingBottom: 32,
+						},
 					]}
 					keyboardShouldPersistTaps='handled'
-					showsVerticalScrollIndicator={false}>
-					<View style={styles.container}>
+					keyboardDismissMode='interactive'
+					showsVerticalScrollIndicator={false}
+					// 🔒 prevent rubber-band / overscroll that looks infinite
+					bounces={false}
+					overScrollMode='never'>
+					<View style={styles.formContainer}>
 						{/* Options */}
 						<View
 							style={[
@@ -254,33 +263,45 @@ export default function RegisterStep2({
 
 						{/* Requirements */}
 						<PasswordRequirements password={newPassword} />
-
-						{/* Submit */}
-						<Pressable style={styles.buttonSubmit} onPress={handleNext}>
-							<Text style={styles.buttonTextSubmit}>C'est parti</Text>
-						</Pressable>
-
-						{/* Back */}
-						<Pressable style={styles.buttonRevenir} onPress={() => setStep(1)}>
-							<Text style={styles.buttonTextRevenir}>Revenir</Text>
-						</Pressable>
 					</View>
 				</ScrollView>
+
+				<View style={[styles.footer, { paddingBottom: bottomInset }]}>
+					{/* Submit */}
+					<Pressable style={styles.buttonSubmit} onPress={handleNext}>
+						<Text style={styles.buttonTextSubmit}>C'est parti</Text>
+					</Pressable>
+
+					{/* Back */}
+					<Pressable style={styles.buttonRevenir} onPress={() => setStep(1)}>
+						<Text style={styles.buttonTextRevenir}>Revenir</Text>
+					</Pressable>
+				</View>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
+	avoidingContainer: {
+		flex: 1,
+	},
+	formScroll: {
+		flex: 1,
+	},
 	scrollContent: {
-		flexGrow: 1,
-		justifyContent: "center",
+		// ❗️Removed flexGrow: 1 to avoid manufactured extra space when keyboard is visible
 		minWidth: "100%",
 	},
-	container: {
+	formContainer: {
 		width: "100%",
 		alignItems: "center",
 		paddingHorizontal: 10,
+	},
+	footer: {
+		paddingHorizontal: 10,
+		paddingTop: 24,
+		alignItems: "center",
 	},
 	passwordInputContainer: {
 		flexDirection: "row",
@@ -333,7 +354,6 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 	},
 	buttonSubmit: {
-		marginTop: 70,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,

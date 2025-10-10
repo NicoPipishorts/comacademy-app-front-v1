@@ -61,7 +61,6 @@ export default function RegisterStep1({
 			email?: string;
 		} = {};
 
-		// Regex for first name and last name (letters, accented, dashes, spaces)
 		const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ\- ]+$/;
 
 		if (!firstName.trim()) {
@@ -133,21 +132,30 @@ export default function RegisterStep1({
 		| "height"
 		| "position"
 		| undefined;
+	const bottomInset = Math.max(insets.bottom, 20);
 
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 			<KeyboardAvoidingView
-				style={{ flex: 1 }}
+				style={styles.avoidingContainer}
 				behavior={behavior}
 				keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
 				<ScrollView
+					style={styles.formScroll}
 					contentContainerStyle={[
 						styles.scrollContent,
-						{ paddingTop: 20, paddingBottom: insets.bottom + 20 },
+						{
+							paddingTop: Math.max(insets.top, 20),
+							paddingBottom: 32,
+						},
 					]}
 					keyboardShouldPersistTaps='handled'
-					showsVerticalScrollIndicator={false}>
-					<View style={styles.container}>
+					keyboardDismissMode='interactive'
+					showsVerticalScrollIndicator={false}
+					// 🔒 prevent rubber-band / overscroll that looks infinite
+					bounces={false}
+					overScrollMode='never'>
+					<View style={styles.formContainer}>
 						<View style={{ backgroundColor: primaryBackground }}>
 							<Text style={styles.title}>Venez com' vous êtes !</Text>
 						</View>
@@ -231,50 +239,62 @@ export default function RegisterStep1({
 								returnKeyType='done'
 							/>
 						</View>
-
-						<Pressable style={styles.buttonContainer} onPress={handleNext}>
-							<Text style={styles.buttonText}>Suivant</Text>
-							<View
-								style={{
-									justifyContent: "center",
-									alignContent: "center",
-									backgroundColor: colorBlack,
-									borderRadius: 16,
-									padding: 5,
-									marginLeft: 10,
-								}}>
-								<Image
-									source={require("@/assets/imgs/icons/chevron_white.png")}
-									style={{
-										width: 18,
-										height: 18,
-										transform: [{ rotate: "180deg" }],
-										marginLeft: 2,
-									}}
-								/>
-							</View>
-						</Pressable>
-
-						<Pressable style={styles.buttonRevenir} onPress={handleCancle}>
-							<Text style={styles.buttonTextRevenir}>Annuler</Text>
-						</Pressable>
 					</View>
 				</ScrollView>
+
+				<View style={[styles.footer, { paddingBottom: bottomInset }]}>
+					<Pressable style={styles.buttonContainer} onPress={handleNext}>
+						<Text style={styles.buttonText}>Suivant</Text>
+						<View
+							style={{
+								justifyContent: "center",
+								alignContent: "center",
+								backgroundColor: colorBlack,
+								borderRadius: 16,
+								padding: 5,
+								marginLeft: 10,
+							}}>
+							<Image
+								source={require("@/assets/imgs/icons/chevron_white.png")}
+								style={{
+									width: 18,
+									height: 18,
+									transform: [{ rotate: "180deg" }],
+									marginLeft: 2,
+								}}
+							/>
+						</View>
+					</Pressable>
+
+					<Pressable style={styles.buttonRevenir} onPress={handleCancle}>
+						<Text style={styles.buttonTextRevenir}>Annuler</Text>
+					</Pressable>
+				</View>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
+	avoidingContainer: {
+		flex: 1,
+	},
+	formScroll: {
+		flex: 1,
+	},
 	scrollContent: {
-		flexGrow: 1,
-		justifyContent: "center",
+		// ❗️Removed flexGrow: 1 to avoid manufactured extra space when keyboard is visible
 		minWidth: "100%",
 	},
-	container: {
+	formContainer: {
 		width: "100%",
 		alignItems: "center",
 		paddingHorizontal: 10,
+	},
+	footer: {
+		paddingHorizontal: 10,
+		paddingTop: 24,
+		alignItems: "center",
 	},
 	title: {
 		fontSize: FontSizeH1,
@@ -301,7 +321,6 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 	buttonContainer: {
-		marginTop: 40,
 		flexDirection: "row",
 		alignItems: "center",
 		backgroundColor: colorWhite,

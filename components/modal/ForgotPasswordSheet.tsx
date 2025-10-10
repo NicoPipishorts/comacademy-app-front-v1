@@ -1,5 +1,6 @@
 import ModalGestureLine from "@/components/experience/modalGestureLine";
 import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import {
 	BottomSheetBackdrop,
@@ -8,13 +9,14 @@ import {
 	BottomSheetScrollView,
 	BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
-import {
-	ActivityIndicator,
-	Pressable,
-	StyleSheet,
-	Text,
-} from "react-native";
+import React, {
+	forwardRef,
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 
 interface ForgotPasswordSheetProps {
 	initialEmail?: string;
@@ -29,7 +31,10 @@ const DEFAULT_TITLE = "Mot de passe oublié";
 const DEFAULT_DESCRIPTION =
 	"Entrez l'email associé à votre compte pour recevoir un lien de réinitialisation.";
 
-const ForgotPasswordSheet = forwardRef<BottomSheetModal, ForgotPasswordSheetProps>(
+const ForgotPasswordSheet = forwardRef<
+	BottomSheetModal,
+	ForgotPasswordSheetProps
+>(
 	(
 		{
 			initialEmail = "",
@@ -81,13 +86,13 @@ const ForgotPasswordSheet = forwardRef<BottomSheetModal, ForgotPasswordSheetProp
 				enablePanDownToClose
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
-				keyboardBehavior="interactive"
-				keyboardBlurBehavior="restore"
-				android_keyboardInputMode="adjustResize">
+				keyboardBehavior='interactive'
+				keyboardBlurBehavior='restore'
+				android_keyboardInputMode='adjustResize'>
 				<BottomSheetScrollView
 					style={styles.sheetContent}
 					contentContainerStyle={styles.scrollContentContainer}
-					keyboardShouldPersistTaps="handled">
+					keyboardShouldPersistTaps='handled'>
 					<ModalGestureLine />
 					<Text style={styles.sheetTitle}>{title}</Text>
 					<Text style={styles.sheetDescription}>{description}</Text>
@@ -105,7 +110,7 @@ const ForgotPasswordSheet = forwardRef<BottomSheetModal, ForgotPasswordSheetProp
 					<Pressable
 						onPress={handleSubmit}
 						disabled={buttonDisabled}
-						style={[styles.resetButton, buttonDisabled && styles.resetButtonDisabled]}>
+						style={[buttonBlack, buttonDisabled && styles.resetButtonDisabled]}>
 						{isSubmitting ? (
 							<ActivityIndicator color={colorWhite} />
 						) : (
@@ -156,13 +161,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize16,
 		fontWeight: "bold",
 		color: colorBlack,
-	},
-	resetButton: {
-		backgroundColor: colorBlack,
-		paddingVertical: 16,
-		borderRadius: 12,
-		alignItems: "center",
-		justifyContent: "center",
 	},
 	resetButtonDisabled: {
 		opacity: 0.6,
