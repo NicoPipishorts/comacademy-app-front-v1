@@ -43,6 +43,7 @@ const SignIn = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [forgotPrefillEmail, setForgotPrefillEmail] = useState("");
 	const [pendingResetCode, setPendingResetCode] = useState<string | null>(null);
+	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
 	const forgotPasswordSheetRef = useRef<BottomSheetModal>(null);
 	const resetPasswordSheetRef = useRef<BottomSheetModal>(null);
@@ -88,7 +89,11 @@ const SignIn = () => {
 		const trimmedEmail = email.trim();
 		setForgotPrefillEmail(trimmedEmail);
 		forgotPasswordMutation.reset();
-		forgotPasswordSheetRef.current?.present();
+		// Close keyboard first, then present sheet on next frame to avoid race
+		Keyboard.dismiss();
+		requestAnimationFrame(() => {
+			forgotPasswordSheetRef.current?.present();
+		});
 	}, [email, forgotPasswordMutation]);
 
 	const resetPasswordMutation = useResetPasswordMutation(
@@ -99,9 +104,7 @@ const SignIn = () => {
 				"success"
 			);
 			const latestPassword = latestResetPasswordRef.current;
-			if (latestPassword) {
-				setPassword(latestPassword);
-			}
+			if (latestPassword) setPassword(latestPassword);
 			setPendingResetCode(null);
 			resetPasswordSheetRef.current?.dismiss();
 		},
@@ -144,15 +147,7 @@ const SignIn = () => {
 		}) => {
 			const { password: newPassword, passwordConfirmation, code } = payload;
 
-			console.log("[Reset Password] Submit called with:", {
-				code,
-				hasPassword: !!newPassword,
-				hasConfirmation: !!passwordConfirmation,
-			});
-			console.log("[Reset Password] resetPasswordUrl:", resetPasswordUrl);
-
 			if (!code) {
-				console.log("[Reset Password] Error: No code provided");
 				showSnackbar(
 					"Le lien de réinitialisation est invalide ou expiré.",
 					"error"
@@ -160,7 +155,6 @@ const SignIn = () => {
 				return;
 			}
 
-			console.log("[Reset Password] Calling mutation...");
 			latestResetPasswordRef.current = newPassword;
 			setPendingResetCode(code);
 			resetPasswordMutation.mutate({
@@ -169,7 +163,7 @@ const SignIn = () => {
 				code,
 			});
 		},
-		[resetPasswordMutation, showSnackbar, resetPasswordUrl]
+		[resetPasswordMutation, showSnackbar]
 	);
 
 	const handleForgotSheetDismiss = useCallback(() => {
@@ -217,7 +211,11 @@ const SignIn = () => {
 			setPendingResetCode(codeParam);
 			resetPasswordMutation.reset();
 			latestResetPasswordRef.current = "";
-			resetPasswordSheetRef.current?.present();
+			// Close keyboard before presenting the reset sheet
+			Keyboard.dismiss();
+			requestAnimationFrame(() => {
+				resetPasswordSheetRef.current?.present();
+			});
 		},
 		[resetPasswordMutation]
 	);
@@ -250,11 +248,31 @@ const SignIn = () => {
 		})();
 	}, [navigation, checkLoggedIn]);
 
-	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
+	// Smoother on Android with "height"; iOS "padding" is fine
+	const behavior = Platform.select({ ios: "padding", android: "height" }) as
 		| "padding"
 		| "height"
 		| "position"
 		| undefined;
+
+	const bottomInset = Math.max(insets.bottom, 20);
+
+	useEffect(() => {
+		const showEvt =
+			Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+		const hideEvt =
+			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+		const subShow = Keyboard.addListener(showEvt, () =>
+			setKeyboardVisible(true)
+		);
+		const subHide = Keyboard.addListener(hideEvt, () =>
+			setKeyboardVisible(false)
+		);
+		return () => {
+			subShow.remove();
+			subHide.remove();
+		};
+	}, []);
 
 	return (
 		<>
@@ -262,19 +280,24 @@ const SignIn = () => {
 				<KeyboardAvoidingView
 					style={styles.container}
 					behavior={behavior}
-					// Lift content just below the iOS notch/header; no offset for Android
 					keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
 					<ScrollView
 						contentContainerStyle={[
 							styles.scrollContainer,
-							{ paddingTop: insets.top, paddingBottom: 120 },
+							{
+								paddingTop: Math.max(insets.top, 20),
+								// remove extra bottom padding while keyboard is visible to avoid big gap
+								paddingBottom: bottomInset + (keyboardVisible ? 0 : 80),
+							},
 						]}
-						keyboardShouldPersistTaps='handled'
+						keyboardShouldPersistTaps='always'
+						keyboardDismissMode={
+							Platform.OS === "ios" ? "interactive" : "on-drag"
+						}
 						showsVerticalScrollIndicator={false}
-						// Helps Android not “fight” with SafeArea/Insets
 						contentInsetAdjustmentBehavior='never'>
 						<LogoPageTop />
-						{/* Main content wrapper stays perfectly centered */}
+
 						<View style={styles.centerWrap}>
 							<Text style={styles.title}>C'est bon de se revoir !</Text>
 
@@ -290,6 +313,7 @@ const SignIn = () => {
 									keyboardType='email-address'
 									textContentType='emailAddress'
 									returnKeyType='next'
+									onSubmitEditing={() => Keyboard.dismiss()}
 								/>
 							</View>
 
@@ -305,6 +329,7 @@ const SignIn = () => {
 									keyboardType='default'
 									textContentType='password'
 									returnKeyType='done'
+									onSubmitEditing={() => Keyboard.dismiss()}
 								/>
 								<MaterialCommunityIcons
 									name={showPassword ? "eye-off" : "eye"}
@@ -331,20 +356,23 @@ const SignIn = () => {
 						</View>
 					</ScrollView>
 
-					{/* Bottom sticky register row – will rise above the keyboard on Android due to behavior="padding" */}
-					<View
-						style={[
-							styles.registerRow,
-							{ bottom: Math.max(insets.bottom, 20) + 20 },
-						]}>
-						<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
-						<Pressable onPress={() => setIsRegistering(true)}>
-							<Text style={{ fontWeight: "bold" }}> S'inscrire</Text>
+					<View style={[styles.registerRow, { bottom: bottomInset }]}>
+						<Pressable
+							onPress={() => {
+								Keyboard.dismiss();
+								requestAnimationFrame(() => setIsRegistering(true));
+							}}>
+							<Text style={{ fontWeight: "bold" }}>
+								Je n'ai pas de compte : S'inscrire
+							</Text>
 						</Pressable>
 					</View>
 				</KeyboardAvoidingView>
 			</TouchableWithoutFeedback>
 
+			{/* If your BottomSheet components expose props, add:
+          keyboardBehavior="interactive" keyboardBlurBehavior="restore"
+          inside their underlying <BottomSheetModal /> */}
 			<ForgotPasswordSheet
 				ref={forgotPasswordSheetRef}
 				initialEmail={forgotPrefillEmail}
@@ -367,7 +395,6 @@ const SignIn = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		// remove alignItems center here so ScrollView can use full width, we’ll center inner content
 		paddingHorizontal: 20,
 	},
 	scrollContainer: {
@@ -377,7 +404,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	centerWrap: {
-		// true vertical center for logo + text + form + button
 		alignItems: "center",
 		justifyContent: "center",
 		gap: 0,

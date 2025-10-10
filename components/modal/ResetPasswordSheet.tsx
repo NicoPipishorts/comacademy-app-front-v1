@@ -7,6 +7,7 @@ import {
 	colorPink,
 	colorWhite,
 } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
@@ -48,7 +49,10 @@ const DEFAULT_TITLE = "Réinitialiser le mot de passe";
 const DEFAULT_DESCRIPTION =
 	"Choisissez un nouveau mot de passe répondant aux critères ci-dessous.";
 
-const ResetPasswordSheet = forwardRef<BottomSheetModal, ResetPasswordSheetProps>(
+const ResetPasswordSheet = forwardRef<
+	BottomSheetModal,
+	ResetPasswordSheetProps
+>(
 	(
 		{
 			resetCode,
@@ -122,13 +126,13 @@ const ResetPasswordSheet = forwardRef<BottomSheetModal, ResetPasswordSheetProps>
 				enablePanDownToClose
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
-				keyboardBehavior="interactive"
-				keyboardBlurBehavior="restore"
-				android_keyboardInputMode="adjustResize">
+				keyboardBehavior='interactive'
+				keyboardBlurBehavior='restore'
+				android_keyboardInputMode='adjustResize'>
 				<BottomSheetScrollView
 					style={styles.sheetContent}
 					contentContainerStyle={styles.scrollContentContainer}
-					keyboardShouldPersistTaps="handled">
+					keyboardShouldPersistTaps='handled'>
 					<ModalGestureLine />
 					<Text style={styles.sheetTitle}>{title}</Text>
 					<Text style={styles.sheetDescription}>{description}</Text>
@@ -191,7 +195,7 @@ const ResetPasswordSheet = forwardRef<BottomSheetModal, ResetPasswordSheetProps>
 						onPress={handleSubmit}
 						disabled={isButtonDisabled}
 						style={[
-							styles.resetButton,
+							buttonBlack,
 							isButtonDisabled && styles.resetButtonDisabled,
 						]}>
 						{isSubmitting ? (
@@ -256,13 +260,6 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		color: colorPink,
 		fontSize: FontSize16,
-	},
-	resetButton: {
-		backgroundColor: colorBlack,
-		paddingVertical: 16,
-		borderRadius: 12,
-		alignItems: "center",
-		justifyContent: "center",
 	},
 	resetButtonDisabled: {
 		opacity: 0.6,
