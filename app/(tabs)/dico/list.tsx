@@ -1,6 +1,6 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
-import Searchbar from "@/components/Searchbar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
+import Searchbar from "@/components/Searchbar";
 import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
@@ -23,15 +23,23 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import DicoListSkeleton from "./DicoListSkeleton";
 
 type Props = {
 	data: DicoLists;
 	categories: CategoriePayload;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+	isLoading: boolean;
 };
 
-const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
+const DicoList = ({
+	data,
+	categories,
+	filterByCat,
+	setFilterByCat,
+	isLoading,
+}: Props) => {
 	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
 	const sectionRefs = useRef<Record<string, View | null>>({});
@@ -188,11 +196,8 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 						/>
 					)}
 					{/* If search query is active, render filtered data, else render grouped data */}
-					{filteredData.length <= 0 && (
-						<View style={styles.noDataContainer}>
-							<Text style={styles.noDataText}>Aucune définition trouvée. </Text>
-							<Text>Essayez un autre mot.</Text>
-						</View>
+					{!isLoading && filteredData.length <= 0 && (
+						<DicoListSkeleton lines={25} />
 					)}
 					{searchQuery
 						? filteredData.map((item, index) => {
@@ -223,13 +228,8 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 											return (
 												<Text
 													key={localIndex}
-													style={[
-														styles.listItem,
-														locked && styles.lockedItem,
-													]}
-													onPress={() =>
-														handlePress(item.id, currentIndex)
-													}>
+													style={[styles.listItem, locked && styles.lockedItem]}
+													onPress={() => handlePress(item.id, currentIndex)}>
 													{item.Word}
 												</Text>
 											);
