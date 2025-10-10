@@ -52,7 +52,7 @@ const AnswerModal = ({
 	setFavoriteQuestions,
 }: Props) => {
 	const [progress, setProgress] = useState(0);
-	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const timerRef = useRef<number | null>(null);
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const [favorite, setFavorite] = useState<boolean>(false);

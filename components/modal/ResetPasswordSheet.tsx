@@ -26,6 +26,8 @@ import React, {
 } from "react";
 import {
 	ActivityIndicator,
+	Keyboard,
+	Platform,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -68,12 +70,29 @@ const ResetPasswordSheet = forwardRef<
 		const [confirmPassword, setConfirmPassword] = useState("");
 		const [showPassword, setShowPassword] = useState(false);
 		const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+		const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 		const snapPoints = useMemo(() => ["75%", "90%"], []);
 
 		useEffect(() => {
 			setPassword("");
 			setConfirmPassword("");
 		}, [resetCode]);
+
+		useEffect(() => {
+			const showListener = Keyboard.addListener(
+				Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+				() => setIsKeyboardVisible(true)
+			);
+			const hideListener = Keyboard.addListener(
+				Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+				() => setIsKeyboardVisible(false)
+			);
+
+			return () => {
+				showListener.remove();
+				hideListener.remove();
+			};
+		}, []);
 
 		const renderBackdrop = useCallback(
 			(props: BottomSheetBackdropProps) => (
@@ -119,11 +138,11 @@ const ResetPasswordSheet = forwardRef<
 		return (
 			<BottomSheetModal
 				ref={ref}
-				index={0}
+				index={isKeyboardVisible ? 1 : 0}
 				snapPoints={snapPoints}
 				backgroundStyle={styles.sheetBackground}
 				handleIndicatorStyle={styles.hiddenIndicator}
-				enablePanDownToClose
+				enablePanDownToClose={!isKeyboardVisible}
 				enableDynamicSizing={false}
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}

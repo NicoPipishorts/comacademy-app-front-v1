@@ -177,48 +177,44 @@ const SignIn = () => {
 		latestResetPasswordRef.current = "";
 	}, [resetPasswordMutation]);
 
-	const handleDeepLink = useCallback(
-		(url: string | null) => {
-			if (!url) return;
+	const handleDeepLink = useCallback((url: string | null) => {
+		if (!url) return;
 
-			const parsed = Linking.parse(url);
-			const { path, queryParams } = parsed;
-			const codeParam =
-				typeof queryParams?.code === "string"
-					? queryParams.code
-					: typeof queryParams?.token === "string"
-					? queryParams.token
-					: typeof queryParams?.reset_code === "string"
-					? queryParams.reset_code
-					: null;
+		const parsed = Linking.parse(url);
+		const { path, queryParams } = parsed;
+		const codeParam =
+			typeof queryParams?.code === "string"
+				? queryParams.code
+				: typeof queryParams?.token === "string"
+				? queryParams.token
+				: typeof queryParams?.reset_code === "string"
+				? queryParams.reset_code
+				: null;
 
-			if (!codeParam) return;
+		if (!codeParam) return;
 
-			const normalizedPath = path?.toLowerCase() ?? "";
-			if (
-				normalizedPath &&
-				!normalizedPath.includes("reset-password") &&
-				!normalizedPath.includes("password-reset") &&
-				!normalizedPath.includes("auth/reset-password")
-			) {
-				return;
-			}
+		const normalizedPath = path?.toLowerCase() ?? "";
+		if (
+			normalizedPath &&
+			!normalizedPath.includes("reset-password") &&
+			!normalizedPath.includes("password-reset") &&
+			!normalizedPath.includes("auth/reset-password")
+		) {
+			return;
+		}
 
-			if (typeof queryParams?.email === "string") {
-				setEmail(queryParams.email);
-			}
+		if (typeof queryParams?.email === "string") {
+			setEmail(queryParams.email);
+		}
 
-			setPendingResetCode(codeParam);
-			resetPasswordMutation.reset();
-			latestResetPasswordRef.current = "";
-			// Close keyboard before presenting the reset sheet
-			Keyboard.dismiss();
-			requestAnimationFrame(() => {
-				resetPasswordSheetRef.current?.present();
-			});
-		},
-		[resetPasswordMutation]
-	);
+		setPendingResetCode(codeParam);
+		latestResetPasswordRef.current = "";
+		// Close keyboard before presenting the reset sheet
+		Keyboard.dismiss();
+		requestAnimationFrame(() => {
+			resetPasswordSheetRef.current?.present();
+		});
+	}, []);
 
 	useEffect(() => {
 		const fetchInitialUrl = async () => {
