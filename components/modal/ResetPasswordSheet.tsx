@@ -71,7 +71,7 @@ const ResetPasswordSheet = forwardRef<
 		const [showPassword, setShowPassword] = useState(false);
 		const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 		const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-		const snapPoints = useMemo(() => ["75%", "90%"], []);
+		const snapPoints = useMemo(() => ["65%", "90%"], []);
 
 		useEffect(() => {
 			setPassword("");

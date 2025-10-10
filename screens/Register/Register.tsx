@@ -1,15 +1,6 @@
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-	Alert,
-	Keyboard,
-	KeyboardAvoidingView,
-	Platform,
-	ScrollView,
-	StyleSheet,
-	TouchableWithoutFeedback,
-	View,
-} from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 
 // Import Assets
 import { useRegisterNewUser } from "@/api/credentials/registerNewUser";
@@ -35,12 +26,11 @@ const Register = () => {
 	const navigation = useNavigation<NavigationType>();
 	const { login, checkLoggedIn } = UseAuth();
 	const [formPayload, setFormPayload] = useState<FormPayload>();
-
 	const [step, setStep] = useState<number>(1);
 
 	const onSuccess = async (data: AuthResponse) => {
 		await login(data);
-		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
+		navigation.navigate("(tabs)");
 	};
 
 	const onError = (error) => {
@@ -53,18 +43,17 @@ const Register = () => {
 					return error.message;
 			}
 		};
-		Alert.alert("L'inscription a échoué", translation()); // Using Alert from react-native
+		Alert.alert("L'inscription a échoué", translation());
 	};
 
 	const mutation = useRegisterNewUser(onSuccess, onError);
 
-	const handleLogin = (formPayload: FormPayload) => {
-		if (!formPayload) {
+	const handleLogin = (payload: FormPayload) => {
+		if (!payload) {
 			Alert.alert("Error", "Please complete all fields before proceeding.");
 			return;
 		}
-
-		const formPayloadToSubmit = { ...formPayload, profile: 2 };
+		const formPayloadToSubmit = { ...payload, profile: 2 };
 		mutation.mutate(formPayloadToSubmit);
 	};
 
@@ -72,10 +61,9 @@ const Register = () => {
 		const checkIfLoggedIn = async () => {
 			const loggedIn = await checkLoggedIn();
 			if (loggedIn) {
-				navigation.navigate("(tabs)"); // Navigate to the home screen if already logged in
+				navigation.navigate("(tabs)");
 			}
 		};
-
 		checkIfLoggedIn();
 	}, [navigation, checkLoggedIn]);
 
@@ -85,19 +73,19 @@ const Register = () => {
 				<LogoPageTop />
 			</View>
 
-			<View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+			<View style={{ flex: 1, width: "100%" }}>
 				{step === 1 && (
 					<RegisterStep1
 						setStep={setStep}
-						formPayload={formPayload}
-						setFormPayload={setFormPayload}
+						formPayload={formPayload as any}
+						setFormPayload={setFormPayload as any}
 					/>
 				)}
 				{step === 2 && (
 					<RegisterStep2
 						setStep={setStep}
-						formPayload={formPayload}
-						setFormPayload={setFormPayload}
+						formPayload={formPayload as any}
+						setFormPayload={setFormPayload as any}
 						handleLogin={handleLogin}
 					/>
 				)}
@@ -109,15 +97,14 @@ const Register = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "center",
+		width: "100%",
+		padding: 10,
+		paddingVertical: 30,
 		alignItems: "center",
-		padding: 20,
+		justifyContent: "center",
 	},
 	scrollContainer: {
-		flexGrow: 1,
 		minWidth: "100%",
-		alignItems: "center",
-		justifyContent: "center",
 	},
 	logoContainer: {
 		marginBottom: 20,

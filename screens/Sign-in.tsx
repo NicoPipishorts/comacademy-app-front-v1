@@ -286,10 +286,8 @@ const SignIn = () => {
 								paddingBottom: bottomInset + (keyboardVisible ? 0 : 80),
 							},
 						]}
-						keyboardShouldPersistTaps='always'
-						keyboardDismissMode={
-							Platform.OS === "ios" ? "interactive" : "on-drag"
-						}
+						keyboardShouldPersistTaps='never'
+						keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "on-drag"}
 						showsVerticalScrollIndicator={false}
 						contentInsetAdjustmentBehavior='never'>
 						<LogoPageTop />
@@ -366,9 +364,6 @@ const SignIn = () => {
 				</KeyboardAvoidingView>
 			</TouchableWithoutFeedback>
 
-			{/* If your BottomSheet components expose props, add:
-          keyboardBehavior="interactive" keyboardBlurBehavior="restore"
-          inside their underlying <BottomSheetModal /> */}
 			<ForgotPasswordSheet
 				ref={forgotPasswordSheetRef}
 				initialEmail={forgotPrefillEmail}

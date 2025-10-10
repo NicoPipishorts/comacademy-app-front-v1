@@ -6,6 +6,7 @@ import {
 	colorWhite,
 	primaryBackground,
 } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import {
@@ -14,13 +15,13 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 	Pressable,
-	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FormPayload } from "./Register";
 
@@ -44,7 +45,6 @@ export default function RegisterStep1({
 	const [email, setEmail] = useState<string>(formPayload?.email || "");
 	const { setIsRegistering } = UseAuth();
 
-	// Validation error messages
 	const [errors, setErrors] = useState<{
 		firstName?: string | null;
 		lastName?: string | null;
@@ -111,13 +111,16 @@ export default function RegisterStep1({
 				email: null,
 				username: null,
 			});
-			setFormPayload({
-				...formPayload,
+
+			const nextPayload = {
+				...(formPayload || ({} as FormPayload)),
 				firstName,
 				lastName,
 				email,
 				username,
-			});
+			} as FormPayload;
+
+			setFormPayload(nextPayload);
 			setStep(2);
 		}
 	};
@@ -127,151 +130,153 @@ export default function RegisterStep1({
 		setIsRegistering(false);
 	};
 
-	const behavior = Platform.select({ ios: "padding", android: "padding" }) as
+	const behavior = (Platform.OS === "ios" ? "padding" : "height") as
 		| "padding"
 		| "height"
 		| "position"
 		| undefined;
+
 	const bottomInset = Math.max(insets.bottom, 20);
+	// Offset accounts for top inset + your header/logo height (tweak if needed)
+	const keyboardOffset = (Platform.OS === "ios" ? insets.top : 0) + 80;
 
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<KeyboardAvoidingView
-				style={styles.avoidingContainer}
-				behavior={behavior}
-				keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
-				<ScrollView
-					style={styles.formScroll}
-					contentContainerStyle={[
-						styles.scrollContent,
-						{
-							paddingTop: Math.max(insets.top, 20),
-							paddingBottom: 32,
-						},
-					]}
-					keyboardShouldPersistTaps='handled'
-					keyboardDismissMode='interactive'
-					showsVerticalScrollIndicator={false}
-					// 🔒 prevent rubber-band / overscroll that looks infinite
-					bounces={false}
-					overScrollMode='never'>
-					<View style={styles.formContainer}>
-						<View style={{ backgroundColor: primaryBackground }}>
-							<Text style={styles.title}>Venez com' vous êtes !</Text>
-						</View>
+		<KeyboardAvoidingView
+			style={styles.avoidingContainer}
+			behavior={behavior}
+			keyboardVerticalOffset={keyboardOffset}>
+			<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+				<View style={{ flex: 1 }}>
+					<ScrollView
+						contentContainerStyle={{
+							flexGrow: 1,
+							justifyContent: "center",
+							paddingHorizontal: 10,
+							paddingTop: 0,
+							paddingBottom: bottomInset + 20, // keeps footer visible when keyboard open
+						}}
+						keyboardShouldPersistTaps='handled'
+						showsVerticalScrollIndicator={false}
+						keyboardDismissMode={
+							Platform.OS === "ios" ? "interactive" : "on-drag"
+						}>
+						<View style={styles.formContainer}>
+							<View>
+								<Text style={styles.title}>Venez com' vous êtes !</Text>
+							</View>
 
-						{errors.firstName ? (
-							<Text style={styles.errorText}>{errors.firstName}</Text>
-						) : null}
-						<View
-							style={[
-								styles.inputContainer,
-								{ borderBottomColor: errors.firstName ? colorRed : colorGrey },
-							]}>
-							<TextInput
-								style={styles.input}
-								onChangeText={setFirstName}
-								value={firstName}
-								placeholder='Prénom'
-								placeholderTextColor={colorBlack}
-								autoCapitalize='words'
-								returnKeyType='next'
-							/>
-						</View>
+							{errors.firstName ? (
+								<Text style={styles.errorText}>{errors.firstName}</Text>
+							) : null}
+							<View
+								style={[
+									styles.inputContainer,
+									{
+										borderBottomColor: errors.firstName ? colorRed : colorGrey,
+									},
+								]}>
+								<TextInput
+									style={styles.input}
+									onChangeText={setFirstName}
+									value={firstName}
+									placeholder='Prénom'
+									placeholderTextColor={colorBlack}
+									autoCapitalize='words'
+									returnKeyType='next'
+								/>
+							</View>
 
-						{errors.lastName ? (
-							<Text style={styles.errorText}>{errors.lastName}</Text>
-						) : null}
-						<View
-							style={[
-								styles.inputContainer,
-								{ borderBottomColor: errors.lastName ? colorRed : colorGrey },
-							]}>
-							<TextInput
-								style={styles.input}
-								onChangeText={setLastName}
-								value={lastName}
-								placeholder='Nom'
-								placeholderTextColor={colorBlack}
-								autoCapitalize='words'
-								returnKeyType='next'
-							/>
-						</View>
+							{errors.lastName ? (
+								<Text style={styles.errorText}>{errors.lastName}</Text>
+							) : null}
+							<View
+								style={[
+									styles.inputContainer,
+									{ borderBottomColor: errors.lastName ? colorRed : colorGrey },
+								]}>
+								<TextInput
+									style={styles.input}
+									onChangeText={setLastName}
+									value={lastName}
+									placeholder='Nom'
+									placeholderTextColor={colorBlack}
+									autoCapitalize='words'
+									returnKeyType='next'
+								/>
+							</View>
 
-						{errors.username ? (
-							<Text style={styles.errorText}>{errors.username}</Text>
-						) : null}
-						<View
-							style={[
-								styles.inputContainer,
-								{ borderBottomColor: errors.username ? colorRed : colorGrey },
-							]}>
-							<TextInput
-								style={styles.input}
-								onChangeText={setUsername}
-								value={username}
-								autoCorrect={false}
-								placeholder='Pseudo'
-								placeholderTextColor={colorBlack}
-								autoCapitalize='none'
-								returnKeyType='next'
-							/>
-						</View>
+							{errors.username ? (
+								<Text style={styles.errorText}>{errors.username}</Text>
+							) : null}
+							<View
+								style={[
+									styles.inputContainer,
+									{ borderBottomColor: errors.username ? colorRed : colorGrey },
+								]}>
+								<TextInput
+									style={styles.input}
+									onChangeText={setUsername}
+									value={username}
+									autoCorrect={false}
+									placeholder='Pseudo'
+									placeholderTextColor={colorBlack}
+									autoCapitalize='none'
+									returnKeyType='next'
+								/>
+							</View>
 
-						{errors.email ? (
-							<Text style={styles.errorText}>{errors.email}</Text>
-						) : null}
-						<View
-							style={[
-								styles.inputContainer,
-								{ borderBottomColor: errors.email ? colorRed : colorGrey },
-							]}>
-							<TextInput
-								value={email}
-								autoCorrect={false}
-								onChangeText={(text) => setEmail(text.toLowerCase())}
-								style={styles.input}
-								placeholder='Email'
-								placeholderTextColor={colorBlack}
-								keyboardType='email-address'
-								textContentType='emailAddress'
-								autoCapitalize='none'
-								returnKeyType='done'
-							/>
+							{errors.email ? (
+								<Text style={styles.errorText}>{errors.email}</Text>
+							) : null}
+							<View
+								style={[
+									styles.inputContainer,
+									{ borderBottomColor: errors.email ? colorRed : colorGrey },
+								]}>
+								<TextInput
+									value={email}
+									autoCorrect={false}
+									onChangeText={(text) => setEmail(text.toLowerCase())}
+									style={styles.input}
+									placeholder='Email'
+									placeholderTextColor={colorBlack}
+									keyboardType='email-address'
+									textContentType='emailAddress'
+									autoCapitalize='none'
+									returnKeyType='done'
+								/>
+							</View>
 						</View>
-					</View>
-				</ScrollView>
-
-				<View style={[styles.footer, { paddingBottom: bottomInset }]}>
-					<Pressable style={styles.buttonContainer} onPress={handleNext}>
-						<Text style={styles.buttonText}>Suivant</Text>
-						<View
-							style={{
-								justifyContent: "center",
-								alignContent: "center",
-								backgroundColor: colorBlack,
-								borderRadius: 16,
-								padding: 5,
-								marginLeft: 10,
-							}}>
-							<Image
-								source={require("@/assets/imgs/icons/chevron_white.png")}
+						<Pressable style={styles.buttonContainer} onPress={handleNext}>
+							<Text style={styles.buttonText}>Suivant</Text>
+							<View
 								style={{
-									width: 18,
-									height: 18,
-									transform: [{ rotate: "180deg" }],
-									marginLeft: 2,
-								}}
-							/>
-						</View>
-					</Pressable>
+									justifyContent: "center",
+									alignContent: "center",
+									backgroundColor: colorBlack,
+									borderRadius: 16,
+									padding: 5,
+									marginLeft: 10,
+								}}>
+								<Image
+									source={require("@/assets/imgs/icons/chevron_white.png")}
+									style={{
+										width: 18,
+										height: 18,
+										transform: [{ rotate: "180deg" }],
+										marginLeft: 2,
+									}}
+								/>
+							</View>
+						</Pressable>
 
-					<Pressable style={styles.buttonRevenir} onPress={handleCancle}>
-						<Text style={styles.buttonTextRevenir}>Annuler</Text>
-					</Pressable>
+						<Pressable style={buttonBlack} onPress={handleCancle}>
+							<Text style={styles.buttonTextRevenir}>Annuler</Text>
+						</Pressable>
+					</ScrollView>
 				</View>
-			</KeyboardAvoidingView>
-		</TouchableWithoutFeedback>
+			</TouchableWithoutFeedback>
+		</KeyboardAvoidingView>
 	);
 }
 
@@ -279,22 +284,11 @@ const styles = StyleSheet.create({
 	avoidingContainer: {
 		flex: 1,
 	},
-	formScroll: {
-		flex: 1,
-	},
-	scrollContent: {
-		// ❗️Removed flexGrow: 1 to avoid manufactured extra space when keyboard is visible
-		minWidth: "100%",
-	},
 	formContainer: {
 		width: "100%",
+		minWidth: "100%",
 		alignItems: "center",
-		paddingHorizontal: 10,
-	},
-	footer: {
-		paddingHorizontal: 10,
-		paddingTop: 24,
-		alignItems: "center",
+		justifyContent: "center",
 	},
 	title: {
 		fontSize: FontSizeH1,
@@ -327,6 +321,8 @@ const styles = StyleSheet.create({
 		padding: 10,
 		paddingLeft: 20,
 		borderRadius: 50,
+		alignSelf: "center",
+		marginBottom: 10,
 	},
 	buttonText: {
 		fontSize: FontSize16,
@@ -334,6 +330,10 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 	buttonRevenir: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		alignSelf: "center",
 		marginTop: 10,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 24,

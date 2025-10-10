@@ -47,7 +47,7 @@ const ForgotPasswordSheet = forwardRef<
 		ref
 	) => {
 		const [email, setEmail] = useState(initialEmail);
-		const snapPoints = useMemo(() => ["50%", "73%"], []);
+		const snapPoints = useMemo(() => ["38%", "74%"], []);
 
 		useEffect(() => {
 			setEmail(initialEmail);
