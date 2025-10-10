@@ -11,6 +11,7 @@ import {
 	Animated,
 	Dimensions,
 	PanResponder,
+	Platform,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -357,16 +358,22 @@ const styles = StyleSheet.create({
 		width: "100%",
 		height: "80%",
 		borderRadius: 24,
-		shadowColor: "rgba(0,0,0,0.25)",
-		shadowOffset: { width: 0, height: 12 },
-		shadowOpacity: 0.35,
-		shadowRadius: 16,
-		elevation: 12,
+		...Platform.select({
+			ios: {
+				shadowColor: "rgba(0,0,0,0.25)",
+				shadowOffset: { width: 0, height: 12 },
+				shadowOpacity: 0.35,
+				shadowRadius: 16,
+			},
+			android: {
+				elevation: 0,
+			},
+		}),
 	},
 	cardContentWrapper: {
 		flex: 1,
 		borderRadius: 24,
-		overflow: "hidden",
+		overflow: Platform.OS === "android" ? "visible" : "hidden",
 	},
 	overlayLabel: {
 		position: "absolute",
