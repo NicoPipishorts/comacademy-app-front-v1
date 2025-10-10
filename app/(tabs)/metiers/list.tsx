@@ -1,6 +1,6 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
-import Searchbar from "@/components/Searchbar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
+import Searchbar from "@/components/Searchbar";
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
@@ -23,12 +23,14 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import MetierListSkeleton from "./MetierListSkeleton";
 
 type Props = {
 	data: MetiersList;
 	categories: CategoriePayload;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+	isLoading?: boolean;
 };
 
 const MetierList = ({
@@ -36,6 +38,7 @@ const MetierList = ({
 	categories,
 	filterByCat,
 	setFilterByCat,
+	isLoading = false,
 }: Props) => {
 	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
@@ -188,14 +191,11 @@ const MetierList = ({
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
-				message="Un métier de chaque lettre est gratuit. Passez à un abonnement premium pour accéder à tous les métiers."
+				message='Un métier de chaque lettre est gratuit. Passez à un abonnement premium pour accéder à tous les métiers.'
 			/>
 
-			{filteredData.length <= 0 && (
-				<View style={styles.noDataContainer}>
-					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
-					<Text>Sélectionnez une autre catégorie.</Text>
-				</View>
+			{!isLoading && filteredData.length <= 0 && (
+				<MetierListSkeleton lines={25} />
 			)}
 
 			<View style={styles.contentContainer}>
@@ -221,14 +221,19 @@ const MetierList = ({
 									<TouchableOpacity
 										key={index}
 										onPress={() => handlePress(item.id, index)}>
-										<Text style={[styles.listItem, locked && styles.lockedItem]}>
+										<Text
+											style={[styles.listItem, locked && styles.lockedItem]}>
 											{item.METIER}
 										</Text>
 									</TouchableOpacity>
 								);
 						  })
 						: alphabet.map((letter) => (
-								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
+								<View
+									key={letter}
+									ref={(el) => {
+										sectionRefs[letter] = el;
+									}}>
 									<Text style={styles.listHeader}>{letter}</Text>
 									{groupedData[letter]?.map((item, indexInGroup) => {
 										const locked = isMetierLocked(indexInGroup);
