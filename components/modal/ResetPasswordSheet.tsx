@@ -68,7 +68,7 @@ const ResetPasswordSheet = forwardRef<
 		const [confirmPassword, setConfirmPassword] = useState("");
 		const [showPassword, setShowPassword] = useState(false);
 		const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-		const snapPoints = useMemo(() => ["70%"], []);
+		const snapPoints = useMemo(() => ["75%", "90%"], []);
 
 		useEffect(() => {
 			setPassword("");
@@ -124,9 +124,10 @@ const ResetPasswordSheet = forwardRef<
 				backgroundStyle={styles.sheetBackground}
 				handleIndicatorStyle={styles.hiddenIndicator}
 				enablePanDownToClose
+				enableDynamicSizing={false}
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
-				keyboardBehavior='interactive'
+				keyboardBehavior='extend'
 				keyboardBlurBehavior='restore'
 				android_keyboardInputMode='adjustResize'>
 				<BottomSheetScrollView

@@ -47,7 +47,7 @@ const ForgotPasswordSheet = forwardRef<
 		ref
 	) => {
 		const [email, setEmail] = useState(initialEmail);
-		const snapPoints = useMemo(() => ["40%"], []);
+		const snapPoints = useMemo(() => ["50%", "70%"], []);
 
 		useEffect(() => {
 			setEmail(initialEmail);
@@ -84,9 +84,10 @@ const ForgotPasswordSheet = forwardRef<
 				backgroundStyle={styles.sheetBackground}
 				handleIndicatorStyle={styles.hiddenIndicator}
 				enablePanDownToClose
+				enableDynamicSizing={false}
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
-				keyboardBehavior='interactive'
+				keyboardBehavior='extend'
 				keyboardBlurBehavior='restore'
 				android_keyboardInputMode='adjustResize'>
 				<BottomSheetScrollView
