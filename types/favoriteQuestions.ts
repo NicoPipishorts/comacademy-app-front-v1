@@ -30,7 +30,7 @@ export interface FavoriteQuestionsPayloadShort {
 			questions: {
 				data: {
 					id: number;
-					attributes: {};
+					attributes: Record<string, unknown>;
 				}[];
 			};
 		};

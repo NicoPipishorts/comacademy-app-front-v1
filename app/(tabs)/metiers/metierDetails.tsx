@@ -1,6 +1,6 @@
 import HR from "@/components/HR";
 import ScreenHeaders from "@/components/ScreenHeaders";
-import { primaryBackground } from "@/constants/colors";
+import { primaryBackground , colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH2 } from "@/constants/fontsizes";
 import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -15,7 +15,6 @@ import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import UnorderedList from "@/components/UnorderedList";
-import { colorWhite } from "@/constants/colors";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
 import { useLocalSearchParams } from "expo-router";

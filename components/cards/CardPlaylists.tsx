@@ -27,7 +27,7 @@ interface Props {
 	refKey: string;
 	openedSwipeable: any;
 	setOpenedSwipeable: React.Dispatch<any>;
-	swipeableRefs: React.MutableRefObject<{}>;
+	swipeableRefs: React.MutableRefObject<Record<number, unknown>>;
 	handDeletePlaylist: (id: number) => void;
 	handleEditPlaylist: (id: number) => void;
 }

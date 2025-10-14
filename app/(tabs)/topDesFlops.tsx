@@ -1,10 +1,5 @@
 // File: src/components/leJeu/TopDesFlops.tsx
-import {
-	useFocusEffect,
-	useIsFocused,
-	useNavigation,
-} from "@react-navigation/native";
-import { BlurView } from "expo-blur";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import React, {
 	useCallback,
 	useEffect,
@@ -41,7 +36,6 @@ const TopDesFlops: React.FC = () => {
 	const { data, isLoading } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 	const isScreenFocused = useIsFocused();
-	const navigation = useNavigation();
 
 	useTrackPageMetrics({ page: "TopDesFlops" });
 

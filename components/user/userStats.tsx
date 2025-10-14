@@ -1,6 +1,6 @@
-import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
-import { FontSize16 } from "@/constants/fontsizes";
+import { colorLightGrey, colorWhite } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
+import { FontSize16 } from "@/constants/fontsizes";
 import { SingleUserScoreResponse } from "@/hooks/useGetUsersScore";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";

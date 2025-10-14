@@ -92,7 +92,7 @@ const NewPlaylistModal = ({
 
 	const hasPlaylist = playlistId !== undefined && playlistId !== null;
 	const playlistQueryId = hasPlaylist ? playlistId! : 0;
-	const { data: playlistData, isFetched } = useGetPlaylistById(playlistQueryId);
+	const { data: playlistData } = useGetPlaylistById(playlistQueryId);
 
 	const resetForm = useCallback(() => {
 		setPlaylistName("");

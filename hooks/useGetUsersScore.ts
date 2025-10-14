@@ -13,10 +13,10 @@ export interface UserAttributes {
 	lastName: string;
 	role: string;
 	profile?: string;
-	clients: Array<{
+	clients: {
 		id: number | null;
 		name: string;
-	}>;
+	}[];
 }
 
 export interface UserScoreAttributes {

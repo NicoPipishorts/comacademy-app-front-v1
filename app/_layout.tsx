@@ -3,6 +3,7 @@ import "react-native-reanimated";
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import { NetworkProvider } from "@/providers/NetworkProvider";
+import { UpdatesProvider } from "@/context/UpdatesContext";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Audio } from "expo-av";
@@ -28,16 +29,18 @@ export default function RootLayout() {
 					<BottomSheetModalProvider>
 						<PaperProvider>
 							<SnackbarProvider>
-								<NetworkProvider>
-									<TabProvider>
-										<Stack screenOptions={{ animation: "none" }}>
-											<Stack.Screen
-												name='(tabs)'
-												options={{ headerShown: false }}
-											/>
-										</Stack>
-									</TabProvider>
-								</NetworkProvider>
+								<UpdatesProvider>
+									<NetworkProvider>
+										<TabProvider>
+											<Stack screenOptions={{ animation: "none" }}>
+												<Stack.Screen
+													name='(tabs)'
+													options={{ headerShown: false }}
+												/>
+											</Stack>
+										</TabProvider>
+									</NetworkProvider>
+								</UpdatesProvider>
 							</SnackbarProvider>
 						</PaperProvider>
 					</BottomSheetModalProvider>

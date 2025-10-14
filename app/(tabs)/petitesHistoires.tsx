@@ -4,7 +4,6 @@ import {
 	useIsFocused,
 	useNavigation,
 } from "@react-navigation/native";
-import { BlurView } from "expo-blur";
 import React, {
 	useCallback,
 	useEffect,
@@ -171,7 +170,7 @@ const LesPetitesHistoires: React.FC = () => {
 				}
 			}
 		},
-		[fadeAnim, isFirstRender, setFocusedIndex, isFreeUser]
+		[fadeAnim, setFocusedIndex, isFreeUser]
 	);
 
 	const viewabilityConfig = useMemo(
