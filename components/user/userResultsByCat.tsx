@@ -1,4 +1,4 @@
-import { colorBlack, colorWhite } from "@/constants/colors";
+import { colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { buttonBlack } from "@/constants/commonStyles";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";

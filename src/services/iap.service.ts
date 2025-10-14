@@ -38,13 +38,13 @@ export const IAPService = {
   /**
    * Get available products
    */
-  async getProducts(): Promise<Array<Product | ProductSubscription>> {
+  async getProducts(): Promise<(Product | ProductSubscription)[]> {
     try {
       const products = await RNIap.fetchProducts({
         skus: PRODUCT_IDS,
         type: 'subs',
       });
-      return (products ?? []) as Array<Product | ProductSubscription>;
+      return (products ?? []) as (Product | ProductSubscription)[];
     } catch (error) {
       console.error('Failed to get products:', error);
       throw error;
