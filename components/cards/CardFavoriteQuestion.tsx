@@ -25,38 +25,39 @@ export default function CardFavoriteQuestion({
 
 	return (
 		<View style={styles.wrapper}>
-			<View style={styles.cardContainer}>
-				<View style={styles.cardIcons}>
-					{data.attributes.CATEGORIE?.split(",").map((cat, index) => {
-						return (
-							<Image
-								key={index}
-								style={[
-									styles.icon,
-									{ backgroundColor: `${categoriesColors}` },
-								]}
-								source={{
-									uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons[cat]}`,
-								}}
-							/>
-						);
-					})}
-				</View>
-				<View style={styles.cardRowContent}>
-					<View style={{ flexShrink: 1 }}>
-						<Text>{truncateString(data.attributes.QUESTION, 70)}</Text>
+			<TouchableOpacity
+				onPress={() => {
+					navigation.navigate("favoriteQuestionDetails", {
+						questionId: data.id,
+					});
+				}}>
+				<View style={styles.cardContainer}>
+					<View style={styles.cardIcons}>
+						{data.attributes.CATEGORIE?.split(",").map((cat, index) => {
+							return (
+								<Image
+									key={index}
+									style={[
+										styles.icon,
+										{ backgroundColor: `${categoriesColors}` },
+									]}
+									source={{
+										uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons[cat]}`,
+									}}
+								/>
+							);
+						})}
 					</View>
-					<TouchableOpacity
-						style={styles.button}
-						onPress={() => {
-							navigation.navigate("favoriteQuestionDetails", {
-								questionId: data.id,
-							});
-						}}>
-						<Text style={{ color: colorWhite }}>Voir</Text>
-					</TouchableOpacity>
+					<View style={styles.cardRowContent}>
+						<View style={{ flexShrink: 1 }}>
+							<Text>{truncateString(data.attributes.QUESTION, 70)}</Text>
+						</View>
+						<View style={styles.button}>
+							<Text style={{ color: colorWhite }}>Voir</Text>
+						</View>
+					</View>
 				</View>
-			</View>
+			</TouchableOpacity>
 		</View>
 	);
 }

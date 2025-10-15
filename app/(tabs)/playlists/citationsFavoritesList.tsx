@@ -1,6 +1,6 @@
 import FavoritesIcon from "@/assets/imgs/icons/FavoritePlaylist.png";
 import ReturnButton from "@/components/buttons/returnButton";
-import CardFavoriteCitation from "@/components/cards/feed/CardFavoriteCitation";
+import CardFavoriteCitation from "@/components/cards/CardFavoriteCitation";
 import Loader from "@/components/experience/loader";
 import {
 	FontSize12,

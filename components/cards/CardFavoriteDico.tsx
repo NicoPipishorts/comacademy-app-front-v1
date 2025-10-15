@@ -25,42 +25,43 @@ export default function CardFavoriteMetier({
 	}
 	return (
 		<View style={styles.wrapper}>
-			<View style={styles.cardContainer}>
-				<View style={styles.cardIcons}>
-					{data.attributes.Categories?.split(",").map((cat, index) => {
-						if (cat) {
-							return (
-								<Image
-									key={index}
-									style={[
-										styles.icon,
-										{ backgroundColor: `${categoriesColors}` },
-									]}
-									source={{
-										uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons}`,
-									}}
-								/>
-							);
-						} else return null;
-					})}
-				</View>
-				<View style={styles.cardRowContent}>
-					<View style={{ flexShrink: 1 }}>
-						<Text style={{ fontSize: FontSizeH3, fontWeight: "bold" }}>
-							{truncateString(data.attributes.Word, 70)}
-						</Text>
+			<TouchableOpacity
+				onPress={() => {
+					navigation.navigate("favoriteDicoDetails", {
+						dicoId: data.id,
+					});
+				}}>
+				<View style={styles.cardContainer}>
+					<View style={styles.cardIcons}>
+						{data.attributes.Categories?.split(",").map((cat, index) => {
+							if (cat) {
+								return (
+									<Image
+										key={index}
+										style={[
+											styles.icon,
+											{ backgroundColor: `${categoriesColors}` },
+										]}
+										source={{
+											uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons}`,
+										}}
+									/>
+								);
+							} else return null;
+						})}
 					</View>
-					<TouchableOpacity
-						style={styles.button}
-						onPress={() => {
-							navigation.navigate("favoriteDicoDetails", {
-								dicoId: data.id,
-							});
-						}}>
-						<Text style={{ color: colorWhite }}>Voir</Text>
-					</TouchableOpacity>
+					<View style={styles.cardRowContent}>
+						<View style={{ flexShrink: 1 }}>
+							<Text style={{ fontSize: FontSizeH3, fontWeight: "bold" }}>
+								{truncateString(data.attributes.Word, 70)}
+							</Text>
+						</View>
+						<View style={styles.button}>
+							<Text style={{ color: colorWhite }}>Voir</Text>
+						</View>
+					</View>
 				</View>
-			</View>
+			</TouchableOpacity>
 		</View>
 	);
 }
