@@ -2,6 +2,7 @@
 import SecretCard from "@/components/cards/SecretCard";
 import TitleCard from "@/components/cards/SecretTitle";
 import Loader from "@/components/experience/loader";
+import ModalGestureLine from "@/components/experience/modalGestureLine";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
@@ -137,6 +138,7 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 
 	return (
 		<View style={[styles.cardsWrapper, { paddingTop: isAndroid ? 40 : 20 }]}>
+			<ModalGestureLine />
 			<View style={styles.header}>
 				<Text style={styles.headerText}>3 Secrets du Succès</Text>
 			</View>

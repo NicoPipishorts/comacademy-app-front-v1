@@ -20,6 +20,7 @@ import Animated, {
 import CommandementCard from "@/components/cards/CommandementCard";
 import CommandementTitleCard from "@/components/cards/CommandementTitle";
 import Loader from "@/components/experience/loader";
+import ModalGestureLine from "@/components/experience/modalGestureLine";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
@@ -178,6 +179,7 @@ export default function CommandementsDetails() {
 
 	return (
 		<View style={[styles.container, { paddingTop: isAndroid ? 40 : 20 }]}>
+			<ModalGestureLine />
 			<Text style={styles.headerText}>Tips & tactics</Text>
 			<Animated.FlatList
 				ref={listRef}

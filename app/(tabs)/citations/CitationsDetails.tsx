@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import CardLesCitations from "@/components/cards/CardLesCitations";
 import Loader from "@/components/experience/loader";
+import ModalGestureLine from "@/components/experience/modalGestureLine";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { CitationFavoritesProvider } from "@/context/CitationFavoritesContext";
@@ -66,7 +67,8 @@ const LesCitations = () => {
 
 	return (
 		<CitationFavoritesProvider>
-			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+			<View style={[styles.wrapper, { paddingTop: 20 }]}>
+				<ModalGestureLine />
 				<View style={{ paddingHorizontal: 30 }}>
 					<ScreenHeaders content='Citations' />
 					<Text style={styles.categoryTitle}>{data.data.cat}</Text>
