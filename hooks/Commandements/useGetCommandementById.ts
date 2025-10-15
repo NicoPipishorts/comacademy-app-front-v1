@@ -1,5 +1,4 @@
-// src/hooks/useCategories.ts
-
+// src/hooks/useGetCommandementById.ts
 import useJwtToken from "@/hooks/useJwtToken";
 import { SingleCommandementResponse } from "@/types/commandements";
 import { useQuery } from "@tanstack/react-query";
@@ -8,30 +7,35 @@ const fetchData = async (
 	token: string,
 	itemId: number
 ): Promise<SingleCommandementResponse> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/commandements/${itemId}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
-
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
+	const res = await fetch(
+		`${process.env.EXPO_PUBLIC_API_URL}/commandements/${itemId}?populate=cards`,
+		{
+			headers: { Authorization: `Bearer ${token}` },
 		}
+	);
 
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error fetching Amm Secrets:", error);
-		throw error;
+	if (!res.ok) {
+		const text = await res.text();
+		console.error(`HTTP ${res.status}`, text);
+		throw new Error(`HTTP ${res.status}`);
 	}
+
+	// Parse as unknown, then narrow
+	const json: unknown = await res.json();
+
+	// Minimal runtime guard for Strapi v4 single
+	if (
+		typeof json === "object" &&
+		json !== null &&
+		"data" in json &&
+		typeof (json as any).data === "object" &&
+		(json as any).data !== null
+	) {
+		return json as SingleCommandementResponse;
+	}
+
+	console.error("Unexpected response shape:", json);
+	throw new Error("Invalid API response shape for SingleCommandementResponse");
 };
 
 const useGetCommandementById = (itemId: number) => {

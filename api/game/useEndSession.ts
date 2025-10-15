@@ -21,7 +21,13 @@ export const useEndSession = (
 	onSuccess: (status: string | null) => void,
 	onError: (err: AxiosError) => void
 ) => {
-	const { setDataGame, setSessionsId } = useGameContext();
+	const {
+		setDataGame,
+		setSessionsId,
+		setGameStatus,
+		setQuestionsLeft,
+		setAnsweredCount,
+	} = useGameContext();
 	return useMutation<EndResponse, AxiosError, EndSessionPayload>({
 		mutationFn: async ({ userId, token }) => {
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/end`;
@@ -37,6 +43,9 @@ export const useEndSession = (
 			if (resp.data.status === "finished") {
 				setDataGame([]);
 				setSessionsId(null);
+				setQuestionsLeft(null);
+				setAnsweredCount(0);
+				setGameStatus("finished");
 			}
 			queryClient.refetchQueries({ queryKey: ["GameQuestions"] });
 		},

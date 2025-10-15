@@ -19,6 +19,7 @@ import {
 	Text,
 	View,
 } from "react-native";
+import ReturnButton from "../buttons/returnButton";
 import Loader from "../experience/loader";
 import ModalGestureLine from "../experience/modalGestureLine";
 import SmallCategroieIcons from "../icons/SmallCategroieIcons";
@@ -124,6 +125,10 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 				}}>
 				<ModalGestureLine />
 			</View>
+
+			<View style={{ paddingLeft: 20 }}>
+				<ReturnButton />
+			</View>
 			<ScrollView contentContainerStyle={styles.wrapper}>
 				<View style={[styles.contentContainer]}>
 					<Text style={{ fontSize: 22, fontWeight: "bold" }}>
@@ -197,7 +202,6 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 const styles = StyleSheet.create({
 	wrapper: {
 		alignItems: "center",
-		marginTop: 20,
 	},
 	headerContainer: {
 		marginVertical: 30,

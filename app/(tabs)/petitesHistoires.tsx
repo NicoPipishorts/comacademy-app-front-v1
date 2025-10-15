@@ -1,7 +1,15 @@
-// File: src/screens/LesPetitesHistoires.tsx
-import { useFocusEffect } from "@react-navigation/native";
-import { Video } from "expo-av";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+	useFocusEffect,
+	useIsFocused,
+	useNavigation,
+} from "@react-navigation/native";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	Animated,
 	Dimensions,
@@ -10,39 +18,123 @@ import {
 	Text,
 	TouchableOpacity,
 	View,
+	ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
+import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
+import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
+import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
 const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
 	const routeKey = "petites-histoires";
-	const { data, isLoading } = useGetMediaList(routeKey, token);
+	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 
 	useTrackPageMetrics({ page: "PetiteHistoires" });
 
-	// Dimensions for videos
+	const {
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+		isFreeUser,
+	} = useSubscriptionLimit({ freeLimit: 5 });
+
+	const isScreenFocused = useIsFocused();
+	const navigation = useNavigation();
+
 	const { width } = Dimensions.get("window");
 	const videoWidth = Math.floor(width * 0.8);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
-	// Refs for videos, positions, fade animations
-	const videoRefs = useRef<Record<number, any>>({});
+	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
+	const autoPausedRef = useRef<Set<number>>(new Set());
+	const playingIndicesRef = useRef<Set<number>>(new Set());
 
-	// Local state
-	const [, setFocusedIndex] = useState(0);
-	const [isFirstRender, setIsFirstRender] = useState(true);
+	const [focusedIndex, setFocusedIndex] = useState(0);
+
+	const pauseVideoAtIndex = useCallback(
+		async (
+			index: number,
+			{ markAutoPaused = false }: { markAutoPaused?: boolean } = {}
+		) => {
+			const ref = videoRefs.current[index];
+			if (!ref) return;
+			try {
+				const status = await ref.getStatusAsync();
+				if (!status.isLoaded) return;
+
+				const position =
+					typeof status.positionMillis === "number"
+						? status.positionMillis
+						: videoPositions.current[index] ?? 0;
+				videoPositions.current[index] = position;
+
+				if (status.isPlaying) {
+					await ref.pauseAsync();
+					playingIndicesRef.current.delete(index);
+					if (markAutoPaused) autoPausedRef.current.add(index);
+					else autoPausedRef.current.delete(index);
+				} else if (!markAutoPaused) {
+					autoPausedRef.current.delete(index);
+					playingIndicesRef.current.delete(index);
+				}
+			} catch {
+				// ignore
+			}
+		},
+		[]
+	);
+
+	const resumeVideoAtIndex = useCallback(async (index: number) => {
+		const playing = playingIndicesRef.current;
+		if (playing.size > 0 && !(playing.size === 1 && playing.has(index))) return;
+		if (!autoPausedRef.current.has(index)) return;
+
+		const ref = videoRefs.current[index];
+		if (!ref) {
+			autoPausedRef.current.delete(index);
+			return;
+		}
+
+		try {
+			const status = await ref.getStatusAsync();
+			if (!status.isLoaded) return;
+
+			const targetPosition =
+				videoPositions.current[index] ??
+				(typeof status.positionMillis === "number" ? status.positionMillis : 0);
+
+			if (
+				typeof status.positionMillis !== "number" ||
+				Math.abs(status.positionMillis - targetPosition) > 100
+			) {
+				await ref.setPositionAsync(targetPosition, { toleranceMillis: 100 });
+			}
+
+			if (!status.isPlaying) {
+				await ref.playAsync();
+				playingIndicesRef.current.add(index);
+			}
+		} catch {
+			// ignore
+		} finally {
+			autoPausedRef.current.delete(index);
+		}
+	}, []);
 
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
@@ -50,26 +142,30 @@ const LesPetitesHistoires: React.FC = () => {
 		setFocusedIndex
 	);
 
-	// Pause all videos helper
-	const pauseAllVideos = useCallback(async () => {
-		const refs = Object.values(videoRefs.current);
-		await Promise.all(
-			refs.map(async (ref) => {
-				if (ref) {
-					try {
-						const status = await ref.getStatusAsync();
-						if (status.isLoaded && status.isPlaying) {
-							await ref.pauseAsync();
-						}
-					} catch {
-						// ignore
-					}
+	const onStatusUpdate = useCallback(
+		(status: any, index: number) => {
+			try {
+				if (status?.isLoaded && status?.isPlaying) {
+					playingIndicesRef.current.add(index);
+				} else {
+					playingIndicesRef.current.delete(index);
 				}
-			})
-		);
-	}, []);
+			} catch {
+			} finally {
+				handlePlaybackStatus(status, index);
+			}
+		},
+		[handlePlaybackStatus]
+	);
 
-	// Pause whenever screen loses focus or unmounts
+	const pauseAllVideos = useCallback(async () => {
+		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		await Promise.all(
+			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false }))
+		);
+		playingIndicesRef.current.clear();
+	}, [pauseVideoAtIndex]);
+
 	useFocusEffect(
 		useCallback(() => {
 			return () => {
@@ -78,22 +174,58 @@ const LesPetitesHistoires: React.FC = () => {
 		}, [pauseAllVideos])
 	);
 
-	// When the visible item changes, pause the old and play the new
-	const onViewableItemsChanged = useCallback(
-		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
-			const newIndex = viewableItems[0]?.index;
-			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
-				const prevIndex = focusedIndexRef.current;
-				const prevRef = videoRefs.current[prevIndex];
-				if (prevRef) {
-					const status = await prevRef.getStatusAsync();
-					if (status.isLoaded) {
-						videoPositions.current[prevIndex] = status.positionMillis;
-						await prevRef.pauseAsync();
-					}
-				}
+	useEffect(() => {
+		const unsub = (navigation as any).addListener("blur", () => {
+			pauseAllVideos();
+		});
+		return unsub;
+	}, [navigation, pauseAllVideos]);
 
-				const prevAnim = fadeAnim[prevIndex];
+	useEffect(() => {
+		if (!isScreenFocused) pauseAllVideos();
+	}, [isScreenFocused, pauseAllVideos]);
+
+	useEffect(() => {
+		const pauseUnfocused = async () => {
+			const promises = Object.keys(videoRefs.current).map((k) => {
+				const i = Number(k);
+				if (i === focusedIndex) return Promise.resolve();
+				return pauseVideoAtIndex(i, { markAutoPaused: false });
+			});
+			await Promise.all(promises);
+		};
+		pauseUnfocused();
+	}, [focusedIndex, pauseVideoAtIndex]);
+
+	const onViewableItemsChanged = useCallback(
+		({
+			viewableItems,
+			changed,
+		}: {
+			viewableItems: ViewToken[];
+			changed: ViewToken[];
+		}) => {
+			changed?.forEach((token) => {
+				if (token.index == null) return;
+				if (token.isViewable) {
+					void resumeVideoAtIndex(token.index);
+				} else {
+					void pauseVideoAtIndex(token.index, { markAutoPaused: true });
+				}
+			});
+
+			const primary = viewableItems
+				.filter((t) => t.isViewable && t.index != null)
+				.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))[0];
+
+			if (
+				primary &&
+				primary.index !== undefined &&
+				primary.index !== focusedIndexRef.current
+			) {
+				const newIndex = primary.index;
+
+				const prevAnim = fadeAnim[focusedIndexRef.current];
 				if (prevAnim) {
 					Animated.timing(prevAnim, {
 						toValue: 1,
@@ -104,45 +236,79 @@ const LesPetitesHistoires: React.FC = () => {
 
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
-				setIsFirstRender(false);
 
 				if (!fadeAnim[newIndex]) {
 					fadeAnim[newIndex] = new Animated.Value(1);
-				}
-				Animated.timing(fadeAnim[newIndex], {
-					toValue: 0,
-					duration: 400,
-					useNativeDriver: true,
-				}).start();
-
-				const newRef = videoRefs.current[newIndex];
-				if (newRef) {
-					const resumePosition = videoPositions.current[newIndex] || 0;
-					await newRef.setPositionAsync(resumePosition, {
-						toleranceMillis: 50,
-					});
-					await newRef.playAsync();
+				} else {
+					fadeAnim[newIndex].setValue(1);
 				}
 			}
 		},
-		[fadeAnim, isFirstRender, setFocusedIndex]
+		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim]
 	);
 
 	const viewabilityConfig = useMemo(
-		() => ({ itemVisiblePercentThreshold: 70 }),
+		() => ({
+			itemVisiblePercentThreshold: 90,
+			minimumViewTime: 100,
+		}),
 		[]
 	);
 
+	const handleScrollBegin = useCallback(() => {
+		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		indices.forEach((i) => void pauseVideoAtIndex(i, { markAutoPaused: true }));
+	}, [pauseVideoAtIndex]);
+
 	const stories = useMemo(() => data?.data ?? [], [data]);
+
+	const handleFocusPress = useCallback(
+		(index: number) => {
+			focusedIndexRef.current = index;
+			setFocusedIndex(index);
+			videoRefs.current[index]?.playAsync();
+
+			void resumeVideoAtIndex(index);
+		},
+		[resumeVideoAtIndex]
+	);
+
+	const isActuallyLoading =
+		(!data || stories.length === 0) && (isLoading || isFetching);
+
+	const showSkeleton = useMinimumLoadingTime({
+		isLoading: isActuallyLoading,
+		minimumLoadingTime: 1000,
+	});
+
+	useEffect(() => {
+		if (isLoading) return;
+		if (!stories.length) return;
+
+		const initialIndex = 0;
+		focusedIndexRef.current = initialIndex;
+		setFocusedIndex(initialIndex);
+
+		if (!fadeAnim[initialIndex]) {
+			fadeAnim[initialIndex] = new Animated.Value(1);
+		} else {
+			fadeAnim[initialIndex].setValue(1);
+		}
+
+		return () => {
+			pauseAllVideos();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isLoading, stories.length, pauseAllVideos]);
 
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
 			const videoUri = item.attributes.videoUri;
-			const isFocused = focusedIndexRef.current === index;
+			const isFocused = focusedIndex === index;
+			const isLocked = isFreeUser && index >= 5;
+
 			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(
-					isFirstRender && index === 0 ? 0 : 1
-				);
+				fadeAnim[index] = new Animated.Value(1);
 			}
 
 			return (
@@ -153,16 +319,20 @@ const LesPetitesHistoires: React.FC = () => {
 						{ width: videoWidth, height: videoHeight },
 					]}>
 					<View style={styles.videoContainer}>
-						<Video
-							ref={(ref) => (videoRefs.current[index] = ref)}
+						<ExpoVideo
+							ref={(ref: ManagedVideoHandle | null) => {
+								videoRefs.current[index] = ref;
+							}}
 							source={{ uri: videoUri }}
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							useNativeControls
-							onPlaybackStatusUpdate={(status) =>
-								handlePlaybackStatus(status, index)
-							}
+							shouldPlay={false}
+							positionMillis={videoPositions.current[index] || 0}
+							useNativeControls={!isLocked}
+							resizeMode='cover'
+							onPlaybackStatusUpdate={(status) => onStatusUpdate(status, index)}
+							isScreenFocused={isScreenFocused && isFocused}
 						/>
 
 						{!isFocused && (
@@ -179,11 +349,17 @@ const LesPetitesHistoires: React.FC = () => {
 								/>
 								<TouchableOpacity
 									activeOpacity={0.8}
-									onPress={() => setFocusedIndex(index)}
+									onPress={() => handleFocusPress(index)}
 									style={styles.playButtonContainer}>
 									<Text style={styles.playIcon}>▶</Text>
 								</TouchableOpacity>
 							</Animated.View>
+						)}
+
+						{isLocked && (
+							<View style={[StyleSheet.absoluteFillObject]}>
+								<LockedVideoOverlay onUpgradePress={handleLockedItemPress} />
+							</View>
 						)}
 					</View>
 				</Animated.View>
@@ -191,77 +367,61 @@ const LesPetitesHistoires: React.FC = () => {
 		},
 		[
 			fadeAnim,
-			handlePlaybackStatus,
-			isFirstRender,
-			setFocusedIndex,
+			onStatusUpdate,
+			focusedIndex,
 			videoHeight,
 			videoWidth,
+			isFreeUser,
+			handleLockedItemPress,
+			handleFocusPress,
 		]
 	);
-
-	if (isLoading) {
-		return (
-			<View style={styles.loaderContainer}>
-				<Loader />
-			</View>
-		);
-	}
-
-	if (!data) {
-		return (
-			<View style={styles.noDataContainer}>
-				<Text>No data available</Text>
-			</View>
-		);
-	}
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerPadding}>
 				<ScreenHeaders content='La petite histoire' />
 			</View>
-			<Animated.FlatList
-				style={styles.list}
-				data={stories}
-				key={routeKey}
-				keyExtractor={(item) => `${routeKey}-${item.id}`}
-				renderItem={renderItem}
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={styles.contentPadding}
-				onViewableItemsChanged={onViewableItemsChanged}
-				viewabilityConfig={viewabilityConfig}
-				scrollEventThrottle={16}
-			/>
+
+			{showSkeleton && <PetitesHistoiresSkeleton />}
+
+			{!showSkeleton && data && (
+				<>
+					<UpgradeSubscriptionModal
+						visible={showUpgradeModal}
+						onClose={closeUpgradeModal}
+					/>
+
+					<Animated.FlatList
+						style={styles.list}
+						data={stories}
+						key={routeKey}
+						keyExtractor={(item) => `${routeKey}-${item.id}`}
+						renderItem={renderItem}
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						contentContainerStyle={styles.contentPadding}
+						onViewableItemsChanged={onViewableItemsChanged}
+						viewabilityConfig={viewabilityConfig}
+						onScrollBeginDrag={handleScrollBegin}
+						onMomentumScrollBegin={handleScrollBegin}
+						snapToInterval={videoWidth + 34}
+						snapToAlignment='start'
+						decelerationRate='fast'
+						pagingEnabled={false}
+					/>
+				</>
+			)}
 		</View>
 	);
 };
 
 const styles = StyleSheet.create({
-	wrapper: {
-		flex: 1,
-		backgroundColor: "#f0f0f0",
-	},
-	headerPadding: {
-		paddingHorizontal: 30,
-	},
-	list: {
-		marginTop: 30,
-		paddingHorizontal: 30,
-	},
-	contentPadding: {
-		paddingRight: 25,
-	},
-	loaderContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	noDataContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
+	wrapper: { flex: 1, backgroundColor: "#F5F5F5" },
+	headerPadding: { paddingHorizontal: 30 },
+	list: { marginTop: 30, paddingHorizontal: 30 },
+	contentPadding: { paddingRight: 25 },
+	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 	cardWrapper: {
 		marginLeft: 10,
 		marginRight: 24,
@@ -269,24 +429,14 @@ const styles = StyleSheet.create({
 		overflow: "hidden",
 		backgroundColor: "#000",
 	},
-	videoContainer: {
-		position: "relative",
-		width: "100%",
-		height: "100%",
-	},
-	video: {
-		width: "100%",
-		height: "100%",
-	},
+	videoContainer: { position: "relative", width: "100%", height: "100%" },
+	video: { width: "100%", height: "100%" },
 	overlayContainer: {
 		justifyContent: "center",
 		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0, 0.5)",
 	},
-	thumbnail: {
-		width: "100%",
-		height: "100%",
-	},
+	thumbnail: { width: "100%", height: "100%" },
 	playButtonContainer: {
 		position: "absolute",
 		backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -296,10 +446,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 	},
-	playIcon: {
-		color: "#FFF",
-		fontSize: 30,
-	},
+	playIcon: { color: "#FFF", fontSize: 30 },
 });
 
 export default LesPetitesHistoires;

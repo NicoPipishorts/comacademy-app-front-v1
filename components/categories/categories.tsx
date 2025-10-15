@@ -14,12 +14,16 @@ import {
 interface Props {
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 	setActiveTab: Dispatch<SetStateAction<number>>;
+	disabled?: boolean;
 }
 
-const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
+const CategoriesCards = ({ setFilterByCat, setActiveTab, disabled = false }: Props) => {
 	const { data: dataCategory } = useCategoriesFull();
 
 	const onPress = (filter: number) => {
+		if (disabled) {
+			return;
+		}
 		setFilterByCat(filter);
 		setActiveTab(0);
 	};
@@ -32,10 +36,12 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab }: Props) => {
 						return (
 							<TouchableOpacity
 								key={cat.id}
+								disabled={disabled}
 								onPress={() => onPress(cat.id)}
 								style={[
 									styles.card,
 									{ backgroundColor: `#${cat.attributes.backgroundColor}` },
+									disabled && styles.cardDisabled,
 								]}>
 								<Image
 									source={{
@@ -82,6 +88,9 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.25,
 		shadowRadius: 6,
 		elevation: 5,
+	},
+	cardDisabled: {
+		opacity: 0.4,
 	},
 	icon: {
 		width: 50,

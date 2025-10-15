@@ -1,5 +1,6 @@
 import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize22 } from "@/constants/fontsizes";
+import { buttonBlack } from "@/constants/commonStyles";
 import { NavigationType } from "@/types/general";
 import { Inter_700Bold, useFonts } from "@expo-google-fonts/inter";
 import { useNavigation } from "expo-router";
@@ -15,14 +16,28 @@ interface Props {
 	image: string;
 	content: string;
 	category: string;
+	onPress?: () => void;
+	locked?: boolean;
 }
 
 export default function CardSimpleButtonCitrationsMenu({
 	image,
 	content,
 	category,
+	onPress,
+	locked = false,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
+
+	const handlePress = () => {
+		if (onPress) {
+			onPress();
+		} else {
+			navigation.navigate("CitationsDetails", {
+				citationCategory: category,
+			});
+		}
+	};
 	let [fontsLoaded] = useFonts({
 		Inter_700Bold,
 	});
@@ -32,7 +47,10 @@ export default function CardSimpleButtonCitrationsMenu({
 	}
 
 	return (
-		<View style={styles.cardWrapper}>
+		<TouchableOpacity
+			style={[styles.cardWrapper, locked && styles.lockedCard]}
+			onPress={handlePress}
+			activeOpacity={0.8}>
 			<View
 				style={{
 					borderRadius: 25,
@@ -47,20 +65,14 @@ export default function CardSimpleButtonCitrationsMenu({
 					<View style={styles.cardTextContainer}>
 						<View style={styles.buttonContainer}>
 							<Text style={styles.cardText}>{content}</Text>
-							<TouchableOpacity
-								style={styles.buttonBlack}
-								onPress={() =>
-									navigation.navigate("CitationsDetails", {
-										citationCategory: category,
-									})
-								}>
+							<View style={buttonBlack}>
 								<Text style={styles.buttonText}>Voir</Text>
-							</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				</ImageBackground>
 			</View>
-		</View>
+		</TouchableOpacity>
 	);
 }
 
@@ -100,14 +112,11 @@ const styles = StyleSheet.create({
 		padding: 20,
 		backgroundColor: colorWhite,
 	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 25,
-		borderRadius: 50,
-	},
 	buttonText: {
 		color: colorWhite,
 		fontWeight: "bold",
+	},
+	lockedCard: {
+		opacity: 0.4,
 	},
 });

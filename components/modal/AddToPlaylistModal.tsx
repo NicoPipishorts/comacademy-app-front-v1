@@ -9,14 +9,23 @@ import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
-import { AxiosError } from "axios";
-import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-	Animated,
+	BottomSheetBackdrop,
+	BottomSheetBackdropProps,
+	BottomSheetModal,
+	BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
+import { AxiosError } from "axios";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import {
 	Image,
-	Modal,
 	Pressable,
-	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -32,15 +41,19 @@ interface Props {
 	type: "metier" | "dico" | "question";
 }
 
+const SNAP_POINTS = ["50%", "80%"];
+
 export default function AddToPlaylistModal({
 	visible,
 	onClose,
 	type,
 	elementId,
 }: Props) {
-	const slideAnim = useRef(new Animated.Value(300)).current;
+	const bottomSheetRef = useRef<BottomSheetModal>(null);
+	const snapPoints = useMemo(() => SNAP_POINTS, []);
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
+	const showSnackbar = useSnackbar();
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsForElement(
 		auth?.user.id,
@@ -48,234 +61,243 @@ export default function AddToPlaylistModal({
 		elementId
 	);
 
-	const showModal = useCallback(() => {
-		Animated.spring(slideAnim, {
-			toValue: 0,
-			useNativeDriver: true,
-		}).start();
-	}, [slideAnim]);
-
-	const hideModal = () => {
-		Animated.timing(slideAnim, {
-			toValue: 300,
-			duration: 200,
-			useNativeDriver: true,
-		}).start(() => {
-			onClose();
-		});
+	const onAddSuccess = () => {
+		queryClient.refetchQueries({ queryKey: ["Playlists"] });
 	};
 
-	// const showSnackbar = useSnackbar();
-
-	const onSuccess = () => {
-		queryClient.refetchQueries({
-			queryKey: ["Playlists"],
-		});
+	const onAddError = (error: AxiosError) => {
+		console.error("Failed to add to playlist:", error.message);
+		showSnackbar("Impossible d'ajouter à la playlist.", "error");
 	};
 
-	const onError = (error: AxiosError) => {
-		console.error(`Failed to create new playlist":`, error.message);
-	};
+	const { mutate: addToPlaylist } = useAddToPlaylist(onAddSuccess, onAddError);
 
-	const { mutate: addToPlaylist } = useAddToPlaylist(onSuccess, onError);
+	const [newPlaylistVisible, setNewPlaylistVisible] = useState(false);
 
-	const handleSubmit = (playlistId: number) => {
-		addToPlaylist({
-			playlistId,
-			elementId: elementId,
-			type,
-			authToken: token,
-		});
-		hideModal();
-	};
+	const handleSubmitToPlaylist = useCallback(
+		(playlistId: number) => {
+			addToPlaylist({
+				playlistId,
+				elementId,
+				type,
+				authToken: token,
+			});
+			bottomSheetRef.current?.dismiss();
+		},
+		[addToPlaylist, elementId, type, token]
+	);
+
+	const onCreateSuccess = useCallback(
+		(_: unknown, message: string) => {
+			queryClient.refetchQueries({ queryKey: ["Playlists"] });
+			showSnackbar(message, "success");
+		},
+		[showSnackbar]
+	);
+
+	const onCreateError = useCallback(
+		(error: AxiosError) => {
+			console.error("Failed to create new playlist:", error.message);
+			showSnackbar("Création impossible.", "error");
+		},
+		[showSnackbar]
+	);
+
+	const { mutate: createNewPlaylist } = useCreateNewPlaylist(
+		onCreateSuccess,
+		onCreateError
+	);
+
+	const handleCreatePlaylist = useCallback(
+		(name: string, selectedColor: string) => {
+			createNewPlaylist({
+				name,
+				selectedColor,
+				userId: auth?.user.id,
+				authToken: token,
+				modalType: "new",
+				playlistId: null,
+			});
+			setNewPlaylistVisible(false);
+		},
+		[auth?.user.id, token, createNewPlaylist]
+	);
+
+	const renderBackdrop = useCallback(
+		(props: BottomSheetBackdropProps) => (
+			<BottomSheetBackdrop
+				{...props}
+				appearsOnIndex={0}
+				disappearsOnIndex={-1}
+				pressBehavior='close'
+			/>
+		),
+		[]
+	);
 
 	useEffect(() => {
 		if (visible) {
-			showModal();
+			bottomSheetRef.current?.present();
+		} else {
+			bottomSheetRef.current?.dismiss();
 		}
-	}, [showModal, visible]);
-	const [modalVisible, setModalVisible] = useState<boolean>(false);
-	const [modalType, setModalType] = useState<"new" | "edit">(null);
-	const [playlistId, setPlaylistId] = useState(null);
-	const [openedSwipeable, setOpenedSwipeable] = useState(null);
+	}, [visible]);
 
-	const showSnackbar = useSnackbar(); // Use the snackbar context
+	const handleDismiss = useCallback(() => {
+		onClose();
+	}, [onClose]);
 
-	const onSuccessCreate = (data: any, message: string) => {
-		queryClient.refetchQueries({
-			queryKey: ["Playlists"],
-		});
-		showSnackbar(message, "success");
-		if (openedSwipeable) {
-			openedSwipeable.close();
-			setOpenedSwipeable(null);
-		}
-	};
-
-	const onErrorCreate = (error: AxiosError) => {
-		console.error(`Failed to create new playlist":`, error.message);
-	};
-
-	const { mutate: createNewPlaylist } = useCreateNewPlaylist(
-		onSuccessCreate,
-		onErrorCreate
-	);
-	const handleCreatePlaylist = (name: string, selectedColor: string) => {
-		createNewPlaylist({
-			name,
-			selectedColor,
-			userId: auth?.user.id,
-			authToken: token,
-			modalType,
-			playlistId,
-		});
-		setModalVisible(false);
-		setPlaylistId(null);
-	};
+	const handleOpenNewPlaylist = useCallback(() => {
+		setNewPlaylistVisible(true);
+	}, []);
 
 	if (!isFetched) return null;
 
 	return (
-		<Modal
-			animationType='none'
-			transparent={true}
-			visible={visible}
-			onRequestClose={hideModal}>
-			<TouchableOpacity
-				style={styles.modalOverlay}
-				activeOpacity={1}
-				onPress={hideModal}>
-				<View style={styles.modalWrapper}>
-					<Animated.View
-						style={[
-							styles.modalContent,
-							{
-								transform: [{ translateY: slideAnim }],
-							},
-						]}>
+		<>
+			<BottomSheetModal
+				ref={bottomSheetRef}
+				index={1}
+				snapPoints={snapPoints}
+				backdropComponent={renderBackdrop}
+				backgroundStyle={styles.sheetBackground}
+				handleIndicatorStyle={styles.hiddenIndicator}
+				enablePanDownToClose
+				onDismiss={handleDismiss}
+				style={styles.bottomSheetModal}>
+				<BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
+					<View style={styles.sheetInner}>
+						<ModalGestureLine />
 						<TouchableOpacity
-							activeOpacity={1}
-							onPress={(e) => e.stopPropagation()}>
-							<ModalGestureLine />
-							<TouchableOpacity
-								style={styles.addPlaylistContainer}
-								onPress={() => {
-									setModalVisible(true);
-									setPlaylistId(null);
-									setModalType("new");
-									if (openedSwipeable) {
-										openedSwipeable.close();
-										setOpenedSwipeable(null);
-									}
-								}}>
-								<Image source={AddPlaylist} style={styles.addPlaylistImage} />
-								<View style={{ flexDirection: "column" }}>
-									<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
-										Nouvelle Playlist
-									</Text>
-								</View>
-							</TouchableOpacity>
-							<Text style={styles.modalTitle}> Choisis une playlist.</Text>
-							<ScrollView
-								showsVerticalScrollIndicator={false}
-								contentContainerStyle={{
-									paddingBottom: 150,
-									gap: 3,
-								}}>
-								{playlistsData.data.map((playlist) => {
-									return (
-										<View key={playlist.id}>
-											{playlist.attributes.inPlaylist && (
-												<View
-													style={{
-														position: "absolute",
-														minWidth: "100%",
-														minHeight: 66,
-														zIndex: 10,
-														borderRadius: 10,
-														backgroundColor: "rgba(220,220,220,0.7)",
-													}}
-												/>
-											)}
-											<Pressable
-												onPress={() => handleSubmit(playlist.id)}
-												style={{
-													flexDirection: "row",
-													alignItems: "center",
-													padding: 8,
-												}}
-												disabled={
-													playlist.attributes.inPlaylist ? true : false
-												}>
-												<PlaylistDisplayImage
-													image={playlist.attributes.selectedColor}
-													title={playlist.attributes.name}
-													width={50}
-													height={50}
-												/>
-												<Text
-													style={{ fontWeight: "bold", fontSize: FontSize16 }}>
-													{playlist.attributes.name}
-												</Text>
-											</Pressable>
-										</View>
-									);
-								})}
-							</ScrollView>
+							style={styles.addPlaylistContainer}
+							onPress={handleOpenNewPlaylist}>
+							<Image source={AddPlaylist} style={styles.addPlaylistImage} />
+							<View style={styles.addPlaylistTextWrapper}>
+								<Text style={styles.addPlaylistTitle}>Nouvelle Playlist</Text>
+							</View>
 						</TouchableOpacity>
-					</Animated.View>
-				</View>
-			</TouchableOpacity>
+						<Text style={styles.modalTitle}>Choisis une playlist.</Text>
+						{playlistsData?.data?.length ? (
+							<BottomSheetScrollView
+								contentContainerStyle={styles.playlistsContainer}
+								showsVerticalScrollIndicator={false}>
+								{playlistsData.data.map((playlist) => (
+									<View key={playlist.id} style={styles.playlistItemWrapper}>
+										{playlist.attributes.inPlaylist && (
+											<View style={styles.disabledOverlay} />
+										)}
+										<Pressable
+											onPress={() => handleSubmitToPlaylist(playlist.id)}
+											style={styles.playlistRow}
+											disabled={playlist.attributes.inPlaylist}>
+											<PlaylistDisplayImage
+												image={playlist.attributes.selectedColor}
+												title={playlist.attributes.name}
+												width={50}
+												height={50}
+											/>
+											<Text style={styles.playlistName}>
+												{playlist.attributes.name}
+											</Text>
+										</Pressable>
+									</View>
+								))}
+							</BottomSheetScrollView>
+						) : (
+							<View style={styles.emptyState}>
+								<Text style={styles.emptyStateText}>
+									Aucune playlist disponible.
+								</Text>
+							</View>
+						)}
+					</View>
+				</BottomSheetScrollView>
+			</BottomSheetModal>
 
 			<NewPlaylistModal
-				visible={modalVisible}
-				onClose={() => setModalVisible(false)}
+				visible={newPlaylistVisible}
+				onClose={() => setNewPlaylistVisible(false)}
 				onSubmit={handleCreatePlaylist}
-				playlistId={playlistId}
 			/>
-		</Modal>
+		</>
 	);
 }
 
 const styles = StyleSheet.create({
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
+	bottomSheetModal: {
+		zIndex: 99999,
+		elevation: 99999,
 	},
-	modalWrapper: {
-		flex: 1,
-		justifyContent: "flex-end",
-	},
-	modalContent: {
-		display: "flex",
+	sheetBackground: {
 		backgroundColor: primaryBackground,
 		borderTopLeftRadius: 20,
 		borderTopRightRadius: 20,
-		padding: 20,
-		height: 350,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: -2,
-		},
-		shadowOpacity: 0.25,
-		shadowRadius: 3.84,
-		elevation: 5,
 	},
-	modalTitle: {
-		fontSize: FontSize18,
-		fontWeight: "bold",
-		marginTop: 20,
-		marginBottom: 10,
-		marginLeft: 10,
-		textAlign: "left",
+	hiddenIndicator: {
+		opacity: 0,
+		height: 0,
+	},
+	scrollContent: {
+		paddingHorizontal: 20,
+		paddingBottom: 24,
+	},
+	sheetInner: {
+		paddingTop: 12,
+		gap: 16,
 	},
 	addPlaylistContainer: {
 		flexDirection: "row",
 		alignItems: "center",
+		gap: 12,
 	},
 	addPlaylistImage: {
 		width: 70,
 		height: 70,
+	},
+	addPlaylistTextWrapper: {
+		flexDirection: "column",
+	},
+	addPlaylistTitle: {
+		fontSize: FontSize18,
+		fontWeight: "bold",
+	},
+	modalTitle: {
+		fontSize: FontSize18,
+		fontWeight: "bold",
+		marginTop: 10,
+	},
+	playlistsContainer: {
+		paddingBottom: 60,
+		gap: 8,
+	},
+	playlistItemWrapper: {
+		position: "relative",
+	},
+	playlistRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		padding: 8,
+		gap: 12,
+	},
+	playlistName: {
+		fontWeight: "bold",
+		fontSize: FontSize16,
+	},
+	disabledOverlay: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		top: 0,
+		bottom: 0,
+		borderRadius: 10,
+		backgroundColor: "rgba(220,220,220,0.7)",
+		zIndex: 1,
+	},
+	emptyState: {
+		paddingVertical: 40,
+		alignItems: "center",
+	},
+	emptyStateText: {
+		fontSize: FontSize16,
 	},
 });

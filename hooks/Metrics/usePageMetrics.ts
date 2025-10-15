@@ -25,10 +25,15 @@ export const useTrackPageMetrics = ({ page }: UseTrackPageMetricsProps) => {
 			return;
 		}
 
-		if (!page) {
+		if (!page?.trim()) {
 			return;
 		}
 
-		addPageMetric({ page, authToken: token });
+		if (!process.env.EXPO_PUBLIC_API_URL) {
+			console.warn("Page metrics API URL is not configured; skipping metric tracking.");
+			return;
+		}
+
+		addPageMetric({ page: page.trim(), authToken: token });
 	}, [addPageMetric, page, token]);
 };

@@ -33,8 +33,8 @@ const Playlist = () => {
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState<boolean>(false);
-	const [modalType, setModalType] = useState<"new" | "edit">(null);
-	const [playlistId, setPlaylistId] = useState(null);
+	const [modalType, setModalType] = useState<"new" | "edit" | null>(null);
+	const [playlistId, setPlaylistId] = useState<number | null>(null);
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(
 		auth?.user.id

@@ -10,19 +10,22 @@ import { StyleSheet, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useSessionAction } from "@/api/game/useNewSession";
+import { UseAuth } from "@/auth/AuthContext";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useAuthSession from "@/hooks/useAuthSession";
+import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { NavigationType } from "@/types/general";
 import { useFocusEffect, useNavigation } from "expo-router";
-
-import useAuthSession from "@/hooks/useAuthSession";
+// import { useMemo } from "react";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
@@ -35,17 +38,72 @@ export default function LeJeu() {
 	const [isEnabled, setIsEnabled] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
+	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
+	const { session } = UseAuth();
 
-	const { setDataGame, setSessionsId, setGameStatus } = useGameContext();
+	// Check subscription status
+	const subscriptionType = React.useMemo(() => {
+		const raw = session?.user?.subscription?.typeKey;
+		if (typeof raw !== "string" || raw.trim() === "") return "free";
+		return raw.toLowerCase();
+	}, [session?.user?.subscription?.typeKey]);
+
+	const isFreeUser =
+		subscriptionType === "free" || subscriptionType === "trial";
+
+	// Get user score to check level
+	const { data: scores } = useGetUserScore(token, auth?.user.id);
+	const totalAnsweredQuestions =
+		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
+
+	const {
+		setDataGame,
+		setSessionsId,
+		setGameStatus,
+		setQuestionsLeft,
+		setAnsweredCount,
+		gameStatus,
+		sessionId,
+		answeredCount,
+	} = useGameContext();
+
+	const sessionInProgress =
+		gameStatus === "in_progress" && !!sessionId && answeredCount > 0;
+	const [showSessionTooltip, setShowSessionTooltip] = useState(false);
+	const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const handleSessionBlockedAction = useCallback(() => {
+		setShowSessionTooltip(true);
+		if (tooltipTimeoutRef.current) {
+			clearTimeout(tooltipTimeoutRef.current);
+		}
+		tooltipTimeoutRef.current = setTimeout(() => {
+			setShowSessionTooltip(false);
+			tooltipTimeoutRef.current = null;
+		}, 2000);
+	}, []);
+
+	const handleTabChange = useCallback(
+		(nextTab: number) => {
+			if (sessionInProgress && nextTab === 1) {
+				handleSessionBlockedAction();
+				return false;
+			}
+			return true;
+		},
+		[sessionInProgress, handleSessionBlockedAction]
+	);
 
 	// session‑restart mutation
 	const { mutate: newSession } = useSessionAction(
 		(payload) => {
 			setGameStatus(payload.status);
 			setSessionsId(payload.sessionId);
+			setQuestionsLeft(payload.questionsLeft);
+			setAnsweredCount(payload.answeredCount);
 			setDataGame(payload.questionsPool);
 		},
 		(err) => console.error("newSession failed:", err)
@@ -70,6 +128,28 @@ export default function LeJeu() {
 		}
 	}, [filterByCat, token, loadingToken, newSession, auth?.user.id]);
 
+	useEffect(() => {
+		if (sessionInProgress && activeTab === 1) {
+			setActiveTab(0);
+		}
+	}, [sessionInProgress, activeTab, setActiveTab]);
+
+	useEffect(() => {
+		if (!sessionInProgress && tooltipTimeoutRef.current) {
+			clearTimeout(tooltipTimeoutRef.current);
+			tooltipTimeoutRef.current = null;
+			setShowSessionTooltip(false);
+		}
+	}, [sessionInProgress]);
+
+	useEffect(() => {
+		return () => {
+			if (tooltipTimeoutRef.current) {
+				clearTimeout(tooltipTimeoutRef.current);
+			}
+		};
+	}, []);
+
 	// fetch either “all” or “by‑category”
 	// ⬇️ pass token + loading into the hook
 	const {
@@ -93,6 +173,8 @@ export default function LeJeu() {
 
 		setGameStatus(sessionData.data.status);
 		setSessionsId(sessionData.data.sessionId);
+		setQuestionsLeft(sessionData.data.questionsLeft);
+		setAnsweredCount(sessionData.data.answeredCount);
 		setDataGame(sessionData.data.questionsPool);
 	}, [
 		loadingQuestions,
@@ -100,21 +182,32 @@ export default function LeJeu() {
 		setDataGame,
 		setSessionsId,
 		setGameStatus,
+		setQuestionsLeft,
+		setAnsweredCount,
 	]);
 
 	useTrackPageMetrics({ page: "Jeu" });
 
 	const toggleSwitch = useCallback(() => {
-		setActiveTab((t) => (t === 0 ? 1 : 0));
 		setIsEnabled((p) => !p);
 	}, []);
 
 	const handlePressPlay = useCallback(() => {
+		// Check if user has reached level 1 (150+ questions)
+		const currentLevel = Math.floor(totalAnsweredQuestions / 150);
+
+		// Only block if user is FREE AND has reached level 1
+		if (isFreeUser && currentLevel >= 1) {
+			// Show subscription modal instead of starting game
+			setShowSubscriptionModal(true);
+			return;
+		}
+
 		navigation.navigate("jeu");
-	}, [navigation]);
+	}, [navigation, totalAnsweredQuestions, isFreeUser]);
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top + 0 }]}>
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.containerHeader}>
 				<Text style={styles.headerMainText}>Le jeu</Text>
 				<View style={styles.containerSwitch}>
@@ -146,6 +239,7 @@ export default function LeJeu() {
 					<CategoriesCards
 						setFilterByCat={setFilterByCat}
 						setActiveTab={setActiveTab}
+						disabled={sessionInProgress}
 					/>
 				</View>
 			)}
@@ -154,12 +248,24 @@ export default function LeJeu() {
 				<FloatingTabBar
 					activeTab={activeTab}
 					setActiveTab={setActiveTab}
-					handlePress={() => setActiveTab(activeTab === 0 ? 1 : 0)}
+					handlePress={handleTabChange}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>
 
+			{showSessionTooltip && (
+				<View style={styles.tooltipContainer}>
+					<Text style={styles.tooltipText}>Une partie est en cours</Text>
+				</View>
+			)}
+
 			{isEnabled && <Answers />}
+
+			<UpgradeSubscriptionModal
+				visible={showSubscriptionModal}
+				onClose={() => setShowSubscriptionModal(false)}
+				message='Bravo ! Tu as terminé le niveau 0 avec 150 questions répondues ! Pour continuer ton aventure et débloquer tous les contenus, passe à la version Premium.'
+			/>
 		</View>
 	);
 }
@@ -203,5 +309,20 @@ const styles = StyleSheet.create({
 		right: 0,
 		bottom: 110,
 		alignItems: "center",
+	},
+	tooltipContainer: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 170,
+		alignItems: "center",
+	},
+	tooltipText: {
+		backgroundColor: colorBlack,
+		color: colorWhite,
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 16,
+		fontWeight: "bold",
 	},
 });

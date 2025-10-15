@@ -1,8 +1,9 @@
-import Loader from "@/components/experience/loader";
 import FilteredByCat from "@/components/filters/filteredByCat";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { CategoriePayload } from "@/types/categories";
 import { DicoLists, DicoSelected } from "@/types/dico";
 import { NavigationType } from "@/types/general";
@@ -22,23 +23,55 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import DicoListSkeleton from "./DicoListSkeleton";
 
 type Props = {
 	data: DicoLists;
 	categories: CategoriePayload;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+	isLoading: boolean;
 };
 
-const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
+const DicoList = ({
+	data,
+	categories,
+	filterByCat,
+	setFilterByCat,
+	isLoading,
+}: Props) => {
 	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
-	const sectionRefs = useRef<{ [key: string]: View | null }>({}).current;
+	const sectionRefs = useRef<Record<string, View | null>>({});
 	const [groupedData, setGroupedData] = useState<{
 		[key: string]: DicoSelected[];
 	}>({});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredData, setFilteredData] = useState<DicoSelected[]>([]);
+	const [showSkeleton, setShowSkeleton] = useState(true);
+	const loadingStartTimeRef = useRef<number>(Date.now());
+
+	const {
+		isItemLocked,
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+	} = useSubscriptionLimit({ freeLimit: 10 });
+
+	useEffect(() => {
+		if (!isLoading && data) {
+			const MINIMUM_LOADING_TIME = 2000; // ms
+			const elapsedTime = Date.now() - loadingStartTimeRef.current;
+			const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+
+			const timer = setTimeout(() => {
+				setShowSkeleton(false);
+			}, remainingTime);
+
+			return () => clearTimeout(timer);
+		}
+		return undefined;
+	}, [isLoading, data]);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -88,7 +121,7 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 	}
 
 	const scrollToSection = (letter: string) => {
-		const section = sectionRefs[letter];
+		const section = sectionRefs.current[letter];
 
 		if (section && scrollViewRef.current) {
 			const scrollView = scrollViewRef.current as unknown as any;
@@ -143,13 +176,13 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 		[data]
 	);
 
-	const handlePress = (id: number) => {
+	const handlePress = (id: number, index: number) => {
+		if (isItemLocked(index)) {
+			handleLockedItemPress();
+			return;
+		}
 		navigation.navigate("dicoDetails", { id });
 	};
-
-	if (!data) {
-		return <Loader />;
-	}
 
 	return (
 		<>
@@ -157,62 +190,90 @@ const DicoList = ({ data, categories, filterByCat, setFilterByCat }: Props) => {
 				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
 
-			<View style={styles.contentContainer}>
-				<ScrollView
-					ref={scrollViewRef}
-					style={styles.listWrapper}
-					contentContainerStyle={styles.listContainer}
-					showsVerticalScrollIndicator={false}>
-					{filterByCat && (
-						<FilteredByCat
-							count={data.data.length}
-							categories={categories}
-							filterByCat={filterByCat}
-							setFilterByCat={setFilterByCat}
-						/>
-					)}
-					{/* If search query is active, render filtered data, else render grouped data */}
-					{filteredData.length <= 0 && (
-						<View style={styles.noDataContainer}>
-							<Text style={styles.noDataText}>Aucune définition trouvée. </Text>
-							<Text>Essayez un autre mot.</Text>
+			{(showSkeleton || isLoading || !data) && <DicoListSkeleton lines={15} />}
+			<UpgradeSubscriptionModal
+				visible={showUpgradeModal}
+				onClose={closeUpgradeModal}
+				message="Les 10 premiers mots du dictionnaire sont gratuits. Passez à un abonnement premium pour accéder à l'intégralité du dictionnaire."
+			/>
+
+			{!showSkeleton && !isLoading && data && (
+				<View style={styles.contentContainer}>
+					<ScrollView
+						ref={scrollViewRef}
+						style={styles.listWrapper}
+						contentContainerStyle={styles.listContainer}
+						showsVerticalScrollIndicator={false}>
+						{filterByCat && (
+							<FilteredByCat
+								count={data.data.length}
+								categories={categories}
+								filterByCat={filterByCat}
+								setFilterByCat={setFilterByCat}
+							/>
+						)}
+						{/* If search query is active, render filtered data, else render grouped data */}
+						{searchQuery
+							? filteredData.map((item, index) => {
+									const locked = isItemLocked(index);
+									return (
+										<TouchableOpacity
+											key={index}
+											onPress={() => handlePress(item.id, index)}>
+											<Text
+												style={[styles.listItem, locked && styles.lockedItem]}>
+												{item.Word}
+											</Text>
+										</TouchableOpacity>
+									);
+							  })
+							: (() => {
+									let globalIndex = 0;
+									return alphabet.map((letter) => (
+										<View
+											key={letter}
+											ref={(el) => {
+												sectionRefs.current[letter] = el;
+											}}>
+											<Text style={styles.listHeader}>{letter}</Text>
+											{groupedData[letter]?.map((item, localIndex) => {
+												const currentIndex = globalIndex++;
+												const locked = isItemLocked(currentIndex);
+												return (
+													<Text
+														key={localIndex}
+														style={[
+															styles.listItem,
+															locked && styles.lockedItem,
+														]}
+														onPress={() => handlePress(item.id, currentIndex)}>
+														{item.Word}
+													</Text>
+												);
+											})}
+										</View>
+									));
+							  })()}
+						{searchQuery && filteredData.length === 0 && (
+							<View style={styles.noDataContainer}>
+								<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>
+							</View>
+						)}
+					</ScrollView>
+
+					{!showSkeleton && !searchQuery && filteredData.length > 0 && (
+						<View style={styles.sidebar}>
+							{alphabet.map((letter) => (
+								<TouchableOpacity
+									key={letter}
+									onPress={() => scrollToSection(letter)}>
+									<Text style={styles.sidebarText}>{letter}</Text>
+								</TouchableOpacity>
+							))}
 						</View>
 					)}
-					{searchQuery
-						? filteredData.map((item, index) => (
-								<TouchableOpacity
-									key={index}
-									onPress={() => handlePress(item.id)}>
-									<Text style={styles.listItem}>{item.Word}</Text>
-								</TouchableOpacity>
-						  ))
-						: alphabet.map((letter) => (
-								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
-									<Text style={styles.listHeader}>{letter}</Text>
-									{groupedData[letter]?.map((item, index) => (
-										<Text
-											key={index}
-											style={styles.listItem}
-											onPress={() => handlePress(item.id)}>
-											{item.Word}
-										</Text>
-									))}
-								</View>
-						  ))}
-				</ScrollView>
-
-				{!searchQuery && filteredData.length > 0 && (
-					<View style={styles.sidebar}>
-						{alphabet.map((letter) => (
-							<TouchableOpacity
-								key={letter}
-								onPress={() => scrollToSection(letter)}>
-								<Text style={styles.sidebarText}>{letter}</Text>
-							</TouchableOpacity>
-						))}
-					</View>
-				)}
-			</View>
+				</View>
+			)}
 		</>
 	);
 };
@@ -228,7 +289,8 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	listContainer: {
-		paddingBottom: 80,
+		paddingHorizontal: 5,
+		paddingBottom: 70,
 	},
 
 	listHeader: {
@@ -243,6 +305,9 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: 18,
 		fontWeight: "500",
+	},
+	lockedItem: {
+		opacity: 0.4,
 	},
 	sidebar: {
 		width: 30,

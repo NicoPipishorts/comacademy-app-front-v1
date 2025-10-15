@@ -1,4 +1,5 @@
-import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
+import { colorLightGrey, colorWhite } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16 } from "@/constants/fontsizes";
 import { SingleUserScoreResponse } from "@/hooks/useGetUsersScore";
 import { NavigationType } from "@/types/general";
@@ -31,7 +32,7 @@ export default function UserStats({ categoriesScore }: Props) {
 				<View style={styles.cardTextContainer}>
 					<Text style={styles.cardText}>Découvre le classement général</Text>
 					<TouchableOpacity
-						style={styles.buttonBlack}
+						style={buttonBlack}
 						onPress={() => navigation.navigate("leaderBoard")}>
 						<Text style={styles.buttonText}>Voir</Text>
 					</TouchableOpacity>
@@ -86,12 +87,6 @@ const styles = StyleSheet.create({
 	contentProgressBar: {
 		width: "100%",
 		borderRadius: 5,
-	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 35,
-		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,

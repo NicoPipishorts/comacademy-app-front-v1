@@ -12,11 +12,11 @@ export interface UserAttributes {
 	firstName: string;
 	lastName: string;
 	role: string;
-	profile: string;
+	profile?: string;
 	clients: {
-		id: number;
+		id: number | null;
 		name: string;
-	};
+	}[];
 }
 
 export interface UserScoreAttributes {
@@ -64,8 +64,8 @@ async function fetchAllUsersScores(
 		);
 	}
 
-	const data: AllUsersScoreResponse = await response.json();
-	return data;
+		const data = (await response.json()) as AllUsersScoreResponse;
+		return data;
 }
 
 // Fetch function for a single user's score
@@ -91,7 +91,7 @@ async function fetchSingleUserScore(
 		);
 	}
 
-	const data: SingleUserScoreResponse = await response.json();
+	const data = (await response.json()) as SingleUserScoreResponse;
 	return data;
 }
 

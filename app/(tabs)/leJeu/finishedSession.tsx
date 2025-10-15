@@ -31,7 +31,14 @@ export default function FinishedSession() {
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
 	const { showTabBar } = useTabBarVisibility();
-	const { sessionId, setDataGame, setSessionsId, setGameStatus } =
+	const {
+		sessionId,
+		setDataGame,
+		setSessionsId,
+		setGameStatus,
+		setQuestionsLeft,
+		setAnsweredCount,
+	} =
 		useGameContext();
 
 	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
@@ -45,6 +52,8 @@ export default function FinishedSession() {
 		(payload, action) => {
 			setDataGame(payload.questionsPool);
 			setSessionsId(payload.sessionId);
+			setQuestionsLeft(payload.questionsLeft);
+			setAnsweredCount(payload.answeredCount);
 			setGameStatus(payload.status);
 
 			if (action === "end") {

@@ -1,5 +1,4 @@
 import CategoriesCards from "@/components/categories/categories";
-import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
@@ -8,8 +7,7 @@ import useAuthSession from "@/hooks/useAuthSession";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { useGetMetiers } from "@/hooks/useGetMetiers";
-import { useQueryClient } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
@@ -17,48 +15,61 @@ import MetierList from "./list";
 const Metier = () => {
 	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
-	const queryClient = useQueryClient();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
 
 	useTrackPageMetrics({ page: "Metiers" });
 
-	const { data: dataMetier, isLoading: isLoadingMetier } =
-		useGetMetiers(filterByCat);
+	const {
+		data: dataMetier,
+		isLoading: isLoadingMetier,
+		isFetching: isFetchingMetier,
+	} = useGetMetiers(filterByCat);
 	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
-	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(auth?.user.id);
-
-	useEffect(() => {
-		queryClient.refetchQueries({ queryKey: ["metiersList"] });
-	}, [filterByCat, queryClient]);
-
-	if (
-		isLoadingMetier ||
-		isLoadingCats ||
-		!dataMetier ||
-		!dataCategory ||
-		!dataFavoritesMetier
-	) {
-		return <Loader />;
-	}
+	const { data: dataFavoritesMetier, isLoading: isLoadingFavorites } =
+		useGetFavoriteMetiers(auth?.user.id);
 
 	const toggleTab = (index: number) => {
 		setActiveTab(index);
 	};
 
+	const requiresFavorites = !!auth?.user?.id;
+	const favoritesReady = !requiresFavorites || !!dataFavoritesMetier;
+	const favoritesLoading =
+		requiresFavorites && isLoadingFavorites && !dataFavoritesMetier;
+
+	const listDepsReady = !!dataMetier && !!dataCategory && favoritesReady;
+
+	// Enforce minimum loading time to prevent glitchy skeleton flashes
+
+	const showListLoader = activeTab === 0 && !listDepsReady && !favoritesLoading;
+
+	const canShowList = activeTab === 0 && listDepsReady;
+	const canShowCategories = activeTab === 1 && !!dataCategory;
+
+	const showCategoriesLoader =
+		activeTab === 1 && (!dataCategory || isLoadingCats);
+
+	const showFavoritesLoader =
+		activeTab === 0 && !listDepsReady && favoritesLoading;
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
-			{activeTab === 0 && (
+
+			{/* {showSkeletonList && <MetierListSkeleton />} */}
+
+			{canShowList && (
 				<MetierList
 					data={dataMetier}
 					categories={dataCategory}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
+					isLoading={isLoadingMetier || isFetchingMetier}
 				/>
 			)}
 
-			{activeTab === 1 && (
+			{canShowCategories && (
 				<CategoriesCards
 					setFilterByCat={setFilterByCat}
 					setActiveTab={setActiveTab}

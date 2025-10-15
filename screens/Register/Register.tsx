@@ -1,20 +1,12 @@
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-	Alert,
-	Keyboard,
-	KeyboardAvoidingView,
-	Platform,
-	ScrollView,
-	StyleSheet,
-	TouchableWithoutFeedback,
-	View,
-} from "react-native";
-import { useAuth } from "../../auth/AuthContext";
+import { Alert, StyleSheet, View } from "react-native";
 
 // Import Assets
 import { useRegisterNewUser } from "@/api/credentials/registerNewUser";
+import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
+import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RegisterStep1 from "./Step1";
@@ -32,14 +24,13 @@ export interface FormPayload {
 const Register = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
-	const { login, checkLoggedIn } = useAuth();
+	const { login, checkLoggedIn } = UseAuth();
 	const [formPayload, setFormPayload] = useState<FormPayload>();
-
 	const [step, setStep] = useState<number>(1);
 
-	const onSuccess = (data) => {
-		login(data);
-		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
+	const onSuccess = async (data: AuthResponse) => {
+		await login(data);
+		navigation.navigate("(tabs)");
 	};
 
 	const onError = (error) => {
@@ -52,19 +43,17 @@ const Register = () => {
 					return error.message;
 			}
 		};
-		Alert.alert("L'inscription a échoué", translation()); // Using Alert from react-native
+		Alert.alert("L'inscription a échoué", translation());
 	};
 
 	const mutation = useRegisterNewUser(onSuccess, onError);
 
-	const handleLogin = (formPayload: FormPayload) => {
-		if (!formPayload) {
+	const handleLogin = (payload: FormPayload) => {
+		if (!payload) {
 			Alert.alert("Error", "Please complete all fields before proceeding.");
 			return;
 		}
-
-		const formPayloadToSubmit = { ...formPayload, profile: 2 };
-		console.log(formPayloadToSubmit);
+		const formPayloadToSubmit = { ...payload, profile: 2 };
 		mutation.mutate(formPayloadToSubmit);
 	};
 
@@ -72,64 +61,50 @@ const Register = () => {
 		const checkIfLoggedIn = async () => {
 			const loggedIn = await checkLoggedIn();
 			if (loggedIn) {
-				navigation.navigate("(tabs)"); // Navigate to the home screen if already logged in
+				navigation.navigate("(tabs)");
 			}
 		};
-
 		checkIfLoggedIn();
 	}, [navigation, checkLoggedIn]);
 
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<KeyboardAvoidingView
-				style={styles.container}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-				keyboardVerticalOffset={0}>
-				<ScrollView
-					contentContainerStyle={[
-						styles.scrollContainer,
-						{ paddingTop: insets.top },
-					]}
-					keyboardShouldPersistTaps='handled'>
-					<View style={[styles.logoContainer]}>
-						<LogoPageTop />
-					</View>
+		<View style={styles.container}>
+			<View style={[styles.logoContainer, { paddingTop: insets.top }]}>
+				<LogoPageTop />
+			</View>
 
-					<View
-						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-						{step === 1 && (
-							<RegisterStep1
-								setStep={setStep}
-								formPayload={formPayload}
-								setFormPayload={setFormPayload}
-							/>
-						)}
-						{step === 2 && (
-							<RegisterStep2
-								setStep={setStep}
-								formPayload={formPayload}
-								setFormPayload={setFormPayload}
-								handleLogin={handleLogin}
-							/>
-						)}
-					</View>
-				</ScrollView>
-			</KeyboardAvoidingView>
-		</TouchableWithoutFeedback>
+			<View style={{ flex: 1, width: "100%" }}>
+				{step === 1 && (
+					<RegisterStep1
+						setStep={setStep}
+						formPayload={formPayload as any}
+						setFormPayload={setFormPayload as any}
+					/>
+				)}
+				{step === 2 && (
+					<RegisterStep2
+						setStep={setStep}
+						formPayload={formPayload as any}
+						setFormPayload={setFormPayload as any}
+						handleLogin={handleLogin}
+					/>
+				)}
+			</View>
+		</View>
 	);
 };
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "center",
+		width: "100%",
+		padding: 10,
+		paddingVertical: 30,
 		alignItems: "center",
-		padding: 20,
+		justifyContent: "center",
 	},
 	scrollContainer: {
-		flex: 1,
 		minWidth: "100%",
-		alignItems: "center",
 	},
 	logoContainer: {
 		marginBottom: 20,

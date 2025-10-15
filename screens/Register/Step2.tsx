@@ -8,17 +8,24 @@ import {
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
+	Keyboard,
+	KeyboardAvoidingView,
+	Platform,
 	Pressable,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
 	TouchableOpacity,
+	TouchableWithoutFeedback,
 	View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FormPayload } from "./Register";
 
 interface Props {
@@ -27,6 +34,7 @@ interface Props {
 	formPayload: FormPayload;
 	handleLogin: (formPayload: FormPayload) => void;
 }
+
 const OPTIONS = [
 	{ label: "Étudiant", value: 5 },
 	{ label: "Enseignant", value: 6 },
@@ -40,6 +48,7 @@ export default function RegisterStep2({
 	setFormPayload,
 	handleLogin,
 }: Props) {
+	const insets = useSafeAreaInsets();
 	const [newPassword, setNewPassword] = useState<string>("");
 	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
 	const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
@@ -47,12 +56,9 @@ export default function RegisterStep2({
 		useState<boolean>(false);
 	const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
-	// Reset the registered values if available
 	useEffect(() => {
-		if (formPayload.profile !== null) {
-			setSelectedOption(formPayload.profile);
-		}
-		if (formPayload.password !== null) {
+		if (formPayload?.profile != null) setSelectedOption(formPayload.profile);
+		if (formPayload?.password != null) {
 			setNewPassword(formPayload.password);
 			setPasswordConfirm(formPayload.password);
 		}
@@ -65,22 +71,17 @@ export default function RegisterStep2({
 	}>({});
 
 	const toggleShowPassword = (field: "new" | "confirm") => {
-		if (field === "new") {
-			setShowNewPassword(!showNewPassword);
-		} else if (field === "confirm") {
-			setShowPasswordConfirm(!showPasswordConfirm);
-		}
+		if (field === "new") setShowNewPassword((v) => !v);
+		else setShowPasswordConfirm((v) => !v);
 	};
 
 	const handleOptionPress = (option: number) => {
 		if (selectedOption === option) {
 			setSelectedOption(null);
+			setFormPayload({ ...formPayload, profile: null as unknown as number });
 		} else {
 			setSelectedOption(option);
-			setFormPayload({
-				...formPayload,
-				profile: option,
-			});
+			setFormPayload({ ...formPayload, profile: option });
 		}
 	};
 
@@ -94,17 +95,15 @@ export default function RegisterStep2({
 
 		const passwordRegex =
 			/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
-		// Validate new password
-		// Validate new password
+
 		if (!newPassword?.trim()) {
 			newErrors.newPassword = "Nouveau mot de passe est requis.";
 			valid = false;
 		} else if (!passwordRegex.test(newPassword)) {
-			newErrors.newPassword = "Le mot de passe n’est pas valide..";
+			newErrors.newPassword = "Le mot de passe n’est pas valide.";
 			valid = false;
 		}
 
-		// Validate password confirmation
 		if (!passwordConfirm?.trim()) {
 			newErrors.passwordConfirm = "Confirmation du mot de passe est requise.";
 			valid = false;
@@ -124,148 +123,187 @@ export default function RegisterStep2({
 
 	const handleNext = () => {
 		if (validateForm()) {
-			// Create the updated payload``
 			const updatedPayload = {
 				...formPayload,
-				profile: selectedOption,
+				profile: selectedOption!,
 				password: newPassword,
 			};
-
-			// Use the updated payload directly for the next step
 			setErrors({});
-
-			// Pass the updated payload directly to handleLogin
 			handleLogin(updatedPayload);
 		}
 	};
 
+	const behavior = (Platform.OS === "ios" ? "padding" : "height") as
+		| "padding"
+		| "height"
+		| "position"
+		| undefined;
+
+	const bottomInset = Math.max(insets.bottom, 20);
+	// Align with Step1: offset accounts for top inset + approx header/logo height
+	const keyboardOffset = (Platform.OS === "ios" ? insets.top : 0) + 80;
+
 	return (
-		<>
-			<View style={styles.container}>
-				{/* Options */}
-				<View
-					style={[
-						styles.optionsContainer,
-						{
-							borderColor: errors.selectedOption
-								? "rgba(199, 62, 48, .5)"
-								: colorGrey,
-							borderWidth: errors.selectedOption ? 2 : 1,
-							borderRadius: 8,
-						},
-					]}>
-					{OPTIONS.map((option, index) => (
-						<TouchableOpacity
-							key={`${option.label}-${option.value}`}
-							style={[
-								styles.optionButton,
-								selectedOption === option.value && styles.selectedOptionButton,
-							]}
-							onPress={() => handleOptionPress(option.value)}>
-							{/* Pass the value to the handler */}
-							<Text
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+			<KeyboardAvoidingView
+				style={styles.avoidingContainer}
+				behavior={behavior}
+				keyboardVerticalOffset={keyboardOffset}>
+				<View style={{ flex: 1 }}>
+					<ScrollView
+						style={styles.formScroll}
+						contentContainerStyle={{
+							flexGrow: 1,
+							paddingHorizontal: 10,
+							paddingTop: 0,
+							// keep footer tappable when keyboard is open
+							paddingBottom: bottomInset + 20,
+						}}
+						keyboardShouldPersistTaps='never'
+						keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "on-drag"}
+						bounces={false}
+						overScrollMode='never'
+						showsVerticalScrollIndicator={false}>
+						<View style={styles.formContainer}>
+							{/* Options */}
+							<View
 								style={[
-									styles.optionText,
-									selectedOption === option.value && styles.selectedOptionText,
+									styles.optionsContainer,
+									{
+										borderColor: errors.selectedOption
+											? "rgba(199, 62, 48, .5)"
+											: colorGrey,
+										borderWidth: errors.selectedOption ? 2 : 1,
+										borderRadius: 8,
+									},
 								]}>
-								{option.label} {/* Display the label */}
-							</Text>
-						</TouchableOpacity>
-					))}
-					{errors.selectedOption && (
-						<View>
-							<Text style={styles.errorText}>{errors.selectedOption}</Text>
+								{OPTIONS.map((option) => (
+									<TouchableOpacity
+										key={`${option.label}-${option.value}`}
+										style={[
+											styles.optionButton,
+											selectedOption === option.value &&
+												styles.selectedOptionButton,
+										]}
+										onPress={() => handleOptionPress(option.value)}
+										activeOpacity={0.8}>
+										<Text
+											style={[
+												styles.optionText,
+												selectedOption === option.value &&
+													styles.selectedOptionText,
+											]}>
+											{option.label}
+										</Text>
+									</TouchableOpacity>
+								))}
+								{errors.selectedOption ? (
+									<Text style={styles.errorText}>{errors.selectedOption}</Text>
+								) : null}
+							</View>
+
+							{/* New Password */}
+							{errors.newPassword ? (
+								<Text style={styles.errorText}>{errors.newPassword}</Text>
+							) : null}
+							<View
+								style={[
+									styles.passwordInputContainer,
+									{
+										borderBottomColor: errors.newPassword
+											? colorRed
+											: colorGrey,
+									},
+								]}>
+								<TextInput
+									secureTextEntry={!showNewPassword}
+									value={newPassword}
+									onChangeText={setNewPassword}
+									style={styles.input}
+									placeholder='Nouveau Mot de Passe'
+									placeholderTextColor={colorBlack}
+									returnKeyType='next'
+								/>
+								<MaterialCommunityIcons
+									name={showNewPassword ? "eye-off" : "eye"}
+									size={24}
+									color={colorBlack}
+									style={styles.eyeIcon}
+									onPress={() => toggleShowPassword("new")}
+								/>
+							</View>
+
+							{/* Strength meter */}
+							<PasswordStrengthMeter password={newPassword} />
+
+							{/* Confirm Password */}
+							{errors.passwordConfirm ? (
+								<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+							) : null}
+							<View
+								style={[
+									styles.passwordInputContainer,
+									{
+										borderBottomColor: errors.passwordConfirm
+											? colorRed
+											: colorGrey,
+									},
+								]}>
+								<TextInput
+									secureTextEntry={!showPasswordConfirm}
+									value={passwordConfirm}
+									onChangeText={setPasswordConfirm}
+									style={styles.input}
+									placeholder='Confirmer le Mot de Passe'
+									placeholderTextColor={colorBlack}
+									returnKeyType='done'
+								/>
+								<MaterialCommunityIcons
+									name={showPasswordConfirm ? "eye-off" : "eye"}
+									size={24}
+									color={colorBlack}
+									style={styles.eyeIcon}
+									onPress={() => toggleShowPassword("confirm")}
+								/>
+							</View>
+
+							{/* Requirements */}
+							<PasswordRequirements password={newPassword} />
 						</View>
-					)}
+
+						<View style={styles.footer}>
+							<Pressable style={buttonBlack} onPress={handleNext}>
+								<Text style={styles.buttonTextSubmit}>C'est parti</Text>
+							</Pressable>
+
+							<Pressable
+								style={styles.buttonRevenir}
+								onPress={() => setStep(1)}>
+								<Text style={styles.buttonTextRevenir}>Revenir</Text>
+							</Pressable>
+						</View>
+					</ScrollView>
 				</View>
-
-				{/* New Password Input */}
-				{errors.newPassword && (
-					<View>
-						<Text style={styles.errorText}>{errors.newPassword}</Text>
-					</View>
-				)}
-				<View
-					style={[
-						styles.passwordInputContainer,
-						{
-							borderBottomColor:
-								errors.newPassword === undefined ? colorGrey : colorRed,
-						},
-					]}>
-					<TextInput
-						secureTextEntry={!showNewPassword}
-						value={newPassword}
-						onChangeText={setNewPassword}
-						style={styles.input}
-						placeholder='Nouveau Mot de Passe'
-						placeholderTextColor={colorBlack}
-					/>
-					<MaterialCommunityIcons
-						name={showNewPassword ? "eye-off" : "eye"}
-						size={24}
-						color={colorBlack}
-						style={styles.eyeIcon}
-						onPress={() => toggleShowPassword("new")}
-					/>
-				</View>
-
-				{/* Password Strength Meter */}
-				<PasswordStrengthMeter password={newPassword} />
-
-				{/* Confirm Password Input */}
-				{errors.passwordConfirm && (
-					<View>
-						<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
-					</View>
-				)}
-				<View
-					style={[
-						styles.passwordInputContainer,
-						{
-							borderBottomColor:
-								errors.passwordConfirm === undefined ? colorGrey : colorRed,
-						},
-					]}>
-					<TextInput
-						secureTextEntry={!showPasswordConfirm}
-						value={passwordConfirm}
-						onChangeText={setPasswordConfirm}
-						style={styles.input}
-						placeholder='Confirmer le Mot de Passe'
-						placeholderTextColor={colorBlack}
-					/>
-					<MaterialCommunityIcons
-						name={showPasswordConfirm ? "eye-off" : "eye"}
-						size={24}
-						color={colorBlack}
-						style={styles.eyeIcon}
-						onPress={() => toggleShowPassword("confirm")}
-					/>
-				</View>
-
-				{/* Password Requirements */}
-				<PasswordRequirements password={newPassword} />
-
-				{/* Submit Button */}
-				<Pressable style={styles.buttonSubmit} onPress={handleNext}>
-					<Text style={styles.buttonTextSubmit}>C'est parti</Text>
-				</Pressable>
-
-				{/* Return Button */}
-				<Pressable style={styles.buttonRevenir} onPress={() => setStep(1)}>
-					<Text style={styles.buttonTextRevenir}>Revenir</Text>
-				</Pressable>
-			</View>
-		</>
+			</KeyboardAvoidingView>
+		</TouchableWithoutFeedback>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
+	avoidingContainer: {
+		flex: 1, // KAV owns full height (no centering here)
+	},
+	formScroll: {
 		flex: 1,
+	},
+	formContainer: {
 		width: "100%",
-		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 10,
+	},
+	footer: {
+		paddingHorizontal: 10,
+		paddingTop: 24,
 		alignItems: "center",
 	},
 	passwordInputContainer: {
@@ -276,6 +314,7 @@ const styles = StyleSheet.create({
 		borderWidth: 0,
 		paddingBottom: 16,
 		borderBottomWidth: 2,
+		width: "100%",
 	},
 	optionsContainer: {
 		flexDirection: "row",
@@ -284,8 +323,8 @@ const styles = StyleSheet.create({
 		padding: 10,
 		marginBottom: 40,
 		backgroundColor: primaryBackground,
+		width: "100%",
 	},
-
 	optionButton: {
 		width: "48%",
 		paddingVertical: 12,
@@ -296,7 +335,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		backgroundColor: "#f9f9f9",
 	},
-
 	selectedOptionButton: {
 		backgroundColor: colorYellow,
 		borderColor: colorYellow,
@@ -319,7 +357,6 @@ const styles = StyleSheet.create({
 		marginLeft: 10,
 	},
 	buttonSubmit: {
-		marginTop: 70,
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,
@@ -337,6 +374,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 24,
 		paddingVertical: 8,
 		borderRadius: 50,
+		alignSelf: "center",
 	},
 	buttonTextRevenir: {
 		color: colorBlack,

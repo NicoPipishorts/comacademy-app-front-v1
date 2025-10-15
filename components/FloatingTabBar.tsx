@@ -18,11 +18,12 @@ import {
 type Props = {
 	activeTab: number;
 	setActiveTab: Dispatch<SetStateAction<number>>;
-	handlePress: (tabIndex: number) => void;
+	handlePress: (tabIndex: number) => boolean | number | void;
 	values: {
 		btn1: string;
 		btn2: string;
 	};
+	disabledTabs?: number[];
 };
 
 const FloatingTabBar = ({
@@ -30,6 +31,7 @@ const FloatingTabBar = ({
 	setActiveTab,
 	handlePress,
 	values,
+	disabledTabs = [],
 }: Props) => {
 	const translateX = useRef(new Animated.Value(0)).current;
 	const [btn1Width, setBtn1Width] = useState(0);
@@ -46,8 +48,22 @@ const FloatingTabBar = ({
 	}, [activeTab, btn1Width, btn2Width, translateX]);
 
 	const handleTabPress = (tabIndex: number) => {
+		if (disabledTabs.includes(tabIndex)) {
+			handlePress(tabIndex);
+			return;
+		}
+
+		const result = handlePress(tabIndex);
+		if (result === false) {
+			return;
+		}
+
+		if (typeof result === "number") {
+			setActiveTab(result);
+			return;
+		}
+
 		setActiveTab(tabIndex);
-		handlePress(tabIndex);
 	};
 
 	const onLayoutBtn1 = (event: any) => {
@@ -74,7 +90,11 @@ const FloatingTabBar = ({
 			/>
 			<View onLayout={onLayoutBtn1}>
 				<TouchableOpacity
-					style={styles.button}
+					style={[
+						styles.button,
+						disabledTabs.includes(0) && styles.buttonDisabled,
+					]}
+					disabled={disabledTabs.includes(0)}
 					onPress={() => handleTabPress(0)}>
 					<Text
 						style={activeTab === 0 ? styles.textActive : styles.textInactive}>
@@ -84,7 +104,11 @@ const FloatingTabBar = ({
 			</View>
 			<View onLayout={onLayoutBtn2}>
 				<TouchableOpacity
-					style={styles.button}
+					style={[
+						styles.button,
+						disabledTabs.includes(1) && styles.buttonDisabled,
+					]}
+					disabled={disabledTabs.includes(1)}
 					onPress={() => handleTabPress(1)}>
 					<Text
 						style={activeTab === 1 ? styles.textActive : styles.textInactive}>
@@ -118,6 +142,9 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		alignItems: "center",
 		zIndex: 2,
+	},
+	buttonDisabled: {
+		opacity: 0.4,
 	},
 	slider: {
 		position: "absolute",
