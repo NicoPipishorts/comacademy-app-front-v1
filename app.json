@@ -9,9 +9,9 @@
 		"userInterfaceStyle": "automatic",
 
 		"splash": {
-			"image": "./assets/imgs/icons/favicon.png",
+			"image": "./assets/imgs/splashScreen.png",
 			"resizeMode": "contain",
-			"backgroundColor": "#f5f5f5"
+			"backgroundColor": "#EDBE00"
 		},
 
 		"notification": {
@@ -31,16 +31,16 @@
 
 		"android": {
 			"adaptiveIcon": {
-				"backgroundColor": "#f5f5f5",
-				"foregroundImage": "./assets/imgs/icons/favicon.png"
+				"backgroundColor": "#EDBE00",
+				"foregroundImage": "./assets/imgs/splashScreen.png"
 			},
 
 			"softwareKeyboardLayoutMode": "resize",
 			"package": "com.nicopipishorts.comacademy",
 			"splash": {
-				"image": "./assets/imgs/icons/favicon.png",
+				"image": "./assets/imgs/splashScreen.png",
 				"resizeMode": "contain",
-				"backgroundColor": "#f5f5f5"
+				"backgroundColor": "#EDBE00"
 			},
 			"intentFilters": [
 				{

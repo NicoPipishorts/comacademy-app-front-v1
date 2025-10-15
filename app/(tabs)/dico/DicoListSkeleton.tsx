@@ -1,6 +1,6 @@
 import { colorGrey, searchbarBackground } from "@/constants/colors";
-import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, ScrollView, StyleSheet, View } from "react-native";
 
 type Props = {
 	lines?: number;
@@ -10,6 +10,31 @@ const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
 
 const DicoListSkeleton = ({ lines = 18 }: Props) => {
 	const placeholders = Array.from({ length: lines });
+	const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+	useEffect(() => {
+		const shimmer = Animated.loop(
+			Animated.sequence([
+				Animated.timing(shimmerAnim, {
+					toValue: 1,
+					duration: 1000,
+					useNativeDriver: true,
+				}),
+				Animated.timing(shimmerAnim, {
+					toValue: 0,
+					duration: 1000,
+					useNativeDriver: true,
+				}),
+			])
+		);
+		shimmer.start();
+		return () => shimmer.stop();
+	}, [shimmerAnim]);
+
+	const shimmerOpacity = shimmerAnim.interpolate({
+		inputRange: [0, 1],
+		outputRange: [0.5, 1],
+	});
 
 	return (
 		<>
@@ -19,18 +44,22 @@ const DicoListSkeleton = ({ lines = 18 }: Props) => {
 					contentContainerStyle={styles.listContainer}
 					showsVerticalScrollIndicator={false}>
 					{placeholders.map((_, index) => (
-						<View
+						<Animated.View
 							key={index}
 							style={[
 								styles.lineSkeleton,
 								index % 4 === 0 ? styles.shortLine : undefined,
+								{ opacity: shimmerOpacity },
 							]}
 						/>
 					))}
 				</ScrollView>
 				<View style={styles.sidebar}>
 					{alphabet.map((letter) => (
-						<View key={letter} style={styles.sidebarDot} />
+						<Animated.View
+							key={letter}
+							style={[styles.sidebarDot, { opacity: shimmerOpacity }]}
+						/>
 					))}
 				</View>
 			</View>

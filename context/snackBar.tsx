@@ -35,7 +35,7 @@ export const SnackbarProvider = ({ children }) => {
 			<Snackbar
 				visible={snackbarVisible}
 				onDismiss={hideSnackbar}
-				duration={3000}
+				duration={1000}
 				action={{
 					label: "Dismiss",
 					onPress: () => hideSnackbar(),

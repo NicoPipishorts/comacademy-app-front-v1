@@ -10,7 +10,6 @@ import { useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import CategoriesCards from "../../../components/categories/categories";
-import DicoListSkeleton from "./DicoListSkeleton";
 import DicoList from "./list";
 
 const Dico = () => {
@@ -38,18 +37,15 @@ const Dico = () => {
 		setActiveTab(index);
 	};
 
-	const showSkeletonList =
-		activeTab === 0 &&
-		(isLoadingData || isFetchingData) &&
-		(!dataDico || dataDico.data?.length === 0);
+	// Enforce minimum loading time to prevent glitchy skeleton flashes
+
 	const showLoader = activeTab === 1 && (!dataCat || isLoadingCat);
 
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Dico' />
 
-			{showSkeletonList && <DicoListSkeleton />}
-			{!showSkeletonList && dataDico && activeTab === 0 && (
+			{dataDico && activeTab === 0 && (
 				<DicoList
 					data={dataDico}
 					categories={dataCat}
