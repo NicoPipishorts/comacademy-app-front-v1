@@ -38,8 +38,7 @@ export default function FinishedSession() {
 		setGameStatus,
 		setQuestionsLeft,
 		setAnsweredCount,
-	} =
-		useGameContext();
+	} = useGameContext();
 
 	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
 
@@ -58,7 +57,7 @@ export default function FinishedSession() {
 
 			if (action === "end") {
 				showTabBar();
-				router.replace("/user");
+				router.replace("/leJeu");
 			} else if (action === "leaderBoard") {
 				showTabBar();
 				router.replace(`/user?openModal=leaderBoard&timestamp=${Date.now()}`);
