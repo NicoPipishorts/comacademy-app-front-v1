@@ -9,15 +9,27 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
 import { useGameContext } from "@/providers/gameDataContext";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
+import { useCallback } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { useFocusEffect } from "expo-router";
 
 export default function AnswersPostGame() {
 	const { sessionId: gameId } = useGameContext();
 
 	const { data: allAnswerData } = useGetEndOfSessionResults(gameId);
+
+	const { hideTabBar, showTabBar } = useTabBarVisibility();
+
+	useFocusEffect(
+		useCallback(() => {
+			hideTabBar();
+			return () => showTabBar();
+		}, [hideTabBar, showTabBar])
+	);
 
 	if (!allAnswerData) {
 		return <Loader />;
@@ -53,8 +65,8 @@ export default function AnswersPostGame() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
+		paddingTop: 40,
 		paddingHorizontal: 20,
-		paddingBottom: 40,
 		overflow: "visible",
 		backgroundColor: primaryBackground,
 	},

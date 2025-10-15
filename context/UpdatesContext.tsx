@@ -47,7 +47,7 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: "v1.3.0",
+	versionTag: "v1.2.3",
 	snackbarMessage:
 		"Nouvelle mise à jour disponible. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
