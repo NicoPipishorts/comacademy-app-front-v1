@@ -11,7 +11,6 @@ import { useGetMetiers } from "@/hooks/useGetMetiers";
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MetierListSkeleton from "./MetierListSkeleton";
 import MetierList from "./list";
 
 const Metier = () => {
@@ -28,10 +27,8 @@ const Metier = () => {
 		isFetching: isFetchingMetier,
 	} = useGetMetiers(filterByCat);
 	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
-	const {
-		data: dataFavoritesMetier,
-		isLoading: isLoadingFavorites,
-	} = useGetFavoriteMetiers(auth?.user.id);
+	const { data: dataFavoritesMetier, isLoading: isLoadingFavorites } =
+		useGetFavoriteMetiers(auth?.user.id);
 
 	const toggleTab = (index: number) => {
 		setActiveTab(index);
@@ -39,20 +36,14 @@ const Metier = () => {
 
 	const requiresFavorites = !!auth?.user?.id;
 	const favoritesReady = !requiresFavorites || !!dataFavoritesMetier;
-	const favoritesLoading = requiresFavorites && isLoadingFavorites && !dataFavoritesMetier;
+	const favoritesLoading =
+		requiresFavorites && isLoadingFavorites && !dataFavoritesMetier;
 
 	const listDepsReady = !!dataMetier && !!dataCategory && favoritesReady;
 
-	const showSkeletonList =
-		activeTab === 0 &&
-		!listDepsReady &&
-		(isLoadingMetier || isFetchingMetier);
+	// Enforce minimum loading time to prevent glitchy skeleton flashes
 
-	const showListLoader =
-		activeTab === 0 &&
-		!listDepsReady &&
-		!showSkeletonList &&
-		!favoritesLoading;
+	const showListLoader = activeTab === 0 && !listDepsReady && !favoritesLoading;
 
 	const canShowList = activeTab === 0 && listDepsReady;
 	const canShowCategories = activeTab === 1 && !!dataCategory;
@@ -61,16 +52,13 @@ const Metier = () => {
 		activeTab === 1 && (!dataCategory || isLoadingCats);
 
 	const showFavoritesLoader =
-		activeTab === 0 &&
-		!showSkeletonList &&
-		!listDepsReady &&
-		favoritesLoading;
+		activeTab === 0 && !listDepsReady && favoritesLoading;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
 
-			{showSkeletonList && <MetierListSkeleton />}
+			{/* {showSkeletonList && <MetierListSkeleton />} */}
 
 			{canShowList && (
 				<MetierList

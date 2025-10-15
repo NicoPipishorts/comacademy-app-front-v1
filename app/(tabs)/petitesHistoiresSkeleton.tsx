@@ -1,11 +1,12 @@
-import React from "react";
+import { colorGrey } from "@/constants/colors";
+import React, { useEffect, useRef } from "react";
 import {
+	Animated,
 	Dimensions,
 	ScrollView,
 	StyleSheet,
 	View,
 } from "react-native";
-import { colorGrey } from "@/constants/colors";
 
 type Props = {
 	paddingTop?: number;
@@ -17,23 +18,45 @@ const PetitesHistoiresSkeleton = ({ paddingTop = 0 }: Props) => {
 	const cardHeight = Math.floor((cardWidth / 9) * 16);
 
 	const placeholders = Array.from({ length: 4 });
+	const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+	useEffect(() => {
+		const shimmer = Animated.loop(
+			Animated.sequence([
+				Animated.timing(shimmerAnim, {
+					toValue: 1,
+					duration: 500,
+					useNativeDriver: true,
+				}),
+				Animated.timing(shimmerAnim, {
+					toValue: 0,
+					duration: 500,
+					useNativeDriver: true,
+				}),
+			])
+		);
+		shimmer.start();
+		return () => shimmer.stop();
+	}, [shimmerAnim]);
+
+	const shimmerOpacity = shimmerAnim.interpolate({
+		inputRange: [0, 1],
+		outputRange: [0.3, 1],
+	});
 
 	return (
 		<View style={[styles.wrapper, { paddingTop }]}>
-			<View style={styles.headerPadding}>
-				<View style={styles.headerSkeleton} />
-			</View>
 			<ScrollView
 				horizontal
 				showsHorizontalScrollIndicator={false}
 				contentContainerStyle={styles.contentPadding}
 				style={styles.list}>
 				{placeholders.map((_, index) => (
-					<View
+					<Animated.View
 						key={index}
 						style={[
 							styles.cardSkeleton,
-							{ width: cardWidth, height: cardHeight },
+							{ width: cardWidth, height: cardHeight, opacity: shimmerOpacity },
 						]}
 					/>
 				))}
@@ -45,11 +68,9 @@ const PetitesHistoiresSkeleton = ({ paddingTop = 0 }: Props) => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		backgroundColor: "#f0f0f0",
+		backgroundColor: "#F5F5F5",
 	},
-	headerPadding: {
-		paddingHorizontal: 30,
-	},
+
 	headerSkeleton: {
 		width: 220,
 		height: 32,

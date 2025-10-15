@@ -1,4 +1,3 @@
-// File: src/screens/LesPetitesHistoires.tsx
 import {
 	useFocusEffect,
 	useIsFocused,
@@ -19,6 +18,7 @@ import {
 	Text,
 	TouchableOpacity,
 	View,
+	ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -31,6 +31,7 @@ import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
@@ -52,20 +53,88 @@ const LesPetitesHistoires: React.FC = () => {
 	const isScreenFocused = useIsFocused();
 	const navigation = useNavigation();
 
-	// Dimensions for videos
 	const { width } = Dimensions.get("window");
 	const videoWidth = Math.floor(width * 0.8);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
-	// Refs for videos, positions, fade animations
 	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
+	const autoPausedRef = useRef<Set<number>>(new Set());
+	const playingIndicesRef = useRef<Set<number>>(new Set());
 
-	// Local state
 	const [focusedIndex, setFocusedIndex] = useState(0);
-	const [isFirstRender, setIsFirstRender] = useState(true);
+
+	const pauseVideoAtIndex = useCallback(
+		async (
+			index: number,
+			{ markAutoPaused = false }: { markAutoPaused?: boolean } = {}
+		) => {
+			const ref = videoRefs.current[index];
+			if (!ref) return;
+			try {
+				const status = await ref.getStatusAsync();
+				if (!status.isLoaded) return;
+
+				const position =
+					typeof status.positionMillis === "number"
+						? status.positionMillis
+						: videoPositions.current[index] ?? 0;
+				videoPositions.current[index] = position;
+
+				if (status.isPlaying) {
+					await ref.pauseAsync();
+					playingIndicesRef.current.delete(index);
+					if (markAutoPaused) autoPausedRef.current.add(index);
+					else autoPausedRef.current.delete(index);
+				} else if (!markAutoPaused) {
+					autoPausedRef.current.delete(index);
+					playingIndicesRef.current.delete(index);
+				}
+			} catch {
+				// ignore
+			}
+		},
+		[]
+	);
+
+	const resumeVideoAtIndex = useCallback(async (index: number) => {
+		const playing = playingIndicesRef.current;
+		if (playing.size > 0 && !(playing.size === 1 && playing.has(index))) return;
+		if (!autoPausedRef.current.has(index)) return;
+
+		const ref = videoRefs.current[index];
+		if (!ref) {
+			autoPausedRef.current.delete(index);
+			return;
+		}
+
+		try {
+			const status = await ref.getStatusAsync();
+			if (!status.isLoaded) return;
+
+			const targetPosition =
+				videoPositions.current[index] ??
+				(typeof status.positionMillis === "number" ? status.positionMillis : 0);
+
+			if (
+				typeof status.positionMillis !== "number" ||
+				Math.abs(status.positionMillis - targetPosition) > 100
+			) {
+				await ref.setPositionAsync(targetPosition, { toleranceMillis: 100 });
+			}
+
+			if (!status.isPlaying) {
+				await ref.playAsync();
+				playingIndicesRef.current.add(index);
+			}
+		} catch {
+			// ignore
+		} finally {
+			autoPausedRef.current.delete(index);
+		}
+	}, []);
 
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
@@ -73,26 +142,30 @@ const LesPetitesHistoires: React.FC = () => {
 		setFocusedIndex
 	);
 
-	// Pause all videos helper
-	const pauseAllVideos = useCallback(async () => {
-		const refs = Object.values(videoRefs.current);
-		await Promise.all(
-			refs.map(async (ref) => {
-				if (ref) {
-					try {
-						const status = await ref.getStatusAsync();
-						if (status.isLoaded && status.isPlaying) {
-							await ref.pauseAsync();
-						}
-					} catch {
-						// ignore
-					}
+	const onStatusUpdate = useCallback(
+		(status: any, index: number) => {
+			try {
+				if (status?.isLoaded && status?.isPlaying) {
+					playingIndicesRef.current.add(index);
+				} else {
+					playingIndicesRef.current.delete(index);
 				}
-			})
-		);
-	}, []);
+			} catch {
+			} finally {
+				handlePlaybackStatus(status, index);
+			}
+		},
+		[handlePlaybackStatus]
+	);
 
-	// Pause whenever screen loses focus or unmounts (navigation blur)
+	const pauseAllVideos = useCallback(async () => {
+		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		await Promise.all(
+			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false }))
+		);
+		playingIndicesRef.current.clear();
+	}, [pauseVideoAtIndex]);
+
 	useFocusEffect(
 		useCallback(() => {
 			return () => {
@@ -101,37 +174,58 @@ const LesPetitesHistoires: React.FC = () => {
 		}, [pauseAllVideos])
 	);
 
-	// EXTRA: also pause on tab blur explicitly
 	useEffect(() => {
-		const unsub = navigation.addListener("blur", () => {
+		const unsub = (navigation as any).addListener("blur", () => {
 			pauseAllVideos();
 		});
 		return unsub;
 	}, [navigation, pauseAllVideos]);
 
-	// EXTRA: pause when focus flag flips to false (some routers keep screen mounted)
 	useEffect(() => {
-		if (!isScreenFocused) {
-			pauseAllVideos();
-		}
+		if (!isScreenFocused) pauseAllVideos();
 	}, [isScreenFocused, pauseAllVideos]);
 
-	// When the visible item changes, pause the old and play the new
-	const onViewableItemsChanged = useCallback(
-		async ({ viewableItems }: { viewableItems: { index?: number }[] }) => {
-			const newIndex = viewableItems[0]?.index;
-			if (newIndex !== undefined && newIndex !== focusedIndexRef.current) {
-				const prevIndex = focusedIndexRef.current;
-				const prevRef = videoRefs.current[prevIndex];
-				if (prevRef) {
-					const status = await prevRef.getStatusAsync();
-					if (status.isLoaded) {
-						videoPositions.current[prevIndex] = status.positionMillis;
-						await prevRef.pauseAsync();
-					}
-				}
+	useEffect(() => {
+		const pauseUnfocused = async () => {
+			const promises = Object.keys(videoRefs.current).map((k) => {
+				const i = Number(k);
+				if (i === focusedIndex) return Promise.resolve();
+				return pauseVideoAtIndex(i, { markAutoPaused: false });
+			});
+			await Promise.all(promises);
+		};
+		pauseUnfocused();
+	}, [focusedIndex, pauseVideoAtIndex]);
 
-				const prevAnim = fadeAnim[prevIndex];
+	const onViewableItemsChanged = useCallback(
+		({
+			viewableItems,
+			changed,
+		}: {
+			viewableItems: ViewToken[];
+			changed: ViewToken[];
+		}) => {
+			changed?.forEach((token) => {
+				if (token.index == null) return;
+				if (token.isViewable) {
+					void resumeVideoAtIndex(token.index);
+				} else {
+					void pauseVideoAtIndex(token.index, { markAutoPaused: true });
+				}
+			});
+
+			const primary = viewableItems
+				.filter((t) => t.isViewable && t.index != null)
+				.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))[0];
+
+			if (
+				primary &&
+				primary.index !== undefined &&
+				primary.index !== focusedIndexRef.current
+			) {
+				const newIndex = primary.index;
+
+				const prevAnim = fadeAnim[focusedIndexRef.current];
 				if (prevAnim) {
 					Animated.timing(prevAnim, {
 						toValue: 1,
@@ -142,94 +236,79 @@ const LesPetitesHistoires: React.FC = () => {
 
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
-				setIsFirstRender(false);
-
-				// Check if new index is locked
-				const isNewIndexLocked = isFreeUser && newIndex >= 5;
 
 				if (!fadeAnim[newIndex]) {
 					fadeAnim[newIndex] = new Animated.Value(1);
-				}
-
-				// Only fade out and play if not locked
-				if (!isNewIndexLocked) {
-					Animated.timing(fadeAnim[newIndex], {
-						toValue: 0,
-						duration: 400,
-						useNativeDriver: true,
-					}).start();
-
-					const newRef = videoRefs.current[newIndex];
-					if (newRef) {
-						const resumePosition = videoPositions.current[newIndex] || 0;
-						await newRef.setPositionAsync(resumePosition, {
-							toleranceMillis: 50,
-						});
-						await newRef.playAsync();
-					}
+				} else {
+					fadeAnim[newIndex].setValue(1);
 				}
 			}
 		},
-		[fadeAnim, setFocusedIndex, isFreeUser]
+		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim]
 	);
 
 	const viewabilityConfig = useMemo(
-		() => ({ itemVisiblePercentThreshold: 70 }),
+		() => ({
+			itemVisiblePercentThreshold: 90,
+			minimumViewTime: 100,
+		}),
 		[]
 	);
 
+	const handleScrollBegin = useCallback(() => {
+		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		indices.forEach((i) => void pauseVideoAtIndex(i, { markAutoPaused: true }));
+	}, [pauseVideoAtIndex]);
+
 	const stories = useMemo(() => data?.data ?? [], [data]);
 
-	const showSkeleton =
+	const handleFocusPress = useCallback(
+		(index: number) => {
+			focusedIndexRef.current = index;
+			setFocusedIndex(index);
+			videoRefs.current[index]?.playAsync();
+
+			void resumeVideoAtIndex(index);
+		},
+		[resumeVideoAtIndex]
+	);
+
+	const isActuallyLoading =
 		(!data || stories.length === 0) && (isLoading || isFetching);
 
-	// OPTIONAL (parity with TrenteSecondes): autoplay first item on mount; pause on hard unmount
+	const showSkeleton = useMinimumLoadingTime({
+		isLoading: isActuallyLoading,
+		minimumLoadingTime: 1000,
+	});
+
 	useEffect(() => {
 		if (isLoading) return;
 		if (!stories.length) return;
 
 		const initialIndex = 0;
-		const locked = isFreeUser && initialIndex >= 5;
-
 		focusedIndexRef.current = initialIndex;
 		setFocusedIndex(initialIndex);
-		setIsFirstRender(false);
 
 		if (!fadeAnim[initialIndex]) {
-			fadeAnim[initialIndex] = new Animated.Value(0);
+			fadeAnim[initialIndex] = new Animated.Value(1);
 		} else {
-			fadeAnim[initialIndex].setValue(0);
-		}
-
-		if (!locked) {
-			const tryPlay = () => {
-				const ref = videoRefs.current[initialIndex];
-				if (ref) {
-					ref.playAsync().catch(() => {});
-				} else {
-					requestAnimationFrame(tryPlay);
-				}
-			};
-			tryPlay();
+			fadeAnim[initialIndex].setValue(1);
 		}
 
 		return () => {
 			pauseAllVideos();
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isLoading, isFreeUser, stories.length, pauseAllVideos]);
+	}, [isLoading, stories.length, pauseAllVideos]);
 
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
 			const videoUri = item.attributes.videoUri;
 			const isFocused = focusedIndex === index;
 			const isLocked = isFreeUser && index >= 5;
-			const shouldPlayVideo = isScreenFocused && isFocused && !isLocked;
 
 			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(
-					isFirstRender && index === 0 ? 0 : 1
-				);
+				fadeAnim[index] = new Animated.Value(1);
 			}
 
 			return (
@@ -248,12 +327,12 @@ const LesPetitesHistoires: React.FC = () => {
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							shouldPlay={shouldPlayVideo}
+							shouldPlay={false}
 							positionMillis={videoPositions.current[index] || 0}
 							useNativeControls={!isLocked}
-							onPlaybackStatusUpdate={(status) =>
-								handlePlaybackStatus(status, index)
-							}
+							resizeMode='cover'
+							onPlaybackStatusUpdate={(status) => onStatusUpdate(status, index)}
+							isScreenFocused={isScreenFocused && isFocused}
 						/>
 
 						{!isFocused && (
@@ -270,7 +349,7 @@ const LesPetitesHistoires: React.FC = () => {
 								/>
 								<TouchableOpacity
 									activeOpacity={0.8}
-									onPress={() => setFocusedIndex(index)}
+									onPress={() => handleFocusPress(index)}
 									style={styles.playButtonContainer}>
 									<Text style={styles.playIcon}>▶</Text>
 								</TouchableOpacity>
@@ -288,28 +367,15 @@ const LesPetitesHistoires: React.FC = () => {
 		},
 		[
 			fadeAnim,
-			handlePlaybackStatus,
-			isFirstRender,
+			onStatusUpdate,
 			focusedIndex,
 			videoHeight,
 			videoWidth,
 			isFreeUser,
 			handleLockedItemPress,
-			isScreenFocused,
+			handleFocusPress,
 		]
 	);
-
-	if (showSkeleton) {
-		return <PetitesHistoiresSkeleton paddingTop={insets.top} />;
-	}
-
-	if (!data) {
-		return (
-			<View style={styles.noDataContainer}>
-				<Text>No data available</Text>
-			</View>
-		);
-	}
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -317,48 +383,45 @@ const LesPetitesHistoires: React.FC = () => {
 				<ScreenHeaders content='La petite histoire' />
 			</View>
 
-			<UpgradeSubscriptionModal
-				visible={showUpgradeModal}
-				onClose={closeUpgradeModal}
-			/>
+			{showSkeleton && <PetitesHistoiresSkeleton />}
 
-			<Animated.FlatList
-				style={styles.list}
-				data={stories}
-				key={routeKey}
-				keyExtractor={(item) => `${routeKey}-${item.id}`}
-				renderItem={renderItem}
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={styles.contentPadding}
-				onViewableItemsChanged={onViewableItemsChanged}
-				viewabilityConfig={viewabilityConfig}
-				scrollEventThrottle={16}
-			/>
+			{!showSkeleton && data && (
+				<>
+					<UpgradeSubscriptionModal
+						visible={showUpgradeModal}
+						onClose={closeUpgradeModal}
+					/>
+
+					<Animated.FlatList
+						style={styles.list}
+						data={stories}
+						key={routeKey}
+						keyExtractor={(item) => `${routeKey}-${item.id}`}
+						renderItem={renderItem}
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						contentContainerStyle={styles.contentPadding}
+						onViewableItemsChanged={onViewableItemsChanged}
+						viewabilityConfig={viewabilityConfig}
+						onScrollBeginDrag={handleScrollBegin}
+						onMomentumScrollBegin={handleScrollBegin}
+						snapToInterval={videoWidth + 34}
+						snapToAlignment='start'
+						decelerationRate='fast'
+						pagingEnabled={false}
+					/>
+				</>
+			)}
 		</View>
 	);
 };
 
 const styles = StyleSheet.create({
-	wrapper: {
-		flex: 1,
-		backgroundColor: "#f0f0f0",
-	},
-	headerPadding: {
-		paddingHorizontal: 30,
-	},
-	list: {
-		marginTop: 30,
-		paddingHorizontal: 30,
-	},
-	contentPadding: {
-		paddingRight: 25,
-	},
-	noDataContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
+	wrapper: { flex: 1, backgroundColor: "#F5F5F5" },
+	headerPadding: { paddingHorizontal: 30 },
+	list: { marginTop: 30, paddingHorizontal: 30 },
+	contentPadding: { paddingRight: 25 },
+	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 	cardWrapper: {
 		marginLeft: 10,
 		marginRight: 24,
@@ -366,24 +429,14 @@ const styles = StyleSheet.create({
 		overflow: "hidden",
 		backgroundColor: "#000",
 	},
-	videoContainer: {
-		position: "relative",
-		width: "100%",
-		height: "100%",
-	},
-	video: {
-		width: "100%",
-		height: "100%",
-	},
+	videoContainer: { position: "relative", width: "100%", height: "100%" },
+	video: { width: "100%", height: "100%" },
 	overlayContainer: {
 		justifyContent: "center",
 		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0, 0.5)",
 	},
-	thumbnail: {
-		width: "100%",
-		height: "100%",
-	},
+	thumbnail: { width: "100%", height: "100%" },
 	playButtonContainer: {
 		position: "absolute",
 		backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -393,10 +446,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 	},
-	playIcon: {
-		color: "#FFF",
-		fontSize: 30,
-	},
+	playIcon: { color: "#FFF", fontSize: 30 },
 });
 
 export default LesPetitesHistoires;

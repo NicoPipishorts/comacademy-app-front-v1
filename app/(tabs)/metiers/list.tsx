@@ -178,13 +178,16 @@ const MetierList = ({
 		navigation.navigate("metierDetails", { id });
 	};
 
-	if (!data) return null;
+	if (!data || isLoading) {
+		return <MetierListSkeleton lines={25} />;
+	}
+
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
 				<Searchbar
 					placeholder='Rechercher'
-					onChangeText={handleSearch} // Pass the handleSearch function to the Searchbar
+					onChangeText={handleSearch}
 				/>
 			</View>
 
@@ -193,10 +196,6 @@ const MetierList = ({
 				onClose={closeUpgradeModal}
 				message='Un métier de chaque lettre est gratuit. Passez à un abonnement premium pour accéder à tous les métiers.'
 			/>
-
-			{!isLoading && filteredData.length <= 0 && (
-				<MetierListSkeleton lines={25} />
-			)}
 
 			<View style={styles.contentContainer}>
 				<ScrollView
@@ -213,49 +212,55 @@ const MetierList = ({
 						/>
 					)}
 
-					{/* If search query is active, render filtered data, else render grouped data */}
-					{searchQuery
-						? filteredData.map((item, index) => {
+					{searchQuery ? (
+						filteredData.length > 0 ? (
+							filteredData.map((item, index) => {
 								const locked = isMetierLocked(index);
 								return (
 									<TouchableOpacity
 										key={index}
 										onPress={() => handlePress(item.id, index)}>
-										<Text
-											style={[styles.listItem, locked && styles.lockedItem]}>
+										<Text style={[styles.listItem, locked && styles.lockedItem]}>
 											{item.METIER}
 										</Text>
 									</TouchableOpacity>
 								);
-						  })
-						: alphabet.map((letter) => (
-								<View
-									key={letter}
-									ref={(el) => {
-										sectionRefs[letter] = el;
-									}}>
-									<Text style={styles.listHeader}>{letter}</Text>
-									{groupedData[letter]?.map((item, indexInGroup) => {
-										const locked = isMetierLocked(indexInGroup);
-										return (
-											<TouchableOpacity
-												key={indexInGroup}
-												onPress={() => handlePress(item.id, indexInGroup)}>
-												<Text
-													style={[
-														styles.listItem,
-														locked && styles.lockedItem,
-													]}>
-													{item.METIER}
-												</Text>
-											</TouchableOpacity>
-										);
-									})}
-								</View>
-						  ))}
+							})
+						) : (
+							<View style={styles.noDataContainer}>
+								<Text style={styles.noDataText}>Aucun métier trouvé.</Text>
+							</View>
+						)
+					) : (
+						alphabet.map((letter) => (
+							<View
+								key={letter}
+								ref={(el) => {
+									sectionRefs[letter] = el;
+								}}>
+								<Text style={styles.listHeader}>{letter}</Text>
+								{groupedData[letter]?.map((item, indexInGroup) => {
+									const locked = isMetierLocked(indexInGroup);
+									return (
+										<TouchableOpacity
+											key={indexInGroup}
+											onPress={() => handlePress(item.id, indexInGroup)}>
+											<Text
+												style={[
+													styles.listItem,
+													locked && styles.lockedItem,
+												]}>
+												{item.METIER}
+											</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+						))
+					)}
 				</ScrollView>
 
-				{!searchQuery && (
+				{!searchQuery && filteredData.length > 0 && (
 					<View style={styles.sidebar}>
 						{alphabet.map((letter, index) => (
 							<TouchableOpacity

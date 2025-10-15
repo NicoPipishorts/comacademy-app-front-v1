@@ -1,7 +1,7 @@
 import { localNotifications } from "@/data/localNotifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
-import { useEffect } from "react";
+import { JSX, useEffect } from "react";
 import { Platform } from "react-native";
 
 const LAST_NOTIFICATION_SCHEDULE_KEY = "lastNotificationSchedule";
@@ -46,11 +46,9 @@ const ensureAndroidChannel = async () => {
 const scheduleWeeklyNotifications = async () => {
 	const needsReschedule = await shouldRescheduleNotifications();
 	if (!needsReschedule) {
-		console.log("Notifications already scheduled, skipping...");
 		return;
 	}
 
-	console.log("Scheduling weekly notifications...");
 	await ensureAndroidChannel();
 	await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -108,7 +106,6 @@ const scheduleWeeklyNotifications = async () => {
 		LAST_NOTIFICATION_SCHEDULE_KEY,
 		new Date().toISOString()
 	);
-	console.log("Notifications scheduled successfully");
 };
 
 // Foreground behavior

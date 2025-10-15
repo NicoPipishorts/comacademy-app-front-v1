@@ -1,4 +1,12 @@
 import { useEvent } from "expo";
+import { setAudioModeAsync } from "expo-audio";
+import {
+	VideoContentFit,
+	VideoPlayer,
+	VideoSource,
+	VideoView,
+	useVideoPlayer,
+} from "expo-video";
 import {
 	forwardRef,
 	useCallback,
@@ -8,13 +16,6 @@ import {
 	useRef,
 } from "react";
 import { StyleProp, ViewStyle } from "react-native";
-import {
-	VideoContentFit,
-	VideoPlayer,
-	VideoSource,
-	VideoView,
-	useVideoPlayer,
-} from "expo-video";
 
 type LoadEventPayload = {
 	naturalSize: {
@@ -54,6 +55,10 @@ type Props = {
 	onPlaybackStatusUpdate?: (status: CompatVideoStatus) => void;
 	onLoadStart?: () => void;
 	onReadyForDisplay?: (event: LoadEventPayload) => void;
+	/** Configure a shared audio session suitable for video playback. */
+	useAudioSession?: boolean;
+	/** Pause video when screen is not focused */
+	isScreenFocused?: boolean;
 };
 
 const defaultStatus: CompatVideoStatus = {
@@ -77,16 +82,40 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		onPlaybackStatusUpdate,
 		onLoadStart,
 		onReadyForDisplay,
+		useAudioSession = true,
+		isScreenFocused = true,
 	} = props;
 
 	const statusRef = useRef<CompatVideoStatus>({ ...defaultStatus });
-	const videoTrackSizeRef = useRef<{ width: number; height: number } | null>(null);
+	const videoTrackSizeRef = useRef<{ width: number; height: number } | null>(
+		null
+	);
 
 	const player = useVideoPlayer(source, (instance) => {
 		instance.loop = isLooping;
 		instance.muted = isMuted;
 		instance.timeUpdateEventInterval = 0.5;
 	});
+
+	useEffect(() => {
+		if (!useAudioSession) {
+			return;
+		}
+		void (async () => {
+			try {
+				await setAudioModeAsync({
+					playsInSilentMode: true,
+					allowsRecording: false,
+					shouldPlayInBackground: false,
+					shouldRouteThroughEarpiece: false,
+					interruptionMode: "doNotMix",
+					interruptionModeAndroid: "doNotMix",
+				});
+			} catch {
+				// ignore session configuration issues
+			}
+		})();
+	}, [useAudioSession]);
 
 	const emitStatus = useCallback(
 		(update: Partial<CompatVideoStatus>) => {
@@ -134,14 +163,24 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	}, [player]);
 
 	useEffect(() => {
-		if (shouldPlay) {
+		if (shouldPlay && isScreenFocused) {
 			player.play();
-		} else {
+		} else if (!isScreenFocused) {
+			player.pause();
+			emitStatus({ isPlaying: false });
+		} else if (shouldPlay === false) {
 			player.pause();
 			emitStatus({ isPlaying: false });
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [player, shouldPlay]);
+	}, [player, shouldPlay, isScreenFocused, emitStatus]);
+
+	// Separate effect to handle screen focus changes and pause immediately
+	useEffect(() => {
+		if (!isScreenFocused && player.playing) {
+			player.pause();
+			emitStatus({ isPlaying: false });
+		}
+	}, [isScreenFocused, player, emitStatus]);
 
 	useEffect(() => {
 		if (typeof positionMillis !== "number") return;
@@ -214,30 +253,47 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		});
 	});
 
-	useEvent(player, "videoTrackChange", (payload) => {
-		if (!payload) {
-			return;
-		}
-		const { videoTrack } = payload;
-		if (videoTrack) {
-			videoTrackSizeRef.current = {
-				width: videoTrack.size.width,
-				height: videoTrack.size.height,
-			};
-			if (statusRef.current.isLoaded && onReadyForDisplay) {
-				onReadyForDisplay({
-					naturalSize: {
-						width: videoTrack.size.width,
-						height: videoTrack.size.height,
-						orientation:
-							videoTrack.size.width >= videoTrack.size.height
-								? "landscape"
-								: "portrait",
-					},
-				});
+	interface VideoTrackSize {
+		width: number;
+		height: number;
+	}
+
+	interface VideoTrack {
+		size: VideoTrackSize;
+	}
+
+	interface VideoTrackChangePayload {
+		videoTrack?: VideoTrack;
+	}
+
+	useEvent(
+		player,
+		"videoTrackChange",
+		(payload: VideoTrackChangePayload | undefined) => {
+			if (!payload) {
+				return;
+			}
+			const { videoTrack } = payload;
+			if (videoTrack) {
+				videoTrackSizeRef.current = {
+					width: videoTrack.size.width,
+					height: videoTrack.size.height,
+				};
+				if (statusRef.current.isLoaded && onReadyForDisplay) {
+					onReadyForDisplay({
+						naturalSize: {
+							width: videoTrack.size.width,
+							height: videoTrack.size.height,
+							orientation:
+								videoTrack.size.width >= videoTrack.size.height
+									? "landscape"
+									: "portrait",
+						},
+					});
+				}
 			}
 		}
-	});
+	);
 
 	useImperativeHandle(
 		ref,

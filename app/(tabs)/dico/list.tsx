@@ -167,7 +167,11 @@ const DicoList = ({
 		navigation.navigate("dicoDetails", { id });
 	};
 
-	if (!data) return null;
+	const showSkeletonList = isLoading;
+
+	if (!data || showSkeletonList) {
+		return <DicoListSkeleton lines={25} />;
+	}
 
 	return (
 		<>
@@ -196,9 +200,6 @@ const DicoList = ({
 						/>
 					)}
 					{/* If search query is active, render filtered data, else render grouped data */}
-					{!isLoading && filteredData.length <= 0 && (
-						<DicoListSkeleton lines={25} />
-					)}
 					{searchQuery
 						? filteredData.map((item, index) => {
 								const locked = isItemLocked(index);
@@ -237,9 +238,14 @@ const DicoList = ({
 									</View>
 								));
 						  })()}
+					{searchQuery && filteredData.length === 0 && (
+						<View style={styles.noDataContainer}>
+							<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>
+						</View>
+					)}
 				</ScrollView>
 
-				{!searchQuery && filteredData.length > 0 && (
+				{!showSkeletonList && !searchQuery && filteredData.length > 0 && (
 					<View style={styles.sidebar}>
 						{alphabet.map((letter) => (
 							<TouchableOpacity

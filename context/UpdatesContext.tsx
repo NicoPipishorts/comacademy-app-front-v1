@@ -1,7 +1,12 @@
 import BlurBackdrop from "@/components/experience/backdropComponent";
 import ModalGestureLine from "@/components/experience/modalGestureLine";
+import {
+	colorBlack,
+	colorWhite,
+	colorYellow,
+	primaryBackground,
+} from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
-import { colorBlack, colorWhite, colorYellow, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
@@ -27,8 +32,8 @@ import {
 	Text,
 	View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Portal } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type StaticUpdateCopy = {
 	versionTag: string;
@@ -43,7 +48,8 @@ type StaticUpdateCopy = {
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
 	versionTag: "v1.3.0",
-	snackbarMessage: "Nouvelle mise à jour disponible. Touchez pour voir ce qui change.",
+	snackbarMessage:
+		"Nouvelle mise à jour disponible. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
@@ -66,11 +72,8 @@ type UpdatesContextValue = {
 };
 
 const UpdatesContext = createContext<UpdatesContextValue>({
-	 
 	checkForUpdates: async () => {},
-	 
 	openUpdateDetails: () => {},
-	 
 	dismissUpdateNotice: () => {},
 	hasPendingUpdate: false,
 	isChecking: false,
@@ -169,20 +172,12 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 				}
 			} catch (error) {
 				console.error("Failed to check for OTA updates", error);
-				showSnackbar(
-					"Mise à jour indisponible pour le moment.",
-					"error"
-				);
+				showSnackbar("Mise à jour indisponible pour le moment.", "error");
 			} finally {
 				setManualCheckInFlight(false);
 			}
 		},
-		[
-			isChecking,
-			isDownloading,
-			manualCheckInFlight,
-			showSnackbar,
-		]
+		[isChecking, isDownloading, manualCheckInFlight, showSnackbar]
 	);
 
 	useEffect(() => {
@@ -247,24 +242,23 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 			await Updates.reloadAsync();
 		} catch (error) {
 			console.error("Failed to reload update", error);
-			showSnackbar(
-				"Le redémarrage pour la mise à jour a échoué.",
-				"error"
-			);
+			showSnackbar("Le redémarrage pour la mise à jour a échoué.", "error");
 			setSnackbarVisible(true);
 		}
 	}, [showSnackbar]);
 
 	const releaseNotes = useMemo(() => {
-		if (latestUpdate) {
-			return extractReleaseNotes(latestUpdate);
-		}
-		return UPDATE_COPY.notes.join("\n\n");
+		const manifestNotes = latestUpdate
+			? extractReleaseNotes(latestUpdate)
+			: undefined;
+		return manifestNotes ?? UPDATE_COPY.notes.join("\n\n");
 	}, [latestUpdate]);
 
 	const sheetSubtitle = useMemo(() => {
 		if (latestUpdate?.createdAt) {
-			return `Publiée le ${latestUpdate.createdAt.toLocaleString()} · ${UPDATE_COPY.versionTag}`;
+			return `Publiée le ${latestUpdate.createdAt.toLocaleString()} · ${
+				UPDATE_COPY.versionTag
+			}`;
 		}
 		return `${UPDATE_COPY.subtitle} · ${UPDATE_COPY.versionTag}`;
 	}, [latestUpdate]);
@@ -320,36 +314,42 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 				)}
 			</Portal>
 
-				<BottomSheetModal
-					ref={bottomSheetRef}
-					index={0}
-					snapPoints={["55%"]}
-					backdropComponent={(props) => <BlurBackdrop {...props} />}
-					backgroundStyle={styles.sheetBackground}
-					handleIndicatorStyle={styles.hiddenIndicator}
-					enablePanDownToClose
-					onDismiss={handleBottomSheetDismiss}>
-					<BottomSheetView style={styles.sheetContent}>
-						<ModalGestureLine />
-						<View style={styles.sheetInner}>
-								<Text style={styles.sheetTitle}>{UPDATE_COPY.title}</Text>
-								<Text style={styles.sheetSubtitle}>{sheetSubtitle}</Text>
-							<View style={styles.releaseNotesWrapper}>
-								<Text style={styles.releaseNotes}>{releaseNotes}</Text>
-							</View>
-							<View style={styles.actions}>
-								<Pressable onPress={handleApplyUpdate} style={[buttonBlack, styles.primaryButton]}>
-									<Text style={styles.primaryButtonText}>{UPDATE_COPY.primaryCtaLabel}</Text>
-								</Pressable>
-								<Pressable
-									onPress={() => bottomSheetRef.current?.dismiss()}
-									style={styles.secondaryAction}>
-									<Text style={styles.secondaryActionText}>{UPDATE_COPY.secondaryCtaLabel}</Text>
-								</Pressable>
-							</View>
+			<BottomSheetModal
+				ref={bottomSheetRef}
+				index={0}
+				snapPoints={["55%"]}
+				backdropComponent={(props) => <BlurBackdrop {...props} />}
+				backgroundStyle={styles.sheetBackground}
+				handleIndicatorStyle={styles.hiddenIndicator}
+				enablePanDownToClose
+				onDismiss={handleBottomSheetDismiss}>
+				<BottomSheetView style={styles.sheetContent}>
+					<ModalGestureLine />
+					<View style={styles.sheetInner}>
+						<Text style={styles.sheetTitle}>{UPDATE_COPY.title}</Text>
+						<Text style={styles.sheetSubtitle}>{sheetSubtitle}</Text>
+						<View style={styles.releaseNotesWrapper}>
+							<Text style={styles.releaseNotes}>{releaseNotes}</Text>
 						</View>
-					</BottomSheetView>
-				</BottomSheetModal>
+						<View style={styles.actions}>
+							<Pressable
+								onPress={handleApplyUpdate}
+								style={[buttonBlack, styles.primaryButton]}>
+								<Text style={styles.primaryButtonText}>
+									{UPDATE_COPY.primaryCtaLabel}
+								</Text>
+							</Pressable>
+							<Pressable
+								onPress={() => bottomSheetRef.current?.dismiss()}
+								style={styles.secondaryAction}>
+								<Text style={styles.secondaryActionText}>
+									{UPDATE_COPY.secondaryCtaLabel}
+								</Text>
+							</Pressable>
+						</View>
+					</View>
+				</BottomSheetView>
+			</BottomSheetModal>
 		</UpdatesContext.Provider>
 	);
 };
