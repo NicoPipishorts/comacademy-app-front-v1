@@ -24,21 +24,23 @@ export default function CardFavoriteCitation({ data }: Props) {
 
 	return (
 		<View style={styles.wrapper}>
-			<View style={styles.cardContainer}>
-				<View style={styles.cardIcons}>
-					<Text>{data.category}</Text>
-				</View>
-				<View style={styles.cardRowContent}>
-					<View style={{ flexShrink: 1 }}>
-						<Text style={{ fontSize: FontSizeH3, fontWeight: "bold" }}>
-							{truncateString(data.citation, 50)}
-						</Text>
+			<TouchableOpacity onPress={handlePress}>
+				<View style={styles.cardContainer}>
+					<View style={styles.cardIcons}>
+						<Text>{data.category}</Text>
 					</View>
-					<TouchableOpacity style={styles.button} onPress={handlePress}>
-						<Text style={{ color: colorWhite }}>Voir</Text>
-					</TouchableOpacity>
+					<View style={styles.cardRowContent}>
+						<View style={{ flexShrink: 1 }}>
+							<Text style={{ fontSize: FontSizeH3, fontWeight: "bold" }}>
+								{truncateString(data.citation, 50)}
+							</Text>
+						</View>
+						<View style={styles.button}>
+							<Text style={{ color: colorWhite }}>Voir</Text>
+						</View>
+					</View>
 				</View>
-			</View>
+			</TouchableOpacity>
 		</View>
 	);
 }

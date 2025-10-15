@@ -3,12 +3,14 @@ import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import { colorBlack, colorWhite } from "@/constants/colors";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
@@ -45,6 +47,15 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 		useState<boolean>(null);
 	const [idArray, setIdArray] = useState<number[]>([]);
 	const [dataId, setDataId] = useState<number>(null);
+
+	const { showTabBar, hideTabBar } = useTabBarVisibility();
+
+	useFocusEffect(
+		useCallback(() => {
+			hideTabBar();
+			return () => showTabBar();
+		}, [hideTabBar, showTabBar])
+	);
 
 	const handleSuccess = () => {
 		queryClient.refetchQueries({
