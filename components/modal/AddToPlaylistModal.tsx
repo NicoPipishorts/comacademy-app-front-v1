@@ -41,7 +41,7 @@ interface Props {
 	type: "metier" | "dico" | "question";
 }
 
-const SNAP_POINTS = ["60%"];
+const SNAP_POINTS = ["50%", "80%"];
 
 export default function AddToPlaylistModal({
 	visible,
@@ -157,13 +157,14 @@ export default function AddToPlaylistModal({
 		<>
 			<BottomSheetModal
 				ref={bottomSheetRef}
-				index={0}
+				index={1}
 				snapPoints={snapPoints}
 				backdropComponent={renderBackdrop}
 				backgroundStyle={styles.sheetBackground}
 				handleIndicatorStyle={styles.hiddenIndicator}
 				enablePanDownToClose
-				onDismiss={handleDismiss}>
+				onDismiss={handleDismiss}
+				style={styles.bottomSheetModal}>
 				<BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
 					<View style={styles.sheetInner}>
 						<ModalGestureLine />
@@ -223,6 +224,10 @@ export default function AddToPlaylistModal({
 }
 
 const styles = StyleSheet.create({
+	bottomSheetModal: {
+		zIndex: 99999,
+		elevation: 99999,
+	},
 	sheetBackground: {
 		backgroundColor: primaryBackground,
 		borderTopLeftRadius: 20,
@@ -282,11 +287,11 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-	top: 0,
-	bottom: 0,
-	borderRadius: 10,
-	backgroundColor: "rgba(220,220,220,0.7)",
-	zIndex: 1,
+		top: 0,
+		bottom: 0,
+		borderRadius: 10,
+		backgroundColor: "rgba(220,220,220,0.7)",
+		zIndex: 1,
 	},
 	emptyState: {
 		paddingVertical: 40,

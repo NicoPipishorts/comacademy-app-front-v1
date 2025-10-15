@@ -171,7 +171,8 @@ const NewPlaylistModal = ({
 			backgroundStyle={styles.sheetBackground}
 			handleIndicatorStyle={styles.hiddenIndicator}
 			enablePanDownToClose
-			onDismiss={handleDismiss}>
+			onDismiss={handleDismiss}
+			style={styles.bottomSheetModal}>
 			<BottomSheetScrollView contentContainerStyle={styles.scrollContent}>
 				<View style={styles.sheetInner}>
 					<ModalGestureLine />
@@ -257,6 +258,10 @@ const NewPlaylistModal = ({
 };
 
 const styles = StyleSheet.create({
+	bottomSheetModal: {
+		zIndex: 99999,
+		elevation: 99999,
+	},
 	sheetBackground: {
 		backgroundColor: primaryBackground,
 		borderTopLeftRadius: 20,
