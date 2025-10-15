@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, {
 	useCallback,
 	useEffect,
@@ -24,6 +24,7 @@ import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 
 // Adapters
@@ -49,6 +50,14 @@ interface Props {
 export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	const { id } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
+	const { showTabBar, hideTabBar } = useTabBarVisibility();
+
+	useFocusEffect(
+		useCallback(() => {
+			hideTabBar();
+			return () => showTabBar();
+		}, [hideTabBar, showTabBar])
+	);
 
 	// Modal visibility
 	const [modalVisible, setModalVisible] = useState(false);
@@ -59,7 +68,7 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 
 	// 60% of viewport height
 	const windowHeight = Dimensions.get("window").height;
-	const sixtyDvh = windowHeight * 0.5;
+	const sixtyDvh = windowHeight * 0.6;
 
 	// Flag: true if combined definitions exceed 60dvh
 	const defsTooTall = def1Height + def2Height > sixtyDvh;
@@ -123,7 +132,7 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 				</View>
 
 				{/* Content */}
-				<ScrollView style={styles.contentContainer}>
+				<ScrollView>
 					{/* Category & Action Icons */}
 					<View style={styles.iconsWrapper}>
 						<View style={styles.iconsContainer}>
@@ -210,9 +219,6 @@ const styles = StyleSheet.create({
 	headerContainer: {
 		paddingHorizontal: 25,
 	},
-	contentContainer: {
-		marginBottom: 100,
-	},
 	iconsWrapper: {
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -249,7 +255,7 @@ const styles = StyleSheet.create({
 	},
 	arrowDown: {
 		position: "absolute",
-		bottom: 90,
+		bottom: 20,
 		left: 0,
 		right: 0,
 		alignItems: "center",

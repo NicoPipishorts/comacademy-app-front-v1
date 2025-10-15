@@ -1,5 +1,4 @@
 import CategoriesCards from "@/components/categories/categories";
-import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
@@ -76,10 +75,6 @@ const Metier = () => {
 					setActiveTab={setActiveTab}
 				/>
 			)}
-
-			{showListLoader && <Loader />}
-			{showCategoriesLoader && <Loader />}
-			{showFavoritesLoader && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar

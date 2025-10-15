@@ -1,6 +1,6 @@
 import HR from "@/components/HR";
 import ScreenHeaders from "@/components/ScreenHeaders";
-import { primaryBackground , colorWhite } from "@/constants/colors";
+import { colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize16, FontSizeH2 } from "@/constants/fontsizes";
 import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -15,9 +15,10 @@ import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import UnorderedList from "@/components/UnorderedList";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 
 interface Props {
 	metierId: number;
@@ -33,6 +34,14 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 	const handleModalOpen = useCallback(() => setModalVisible(true), []);
 	const handleModalClose = useCallback(() => setModalVisible(false), []);
+	const { showTabBar, hideTabBar } = useTabBarVisibility();
+
+	useFocusEffect(
+		useCallback(() => {
+			hideTabBar();
+			return () => showTabBar();
+		}, [hideTabBar, showTabBar])
+	);
 
 	if (!data) {
 		return <Loader />;
@@ -44,7 +53,6 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				styles.wrapper,
 				{
 					paddingTop: isAndroid ? 70 : 20,
-					paddingBottom: isAndroid ? 70 : 20,
 				},
 			]}>
 			<View style={styles.headerContainer}>
@@ -52,9 +60,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				<ScreenHeaders content={data.data.attributes.METIER} />
 			</View>
 
-			<ScrollView
-				style={styles.contentContainer}
-				showsVerticalScrollIndicator={false}>
+			<ScrollView showsVerticalScrollIndicator={false}>
 				<View style={styles.wrapperIcons}>
 					<View style={styles.containerIcons}>
 						{data.data.attributes.CATEGORIE !== undefined &&
@@ -202,9 +208,6 @@ const styles = StyleSheet.create({
 	},
 	headerContainer: {
 		paddingHorizontal: 25,
-	},
-	contentContainer: {
-		marginBottom: 100,
 	},
 	actionIcon: {
 		width: 24,
