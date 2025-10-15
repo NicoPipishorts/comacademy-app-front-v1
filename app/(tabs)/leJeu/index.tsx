@@ -10,6 +10,7 @@ import { StyleSheet, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useSessionAction } from "@/api/game/useNewSession";
+import { UseAuth } from "@/auth/AuthContext";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
@@ -24,6 +25,7 @@ import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { NavigationType } from "@/types/general";
 import { useFocusEffect, useNavigation } from "expo-router";
+import { useMemo } from "react";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
@@ -40,6 +42,17 @@ export default function LeJeu() {
 
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
+	const { session } = UseAuth();
+
+	// Check subscription status
+	const subscriptionType = useMemo(() => {
+		const raw = session?.user?.subscription?.typeKey;
+		if (typeof raw !== "string" || raw.trim() === "") return "free";
+		return raw.toLowerCase();
+	}, [session?.user?.subscription?.typeKey]);
+
+	const isFreeUser =
+		subscriptionType === "free" || subscriptionType === "trial";
 
 	// Get user score to check level
 	const { data: scores } = useGetUserScore(token, auth?.user.id);
@@ -183,14 +196,15 @@ export default function LeJeu() {
 		// Check if user has reached level 1 (150+ questions)
 		const currentLevel = Math.floor(totalAnsweredQuestions / 150);
 
-		if (currentLevel >= 1) {
+		// Only block if user is FREE AND has reached level 1
+		if (isFreeUser && currentLevel >= 1) {
 			// Show subscription modal instead of starting game
 			setShowSubscriptionModal(true);
 			return;
 		}
 
 		navigation.navigate("jeu");
-	}, [navigation, totalAnsweredQuestions]);
+	}, [navigation, totalAnsweredQuestions, isFreeUser]);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
