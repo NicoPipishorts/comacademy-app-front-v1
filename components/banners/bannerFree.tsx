@@ -78,7 +78,7 @@ const BannerFree: FC<BannerFreeProps> = ({ onDismiss }) => {
 	return (
 		<View style={[styles.bannerContainer, { paddingTop: insets.top }]}>
 			<Text style={styles.message}>
-				💥 Oui, c’est gratuit. Oui, c’est fou. En septembre, ça redeviendra
+				💥 Oui, c’est gratuit. Oui, c’est fou. En novembre, ça redeviendra
 				normal. En mieux mais en payant.
 			</Text>
 			<TouchableOpacity onPress={handleClose} style={styles.iconButton}>

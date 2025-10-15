@@ -1,6 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import * as Linking from "expo-linking";
 import { useNavigation } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Keyboard,
 	KeyboardAvoidingView,
@@ -13,166 +15,391 @@ import {
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
-import { useAuth } from "../auth/AuthContext";
-
-// Import Assets
-import { useLoginMutation } from "@/api/credentials/login";
-import LogoPageTop from "@/components/headers/LogoPageTop";
-import {
-	colorBlack,
-	colorDarkGrey,
-	colorGrey,
-	colorWhite,
-} from "@/constants/colors";
-import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
-import { useSnackbar } from "@/context/snackBar";
-import { NavigationType } from "@/types/general";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useForgotPasswordMutation } from "@/api/credentials/forgotPassword";
+import { useLoginMutation } from "@/api/credentials/login";
+import { useResetPasswordMutation } from "@/api/credentials/resetPassword";
+import { UseAuth } from "@/auth/AuthContext";
+import LogoPageTop from "@/components/headers/LogoPageTop";
+import ForgotPasswordSheet from "@/components/modal/ForgotPasswordSheet";
+import ResetPasswordSheet from "@/components/modal/ResetPasswordSheet";
+import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
+import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
+import { useSnackbar } from "@/context/snackBar";
+import { AuthResponse } from "@/types/credentials/auth";
+import { NavigationType } from "@/types/general";
 
 const SignIn = () => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
+	const forgotPasswordUrl = process.env.EXPO_PUBLIC_FORGOT_PASSWORD_URL;
+	const resetPasswordUrl = process.env.EXPO_PUBLIC_RESET_PASSWORD_URL;
+
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const { login, checkLoggedIn, setIsRegistering } = useAuth();
+	const [forgotPrefillEmail, setForgotPrefillEmail] = useState("");
+	const [pendingResetCode, setPendingResetCode] = useState<string | null>(null);
+	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-	const toggleShowPassword = () => {
-		setShowPassword(!showPassword);
+	const forgotPasswordSheetRef = useRef<BottomSheetModal>(null);
+	const resetPasswordSheetRef = useRef<BottomSheetModal>(null);
+	const latestResetPasswordRef = useRef<string>("");
+
+	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
+
+	const toggleShowPassword = () => setShowPassword((v) => !v);
+
+	const onSuccess = async (data: AuthResponse) => {
+		await login(data);
+		navigation.navigate("(tabs)");
 	};
 
-	const onSuccess = (data) => {
-		login(data);
-		navigation.navigate("(tabs)"); // Navigate to the home screen upon successful login
-	};
-
-	const onError = (error) => {
+	const onError = () => {
 		showSnackbar(
 			"Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.",
 			"error"
 		);
 	};
 
-	const mutation = useLoginMutation(authUrl, onSuccess, onError);
+	const loginMutation = useLoginMutation(authUrl, onSuccess, onError);
+	const forgotPasswordMutation = useForgotPasswordMutation(
+		forgotPasswordUrl,
+		() => {
+			showSnackbar(
+				"Si un compte est associé à cet email, un lien de réinitialisation a été envoyé.",
+				"success"
+			);
+			setForgotPrefillEmail("");
+			forgotPasswordSheetRef.current?.dismiss();
+		},
+		(error) => {
+			const fallbackMessage =
+				error instanceof Error && error.message
+					? error.message
+					: "Impossible d'envoyer le lien de réinitialisation. Réessayez ultérieurement.";
+			showSnackbar(fallbackMessage, "error");
+		}
+	);
+
+	const openForgotPasswordSheet = useCallback(() => {
+		const trimmedEmail = email.trim();
+		setForgotPrefillEmail(trimmedEmail);
+		forgotPasswordMutation.reset();
+		// Close keyboard first, then present sheet on next frame to avoid race
+		Keyboard.dismiss();
+		requestAnimationFrame(() => {
+			forgotPasswordSheetRef.current?.present();
+		});
+	}, [email, forgotPasswordMutation]);
+
+	const resetPasswordMutation = useResetPasswordMutation(
+		resetPasswordUrl,
+		() => {
+			showSnackbar(
+				"Ton mot de passe a bien été réinitialisé. Tu peux te connecter avec celui-ci.",
+				"success"
+			);
+			const latestPassword = latestResetPasswordRef.current;
+			if (latestPassword) setPassword(latestPassword);
+			setPendingResetCode(null);
+			resetPasswordSheetRef.current?.dismiss();
+		},
+		(error) => {
+			const fallbackMessage =
+				error instanceof Error && error.message
+					? error.message
+					: "Impossible de mettre à jour le mot de passe pour le moment.";
+			showSnackbar(fallbackMessage, "error");
+		}
+	);
 
 	const handleLogin = () => {
-		mutation.mutate({ identifier: email, password: password });
+		loginMutation.mutate({ identifier: email, password });
 	};
 
+	const handleForgotPasswordSubmit = useCallback(
+		(targetEmail: string) => {
+			const trimmedEmail = targetEmail.trim();
+			setForgotPrefillEmail(trimmedEmail);
+
+			if (!trimmedEmail) {
+				showSnackbar(
+					"Veuillez renseigner votre adresse email avant de continuer.",
+					"error"
+				);
+				return;
+			}
+
+			forgotPasswordMutation.mutate({ email: trimmedEmail });
+		},
+		[forgotPasswordMutation, showSnackbar]
+	);
+
+	const handleResetPasswordSubmit = useCallback(
+		(payload: {
+			password: string;
+			passwordConfirmation: string;
+			code: string;
+		}) => {
+			const { password: newPassword, passwordConfirmation, code } = payload;
+
+			if (!code) {
+				showSnackbar(
+					"Le lien de réinitialisation est invalide ou expiré.",
+					"error"
+				);
+				return;
+			}
+
+			latestResetPasswordRef.current = newPassword;
+			setPendingResetCode(code);
+			resetPasswordMutation.mutate({
+				password: newPassword,
+				passwordConfirmation,
+				code,
+			});
+		},
+		[resetPasswordMutation, showSnackbar]
+	);
+
+	const handleForgotSheetDismiss = useCallback(() => {
+		setForgotPrefillEmail("");
+		forgotPasswordMutation.reset();
+	}, [forgotPasswordMutation]);
+
+	const handleResetSheetDismiss = useCallback(() => {
+		setPendingResetCode(null);
+		resetPasswordMutation.reset();
+		latestResetPasswordRef.current = "";
+	}, [resetPasswordMutation]);
+
+	const handleDeepLink = useCallback((url: string | null) => {
+		if (!url) return;
+
+		const parsed = Linking.parse(url);
+		const { path, queryParams } = parsed;
+		const codeParam =
+			typeof queryParams?.code === "string"
+				? queryParams.code
+				: typeof queryParams?.token === "string"
+				? queryParams.token
+				: typeof queryParams?.reset_code === "string"
+				? queryParams.reset_code
+				: null;
+
+		if (!codeParam) return;
+
+		const normalizedPath = path?.toLowerCase() ?? "";
+		if (
+			normalizedPath &&
+			!normalizedPath.includes("reset-password") &&
+			!normalizedPath.includes("password-reset") &&
+			!normalizedPath.includes("auth/reset-password")
+		) {
+			return;
+		}
+
+		if (typeof queryParams?.email === "string") {
+			setEmail(queryParams.email);
+		}
+
+		setPendingResetCode(codeParam);
+		latestResetPasswordRef.current = "";
+		// Close keyboard before presenting the reset sheet
+		Keyboard.dismiss();
+		requestAnimationFrame(() => {
+			resetPasswordSheetRef.current?.present();
+		});
+	}, []);
+
 	useEffect(() => {
-		const checkIfLoggedIn = async () => {
-			const loggedIn = await checkLoggedIn();
-			if (loggedIn) {
-				navigation.navigate("(tabs)");
+		const fetchInitialUrl = async () => {
+			try {
+				const initialUrl = await Linking.getInitialURL();
+				handleDeepLink(initialUrl);
+			} catch (error) {
+				console.error("Failed to get initial URL", error);
 			}
 		};
 
-		checkIfLoggedIn();
+		void fetchInitialUrl();
+
+		const subscription = Linking.addEventListener("url", ({ url }) =>
+			handleDeepLink(url)
+		);
+
+		return () => {
+			subscription.remove();
+		};
+	}, [handleDeepLink]);
+
+	useEffect(() => {
+		(async () => {
+			const loggedIn = await checkLoggedIn();
+			if (loggedIn) navigation.navigate("(tabs)");
+		})();
 	}, [navigation, checkLoggedIn]);
 
+	// Smoother on Android with "height"; iOS "padding" is fine
+	const behavior = Platform.select({ ios: "padding", android: "height" }) as
+		| "padding"
+		| "height"
+		| "position"
+		| undefined;
+
+	const bottomInset = Math.max(insets.bottom, 20);
+
+	useEffect(() => {
+		const showEvt =
+			Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+		const hideEvt =
+			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+		const subShow = Keyboard.addListener(showEvt, () =>
+			setKeyboardVisible(true)
+		);
+		const subHide = Keyboard.addListener(hideEvt, () =>
+			setKeyboardVisible(false)
+		);
+		return () => {
+			subShow.remove();
+			subHide.remove();
+		};
+	}, []);
+
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<KeyboardAvoidingView
-				style={styles.container}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-				keyboardVerticalOffset={0} // Adjust this offset as needed
-			>
-				<ScrollView
-					contentContainerStyle={[
-						styles.scrollContainer,
-						{ marginTop: insets.top },
-					]}
-					keyboardShouldPersistTaps='handled'>
-					<LogoPageTop />
-					<View
-						style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-						<View>
+		<>
+			<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+				<KeyboardAvoidingView
+					style={styles.container}
+					behavior={behavior}
+					keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
+					<ScrollView
+						contentContainerStyle={[
+							styles.scrollContainer,
+							{
+								paddingTop: Math.max(insets.top, 20),
+								// remove extra bottom padding while keyboard is visible to avoid big gap
+								paddingBottom: bottomInset + (keyboardVisible ? 0 : 80),
+							},
+						]}
+						keyboardShouldPersistTaps='never'
+						keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "on-drag"}
+						showsVerticalScrollIndicator={false}
+						contentInsetAdjustmentBehavior='never'>
+						<LogoPageTop />
+
+						<View style={styles.centerWrap}>
 							<Text style={styles.title}>C'est bon de se revoir !</Text>
+
+							<View style={styles.passwordInputContainer}>
+								<TextInput
+									style={styles.input}
+									onChangeText={setEmail}
+									value={email}
+									autoCorrect={false}
+									placeholder='Email'
+									placeholderTextColor={colorBlack}
+									autoCapitalize='none'
+									keyboardType='email-address'
+									textContentType='emailAddress'
+									returnKeyType='next'
+									onSubmitEditing={() => Keyboard.dismiss()}
+								/>
+							</View>
+
+							<View style={styles.passwordInputContainer}>
+								<TextInput
+									secureTextEntry={!showPassword}
+									value={password}
+									autoCorrect={false}
+									onChangeText={setPassword}
+									style={styles.input}
+									placeholder='Mot de Passe'
+									placeholderTextColor={colorBlack}
+									keyboardType='default'
+									textContentType='password'
+									returnKeyType='done'
+									onSubmitEditing={() => Keyboard.dismiss()}
+								/>
+								<MaterialCommunityIcons
+									name={showPassword ? "eye-off" : "eye"}
+									size={24}
+									color={colorBlack}
+									style={styles.eyeIcon}
+									onPress={toggleShowPassword}
+								/>
+							</View>
+
+							<View style={styles.forgotPasswordContainer}>
+								<Pressable
+									onPress={openForgotPasswordSheet}
+									disabled={forgotPasswordMutation.isPending}>
+									<Text style={styles.forgotPasswordText}>
+										Mot de passe oublié ?
+									</Text>
+								</Pressable>
+							</View>
+
+							<Pressable style={styles.buttonContainer} onPress={handleLogin}>
+								<Text style={styles.buttonText}>Se connecter</Text>
+							</Pressable>
 						</View>
-						<View style={styles.passwordInputContainer}>
-							<TextInput
-								style={styles.input}
-								onChangeText={setEmail}
-								value={email}
-								autoCorrect={false}
-								placeholder='Email'
-								placeholderTextColor={colorBlack}
-								autoCapitalize='none'
-								keyboardType='email-address'
-								textContentType='emailAddress'
-							/>
-						</View>
-						<View style={styles.passwordInputContainer}>
-							<TextInput
-								secureTextEntry={!showPassword}
-								value={password}
-								autoCorrect={false}
-								onChangeText={setPassword}
-								style={styles.input}
-								placeholder='Mot de Passe'
-								placeholderTextColor={colorBlack}
-								keyboardType='default'
-								textContentType='password'
-							/>
-							<MaterialCommunityIcons
-								name={showPassword ? "eye-off" : "eye"}
-								size={24}
-								color={colorBlack}
-								style={styles.eyeIcon}
-								onPress={toggleShowPassword}
-							/>
-						</View>
-						<Pressable style={styles.containerForgot}>
-							<Text style={styles.textForgot}>Mot de passe oublié?</Text>
-						</Pressable>
-						<Pressable style={styles.buttonContainer} onPress={handleLogin}>
-							<Text style={styles.buttonText}>Se connecter</Text>
+					</ScrollView>
+
+					<View style={[styles.registerRow, { bottom: bottomInset }]}>
+						<Pressable
+							onPress={() => {
+								Keyboard.dismiss();
+								requestAnimationFrame(() => setIsRegistering(true));
+							}}>
+							<Text style={{ fontWeight: "bold" }}>
+								Je n'ai pas de compte : S'inscrire
+							</Text>
 						</Pressable>
 					</View>
-				</ScrollView>
-				<View
-					style={{ flexDirection: "row", position: "absolute", bottom: 40 }}>
-					<Text style={{ fontWeight: "bold" }}>Je n'ai pas de compte :</Text>
-					<Pressable onPress={() => setIsRegistering(true)}>
-						<Text style={{ fontWeight: "bold" }}> S'inscrire</Text>
-					</Pressable>
-				</View>
-			</KeyboardAvoidingView>
-		</TouchableWithoutFeedback>
+				</KeyboardAvoidingView>
+			</TouchableWithoutFeedback>
+
+			<ForgotPasswordSheet
+				ref={forgotPasswordSheetRef}
+				initialEmail={forgotPrefillEmail}
+				isSubmitting={forgotPasswordMutation.isPending}
+				onSubmit={handleForgotPasswordSubmit}
+				onDismiss={handleForgotSheetDismiss}
+			/>
+
+			<ResetPasswordSheet
+				ref={resetPasswordSheetRef}
+				resetCode={pendingResetCode}
+				isSubmitting={resetPasswordMutation.isPending}
+				onSubmit={handleResetPasswordSubmit}
+				onDismiss={handleResetSheetDismiss}
+			/>
+		</>
 	);
 };
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: "flex-start",
-		alignItems: "center",
-		padding: 20,
+		paddingHorizontal: 20,
 	},
-
 	scrollContainer: {
 		flexGrow: 1,
 		minWidth: "100%",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-
-	logo: {
-		width: 150,
-		height: 60,
-	},
-	containerDots: {
-		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
 	},
-	dot: {
-		width: 10,
-		height: 10,
-		marginHorizontal: 8,
-		borderRadius: 50,
+	centerWrap: {
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 0,
+		width: "100%",
+		marginTop: 40,
 	},
 	title: {
 		fontSize: FontSizeH1,
@@ -186,10 +413,9 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 		paddingHorizontal: 10,
 		marginBottom: 20,
-		borderWidth: 0,
-		paddingBottom: 16,
 		borderBottomWidth: 2,
 		borderBottomColor: colorGrey,
+		paddingBottom: 16,
 	},
 	input: {
 		flex: 1,
@@ -201,29 +427,32 @@ const styles = StyleSheet.create({
 	eyeIcon: {
 		marginLeft: 10,
 	},
-	containerForgot: {
-		minWidth: "100%",
-		justifyContent: "flex-end",
+	forgotPasswordContainer: {
+		width: "100%",
 		alignItems: "flex-end",
-		marginBottom: 50,
-		paddingRight: 10,
+		marginBottom: 30,
 	},
-	textForgot: {
-		color: colorDarkGrey,
+	forgotPasswordText: {
 		fontWeight: "bold",
-		fontSize: FontSize14,
+		color: colorBlack,
 	},
 	buttonContainer: {
 		backgroundColor: colorBlack,
 		paddingHorizontal: 50,
 		paddingVertical: 15,
-		color: colorWhite,
-		fontWeight: "bold",
 		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,
 		fontWeight: "bold",
+	},
+	registerRow: {
+		position: "absolute",
+		left: 20,
+		right: 20,
+		flexDirection: "row",
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });
 

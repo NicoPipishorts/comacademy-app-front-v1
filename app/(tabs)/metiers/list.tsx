@@ -1,7 +1,9 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { CategoriePayload } from "@/types/categories";
 import { NavigationType } from "@/types/general";
 import { MetiersList, SelectedMetier } from "@/types/metiers";
@@ -21,12 +23,14 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import MetierListSkeleton from "./MetierListSkeleton";
 
 type Props = {
 	data: MetiersList;
 	categories: CategoriePayload;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+	isLoading?: boolean;
 };
 
 const MetierList = ({
@@ -34,6 +38,7 @@ const MetierList = ({
 	categories,
 	filterByCat,
 	setFilterByCat,
+	isLoading = false,
 }: Props) => {
 	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
@@ -43,6 +48,39 @@ const MetierList = ({
 	}>({});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredData, setFilteredData] = useState<SelectedMetier[]>([]);
+	const [showSkeleton, setShowSkeleton] = useState(true);
+	const loadingStartTimeRef = useRef<number>(Date.now());
+
+	const {
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+		isFreeUser,
+	} = useSubscriptionLimit({ freeLimit: 0 }); // Not using index-based locking for metiers
+
+	// Custom logic: Lock items after the first one in each letter group
+	const isMetierLocked = useCallback(
+		(indexInGroup: number): boolean => {
+			if (!isFreeUser) return false;
+			return indexInGroup > 0; // Lock all items except the first in each group
+		},
+		[isFreeUser]
+	);
+
+	useEffect(() => {
+		if (!isLoading && data) {
+			const MINIMUM_LOADING_TIME = 2000; // ms
+			const elapsedTime = Date.now() - loadingStartTimeRef.current;
+			const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+
+			const timer = setTimeout(() => {
+				setShowSkeleton(false);
+			}, remainingTime);
+
+			return () => clearTimeout(timer);
+		}
+		return undefined;
+	}, [isLoading, data]);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -149,77 +187,108 @@ const MetierList = ({
 		[data]
 	);
 
-	const handlePress = (id: number) => {
+	const handlePress = (id: number, indexInGroup: number) => {
+		if (isMetierLocked(indexInGroup)) {
+			handleLockedItemPress();
+			return;
+		}
 		navigation.navigate("metierDetails", { id });
 	};
 
-	if (!data) return null;
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
-				<Searchbar
-					placeholder='Rechercher'
-					onChangeText={handleSearch} // Pass the handleSearch function to the Searchbar
-				/>
+				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
 
-			{filteredData.length <= 0 && (
-				<View style={styles.noDataContainer}>
-					<Text style={styles.noDataText}>Aucun métier de disponible. </Text>
-					<Text>Sélectionnez une autre catégorie.</Text>
-				</View>
+			<UpgradeSubscriptionModal
+				visible={showUpgradeModal}
+				onClose={closeUpgradeModal}
+				message='Un métier de chaque lettre est gratuit. Passez à un abonnement premium pour accéder à tous les métiers.'
+			/>
+
+			{(showSkeleton || isLoading || !data) && (
+				<MetierListSkeleton lines={25} />
 			)}
 
-			<View style={styles.contentContainer}>
-				<ScrollView
-					ref={scrollViewRef}
-					style={styles.listWrapper}
-					contentContainerStyle={styles.listContainer}
-					showsVerticalScrollIndicator={false}>
-					{filterByCat && (
-						<FilteredByCat
-							count={data.data.length}
-							categories={categories}
-							filterByCat={filterByCat}
-							setFilterByCat={setFilterByCat}
-						/>
-					)}
+			{!showSkeleton && !isLoading && data && (
+				<View style={styles.contentContainer}>
+					<ScrollView
+						ref={scrollViewRef}
+						style={styles.listWrapper}
+						contentContainerStyle={styles.listContainer}
+						showsVerticalScrollIndicator={false}>
+						{filterByCat && (
+							<FilteredByCat
+								count={data.data.length}
+								categories={categories}
+								filterByCat={filterByCat}
+								setFilterByCat={setFilterByCat}
+							/>
+						)}
 
-					{/* If search query is active, render filtered data, else render grouped data */}
-					{searchQuery
-						? filteredData.map((item, index) => (
-								<TouchableOpacity
-									key={index}
-									onPress={() => handlePress(item.id)}>
-									<Text style={styles.listItem}>{item.METIER}</Text>
-								</TouchableOpacity>
-						  ))
-						: alphabet.map((letter) => (
-								<View key={letter} ref={(el) => (sectionRefs[letter] = el)}>
-									<Text style={styles.listHeader}>{letter}</Text>
-									{groupedData[letter]?.map((item, index) => (
+						{searchQuery ? (
+							filteredData.length > 0 ? (
+								filteredData.map((item, index) => {
+									const locked = isMetierLocked(index);
+									return (
 										<TouchableOpacity
 											key={index}
-											onPress={() => handlePress(item.id)}>
-											<Text style={styles.listItem}>{item.METIER}</Text>
+											onPress={() => handlePress(item.id, index)}>
+											<Text
+												style={[styles.listItem, locked && styles.lockedItem]}>
+												{item.METIER}
+											</Text>
 										</TouchableOpacity>
-									))}
+									);
+								})
+							) : (
+								<View style={styles.noDataContainer}>
+									<Text style={styles.noDataText}>Aucun métier trouvé.</Text>
 								</View>
-						  ))}
-				</ScrollView>
+							)
+						) : (
+							alphabet.map((letter) => (
+								<View
+									key={letter}
+									ref={(el) => {
+										sectionRefs[letter] = el;
+									}}>
+									<Text style={styles.listHeader}>{letter}</Text>
+									{groupedData[letter]?.map((item, indexInGroup) => {
+										const locked = isMetierLocked(indexInGroup);
+										return (
+											<TouchableOpacity
+												key={indexInGroup}
+												onPress={() => handlePress(item.id, indexInGroup)}>
+												<Text
+													style={[
+														styles.listItem,
+														locked && styles.lockedItem,
+													]}>
+													{item.METIER}
+												</Text>
+											</TouchableOpacity>
+										);
+									})}
+								</View>
+							))
+						)}
+					</ScrollView>
 
-				{!searchQuery && (
-					<View style={styles.sidebar}>
-						{alphabet.map((letter, index) => (
-							<TouchableOpacity
-								key={index}
-								onPress={() => scrollToSection(letter)}>
-								<Text style={styles.sidebarText}>{letter}</Text>
-							</TouchableOpacity>
-						))}
-					</View>
-				)}
-			</View>
+					{!searchQuery && filteredData.length > 0 && (
+						<View style={styles.sidebar}>
+							{alphabet.map((letter, index) => (
+								<TouchableOpacity
+									key={index}
+									onPress={() => scrollToSection(letter)}>
+									<Text style={styles.sidebarText}>{letter}</Text>
+								</TouchableOpacity>
+							))}
+						</View>
+					)}
+				</View>
+			)}
 		</>
 	);
 };
@@ -253,7 +322,8 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	listContainer: {
-		paddingBottom: 80, // Adjust this value as needed
+		paddingHorizontal: 5,
+		paddingBottom: 60,
 	},
 	listHeader: {
 		fontWeight: "bold",
@@ -267,6 +337,9 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: 18,
 		fontWeight: "500",
+	},
+	lockedItem: {
+		opacity: 0.4,
 	},
 	sidebar: {
 		width: 30,

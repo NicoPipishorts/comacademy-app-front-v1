@@ -1,11 +1,11 @@
-import { colorBlue, colorRed } from "@/constants/colors";
-import { FontSize18 } from "@/constants/fontsizes";
+import { colorBlue, colorRed, colorWhite } from "@/constants/colors";
+import { FontSize14, FontSize18 } from "@/constants/fontsizes";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import { useNavigation } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import type { ViewStyle } from "react-native";
 import {
-	Animated,
 	Image,
 	Pressable,
 	StyleSheet,
@@ -13,7 +13,12 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import Swipeable from "react-native-gesture-handler/Swipeable";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, {
+	interpolate,
+	SharedValue,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 
 interface Props {
 	id: number;
@@ -22,7 +27,7 @@ interface Props {
 	refKey: string;
 	openedSwipeable: any;
 	setOpenedSwipeable: React.Dispatch<any>;
-	swipeableRefs: React.MutableRefObject<{}>;
+	swipeableRefs: React.MutableRefObject<Record<number, unknown>>;
 	handDeletePlaylist: (id: number) => void;
 	handleEditPlaylist: (id: number) => void;
 }
@@ -38,6 +43,11 @@ export default function CardPlaylist({
 	handleEditPlaylist,
 }: Props) {
 	const navigation = useNavigation<NavigationType>();
+	const swipeableRef = useRef(null);
+
+	useEffect(() => {
+		swipeableRefs.current[id] = swipeableRef.current;
+	}, [id, swipeableRefs]);
 
 	const handlePress = () => {
 		navigation.navigate("playlistList", { playlistId: id });
@@ -51,67 +61,88 @@ export default function CardPlaylist({
 	};
 
 	const renderRightActions = (
-		progress: Animated.AnimatedInterpolation<number>
+		progress: SharedValue<number>,
+		_dragAnimatedValue: SharedValue<number>
 	) => {
-		// Animate the buttons as you swipe
-		const translateX = progress.interpolate({
-			inputRange: [0, 1],
-			outputRange: [160, 0], // Buttons slide in from the right
-		});
+		const EditButton = () => {
+			const animatedStyle = useAnimatedStyle<ViewStyle>(() => {
+				const translateX = interpolate(progress.value, [0, 1], [160, 0]);
+				const scale = interpolate(progress.value, [0, 1], [0.8, 1]);
 
-		return (
-			<View style={styles.rightActionContainer}>
-				<Animated.View
-					style={[
-						styles.actionEdit,
-						styles.actionButton,
-						{ transform: [{ translateX }] },
-					]}>
+				return {
+					transform: [{ translateX }, { scale }],
+				};
+			});
+
+			return (
+				<Animated.View style={[animatedStyle]}>
 					<Pressable
-						style={styles.rightAction}
+						style={[styles.actionButton, styles.actionEdit, styles.rightAction]}
 						onPress={() => {
 							handleEditPlaylist(id);
 							closeSwipeable();
-						}}>
+						}}
+						android_ripple={{ color: "rgba(255, 255, 255, 0.3)" }}>
 						<Image
 							source={require("@/assets/imgs/icons/pencil_white.png")}
-							style={{ width: 24, height: 24 }}
+							style={styles.actionIcon}
 						/>
+						<Text style={styles.actionText}>Edit</Text>
 					</Pressable>
 				</Animated.View>
-				<Animated.View
-					style={[
-						styles.actionDelete,
-						styles.actionButton,
-						{ transform: [{ translateX }] },
-					]}>
+			);
+		};
+
+		const DeleteButton = () => {
+			const animatedStyle = useAnimatedStyle<ViewStyle>(() => {
+				const translateX = interpolate(progress.value, [0, 1], [160, 0]);
+				const scale = interpolate(progress.value, [0, 1], [0.8, 1]);
+
+				return {
+					transform: [{ translateX }, { scale }],
+				};
+			});
+
+			return (
+				<Animated.View style={[animatedStyle]}>
 					<Pressable
-						style={styles.rightAction}
+						style={[
+							styles.actionButton,
+							styles.actionDelete,
+							styles.rightAction,
+						]}
 						onPress={() => {
 							handDeletePlaylist(id);
 							closeSwipeable();
-						}}>
+						}}
+						android_ripple={{ color: "rgba(255, 255, 255, 0.3)" }}>
 						<Image
 							source={require("@/assets/imgs/icons/trash_white.png")}
-							style={{ width: 24, height: 24 }}
+							style={styles.actionIcon}
 						/>
+						<Text style={styles.actionText}>Delete</Text>
 					</Pressable>
 				</Animated.View>
+			);
+		};
+
+		return (
+			<View style={styles.rightActionContainer}>
+				<EditButton />
+				<DeleteButton />
 			</View>
 		);
 	};
 
 	return (
-		<View
-			style={{
-				flex: 1,
-			}}>
+		<View style={styles.container}>
 			<Swipeable
 				key={id}
-				ref={(ref) => (swipeableRefs.current[id] = ref)}
+				ref={swipeableRef}
 				friction={2}
+				overshootRight={false}
 				rightThreshold={40}
-				renderRightActions={(progress) => renderRightActions(progress)}
+				renderRightActions={renderRightActions}
 				onSwipeableWillOpen={() => {
 					if (
 						openedSwipeable &&
@@ -125,21 +156,22 @@ export default function CardPlaylist({
 					setOpenedSwipeable(null);
 				}}>
 				<TouchableOpacity
-					style={styles.wrapper}
+					style={styles.cardContainer}
+					activeOpacity={0.7}
 					onPress={() => {
 						handlePress();
-						closeSwipeable(); // Close swipeable when card is pressed
+						closeSwipeable();
 					}}>
-					<PlaylistDisplayImage
-						title={title}
-						image={color}
-						width={70}
-						height={70}
-					/>
-					<View style={{ flexDirection: "column" }}>
-						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
-							{title}
-						</Text>
+					<View style={styles.cardContent}>
+						<PlaylistDisplayImage
+							title={title}
+							image={color}
+							width={70}
+							height={70}
+						/>
+						<View style={styles.textContainer}>
+							<Text style={styles.title}>{title}</Text>
+						</View>
 					</View>
 				</TouchableOpacity>
 			</Swipeable>
@@ -148,32 +180,60 @@ export default function CardPlaylist({
 }
 
 const styles = StyleSheet.create({
+	container: {
+		marginBottom: 8,
+	},
+	cardContainer: {
+		backgroundColor: "transparent",
+		borderRadius: 12,
+	},
+	cardContent: {
+		flexDirection: "row",
+		alignItems: "center",
+		padding: 16,
+		paddingLeft: 0,
+	},
+	textContainer: {
+		flex: 1,
+		marginLeft: 16,
+	},
+	title: {
+		fontSize: FontSize18,
+		fontWeight: "600",
+		color: "#000",
+	},
 	rightActionContainer: {
 		flexDirection: "row",
-		maxWidth: 160,
-	},
-	rightAction: {
-		display: "flex",
-		justifyContent: "center",
 		alignItems: "center",
-		minHeight: "100%",
-		minWidth: "100%",
+		marginLeft: 8,
 	},
 	actionButton: {
-		width: "50%",
-		borderRadius: 5,
-		marginVertical: 10,
+		width: 80,
+		height: 80, // <— was "100%"
 		justifyContent: "center",
+		alignItems: "center",
+		borderRadius: 12,
 	},
-	actionDelete: {
-		backgroundColor: colorRed,
+	rightAction: {
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 12,
+	},
+	actionIcon: {
+		width: 22,
+		height: 22,
+		marginBottom: 4,
+	},
+	actionText: {
+		color: colorWhite,
+		fontSize: FontSize14,
+		fontWeight: "600",
 	},
 	actionEdit: {
 		backgroundColor: colorBlue,
+		marginRight: 4,
 	},
-	wrapper: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginVertical: 12,
+	actionDelete: {
+		backgroundColor: colorRed,
 	},
 });

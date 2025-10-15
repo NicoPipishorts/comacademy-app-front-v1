@@ -4,6 +4,7 @@ import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
 import {
 	AllUsersScoreResponse,
@@ -18,26 +19,42 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LeaderBoard() {
 	const { token } = useJwtToken();
-	const { userId: currentUser } = useAuthSession();
+	const { auth, loading: authLoading } = useAuthSession();
+	const currentUser = auth?.user.id;
 	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
 
 	useTrackPageMetrics({ page: "LeaderBoard" });
 
-	const { data: userData } = useGetUserInfo(currentUser);
+	const { data: userData } = useGetUserInfo(currentUser ?? 0);
 	const { data: allScores } = useGetUsersScore(token);
 
-	if (!userData || !allScores) {
+	if (authLoading || !currentUser || !userData || !allScores) {
 		return <Loader />;
 	}
+
+	const resolveScoreUserId = (user: UserScoreData): number | null => {
+		const base = user?.attributes?.user;
+		if (!base) return null;
+		return (base as any).userId ?? base?.userId ?? base?.userId ?? null;
+	};
+
+	const getUserProfile = (user: { profile?: string; role?: string }) => {
+		return user?.profile ?? user?.role ?? "";
+	};
 
 	function filterUsersByRoleAndClients(
 		allScores: AllUsersScoreResponse,
 		profile: string,
 		currentClients: { id: number; name: string }[]
 	): UserScoreData[] {
-		// If the current role is "Authenticated", return all users
-		if (profile === "superAdmin") {
+		// If no profile information, return everyone
+		if (!profile) {
+			return allScores.data;
+		}
+
+		// Allow admins to see everything
+		if (profile === "superAdmin" || profile === "Authenticated") {
 			return allScores.data;
 		}
 
@@ -93,7 +110,7 @@ export default function LeaderBoard() {
 		// For other roles, filter by role and clients
 		return allScores.data.filter((user) => {
 			const userClients = getUserClients(user);
-			const userRole = user.attributes.user.profile;
+			const userRole = getUserProfile(user.attributes.user);
 
 			// Skip users with different roles
 			if (userRole !== profile) {
@@ -128,17 +145,22 @@ export default function LeaderBoard() {
 	}
 
 	// Find the current user's role and clients
-	const currentUserInfo = allScores.data.find(
-		(user) => user.attributes.user.userId === currentUser
-	);
+	const currentUserInfo = allScores.data.find((user) => {
+		const scoreUserId = resolveScoreUserId(user);
+		return scoreUserId === currentUser;
+	});
 
-	const profile = currentUserInfo?.attributes.user.profile || "";
+	const profile = currentUserInfo
+		? getUserProfile(currentUserInfo.attributes.user)
+		: "";
 	const currentClients = currentUserInfo?.attributes.user.clients || [];
 
 	// Get the filtered list of users
 	const normalizedClients = Array.isArray(currentClients)
 		? currentClients
-		: [currentClients]; // Ensure it's always an array
+		: currentClients
+		? [currentClients]
+		: [];
 
 	const filteredUsers = filterUsersByRoleAndClients(
 		allScores,
@@ -164,12 +186,20 @@ export default function LeaderBoard() {
 						borderRadius: 20,
 						flex: 1,
 					}}>
+					{filteredUsers.length === 0 && (
+						<View style={styles.emptyState}>
+							<Text style={styles.emptyStateText}>
+								Aucun classement disponible pour le moment.
+							</Text>
+						</View>
+					)}
 					{filteredUsers.map((user, index) => {
-						const isSelected = currentUser === user.attributes.user.userId;
+						const scoreUserId = resolveScoreUserId(user);
+						const isSelected = currentUser === scoreUserId;
 
 						return (
 							<View
-								key={user.attributes.user.userId}
+								key={scoreUserId ?? user.id ?? index}
 								style={{
 									borderBottomColor: colorGrey,
 									borderBottomWidth: 1,
@@ -240,6 +270,17 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 15,
 		marginBottom: 5,
 		marginTop: 5,
+	},
+	emptyState: {
+		paddingVertical: 30,
+		alignItems: "center",
+	},
+	emptyStateText: {
+		fontSize: FontSize16,
+		fontWeight: "bold",
+		color: colorGrey,
+		textAlign: "center",
+		paddingHorizontal: 20,
 	},
 	resultsText: {
 		fontSize: FontSize16,

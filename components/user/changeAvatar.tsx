@@ -43,7 +43,6 @@ export default function ChangeAvatar() {
 	}
 
 	const onPress = (color: string) => {
-		console.log("pression icon button");
 		updatePreferences.mutate({
 			avatarBackgroundColor: color,
 			userId: data?.data.id,

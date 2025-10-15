@@ -15,7 +15,7 @@ type Vars = {
 export function useInsertAnswer() {
 	const queryClient = useQueryClient();
 	const { token } = useJwtToken();
-	const { setQuestionsLeft } = useGameContext();
+	const { setQuestionsLeft, setAnsweredCount } = useGameContext();
 
 	return useMutation({
 		mutationFn: async ({
@@ -42,11 +42,13 @@ export function useInsertAnswer() {
 			setQuestionsLeft?.((n) =>
 				typeof n === "number" ? Math.max(0, n - 1) : n
 			);
+			setAnsweredCount?.((n) => n + 1);
 		},
 
 		onError: () => {
 			// rollback the counter only (we didn't change dataGame)
 			setQuestionsLeft?.((n) => (typeof n === "number" ? n + 1 : n));
+			setAnsweredCount?.((n) => Math.max(0, n - 1));
 		},
 
 		onSettled: (_res, _err, vars) => {

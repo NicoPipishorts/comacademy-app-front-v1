@@ -1,5 +1,6 @@
-import { useAuth } from "@/auth/AuthContext";
+import { UseAuth } from "@/auth/AuthContext";
 import Loader from "@/components/experience/loader";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import ChangeAvatar from "@/components/user/changeAvatar";
@@ -7,12 +8,14 @@ import ShowNiveaux from "@/components/user/niveaux";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
+import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useSubscriptionPrompt } from "@/hooks/useSubscriptionPrompt";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -38,7 +41,7 @@ export type ResultAccumulator = Record<number, CategoryResult>;
 export default function User() {
 	const router = useRouter();
 	const { openModal, timestamp } = useLocalSearchParams();
-	const { logout } = useAuth();
+	const { logout } = UseAuth();
 	const { auth } = useAuthSession();
 	const insets = useSafeAreaInsets();
 	const [refreshing, setRefreshing] = useState(false);
@@ -58,6 +61,12 @@ export default function User() {
 	}, [openModal, timestamp, router]); // timestamp will always be different
 
 	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
+
+	// Subscription prompt hook
+	const totalAnsweredQuestions =
+		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
+	const { shouldShowModal, dismissModal } =
+		useSubscriptionPrompt(totalAnsweredQuestions);
 
 	const lastFetchTimeRef = useRef<number>(Date.now());
 
@@ -143,7 +152,7 @@ export default function User() {
 								Revoir la visite guidée de l’appli
 							</Text>
 							<TouchableOpacity
-								style={styles.buttonBlack}
+								style={buttonBlack}
 								onPress={() => {
 									setShowOnboarding(true);
 									hideTabBar();
@@ -185,6 +194,12 @@ export default function User() {
 					/>
 				</View>
 			)}
+
+			<UpgradeSubscriptionModal
+				visible={shouldShowModal}
+				onClose={dismissModal}
+				message="Félicitations ! Tu as atteint le niveau 1 ! Continue ton aventure avec un abonnement Premium pour débloquer tout le contenu."
+			/>
 		</KeyboardAvoidingView>
 	);
 }
@@ -249,12 +264,6 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		flexGrow: 1,
 		maxWidth: "50%",
-	},
-	buttonBlack: {
-		backgroundColor: colorBlack,
-		paddingVertical: 10,
-		paddingHorizontal: 35,
-		borderRadius: 50,
 	},
 	buttonText: {
 		color: colorWhite,

@@ -18,7 +18,11 @@ const Dico = () => {
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 
-	const { data: dataDico, isLoading: isLoadingData } = useDicoIds(filterByCat);
+	const {
+		data: dataDico,
+		isLoading: isLoadingData,
+		isFetching: isFetchingData,
+	} = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
 	useTrackPageMetrics({ page: "Dico" });
@@ -29,25 +33,25 @@ const Dico = () => {
 		}
 	}, [openDetails, navigation]);
 
-	if (!dataDico || isLoadingData) {
-		return <Loader />;
-	}
-
 	const toggleTab = (index: number) => {
 		setActiveTab(index);
 	};
 
+	// Enforce minimum loading time to prevent glitchy skeleton flashes
+
+	const showLoader = activeTab === 1 && (!dataCat || isLoadingCat);
+
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Dico' />
-			{isLoadingCat && <Loader />}
 
-			{activeTab === 0 && (
+			{dataDico && activeTab === 0 && (
 				<DicoList
 					data={dataDico}
 					categories={dataCat}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
+					isLoading={isLoadingData || isFetchingData}
 				/>
 			)}
 
@@ -57,6 +61,8 @@ const Dico = () => {
 					setActiveTab={setActiveTab}
 				/>
 			)}
+
+			{showLoader && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar

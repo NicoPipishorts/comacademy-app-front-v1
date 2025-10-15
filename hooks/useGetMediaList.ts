@@ -46,7 +46,6 @@ const fetchMediaList = async (
 	token: string
 ): Promise<MediaListResponse> => {
 	const url = new URL(`${process.env.EXPO_PUBLIC_API_URL}/${route}`);
-	console.log("[useGetMediaList] route =", route, "→", url.toString());
 
 	const res = await fetch(url.toString(), {
 		headers: {
@@ -60,7 +59,7 @@ const fetchMediaList = async (
 		throw new Error(`Failed to fetch ${route}: ${res.status}`);
 	}
 
-	return res.json();
+	return (await res.json()) as MediaListResponse;
 };
 
 export const useGetMediaList = (route: MediaRoute, token: string) => {

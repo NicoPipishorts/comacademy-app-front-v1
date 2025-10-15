@@ -1,8 +1,22 @@
 // File: src/components/leJeu/Jeu.tsx
 import { useNavigation } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Swiper from "react-native-deck-swiper";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import {
+	Animated,
+	Dimensions,
+	PanResponder,
+	Platform,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 import Loader from "@/components/experience/loader";
 import Card from "@/components/leJeu/Card";
@@ -25,15 +39,180 @@ import { QK } from "@/helpers/api/queryKeys";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
+
+interface SwipeableCardProps {
+	data: QuestionData;
+	catColors: any;
+	stackPosition: number;
+	isTopCard: boolean;
+	onSwipe: (isRight: boolean) => void;
+}
+
+const SwipeableCard = ({
+	data,
+	catColors,
+	stackPosition,
+	isTopCard,
+	onSwipe,
+}: SwipeableCardProps) => {
+	const translateX = useRef(new Animated.Value(0)).current;
+	const rotate = useMemo(
+		() =>
+			translateX.interpolate({
+				inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+				outputRange: ["-18deg", "0deg", "18deg"],
+			}),
+		[translateX]
+	);
+
+	const leftOpacity = useMemo(
+		() =>
+			translateX.interpolate({
+				inputRange: [-SWIPE_THRESHOLD, 0],
+				outputRange: [1, 0],
+				extrapolate: "clamp",
+			}),
+		[translateX]
+	);
+
+	const rightOpacity = useMemo(
+		() =>
+			translateX.interpolate({
+				inputRange: [0, SWIPE_THRESHOLD],
+				outputRange: [0, 1],
+				extrapolate: "clamp",
+			}),
+		[translateX]
+	);
+
+	const triggerSwipe = useCallback(
+		(direction: "left" | "right") => {
+			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
+			Animated.timing(translateX, {
+				toValue,
+				duration: 200,
+				useNativeDriver: true,
+			}).start(() => {
+				onSwipe(direction === "right");
+			});
+		},
+		[onSwipe, translateX]
+	);
+
+	const panResponder = useMemo(
+		() =>
+			PanResponder.create({
+				onStartShouldSetPanResponder: () => isTopCard,
+				onMoveShouldSetPanResponder: () => isTopCard,
+				onPanResponderMove: Animated.event([null, { dx: translateX }], {
+					useNativeDriver: false,
+				}),
+				onPanResponderRelease: (_, gesture) => {
+					if (!isTopCard) return;
+					if (
+						Math.abs(gesture.dx) > SWIPE_THRESHOLD ||
+						Math.abs(gesture.vx) > 0.9
+					) {
+						triggerSwipe(gesture.dx > 0 ? "right" : "left");
+					} else {
+						Animated.spring(translateX, {
+							toValue: 0,
+							friction: 6,
+							useNativeDriver: true,
+						}).start();
+					}
+				},
+			}),
+		[isTopCard, translateX, triggerSwipe]
+	);
+
+	const effectivePosition = Math.min(stackPosition, 4);
+	const scale = useMemo(
+		() => 1 - effectivePosition * 0.05,
+		[effectivePosition]
+	);
+	const translateY = useMemo(() => effectivePosition * 22, [effectivePosition]);
+
+	useEffect(() => {
+		if (!isTopCard) {
+			translateX.setValue(0);
+		}
+	}, [isTopCard, translateX]);
+
+	const transform = useMemo(() => {
+		const baseTransform = [{ scale }, { translateY }];
+
+		if (isTopCard) {
+			return [{ translateX }, { rotate }, ...baseTransform];
+		}
+
+		return baseTransform;
+	}, [isTopCard, rotate, scale, translateX, translateY]);
+
+	const cardStyle = useMemo(() => {
+		return {
+			transform: transform as any,
+			zIndex: 100 - stackPosition,
+		};
+	}, [stackPosition, transform]);
+
+	const handleSwipeTrue = useCallback(() => {
+		if (isTopCard) triggerSwipe("right");
+	}, [isTopCard, triggerSwipe]);
+
+	const handleSwipeFalse = useCallback(() => {
+		if (isTopCard) triggerSwipe("left");
+	}, [isTopCard, triggerSwipe]);
+
+	return (
+		<Animated.View
+			style={[styles.cardWrapper, cardStyle]}
+			{...(isTopCard ? panResponder.panHandlers : undefined)}>
+			{isTopCard && (
+				<>
+					<Animated.View
+						style={[
+							styles.overlayLabel,
+							styles.overlayLeft,
+							{ opacity: leftOpacity },
+						]}>
+						<Text style={styles.overlayText}>FAUX</Text>
+					</Animated.View>
+					<Animated.View
+						style={[
+							styles.overlayLabel,
+							styles.overlayRight,
+							{ opacity: rightOpacity },
+						]}>
+						<Text style={styles.overlayText}>VRAI</Text>
+					</Animated.View>
+				</>
+			)}
+
+			<View style={styles.cardContentWrapper}>
+				<Card
+					key={data.id}
+					catColors={catColors}
+					data={data}
+					onSwipeFalse={handleSwipeFalse}
+					onSwipeTrue={handleSwipeTrue}
+				/>
+			</View>
+		</Animated.View>
+	);
+};
+
 export default function Jeu() {
 	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const { isConnected } = useNetwork();
-	const swiperRef = useRef<Swiper<QuestionData>>(null);
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { auth } = useAuthSession();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
+	const [currentIndex, setCurrentIndex] = useState(0);
 
 	const { dataGame, sessionId, gameStatus } = useGameContext();
 	const { data: catData } = useCategories();
@@ -46,6 +225,21 @@ export default function Jeu() {
 		return () => showTabBar();
 	}, [hideTabBar, showTabBar]);
 
+	useEffect(() => {
+		if (dataGame?.length) {
+			setCurrentIndex(dataGame.length - 1);
+		}
+	}, [dataGame]);
+
+	const cardsToRender = useMemo(() => {
+		if (!dataGame || !dataGame.length) {
+			return [] as QuestionData[];
+		}
+		const endIndex = Math.max(0, currentIndex + 1);
+		const startIndex = Math.max(0, endIndex - 5);
+		return dataGame.slice(startIndex, endIndex);
+	}, [dataGame, currentIndex]);
+
 	if (!dataGame || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
@@ -54,6 +248,7 @@ export default function Jeu() {
 		setFeedbackAnswer(answer);
 		setFeedbackVisible(true);
 	};
+
 	const hideFeedback = () => {
 		setFeedbackVisible(false);
 		setFeedbackAnswer(null);
@@ -70,63 +265,27 @@ export default function Jeu() {
 		setTimeout(() => navigation.navigate("index"), 100);
 	};
 
-	const onSwipe = (cardIndex: number, answer: boolean) => {
-		const currentCard = dataGame[cardIndex];
+	const onSwipe = (isRight: boolean) => {
+		const currentCard = dataGame[currentIndex];
 		if (!currentCard) return;
 
 		const correct = currentCard.attributes.ANSWER;
-		showFeedback(correct === answer ? Answer.true : Answer.false);
+		showFeedback(correct === isRight ? Answer.true : Answer.false);
 
 		insertAnswer.mutate({
 			gameId: sessionId!,
 			userId: auth?.user.id,
 			questionId: currentCard.id,
 			categorie: currentCard.attributes.CATEGORIE,
-			answer,
+			answer: isRight,
 		});
-	};
 
-	const overlayLabels = {
-		left: {
-			title: "FAUX",
-			style: {
-				label: {
-					backgroundColor: colorBlack,
-					borderColor: colorBlack,
-					color: "white",
-					borderWidth: 1,
-					fontSize: 24,
-				},
-				wrapper: {
-					flexDirection: "row",
-					alignItems: "flex-start",
-					justifyContent: "flex-end",
-					paddingRight: 20,
-					width: "100%",
-					height: "100%",
-				},
-			},
-		},
-		right: {
-			title: "VRAI",
-			style: {
-				label: {
-					backgroundColor: colorBlack,
-					borderColor: colorBlack,
-					color: "white",
-					borderWidth: 1,
-					fontSize: 24,
-				},
-				wrapper: {
-					flexDirection: "row",
-					alignItems: "flex-start",
-					justifyContent: "flex-start",
-					paddingLeft: 20,
-					width: "100%",
-					height: "100%",
-				},
-			},
-		},
+		const nextIndex = currentIndex - 1;
+		setCurrentIndex(nextIndex);
+
+		if (nextIndex < 0) {
+			setTimeout(() => navigation.navigate("finishedSession"), 500);
+		}
 	};
 
 	const swiperTopMargin = isHomeButtonModel ? -40 : 0;
@@ -135,49 +294,32 @@ export default function Jeu() {
 		<View style={[styles.wrapper, { marginTop: swiperTopMargin }]}>
 			{!isConnected && (
 				<View style={styles.overlay}>
-					<Text style={styles.overlayText}>
+					<Text style={styles.overlayTextNetwork}>
 						Tu as perdu ta connexion internet.
 					</Text>
-					<Text style={styles.overlayText}>
+					<Text style={styles.overlayTextNetwork}>
 						Ton jeu reprendra dès que tu la retrouveras.
 					</Text>
 				</View>
 			)}
 
 			{gameStatus === "in_progress" && sessionId > 0 && (
-				<Swiper
-					key={`${sessionId}-${dataGame?.length ?? 0}`} // 👈 forces a fresh deck
-					ref={swiperRef}
-					cards={dataGame}
-					renderCard={(card, cardIndex) =>
-						card ? (
-							<Card
-								key={card.id}
-								catColors={catData}
+				<View style={styles.cardContainer}>
+					{cardsToRender.map((card, idx) => {
+						const stackPosition = cardsToRender.length - 1 - idx;
+						const isTopCard = idx === cardsToRender.length - 1;
+						return (
+							<SwipeableCard
+								key={`${sessionId}-${card.id}`}
 								data={card}
-								onSwipeFalse={() => swiperRef.current?.swipeLeft()}
-								onSwipeTrue={() => swiperRef.current?.swipeRight()}
+								catColors={catData}
+								stackPosition={stackPosition}
+								isTopCard={isTopCard}
+								onSwipe={onSwipe}
 							/>
-						) : null
-					}
-					verticalSwipe={false}
-					onSwipedLeft={(i) => onSwipe(i, false)}
-					onSwipedRight={(i) => onSwipe(i, true)}
-					onSwipedAll={() =>
-						setTimeout(() => navigation.navigate("finishedSession"), 500)
-					}
-					backgroundColor='transparent'
-					cardVerticalMargin={100}
-					cardHorizontalMargin={30}
-					stackSize={5}
-					stackScale={5}
-					stackSeparation={24}
-					overlayOpacityHorizontalThreshold={20}
-					// — bonus: smooth fade in/out
-					animateCardOpacity
-					animateOverlayLabelsOpacity
-					overlayLabels={overlayLabels}
-				/>
+						);
+					})}
+				</View>
 			)}
 
 			{feedbackVisible && feedbackAnswer && (
@@ -203,6 +345,56 @@ const styles = StyleSheet.create({
 		padding: 30,
 		backgroundColor: primaryBackground,
 		alignItems: "center",
+		position: "relative",
+	},
+	cardContainer: {
+		flex: 1,
+		width: "100%",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	cardWrapper: {
+		position: "absolute",
+		width: "100%",
+		height: "80%",
+		borderRadius: 24,
+		...Platform.select({
+			ios: {
+				shadowColor: "rgba(0,0,0,0.25)",
+				shadowOffset: { width: 0, height: 12 },
+				shadowOpacity: 0.35,
+				shadowRadius: 16,
+			},
+			android: {
+				elevation: 0,
+			},
+		}),
+	},
+	cardContentWrapper: {
+		flex: 1,
+		borderRadius: 24,
+		overflow: Platform.OS === "android" ? "visible" : "hidden",
+	},
+	overlayLabel: {
+		position: "absolute",
+		top: -20,
+		paddingHorizontal: 20,
+		paddingVertical: 8,
+		borderRadius: 50,
+		borderWidth: 2,
+		borderColor: colorBlack,
+		backgroundColor: colorBlack,
+	},
+	overlayLeft: {
+		right: 40,
+	},
+	overlayRight: {
+		left: 40,
+	},
+	overlayText: {
+		fontSize: 24,
+		fontWeight: "bold",
+		color: colorWhite,
 	},
 	overlay: {
 		...StyleSheet.absoluteFillObject,
@@ -211,7 +403,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		zIndex: 999,
 	},
-	overlayText: {
+	overlayTextNetwork: {
 		color: colorWhite,
 		fontSize: FontSize20,
 		fontWeight: "bold",

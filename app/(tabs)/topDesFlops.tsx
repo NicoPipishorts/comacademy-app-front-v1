@@ -1,7 +1,12 @@
 // File: src/components/leJeu/TopDesFlops.tsx
-import { useFocusEffect } from "@react-navigation/native";
-import { Video } from "expo-av";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	Animated,
 	Dimensions,
@@ -14,20 +19,33 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
+import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
+import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
+import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
 const TopDesFlops: React.FC = () => {
 	const { token } = useJwtToken();
 	const routeKey = "top-des-flops";
-	const { data, isLoading } = useGetMediaList(routeKey, token);
+	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
+	const isScreenFocused = useIsFocused();
 
 	useTrackPageMetrics({ page: "TopDesFlops" });
+
+	const {
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+		isFreeUser,
+	} = useSubscriptionLimit({ freeLimit: 5 });
 
 	// Compute dimensions for videos
 	const { width } = Dimensions.get("window");
@@ -35,14 +53,13 @@ const TopDesFlops: React.FC = () => {
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
 	// Refs for controlling videos and fade animations
-	const videoRefs = useRef<Record<number, any>>({});
+	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
 
 	// State to trigger rerenders
-	const [, setFocusedIndex] = useState(0);
-	const [isFirstRender, setIsFirstRender] = useState(true);
+	const [focusedIndex, setFocusedIndex] = useState(0);
 
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
@@ -108,23 +125,15 @@ const TopDesFlops: React.FC = () => {
 				// 3) Switch focus
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
-				setIsFirstRender(false);
 
 				// 4) Init fadeAnim for new index if needed
 				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(
-						isFirstRender && newIndex === 0 ? 0 : 1
-					);
+					fadeAnim[newIndex] = new Animated.Value(1);
 				}
-				// 5) Fade out splash on new
-				Animated.timing(fadeAnim[newIndex], {
-					toValue: 0,
-					duration: 400,
-					useNativeDriver: true,
-				}).start();
+				// Note: Don't auto-fade out - user needs to press play button
 			}
 		},
-		[fadeAnim, isFirstRender]
+		[fadeAnim, isFreeUser]
 	);
 
 	const viewabilityConfig = useMemo(
@@ -140,16 +149,73 @@ const TopDesFlops: React.FC = () => {
 		[data]
 	);
 
+	const isActuallyLoading =
+		(!data || reversedStories.length === 0) && (isLoading || isFetching);
+
+	const showSkeleton = useMinimumLoadingTime({
+		isLoading: isActuallyLoading,
+		minimumLoadingTime: 1000,
+	});
+
+	// Initialize first video without autoplay; pause all on unmount
+	useEffect(() => {
+		if (isLoading) return;
+		if (!reversedStories.length) return;
+
+		const initialIndex = 0;
+
+		// Sync state and refs
+		focusedIndexRef.current = initialIndex;
+		setFocusedIndex(initialIndex);
+
+		// Ensure overlay for first item starts visible (opacity 1)
+		if (!fadeAnim[initialIndex]) {
+			fadeAnim[initialIndex] = new Animated.Value(1);
+		} else {
+			fadeAnim[initialIndex].setValue(1);
+		}
+
+		// Pause all on unmount
+		return () => {
+			pauseAllVideos();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isLoading, reversedStories.length, pauseAllVideos]);
+
+	// Handler for when user presses play button
+	const handleFocusPress = useCallback(
+		(index: number) => {
+			focusedIndexRef.current = index;
+			setFocusedIndex(index);
+
+			// Fade out overlay
+			if (!fadeAnim[index]) {
+				fadeAnim[index] = new Animated.Value(1);
+			}
+			Animated.timing(fadeAnim[index], {
+				toValue: 0,
+				duration: 400,
+				useNativeDriver: true,
+			}).start();
+
+			// Play the video
+			const ref = videoRefs.current[index];
+			if (ref) {
+				ref.playAsync().catch(() => {});
+			}
+		},
+		[fadeAnim]
+	);
+
 	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
 			const videoUri = item.attributes.videoUri;
-			const isFocused = focusedIndexRef.current === index;
+			const isFocused = focusedIndex === index;
+			const isLocked = isFreeUser && index >= 5;
 
 			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(
-					isFirstRender && index === 0 ? 0 : 1
-				);
+				fadeAnim[index] = new Animated.Value(1);
 			}
 
 			return (
@@ -160,18 +226,22 @@ const TopDesFlops: React.FC = () => {
 						{ width: videoWidth, height: videoHeight },
 					]}>
 					<View style={styles.videoContainer}>
-						<Video
-							ref={(ref) => (videoRefs.current[index] = ref)}
+						<ExpoVideo
+							ref={(ref: ManagedVideoHandle | null) => {
+								videoRefs.current[index] = ref;
+							}}
 							source={{ uri: videoUri }}
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							shouldPlay={isFocused}
+							shouldPlay={false} // never auto-play on focus
 							positionMillis={videoPositions.current[index] || 0}
-							useNativeControls
+							useNativeControls={!isLocked}
+							resizeMode='cover'
 							onPlaybackStatusUpdate={(status) =>
 								handlePlaybackStatus(status, index)
 							}
+							isScreenFocused={isScreenFocused && isFocused}
 						/>
 
 						{!isFocused && (
@@ -188,52 +258,69 @@ const TopDesFlops: React.FC = () => {
 								/>
 								<TouchableOpacity
 									activeOpacity={0.8}
-									onPress={() => setFocusedIndex(index)}
+									onPress={() => handleFocusPress(index)}
 									style={styles.playButtonContainer}>
 									<Text style={styles.playIcon}>▶</Text>
 								</TouchableOpacity>
 							</Animated.View>
 						)}
+
+						{isLocked && (
+							<View style={[StyleSheet.absoluteFillObject]}>
+								<LockedVideoOverlay onUpgradePress={handleLockedItemPress} />
+							</View>
+						)}
 					</View>
 				</Animated.View>
 			);
 		},
-		[fadeAnim, handlePlaybackStatus, isFirstRender, videoHeight, videoWidth]
+		[
+			fadeAnim,
+			handlePlaybackStatus,
+			focusedIndex,
+			videoHeight,
+			videoWidth,
+			isFreeUser,
+			handleLockedItemPress,
+			isScreenFocused,
+			handleFocusPress,
+		]
 	);
 
-	if (isLoading) {
-		return (
-			<View style={styles.loaderContainer}>
-				<Loader />
-			</View>
-		);
-	}
-
-	if (!data) {
-		return (
-			<View style={styles.noDataContainer}>
-				<Text>No data available</Text>
-			</View>
-		);
-	}
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.headerPadding}>
 				<ScreenHeaders content='Le top des flops' />
 			</View>
-			<Animated.FlatList
-				style={styles.list}
-				data={reversedStories}
-				key={routeKey}
-				keyExtractor={(item) => `${routeKey}-${item.id}`}
-				renderItem={renderItem}
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={styles.contentPadding}
-				onViewableItemsChanged={onViewableItemsChanged}
-				viewabilityConfig={viewabilityConfig}
-				scrollEventThrottle={16}
-			/>
+
+			{showSkeleton && <PetitesHistoiresSkeleton />}
+
+			{!showSkeleton && data && (
+				<>
+					<UpgradeSubscriptionModal
+						visible={showUpgradeModal}
+						onClose={closeUpgradeModal}
+					/>
+
+					<Animated.FlatList
+						style={styles.list}
+						data={reversedStories}
+						key={routeKey}
+						keyExtractor={(item) => `${routeKey}-${item.id}`}
+						renderItem={renderItem}
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						contentContainerStyle={styles.contentPadding}
+						onViewableItemsChanged={onViewableItemsChanged}
+						viewabilityConfig={viewabilityConfig}
+						scrollEventThrottle={16}
+						snapToInterval={videoWidth + 34}
+						snapToAlignment='start'
+						decelerationRate='fast'
+						pagingEnabled={false}
+					/>
+				</>
+			)}
 		</View>
 	);
 };

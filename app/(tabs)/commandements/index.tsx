@@ -10,10 +10,12 @@ import Loader from "@/components/experience/loader";
 import FilteredByCat from "@/components/filters/filteredByCat";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 
 import { primaryBackground } from "@/constants/colors";
 import useGetCommandements from "@/hooks/Commandements/useGetAllCommandements";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 
 export default function TipsAndTactics() {
 	const insets = useSafeAreaInsets();
@@ -22,6 +24,13 @@ export default function TipsAndTactics() {
 
 	const { data: commandements, isFetched } = useGetCommandements(filterByCat);
 	useTrackPageMetrics({ page: "Tips and Tactics" });
+
+	const {
+		isItemLocked,
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+	} = useSubscriptionLimit({ freeLimit: 5 });
 
 	if (!isFetched || !commandements) {
 		return <Loader />;
@@ -38,11 +47,25 @@ export default function TipsAndTactics() {
 		setActiveTab(0);
 	};
 
+	const handleCommandementPress = (index: number, itemId: number) => {
+		if (isItemLocked(index)) {
+			handleLockedItemPress();
+		} else {
+			// Navigate normally - the card handles this
+		}
+	};
+
 	return (
 		<View style={styles.wrapper}>
 			<View style={{ paddingHorizontal: 20, paddingTop: insets.top }}>
 				<ScreenHeaders content='Tips and Tactics' />
 			</View>
+
+			<UpgradeSubscriptionModal
+				visible={showUpgradeModal}
+				onClose={closeUpgradeModal}
+				message="Les 5 premiers Tips and Tactics sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus."
+			/>
 
 			{/* only render when we have both a filter and at least one item */}
 			{filterByCat !== null && commandements.data.length > 0 && (
@@ -67,10 +90,11 @@ export default function TipsAndTactics() {
 				style={{ paddingHorizontal: 20 }}
 				contentContainerStyle={{ paddingBottom: 100 }}>
 				{activeTab === 0 &&
-					commandements.data.map((cmd) => {
+					commandements.data.map((cmd, index) => {
 						const imageUrl =
 							cmd.attributes.imageUrl ??
 							"https://fearless-comfort-efded67ed1.media.strapiapp.com/tips_n_tactics_52aeea960b.png";
+						const locked = isItemLocked(index);
 
 						return (
 							<CardSimpleButtonCommandements
@@ -78,6 +102,12 @@ export default function TipsAndTactics() {
 								itemId={cmd.id}
 								content={cmd.attributes.Theme}
 								image={imageUrl}
+								locked={locked}
+								onPress={
+									locked
+										? () => handleCommandementPress(index, cmd.id)
+										: undefined
+								}
 							/>
 						);
 					})}

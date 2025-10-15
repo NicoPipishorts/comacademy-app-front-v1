@@ -1,7 +1,16 @@
 // File: src/components/leJeu/TrenteSecondes.tsx
-import { useFocusEffect } from "@react-navigation/native";
-import { Video } from "expo-av";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+	useFocusEffect,
+	useIsFocused,
+	useNavigation,
+} from "@react-navigation/native";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	Animated,
 	Dimensions,
@@ -14,20 +23,34 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
-import Loader from "@/components/experience/loader";
+import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
+import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
+import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
+import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
 const TrenteSecondes: React.FC = () => {
 	const { token } = useJwtToken();
 	const routeKey = "trentes-secondes";
-	const { data, isLoading } = useGetMediaList(routeKey, token);
+	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
+	const isScreenFocused = useIsFocused();
+	const navigation = useNavigation();
 
 	useTrackPageMetrics({ page: "TrenteSecondes" });
+
+	const {
+		showUpgradeModal,
+		handleLockedItemPress,
+		closeUpgradeModal,
+		isFreeUser,
+	} = useSubscriptionLimit({ freeLimit: 5 });
 
 	// Compute dimensions for videos
 	const { width } = Dimensions.get("window");
@@ -35,14 +58,13 @@ const TrenteSecondes: React.FC = () => {
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
 	// Refs for controlling videos and fade animations
-	const videoRefs = useRef<Record<number, any>>({});
+	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
 	const videoPositions = useRef<Record<number, number>>({});
 	const fadeAnim = useRef<Record<number, Animated.Value>>({}).current;
 	const focusedIndexRef = useRef(0);
 
 	// State to trigger rerenders
-	const [, setFocusedIndex] = useState(0);
-	const [isFirstRender, setIsFirstRender] = useState(true);
+	const [focusedIndex, setFocusedIndex] = useState(0);
 
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
@@ -69,7 +91,7 @@ const TrenteSecondes: React.FC = () => {
 		);
 	}, []);
 
-	// Pause on blur/unmount
+	// Pause on blur/unmount (navigation blur from React Navigation)
 	useFocusEffect(
 		useCallback(() => {
 			return () => {
@@ -77,6 +99,21 @@ const TrenteSecondes: React.FC = () => {
 			};
 		}, [pauseAllVideos])
 	);
+
+	// EXTRA: also pause on tab blur explicitly (belt & suspenders)
+	useEffect(() => {
+		const unsub = navigation.addListener("blur", () => {
+			pauseAllVideos();
+		});
+		return unsub;
+	}, [navigation, pauseAllVideos]);
+
+	// EXTRA: pause when focus flag flips to false (some routers keep screen mounted)
+	useEffect(() => {
+		if (!isScreenFocused) {
+			pauseAllVideos();
+		}
+	}, [isScreenFocused, pauseAllVideos]);
 
 	// When viewable item changes, pause previous video, save position, fade overlay
 	const onViewableItemsChanged = useCallback(
@@ -108,23 +145,15 @@ const TrenteSecondes: React.FC = () => {
 				// 3) Switch focus
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
-				setIsFirstRender(false);
 
 				// 4) Init fadeAnim for new index if needed
 				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(
-						isFirstRender && newIndex === 0 ? 0 : 1
-					);
+					fadeAnim[newIndex] = new Animated.Value(1);
 				}
-				// 5) Fade out splash on new
-				Animated.timing(fadeAnim[newIndex], {
-					toValue: 0,
-					duration: 400,
-					useNativeDriver: true,
-				}).start();
+				// Note: Don't auto-fade out - user needs to press play button
 			}
 		},
-		[fadeAnim, isFirstRender]
+		[fadeAnim, isFreeUser]
 	);
 
 	const viewabilityConfig = useMemo(
@@ -140,16 +169,73 @@ const TrenteSecondes: React.FC = () => {
 		[data]
 	);
 
+	const isActuallyLoading =
+		(!data || reversedStories.length === 0) && (isLoading || isFetching);
+
+	const showSkeleton = useMinimumLoadingTime({
+		isLoading: isActuallyLoading,
+		minimumLoadingTime: 1000,
+	});
+
+	// Initialize first video without autoplay; pause all on unmount
+	useEffect(() => {
+		if (isLoading) return;
+		if (!reversedStories.length) return;
+
+		const initialIndex = 0;
+
+		// Sync state and refs
+		focusedIndexRef.current = initialIndex;
+		setFocusedIndex(initialIndex);
+
+		// Ensure overlay for first item starts visible (opacity 1)
+		if (!fadeAnim[initialIndex]) {
+			fadeAnim[initialIndex] = new Animated.Value(1);
+		} else {
+			fadeAnim[initialIndex].setValue(1);
+		}
+
+		// Pause all on unmount
+		return () => {
+			pauseAllVideos();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isLoading, reversedStories.length, pauseAllVideos]);
+
+	// Handler for when user presses play button
+	const handleFocusPress = useCallback(
+		(index: number) => {
+			focusedIndexRef.current = index;
+			setFocusedIndex(index);
+
+			// Fade out overlay
+			if (!fadeAnim[index]) {
+				fadeAnim[index] = new Animated.Value(1);
+			}
+			Animated.timing(fadeAnim[index], {
+				toValue: 0,
+				duration: 400,
+				useNativeDriver: true,
+			}).start();
+
+			// Play the video
+			const ref = videoRefs.current[index];
+			if (ref) {
+				ref.playAsync().catch(() => {});
+			}
+		},
+		[fadeAnim]
+	);
+
 	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
 			const videoUri = item.attributes.videoUri;
-			const isFocused = focusedIndexRef.current === index;
+			const isFocused = focusedIndex === index;
+			const isLocked = isFreeUser && index >= 5;
 
 			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(
-					isFirstRender && index === 0 ? 0 : 1
-				);
+				fadeAnim[index] = new Animated.Value(1);
 			}
 
 			return (
@@ -160,18 +246,22 @@ const TrenteSecondes: React.FC = () => {
 						{ width: videoWidth, height: videoHeight },
 					]}>
 					<View style={styles.videoContainer}>
-						<Video
-							ref={(ref) => (videoRefs.current[index] = ref)}
+						<ExpoVideo
+							ref={(ref: ManagedVideoHandle | null) => {
+								videoRefs.current[index] = ref; // no return
+							}}
 							source={{ uri: videoUri }}
 							style={styles.video}
 							isMuted={false}
 							isLooping={false}
-							shouldPlay={isFocused}
+							shouldPlay={false} // never auto-play on focus
 							positionMillis={videoPositions.current[index] || 0}
-							useNativeControls
+							useNativeControls={!isLocked}
+							resizeMode='cover'
 							onPlaybackStatusUpdate={(status) =>
 								handlePlaybackStatus(status, index)
 							}
+							isScreenFocused={isScreenFocused && isFocused}
 						/>
 
 						{!isFocused && (
@@ -188,11 +278,17 @@ const TrenteSecondes: React.FC = () => {
 								/>
 								<TouchableOpacity
 									activeOpacity={0.8}
-									onPress={() => setFocusedIndex(index)}
+									onPress={() => handleFocusPress(index)}
 									style={styles.playButtonContainer}>
 									<Text style={styles.playIcon}>▶</Text>
 								</TouchableOpacity>
 							</Animated.View>
+						)}
+
+						{isLocked && (
+							<View style={[StyleSheet.absoluteFillObject]}>
+								<LockedVideoOverlay onUpgradePress={handleLockedItemPress} />
+							</View>
 						)}
 					</View>
 				</Animated.View>
@@ -201,28 +297,15 @@ const TrenteSecondes: React.FC = () => {
 		[
 			fadeAnim,
 			handlePlaybackStatus,
-			isFirstRender,
-			setFocusedIndex,
+			focusedIndex,
 			videoHeight,
 			videoWidth,
+			isFreeUser,
+			handleLockedItemPress,
+			isScreenFocused,
+			handleFocusPress,
 		]
 	);
-
-	if (isLoading) {
-		return (
-			<View style={styles.loaderContainer}>
-				<Loader />
-			</View>
-		);
-	}
-
-	if (!data) {
-		return (
-			<View style={styles.noDataContainer}>
-				<Text>No data available</Text>
-			</View>
-		);
-	}
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -230,48 +313,45 @@ const TrenteSecondes: React.FC = () => {
 				<ScreenHeaders content='30s top chrono' />
 			</View>
 
-			<Animated.FlatList
-				style={styles.list}
-				data={reversedStories}
-				key={routeKey}
-				keyExtractor={(item) => `${routeKey}-${item.id}`}
-				renderItem={renderItem}
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={styles.contentPadding}
-				onViewableItemsChanged={onViewableItemsChanged}
-				viewabilityConfig={viewabilityConfig}
-				scrollEventThrottle={16}
-			/>
+			{showSkeleton && <PetitesHistoiresSkeleton />}
+
+			{!showSkeleton && data && (
+				<>
+					<UpgradeSubscriptionModal
+						visible={showUpgradeModal}
+						onClose={closeUpgradeModal}
+					/>
+
+					<Animated.FlatList
+						style={styles.list}
+						data={reversedStories}
+						key={routeKey}
+						keyExtractor={(item) => `${routeKey}-${item.id}`}
+						renderItem={renderItem}
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						contentContainerStyle={styles.contentPadding}
+						onViewableItemsChanged={onViewableItemsChanged}
+						viewabilityConfig={viewabilityConfig}
+						scrollEventThrottle={16}
+						snapToInterval={videoWidth + 34}
+						snapToAlignment='start'
+						decelerationRate='fast'
+						pagingEnabled={false}
+					/>
+				</>
+			)}
 		</View>
 	);
 };
 
 const styles = StyleSheet.create({
-	wrapper: {
-		flex: 1,
-		backgroundColor: "#f0f0f0",
-	},
-	headerPadding: {
-		paddingHorizontal: 30,
-	},
-	list: {
-		marginTop: 30,
-		paddingHorizontal: 30,
-	},
-	contentPadding: {
-		paddingRight: 25,
-	},
-	loaderContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	noDataContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
+	wrapper: { flex: 1, backgroundColor: "#f0f0f0" },
+	headerPadding: { paddingHorizontal: 30 },
+	list: { marginTop: 30, paddingHorizontal: 30 },
+	contentPadding: { paddingRight: 25 },
+	loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 	cardWrapper: {
 		marginLeft: 10,
 		marginRight: 24,
@@ -279,24 +359,14 @@ const styles = StyleSheet.create({
 		overflow: "hidden",
 		backgroundColor: "#000",
 	},
-	videoContainer: {
-		position: "relative",
-		width: "100%",
-		height: "100%",
-	},
-	video: {
-		width: "100%",
-		height: "100%",
-	},
+	videoContainer: { position: "relative", width: "100%", height: "100%" },
+	video: { width: "100%", height: "100%" },
 	overlayContainer: {
 		justifyContent: "center",
 		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0, 0.5)",
 	},
-	thumbnail: {
-		width: "100%",
-		height: "100%",
-	},
+	thumbnail: { width: "100%", height: "100%" },
 	playButtonContainer: {
 		position: "absolute",
 		backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -306,10 +376,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 	},
-	playIcon: {
-		color: "#FFF",
-		fontSize: 30,
-	},
+	playIcon: { color: "#FFF", fontSize: 30 },
 });
 
 export default TrenteSecondes;

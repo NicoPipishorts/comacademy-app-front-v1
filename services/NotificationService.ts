@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -13,9 +14,7 @@ type ScheduledNotification = {
 const PUSH_TOKEN_STORAGE_KEY = "expoPushToken";
 
 export const setupNotificationChannels = async () => {
-	if (Platform.OS !== "android") {
-		return;
-	}
+	if (Platform.OS !== "android") return;
 
 	await Notifications.setNotificationChannelAsync("default", {
 		name: "default",
@@ -26,14 +25,27 @@ export const setupNotificationChannels = async () => {
 	});
 };
 
-export const registerForPushNotificationsAsync = async (): Promise<string | null> => {
+export const registerForPushNotificationsAsync = async (): Promise<
+	string | null
+> => {
 	try {
-		if (!Device.isDevice) {
-			console.warn("Push notifications are not supported on simulators/emulators.");
+		const isExpoGo = Constants.appOwnership === "expo";
+		if (Platform.OS === "android" && isExpoGo) {
+			console.warn(
+				"Skipping push notification registration: Expo Go on Android does not support remote notifications. Use a development build instead."
+			);
 			return null;
 		}
 
-		const { status: existingStatus } = await Notifications.getPermissionsAsync();
+		if (!Device.isDevice) {
+			console.warn(
+				"Push notifications are not supported on simulators/emulators."
+			);
+			return null;
+		}
+
+		const { status: existingStatus } =
+			await Notifications.getPermissionsAsync();
 		let finalStatus = existingStatus;
 		if (existingStatus !== "granted") {
 			const permissionResponse = await Notifications.requestPermissionsAsync();
@@ -45,6 +57,7 @@ export const registerForPushNotificationsAsync = async (): Promise<string | null
 			return null;
 		}
 
+		// If you’re on SDK 51+, you can pass projectId: { projectId: Constants.expoConfig?.extra?.eas?.projectId }
 		const tokenResponse = await Notifications.getExpoPushTokenAsync();
 		const token = tokenResponse.data;
 
@@ -62,13 +75,12 @@ export const registerForPushNotificationsAsync = async (): Promise<string | null
 export const scheduleMultipleNotifications = async (
 	notifications: ScheduledNotification[]
 ) => {
-	if (!notifications.length) {
-		return;
-	}
+	if (!notifications.length) return;
 
 	await Promise.all(
 		notifications.map(async ({ title, body, delayInSeconds, data }) => {
 			const triggerSeconds = Math.max(delayInSeconds, 1);
+
 			await Notifications.scheduleNotificationAsync({
 				content: {
 					title,
@@ -76,6 +88,7 @@ export const scheduleMultipleNotifications = async (
 					data,
 				},
 				trigger: {
+					type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, // ✅ required
 					seconds: triggerSeconds,
 					repeats: false,
 				},
@@ -83,4 +96,3 @@ export const scheduleMultipleNotifications = async (
 		})
 	);
 };
-

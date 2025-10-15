@@ -35,7 +35,7 @@ export const SnackbarProvider = ({ children }) => {
 			<Snackbar
 				visible={snackbarVisible}
 				onDismiss={hideSnackbar}
-				duration={3000}
+				duration={1000}
 				action={{
 					label: "Dismiss",
 					onPress: () => hideSnackbar(),
@@ -46,6 +46,8 @@ export const SnackbarProvider = ({ children }) => {
 					{
 						backgroundColor:
 							snackbarType === "success" ? colorGreen : colorPink,
+						zIndex: 9999,
+						elevation: 9999,
 					}, // Dynamic background based on type
 				]}>
 				<Text style={styles.snackbarText}>{snackbarMessage} </Text>

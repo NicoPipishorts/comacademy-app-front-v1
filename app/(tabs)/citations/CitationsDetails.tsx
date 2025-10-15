@@ -36,7 +36,6 @@ const LesCitations = () => {
 	const handleAddToPlaylist = (citationId: number) => {
 		// e.g., open modal or navigate
 		// openAddToPlaylistModal({ type: "citation", elementId: citationId });
-		console.log("Add citation to playlist:", citationId);
 	};
 
 	return (
