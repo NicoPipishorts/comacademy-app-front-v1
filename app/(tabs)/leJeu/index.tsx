@@ -25,7 +25,7 @@ import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { NavigationType } from "@/types/general";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useMemo } from "react";
+// import { useMemo } from "react";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
@@ -45,7 +45,7 @@ export default function LeJeu() {
 	const { session } = UseAuth();
 
 	// Check subscription status
-	const subscriptionType = useMemo(() => {
+	const subscriptionType = React.useMemo(() => {
 		const raw = session?.user?.subscription?.typeKey;
 		if (typeof raw !== "string" || raw.trim() === "") return "free";
 		return raw.toLowerCase();

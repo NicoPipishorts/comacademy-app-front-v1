@@ -94,6 +94,7 @@ export default function UpgradeSubscriptionModal({
 			handleIndicatorStyle={styles.hiddenIndicator}
 			enablePanDownToClose
 			onDismiss={handleDismiss} // onClose runs AFTER animation
+			style={styles.bottomSheetModal}
 		>
 			<BottomSheetView style={styles.contentContainer}>
 				<ModalGestureLine />
@@ -115,6 +116,10 @@ export default function UpgradeSubscriptionModal({
 }
 
 const styles = StyleSheet.create({
+	bottomSheetModal: {
+		zIndex: 99999,
+		elevation: 99999,
+	},
 	transparentSheetBackground: {
 		backgroundColor: "rgba(0,0,0,0.2)", // subtle overlay inside the modal
 		borderTopLeftRadius: 20,

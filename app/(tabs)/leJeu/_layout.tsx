@@ -38,7 +38,7 @@ const LeJeuLayout = () => {
 					name='answersDetails'
 					options={{
 						headerShown: false,
-						presentation: "modal",
+						presentation: "card",
 					}}
 				/>
 			</Stack>
