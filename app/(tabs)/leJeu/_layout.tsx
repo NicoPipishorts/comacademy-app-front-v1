@@ -17,7 +17,7 @@ const LeJeuLayout = () => {
 					name='jeu'
 					options={{
 						headerShown: false,
-						presentation: "card", // Use 'modal' for native modal behavior
+						presentation: "card",
 					}}
 				/>
 				<Stack.Screen

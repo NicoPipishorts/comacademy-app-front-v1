@@ -331,6 +331,7 @@ export default function Jeu() {
 			)}
 
 			<View style={styles.containerBackButton}>
+				<Text style={styles.cardsLeftText}>{currentIndex + 1} / 15</Text>
 				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
 				</TouchableOpacity>
@@ -416,6 +417,12 @@ const styles = StyleSheet.create({
 		width: "100%",
 		alignItems: "center",
 		zIndex: 10,
+	},
+	cardsLeftText: {
+		color: colorBlack,
+		fontSize: 20,
+		fontWeight: 400,
+		marginBottom: 12,
 	},
 	backButton: {
 		paddingHorizontal: 40,
