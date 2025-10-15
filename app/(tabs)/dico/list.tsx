@@ -48,6 +48,8 @@ const DicoList = ({
 	}>({});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredData, setFilteredData] = useState<DicoSelected[]>([]);
+	const [showSkeleton, setShowSkeleton] = useState(true);
+	const loadingStartTimeRef = useRef<number>(Date.now());
 
 	const {
 		isItemLocked,
@@ -55,6 +57,21 @@ const DicoList = ({
 		handleLockedItemPress,
 		closeUpgradeModal,
 	} = useSubscriptionLimit({ freeLimit: 10 });
+
+	useEffect(() => {
+		if (!isLoading && data) {
+			const MINIMUM_LOADING_TIME = 2000; // ms
+			const elapsedTime = Date.now() - loadingStartTimeRef.current;
+			const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+
+			const timer = setTimeout(() => {
+				setShowSkeleton(false);
+			}, remainingTime);
+
+			return () => clearTimeout(timer);
+		}
+		return undefined;
+	}, [isLoading, data]);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -167,96 +184,96 @@ const DicoList = ({
 		navigation.navigate("dicoDetails", { id });
 	};
 
-	const showSkeletonList = isLoading;
-
-	if (!data || showSkeletonList) {
-		return <DicoListSkeleton lines={25} />;
-	}
-
 	return (
 		<>
 			<View style={{ paddingTop: 30 }}>
 				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
 
+			{(showSkeleton || isLoading || !data) && <DicoListSkeleton lines={15} />}
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
 				message="Les 10 premiers mots du dictionnaire sont gratuits. Passez à un abonnement premium pour accéder à l'intégralité du dictionnaire."
 			/>
 
-			<View style={styles.contentContainer}>
-				<ScrollView
-					ref={scrollViewRef}
-					style={styles.listWrapper}
-					contentContainerStyle={styles.listContainer}
-					showsVerticalScrollIndicator={false}>
-					{filterByCat && (
-						<FilteredByCat
-							count={data.data.length}
-							categories={categories}
-							filterByCat={filterByCat}
-							setFilterByCat={setFilterByCat}
-						/>
-					)}
-					{/* If search query is active, render filtered data, else render grouped data */}
-					{searchQuery
-						? filteredData.map((item, index) => {
-								const locked = isItemLocked(index);
-								return (
-									<TouchableOpacity
-										key={index}
-										onPress={() => handlePress(item.id, index)}>
-										<Text
-											style={[styles.listItem, locked && styles.lockedItem]}>
-											{item.Word}
-										</Text>
-									</TouchableOpacity>
-								);
-						  })
-						: (() => {
-								let globalIndex = 0;
-								return alphabet.map((letter) => (
-									<View
-										key={letter}
-										ref={(el) => {
-											sectionRefs.current[letter] = el;
-										}}>
-										<Text style={styles.listHeader}>{letter}</Text>
-										{groupedData[letter]?.map((item, localIndex) => {
-											const currentIndex = globalIndex++;
-											const locked = isItemLocked(currentIndex);
-											return (
-												<Text
-													key={localIndex}
-													style={[styles.listItem, locked && styles.lockedItem]}
-													onPress={() => handlePress(item.id, currentIndex)}>
-													{item.Word}
-												</Text>
-											);
-										})}
-									</View>
-								));
-						  })()}
-					{searchQuery && filteredData.length === 0 && (
-						<View style={styles.noDataContainer}>
-							<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>
+			{!showSkeleton && !isLoading && data && (
+				<View style={styles.contentContainer}>
+					<ScrollView
+						ref={scrollViewRef}
+						style={styles.listWrapper}
+						contentContainerStyle={styles.listContainer}
+						showsVerticalScrollIndicator={false}>
+						{filterByCat && (
+							<FilteredByCat
+								count={data.data.length}
+								categories={categories}
+								filterByCat={filterByCat}
+								setFilterByCat={setFilterByCat}
+							/>
+						)}
+						{/* If search query is active, render filtered data, else render grouped data */}
+						{searchQuery
+							? filteredData.map((item, index) => {
+									const locked = isItemLocked(index);
+									return (
+										<TouchableOpacity
+											key={index}
+											onPress={() => handlePress(item.id, index)}>
+											<Text
+												style={[styles.listItem, locked && styles.lockedItem]}>
+												{item.Word}
+											</Text>
+										</TouchableOpacity>
+									);
+							  })
+							: (() => {
+									let globalIndex = 0;
+									return alphabet.map((letter) => (
+										<View
+											key={letter}
+											ref={(el) => {
+												sectionRefs.current[letter] = el;
+											}}>
+											<Text style={styles.listHeader}>{letter}</Text>
+											{groupedData[letter]?.map((item, localIndex) => {
+												const currentIndex = globalIndex++;
+												const locked = isItemLocked(currentIndex);
+												return (
+													<Text
+														key={localIndex}
+														style={[
+															styles.listItem,
+															locked && styles.lockedItem,
+														]}
+														onPress={() => handlePress(item.id, currentIndex)}>
+														{item.Word}
+													</Text>
+												);
+											})}
+										</View>
+									));
+							  })()}
+						{searchQuery && filteredData.length === 0 && (
+							<View style={styles.noDataContainer}>
+								<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>
+							</View>
+						)}
+					</ScrollView>
+
+					{!showSkeleton && !searchQuery && filteredData.length > 0 && (
+						<View style={styles.sidebar}>
+							{alphabet.map((letter) => (
+								<TouchableOpacity
+									key={letter}
+									onPress={() => scrollToSection(letter)}>
+									<Text style={styles.sidebarText}>{letter}</Text>
+								</TouchableOpacity>
+							))}
 						</View>
 					)}
-				</ScrollView>
-
-				{!showSkeletonList && !searchQuery && filteredData.length > 0 && (
-					<View style={styles.sidebar}>
-						{alphabet.map((letter) => (
-							<TouchableOpacity
-								key={letter}
-								onPress={() => scrollToSection(letter)}>
-								<Text style={styles.sidebarText}>{letter}</Text>
-							</TouchableOpacity>
-						))}
-					</View>
-				)}
-			</View>
+				</View>
+			)}
 		</>
 	);
 };
@@ -272,7 +289,8 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	listContainer: {
-		paddingBottom: 80,
+		paddingHorizontal: 5,
+		paddingBottom: 70,
 	},
 
 	listHeader: {
