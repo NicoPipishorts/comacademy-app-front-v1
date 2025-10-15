@@ -1,4 +1,4 @@
-import { colorGrey } from "@/constants/colors";
+import { colorDarkGrey } from "@/constants/colors";
 import { View } from "react-native";
 
 export default function ModalGestureLine() {
@@ -7,7 +7,7 @@ export default function ModalGestureLine() {
 			style={{
 				width: 65,
 				height: 3,
-				backgroundColor: colorGrey,
+				backgroundColor: colorDarkGrey,
 				borderRadius: 10,
 				alignSelf: "center",
 				marginBottom: 15,
