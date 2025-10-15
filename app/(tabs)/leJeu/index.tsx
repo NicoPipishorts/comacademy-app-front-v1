@@ -249,7 +249,7 @@ export default function LeJeu() {
 					activeTab={activeTab}
 					setActiveTab={setActiveTab}
 					handlePress={handleTabChange}
-					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
+					values={{ btn1: "Aléatoire", btn2: "Catégories" }}
 				/>
 			</View>
 
