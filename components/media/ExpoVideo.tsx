@@ -319,13 +319,13 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		[player, emitStatus, syncDuration]
 	);
 
-	const memoizedProps = useMemo(
-		() => ({
+	const memoizedProps = useMemo(() => {
+		const props = {
 			nativeControls: useNativeControls,
 			contentFit: resizeMode,
-		}),
-		[useNativeControls, resizeMode]
-	);
+		};
+		return props;
+	}, [useNativeControls, resizeMode]);
 
 	// Cleanup player on unmount
 	useEffect(() => {
