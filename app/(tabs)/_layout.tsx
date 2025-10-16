@@ -160,6 +160,14 @@ const TabsLayout: React.FC = () => {
 						href: null,
 					}}
 				/>
+				<Tabs.Screen
+					name='subscription'
+					options={{
+						tabBarLabel: "Abonnement",
+						headerShown: false,
+						href: null,
+					}}
+				/>
 			</Tabs>
 		</TabBarVisibilityProvider>
 	);
