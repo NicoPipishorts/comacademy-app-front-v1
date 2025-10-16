@@ -2,6 +2,7 @@ import { primaryBackground } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import { usePathname, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BlurBackdrop from "../experience/backdropComponent";
@@ -60,6 +61,8 @@ export default function UpgradeSubscriptionModal({
 	onClose,
 	message,
 }: Props) {
+	const router = useRouter();
+	const pathname = usePathname();
 	const displayMessage = useMemo(() => {
 		return message || getRandomSubscriptionMessage();
 	}, [message]);
@@ -79,10 +82,20 @@ export default function UpgradeSubscriptionModal({
 	}, [onClose]);
 
 	const handleUpgradePress = useCallback(() => {
-		// TODO: Navigate to subscription/payment page
-		// navigation.navigate("subscription");
 		onClose();
-	}, [onClose]);
+		// Navigate to subscription screen after modal closes
+		setTimeout(() => {
+			const from = pathname;
+			if (from) {
+				router.push({
+					pathname: "/subscription",
+					params: { from },
+				});
+				return;
+			}
+			router.push("/subscription");
+		}, 300);
+	}, [onClose, router, pathname]);
 
 	return (
 		<BottomSheetModal

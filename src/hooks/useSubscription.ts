@@ -98,6 +98,27 @@ export const useSubscription = () => {
     }
   };
 
+  const cancelSubscription = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Check if resetSubscription exists (mock only)
+      if ('resetSubscription' in IAPService && typeof IAPService.resetSubscription === 'function') {
+        await IAPService.resetSubscription();
+        await checkSubscription();
+        return true;
+      }
+      // For production, this would call a backend API or open native subscription management
+      return false;
+    } catch (err: any) {
+      console.error('Cancel subscription error:', err);
+      setError(err.message || 'Cancel failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     products,
     subscription,
@@ -107,6 +128,7 @@ export const useSubscription = () => {
     purchase,
     restore,
     checkSubscription,
+    cancelSubscription,
     hasActiveSubscription: !!subscription,
   };
 };

@@ -60,7 +60,7 @@ const DicoList = ({
 
 	useEffect(() => {
 		if (!isLoading && data) {
-			const MINIMUM_LOADING_TIME = 2000; // ms
+			const MINIMUM_LOADING_TIME = 1500; // ms
 			const elapsedTime = Date.now() - loadingStartTimeRef.current;
 			const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
 
