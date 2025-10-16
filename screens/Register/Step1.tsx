@@ -86,7 +86,13 @@ export default function RegisterStep1({
 			newErrors.username = "Le pseudo est requis.";
 			valid = false;
 		} else if (!usernameRegex.test(username)) {
-			newErrors.username = "Doit contenir lettres, chiffres ou tirets.";
+			// Find the first invalid character
+			const invalidChar = username.split('').find(char => !usernameRegex.test(char));
+			if (invalidChar) {
+				newErrors.username = `Caractère non autorisé: "${invalidChar}". Utilisez uniquement des lettres, chiffres ou tirets.`;
+			} else {
+				newErrors.username = "Doit contenir lettres, chiffres ou tirets.";
+			}
 			valid = false;
 		}
 
