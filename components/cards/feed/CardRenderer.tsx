@@ -9,7 +9,7 @@ import FeedCardMetier from "@/components/cards/feed/CardMetier";
 import FeedCardNumber from "@/components/cards/feed/CardNumber";
 import FeedCardVie from "@/components/cards/feed/CardVie";
 import { FeedItem } from "@/types/feed";
-import React from "react";
+import React, { JSX } from "react";
 import FeedCardActusBref from "./CardActusBref";
 import FeedCardCardComAcademy from "./CardComAcademy";
 import FeedCardCultureCom from "./CardCultureCom";
