@@ -47,7 +47,7 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: "v1.2.3.2",
+	versionTag: "v1.2.3.3",
 	snackbarMessage:
 		"Nouvelle mise à jour OTA faite. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
@@ -55,11 +55,7 @@ const UPDATE_COPY: StaticUpdateCopy = {
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
 	notes: [
-		"Amélioration de l'UX du jeu.",
-		"Correction des boutons.",
-		"Ajout de UI pour les modals.",
-		"Message erreurss plus clairs.",
-		"Optimisations de performance.",
+		"Correction de la lecture vidéo qui se bloquait parfois sur la carte mystère.",
 	],
 };
 
