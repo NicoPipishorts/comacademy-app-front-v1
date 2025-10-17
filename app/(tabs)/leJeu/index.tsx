@@ -44,15 +44,24 @@ export default function LeJeu() {
 	const { token, loading: loadingToken } = useJwtToken();
 	const { session } = UseAuth();
 
-	// Check subscription status
-	const subscriptionType = React.useMemo(() => {
-		const raw = session?.user?.subscription?.typeKey;
-		if (typeof raw !== "string" || raw.trim() === "") return "free";
-		return raw.toLowerCase();
-	}, [session?.user?.subscription?.typeKey]);
+	// Check premium access status
+	const hasPremiumAccess = React.useMemo(() => {
+		if (session?.user?.manualPremium) return true;
+		if (session?.user?.hasPremiumAccess) return true;
 
-	const isFreeUser =
-		subscriptionType === "free" || subscriptionType === "trial";
+		const status = session?.user?.subscription?.status;
+		return (
+			status === "active" ||
+			status === "grace_period" ||
+			status === "billing_retry"
+		);
+	}, [
+		session?.user?.manualPremium,
+		session?.user?.hasPremiumAccess,
+		session?.user?.subscription?.status,
+	]);
+
+	const isFreeUser = !hasPremiumAccess;
 
 	// Get user score to check level
 	const { data: scores } = useGetUserScore(token, auth?.user.id);
