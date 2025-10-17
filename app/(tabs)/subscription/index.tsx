@@ -57,13 +57,23 @@ export default function SubscriptionScreen() {
 		}, [hideTabBar, showTabBar])
 	);
 
-	// Get subscription type from user session
-	const currentSubscriptionType =
-		session?.user?.subscription?.typeKey?.toLowerCase();
-	const isFreeUser =
-		!currentSubscriptionType ||
-		currentSubscriptionType === "free" ||
-		currentSubscriptionType === "trial";
+	const hasManualPremium = session?.user?.manualPremium ?? false;
+	const hasPremiumAccess = useMemo(() => {
+		if (hasManualPremium) return true;
+		if (session?.user?.hasPremiumAccess) return true;
+
+		const status = session?.user?.subscription?.status;
+		return (
+			status === "active" ||
+			status === "grace_period" ||
+			status === "billing_retry"
+		);
+	}, [
+		hasManualPremium,
+		session?.user?.hasPremiumAccess,
+		session?.user?.subscription?.status,
+	]);
+	const isFreeUser = !hasPremiumAccess;
 
 	// Map products to plan cards
 	const monthlyProduct = useMemo(
@@ -180,7 +190,7 @@ export default function SubscriptionScreen() {
 					contentContainerStyle={styles.scrollContent}>
 					{/* Header Section */}
 					<View style={styles.headerSection}>
-						{hasActiveSubscription ? (
+						{hasPremiumAccess ? (
 							<>
 								<View style={styles.activeSubscriptionBanner}>
 									<Text style={styles.activeSubscriptionText}>
@@ -190,13 +200,21 @@ export default function SubscriptionScreen() {
 										Profitez de tous les contenus sans limite
 									</Text>
 								</View>
-								<TouchableOpacity
-									style={styles.manageButton}
-									onPress={handleManageSubscription}>
-									<Text style={styles.manageButtonText}>
-										Gérer mon abonnement
-									</Text>
-								</TouchableOpacity>
+								{hasActiveSubscription ? (
+									<TouchableOpacity
+										style={styles.manageButton}
+										onPress={handleManageSubscription}>
+										<Text style={styles.manageButtonText}>
+											Gérer mon abonnement
+										</Text>
+									</TouchableOpacity>
+								) : (
+									hasManualPremium && (
+										<Text style={styles.manualPremiumNote}>
+											Accès Premium accordé manuellement par l'équipe Com'Academy.
+										</Text>
+									)
+								)}
 								{isExpoGo && (
 									<View style={styles.mockWarning}>
 										<Text style={styles.mockWarningText}>
@@ -403,6 +421,12 @@ const styles = StyleSheet.create({
 		fontSize: FontSize16,
 		fontWeight: "600",
 		color: colorBlack,
+	},
+	manualPremiumNote: {
+		marginTop: 16,
+		fontSize: FontSize14,
+		color: "#2E7D32",
+		textAlign: "center",
 	},
 	mockWarning: {
 		backgroundColor: "#FFF3E0",

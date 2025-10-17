@@ -17,14 +17,23 @@ export const useSubscriptionLimit = (
 	const { session } = UseAuth();
 	const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-	const subscriptionType = useMemo(() => {
-		const raw = session?.user?.subscription?.typeKey;
-		if (typeof raw !== "string" || raw.trim() === "") return "free"; // fallback
-		return raw.toLowerCase();
-	}, [session?.user?.subscription?.typeKey]);
+	const hasPremiumAccess = useMemo(() => {
+		if (session?.user?.manualPremium) return true;
+		if (session?.user?.hasPremiumAccess) return true;
 
-	const isFreeUser =
-		subscriptionType === "free" || subscriptionType === "trial"; // include trial if you want
+		const status = session?.user?.subscription?.status;
+		return (
+			status === "active" ||
+			status === "grace_period" ||
+			status === "billing_retry"
+		);
+	}, [
+		session?.user?.manualPremium,
+		session?.user?.hasPremiumAccess,
+		session?.user?.subscription?.status,
+	]);
+
+	const isFreeUser = !hasPremiumAccess;
 
 	const isItemLocked = useCallback(
 		(index: number) => isFreeUser && index >= config.freeLimit, // 0-based
