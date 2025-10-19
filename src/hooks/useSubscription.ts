@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Product, ProductSubscription } from 'react-native-iap';
 import { IAPService } from '../services/iap.service';
 import { UseAuth } from '@/auth/AuthContext';
@@ -12,6 +12,28 @@ export const useSubscription = () => {
   const [purchasing, setPurchasing] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const checkSubscription = useCallback(async () => {
+    try {
+      const currentSub = await IAPService.checkSubscriptionStatus();
+      setSubscription(currentSub);
+      return currentSub;
+    } catch (err: any) {
+      console.error('Check subscription error:', err);
+      return null;
+    }
+  }, []);
+
+  const fetchProductsAndSubscription = useCallback(async () => {
+    const [availableProducts, currentSub] = await Promise.all([
+      IAPService.getProducts(),
+      IAPService.checkSubscriptionStatus(),
+    ]);
+
+    setProducts(availableProducts);
+    setSubscription(currentSub);
+  }, []);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -35,13 +57,7 @@ export const useSubscription = () => {
         );
 
         // Load products and subscription status
-        const [availableProducts, currentSub] = await Promise.all([
-          IAPService.getProducts(),
-          IAPService.checkSubscriptionStatus(),
-        ]);
-
-        setProducts(availableProducts);
-        setSubscription(currentSub);
+        await fetchProductsAndSubscription();
       } catch (err: any) {
         console.error('Failed to initialize IAP:', err);
         setError(err.message || 'Failed to initialize purchases');
@@ -56,7 +72,7 @@ export const useSubscription = () => {
       cleanup?.();
       IAPService.endConnection();
     };
-  }, []);
+  }, [checkSubscription, fetchProductsAndSubscription]);
 
   const purchase = async (productId: string) => {
     try {
@@ -73,6 +89,19 @@ export const useSubscription = () => {
     }
   };
 
+  const refresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      setError(null);
+      await fetchProductsAndSubscription();
+    } catch (err: any) {
+      console.error('Refresh error:', err);
+      setError(err.message || 'Refresh failed');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchProductsAndSubscription]);
+
   const restore = async () => {
     try {
       setLoading(true);
@@ -84,17 +113,6 @@ export const useSubscription = () => {
       setError(err.message || 'Restore failed');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkSubscription = async () => {
-    try {
-      const currentSub = await IAPService.checkSubscriptionStatus();
-      setSubscription(currentSub);
-      return currentSub;
-    } catch (err: any) {
-      console.error('Check subscription error:', err);
-      return null;
     }
   };
 
@@ -123,12 +141,14 @@ export const useSubscription = () => {
     products,
     subscription,
     loading,
+    refreshing,
     purchasing,
     error,
     purchase,
     restore,
     checkSubscription,
     cancelSubscription,
+    refresh,
     hasActiveSubscription: !!subscription,
   };
 };

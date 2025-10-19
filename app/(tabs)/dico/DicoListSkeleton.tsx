@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
 	contentContainer: {
 		flexDirection: "row",
 		flex: 1,
-		marginTop: 20,
+		marginTop: 50,
 		marginBottom: 80,
 	},
 	listWrapper: {
@@ -104,11 +104,11 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	sidebarDot: {
-		width: 10,
-		height: 10,
+		width: 9,
+		height: 9,
 		borderRadius: 5,
 		backgroundColor: colorGrey,
-		marginVertical: 6,
+		marginVertical: 4,
 	},
 });
 
