@@ -15,13 +15,13 @@ import {
 	KeyboardAvoidingView,
 	Linking,
 	Platform,
+	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Check if running in Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
@@ -29,7 +29,6 @@ const isExpoGo = Constants.appOwnership === "expo";
 export default function SubscriptionScreen() {
 	const router = useRouter();
 	const { from } = useLocalSearchParams<{ from?: string | string[] }>();
-	const insets = useSafeAreaInsets();
 	const { session } = UseAuth();
 	const {
 		products,
@@ -40,6 +39,8 @@ export default function SubscriptionScreen() {
 		purchase,
 		restore,
 		cancelSubscription,
+		refresh,
+		refreshing,
 		hasActiveSubscription,
 	} = useSubscription();
 
@@ -173,6 +174,12 @@ export default function SubscriptionScreen() {
 		}
 	};
 
+	const handleRefresh = useCallback(() => {
+		refresh().catch((err) => {
+			console.error("Failed to refresh subscriptions:", err);
+		});
+	}, [refresh]);
+
 	if (loading) {
 		return <Loader />;
 	}
@@ -187,6 +194,13 @@ export default function SubscriptionScreen() {
 
 				<ScrollView
 					showsVerticalScrollIndicator={false}
+					refreshControl={
+						<RefreshControl
+							refreshing={refreshing}
+							onRefresh={handleRefresh}
+							tintColor={colorBlack}
+						/>
+					}
 					contentContainerStyle={styles.scrollContent}>
 					{/* Header Section */}
 					<View style={styles.headerSection}>
@@ -211,7 +225,8 @@ export default function SubscriptionScreen() {
 								) : (
 									hasManualPremium && (
 										<Text style={styles.manualPremiumNote}>
-											Accès Premium accordé manuellement par l'équipe Com'Academy.
+											Accès Premium accordé manuellement par l'équipe
+											Com'Academy.
 										</Text>
 									)
 								)}
@@ -337,7 +352,7 @@ export default function SubscriptionScreen() {
 
 					{/* Legal Links */}
 					<View style={styles.legalSection}>
-						<Text style={styles.legalText}>
+						{/* <Text style={styles.legalText}>
 							En vous abonnant, vous acceptez nos
 						</Text>
 						<View style={styles.legalLinks}>
@@ -350,7 +365,7 @@ export default function SubscriptionScreen() {
 									Politique de confidentialité
 								</Text>
 							</TouchableOpacity>
-						</View>
+						</View> */}
 						<Text style={styles.legalNote}>
 							L'abonnement se renouvelle automatiquement. Vous pouvez annuler à
 							tout moment depuis les paramètres de votre compte App Store ou
