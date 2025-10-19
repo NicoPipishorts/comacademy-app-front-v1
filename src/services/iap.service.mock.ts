@@ -11,28 +11,35 @@ import { Platform } from "react-native";
  */
 
 // Mock product data
+const YEARLY_SKU = Platform.select({
+	ios: "com.comacademy.yearly",
+	android: "yearly_subscription",
+}) as string;
+const MONTHLY_SKU = Platform.select({
+	ios: "com.comacademy.monthly",
+	android: "monthly_subscription",
+}) as string;
+
 const MOCK_PRODUCTS = [
 	{
-		productId: Platform.select({
-			ios: "com.comacademy.yearly",
-			android: "yearly_subscription",
-		}) as string,
+		id: YEARLY_SKU,
+		productId: YEARLY_SKU,
 		title: "Abonnement Annuel",
 		description: "Accès premium pendant 1 an",
 		price: "29.99",
 		localizedPrice: "29,99 €",
+		displayPrice: "29,99 €",
 		currency: "EUR",
 		type: "subs" as const,
 	},
 	{
-		productId: Platform.select({
-			ios: "com.comacademy.monthly",
-			android: "monthly_subscription",
-		}) as string,
+		id: MONTHLY_SKU,
+		productId: MONTHLY_SKU,
 		title: "Abonnement Mensuel",
 		description: "Accès premium pendant 1 mois",
 		price: "4.99",
 		localizedPrice: "4,99 €",
+		displayPrice: "4,99 €",
 		currency: "EUR",
 		type: "subs" as const,
 	},

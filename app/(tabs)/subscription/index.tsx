@@ -10,6 +10,7 @@ import { useSubscription } from "@/src/hooks/useSubscription";
 import Constants from "expo-constants";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
+import type { Product, ProductSubscription } from "react-native-iap";
 import {
 	Alert,
 	KeyboardAvoidingView,
@@ -25,6 +26,44 @@ import {
 
 // Check if running in Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
+
+type SubscriptionProduct = Product | ProductSubscription;
+
+const getSubscriptionProductId = (
+	product?: SubscriptionProduct | null
+): string | undefined => {
+	if (!product) return undefined;
+
+	const legacy = (product as SubscriptionProduct & {
+		productId?: string | null;
+	}).productId;
+
+	return legacy ?? product.id;
+};
+
+const formatSubscriptionPrice = (
+	product: SubscriptionProduct | undefined,
+	fallback: string
+): string => {
+	if (!product) return fallback;
+
+	if (product.displayPrice) {
+		return product.displayPrice;
+	}
+
+	const legacyLocalized = (product as {
+		localizedPrice?: string | null;
+	}).localizedPrice;
+	if (legacyLocalized) {
+		return legacyLocalized;
+	}
+
+	if (product.price != null) {
+		return `${product.price} ${product.currency}`.trim();
+	}
+
+	return fallback;
+};
 
 export default function SubscriptionScreen() {
 	const router = useRouter();
@@ -78,15 +117,30 @@ export default function SubscriptionScreen() {
 
 	// Map products to plan cards
 	const monthlyProduct = useMemo(
-		() => products.find((p) => p.productId.includes("monthly")),
+		() =>
+			products.find((p) => {
+				const identifier = getSubscriptionProductId(p);
+				return identifier
+					? identifier.toLowerCase().includes("monthly")
+					: false;
+			}),
 		[products]
 	);
 	const yearlyProduct = useMemo(
 		() =>
 			products.find(
-				(p) => p.productId.includes("yearly") || p.productId.includes("year")
+				(p) => {
+					const identifier = getSubscriptionProductId(p)?.toLowerCase();
+					return identifier
+						? identifier.includes("yearly") || identifier.includes("year")
+						: false;
+				}
 			),
 		[products]
+	);
+	const monthlyProductId = useMemo(
+		() => getSubscriptionProductId(monthlyProduct),
+		[monthlyProduct]
 	);
 
 	const handlePurchase = async (productId: string) => {
@@ -294,7 +348,10 @@ export default function SubscriptionScreen() {
 						{monthlyProduct && (
 							<SubscriptionPlanCard
 								title='Abonnement Mensuel'
-								price={monthlyProduct.localizedPrice || "4,99 €"}
+								price={formatSubscriptionPrice(
+									monthlyProduct,
+									"4,99 €"
+								)}
 								duration='/ mois'
 								features={[
 									"Accès illimité à tout le contenu",
@@ -303,10 +360,12 @@ export default function SubscriptionScreen() {
 								]}
 								isCurrentPlan={
 									hasActiveSubscription &&
-									monthlyProduct.productId === subscription?.productId
+									monthlyProductId === subscription?.productId
 								}
-								onPress={() => handlePurchase(monthlyProduct.productId)}
-								disabled={purchasing}
+								onPress={() =>
+									monthlyProductId && handlePurchase(monthlyProductId)
+								}
+								disabled={purchasing || !monthlyProductId}
 							/>
 						)}
 
