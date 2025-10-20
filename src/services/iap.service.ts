@@ -1,32 +1,31 @@
+// iap.service.ts
 import axios from "axios";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import type {
+	Purchase,
 	RequestSubscriptionAndroidProps,
 	RequestSubscriptionPropsByPlatforms,
 } from "react-native-iap";
+
 import {
 	getAndroidOfferToken,
 	getSubscriptionProductId,
 	type SubscriptionProduct,
 } from "../utils/iap";
 
-// Check if running in Expo Go
+// Detect Expo Go (real IAP doesn't work there)
 const isExpoGo = Constants.appOwnership === "expo";
-
 if (isExpoGo) {
 	console.warn(
-		"⚠️ ============================================\n" +
-			"⚠️  Running in Expo Go\n" +
-			"⚠️  Using MOCK IAP service for UI testing\n" +
-			"⚠️  Build a development build for real IAP\n" +
-			"⚠️ ============================================"
+		"⚠️ Running in Expo Go — using MOCK IAP service. Build a dev/TestFlight build for real IAP."
 	);
 }
 
-// Real IAP implementation - only imported when not in Expo Go
+// Import react-native-iap only in non-Expo-Go context
 const RNIap = isExpoGo ? null : require("react-native-iap");
 
+// Keep identical IDs on both platforms (must match App Store / Play Console)
 const PRODUCT_IDS = Platform.select({
 	ios: ["fullAccess100"],
 	android: ["fullAccess100"],
@@ -34,95 +33,85 @@ const PRODUCT_IDS = Platform.select({
 
 const getApiBaseUrl = () => {
 	const baseUrl = process.env.EXPO_PUBLIC_API_URL;
-	if (!baseUrl) {
-		throw new Error("EXPO_PUBLIC_API_URL is not configured");
-	}
+	if (!baseUrl) throw new Error("EXPO_PUBLIC_API_URL is not configured");
 	return baseUrl.replace(/\/$/, "");
 };
 
-// Define the service based on environment
 const createIAPService = () => {
 	if (isExpoGo) {
-		// Return mock service
+		// Mocked service for UI/dev in Expo Go
 		const { IAPService: MockIAPService } = require("./iap.service.mock");
 		return MockIAPService;
 	}
 
-	// Real IAP implementation
 	return {
 		/**
-		 * Initialize IAP connection
+		 * Initialize the IAP connection and clean pending purchases (Android)
 		 */
 		async initialize() {
 			try {
 				await RNIap.initConnection();
+
+				if (Platform.OS === "android") {
+					// Avoid stuck purchases during dev
+					try {
+						await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
+					} catch {
+						/* noop */
+					}
+				}
 			} catch (error) {
+				console.error("IAP init failed:", error);
 				throw error;
 			}
 		},
 
 		/**
-		 * Get available products
+		 * Fetch subscription products (NOT getProducts)
 		 */
 		async getProducts() {
 			try {
-				const products = await RNIap.fetchProducts({
-					skus: PRODUCT_IDS,
-					type: "subs",
-				});
-				return products ?? [];
+				const subs = await RNIap.getSubscriptions(PRODUCT_IDS);
+				return subs ?? [];
 			} catch (error) {
-				console.error("Failed to get products:", error);
+				console.error("Failed to get subscriptions:", error);
 				throw error;
 			}
 		},
 
 		/**
-		 * Purchase a subscription
+		 * Request a subscription purchase
 		 */
 		async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
 			try {
 				const sku = getSubscriptionProductId(product);
-				if (!sku) {
-					throw new Error("Invalid product identifier");
-				}
+				if (!sku) throw new Error("Invalid product identifier");
 
 				const request: RequestSubscriptionPropsByPlatforms = {};
 
 				if (Platform.OS === "ios") {
 					request.ios = {
 						sku,
+						// Optional: used for App Store Server notifications linkage
 						...(userId ? { appAccountToken: userId } : {}),
 					};
 				} else if (Platform.OS === "android") {
-					const androidRequest: RequestSubscriptionAndroidProps = {
+					const androidReq: RequestSubscriptionAndroidProps = {
 						skus: [sku],
+						// Policy: obfuscate your account ID; do not send raw PII
 						...(userId ? { obfuscatedAccountIdAndroid: userId } : {}),
 					};
 
 					const offerToken = getAndroidOfferToken(product);
 					if (offerToken) {
-						androidRequest.subscriptionOffers = [
-							{
-								sku,
-								offerToken,
-							},
-						];
+						androidReq.subscriptionOffers = [{ sku, offerToken }];
 					}
 
-					request.android = androidRequest;
+					request.android = androidReq;
 				}
 
-				if (!request.ios && !request.android) {
-					throw new Error(
-						`Unsupported platform for IAP purchase: ${Platform.OS}`
-					);
-				}
-
-				const purchase = await RNIap.requestPurchase({
-					type: "subs",
-					request,
-				});
+				// Use requestSubscription (not requestPurchase)
+				const purchase: Purchase = await RNIap.requestSubscription(request);
 
 				return purchase;
 			} catch (error) {
@@ -132,7 +121,9 @@ const createIAPService = () => {
 		},
 
 		/**
-		 * Complete purchase on backend
+		 * Verify and complete a purchase with your backend
+		 * - iOS: prefer StoreKit 2 (signedTransactionInfo), fallback to legacy receipt
+		 * - Android: use purchaseToken
 		 */
 		async completePurchase(purchase: any) {
 			try {
@@ -143,66 +134,68 @@ const createIAPService = () => {
 
 				if (Platform.OS === "ios") {
 					const originalTransactionId =
-						"originalTransactionIdentifierIOS" in purchase &&
-						purchase.originalTransactionIdentifierIOS
-							? purchase.originalTransactionIdentifierIOS
-							: purchase.transactionId;
-					const iosEnvironment =
-						"environmentIOS" in purchase && purchase.environmentIOS
-							? purchase.environmentIOS
-							: environment;
+						purchase?.originalTransactionIdentifierIOS ??
+						purchase?.transactionId;
 
 					payload = {
 						platform: "ios",
-						productId: purchase.productId,
+						productId: purchase?.productId,
 						originalTransactionId,
-						environment: iosEnvironment,
+						environment: purchase?.environmentIOS ?? environment,
 					};
 
-					if ("transactionId" in purchase && purchase.transactionId) {
+					if (purchase?.transactionId) {
 						payload.transactionId = purchase.transactionId;
 					}
-					if ("purchaseToken" in purchase && purchase.purchaseToken) {
-						payload.signedTransactionInfo = purchase.purchaseToken;
+
+					// StoreKit 2 signed JWS (preferred)
+					if (purchase?.signedTransactionInfo) {
+						payload.signedTransactionInfo = purchase.signedTransactionInfo;
 					}
-					if ("appAccountToken" in purchase && purchase.appAccountToken) {
+
+					// Legacy base64 receipt (fallback)
+					if (purchase?.transactionReceipt) {
+						payload.transactionReceipt = purchase.transactionReceipt;
+					}
+
+					if (purchase?.appAccountToken) {
 						payload.appAccountToken = purchase.appAccountToken;
 					}
 				} else if (Platform.OS === "android") {
-					if (!purchase.purchaseToken) {
-						throw new Error(
-							"Missing purchase token for Android purchase verification"
-						);
+					if (!purchase?.purchaseToken) {
+						throw new Error("Missing purchaseToken for Android verification");
 					}
 
 					payload = {
 						platform: "android",
-						productId: purchase.productId,
+						productId: purchase?.productId,
 						purchaseToken: purchase.purchaseToken,
 						environment,
 					};
 
-					if ("transactionId" in purchase && purchase.transactionId) {
+					if (purchase?.transactionId) {
 						payload.orderId = purchase.transactionId;
 					}
 				} else {
-					throw new Error(
-						`Unsupported platform for IAP purchase: ${Platform.OS}`
-					);
+					throw new Error(`Unsupported platform: ${Platform.OS}`);
 				}
 
-				const response = await axios.post(
-					`${apiBaseUrl}/api/iap/complete`,
-					payload
-				);
+				const res = await axios.post(`${apiBaseUrl}/api/iap/complete`, payload);
 
-				if (response.data.ok) {
-					// Finish the transaction
-					await RNIap.finishTransaction({ purchase, isConsumable: false });
-					return response.data.entitlement;
-				} else {
-					throw new Error("Backend verification failed");
+				if (res.data?.ok) {
+					// Only finish the transaction when backend says OK
+					try {
+						await RNIap.finishTransaction({ purchase, isConsumable: false });
+					} catch (finishErr) {
+						// Don't block entitlement return if finish fails; log instead
+						console.warn("finishTransaction failed:", finishErr);
+					}
+
+					return res.data.entitlement;
 				}
+
+				// Backend said not OK
+				throw new Error("Backend verification failed");
 			} catch (error) {
 				console.error("Failed to complete purchase:", error);
 				throw error;
@@ -210,13 +203,13 @@ const createIAPService = () => {
 		},
 
 		/**
-		 * Get user entitlements
+		 * Get user entitlements from your API
 		 */
 		async getEntitlements() {
 			try {
 				const apiBaseUrl = getApiBaseUrl();
-				const response = await axios.get(`${apiBaseUrl}/api/me/entitlements`);
-				return response.data.entitlements ?? [];
+				const res = await axios.get(`${apiBaseUrl}/api/me/entitlements`);
+				return res.data?.entitlements ?? [];
 			} catch (error) {
 				console.error("Failed to get entitlements:", error);
 				throw error;
@@ -224,15 +217,20 @@ const createIAPService = () => {
 		},
 
 		/**
-		 * Restore purchases (for iOS primarily)
+		 * Restore purchases (iOS primary; Android returns active)
+		 * Verifies each with backend and returns entitlements that are active
 		 */
 		async restorePurchases() {
 			try {
 				const purchases = await RNIap.getAvailablePurchases();
 
-				// Verify each purchase with backend
 				const entitlements = await Promise.all(
-					purchases.map((purchase: any) => this.completePurchase(purchase))
+					purchases.map((p: any) =>
+						this.completePurchase(p).catch((e: any) => {
+							console.warn("restore single purchase failed:", e);
+							return null;
+						})
+					)
 				);
 
 				return entitlements.filter(Boolean);
@@ -243,15 +241,15 @@ const createIAPService = () => {
 		},
 
 		/**
-		 * Check subscription status
+		 * Quick check: is there an active subscription entitlement?
 		 */
 		async checkSubscriptionStatus() {
 			try {
 				const entitlements = await this.getEntitlements();
-				const activeSubscription = entitlements.find(
-					(e: any) => e.active && e.status === "active"
+				return (
+					entitlements.find((e: any) => e?.active && e?.status === "active") ||
+					null
 				);
-				return activeSubscription || null;
 			} catch (error) {
 				console.error("Failed to check subscription status:", error);
 				return null;
@@ -259,19 +257,19 @@ const createIAPService = () => {
 		},
 
 		/**
-		 * End connection (cleanup)
+		 * Cleanup
 		 */
 		async endConnection() {
 			try {
 				await RNIap.endConnection();
-				console.log("IAP connection ended");
 			} catch (error) {
 				console.error("Failed to end IAP connection:", error);
 			}
 		},
 
 		/**
-		 * Setup purchase listener
+		 * Purchase listeners
+		 * - Verifies with backend then (inside completePurchase) finishes transaction
 		 */
 		setupPurchaseListener(
 			onPurchase: (purchase: any) => void,
@@ -280,13 +278,10 @@ const createIAPService = () => {
 			const purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(
 				async (purchase: any) => {
 					try {
-						const receipt = purchase.transactionId;
-						if (receipt) {
-							await this.completePurchase(purchase);
-							onPurchase(purchase);
-						}
-					} catch (error) {
-						onError(error);
+						await this.completePurchase(purchase);
+						onPurchase(purchase);
+					} catch (err) {
+						onError(err);
 					}
 				}
 			);

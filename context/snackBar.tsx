@@ -1,23 +1,22 @@
-import { colorGreen, colorPink, colorWhite } from "@/constants/colors"; // Add more colors
+import { colorBlue, colorGreen, colorPink, colorWhite } from "@/constants/colors"; // Add more colors
 import { FontSize16 } from "@/constants/fontsizes";
 import React, { createContext, useCallback, useContext, useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import { Snackbar } from "react-native-paper";
 
 // Define the types for the Snackbar (success, error, etc.)
-type SnackbarContextType = (message: string, type: "success" | "error") => void;
+type SnackbarVariant = "success" | "error" | "info";
+type SnackbarContextType = (message: string, type?: SnackbarVariant) => void;
 
 const SnackbarContext = createContext<SnackbarContextType>(() => {});
 
 export const SnackbarProvider = ({ children }) => {
 	const [snackbarVisible, setSnackbarVisible] = useState(false);
 	const [snackbarMessage, setSnackbarMessage] = useState("");
-	const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-		"success"
-	); // Default to "success"
+	const [snackbarType, setSnackbarType] = useState<SnackbarVariant>("success"); // Default to "success"
 
 	const showSnackbar = useCallback(
-		(message: string, type: "success" | "error" = "success") => {
+		(message: string, type: SnackbarVariant = "success") => {
 			setSnackbarMessage(message);
 			setSnackbarType(type); // Set the type
 			setSnackbarVisible(true);
@@ -45,7 +44,11 @@ export const SnackbarProvider = ({ children }) => {
 					styles.snackbarStyle,
 					{
 						backgroundColor:
-							snackbarType === "success" ? colorGreen : colorPink,
+							snackbarType === "success"
+								? colorGreen
+								: snackbarType === "error"
+								? colorPink
+								: colorBlue,
 						zIndex: 9999,
 						elevation: 9999,
 					}, // Dynamic background based on type
