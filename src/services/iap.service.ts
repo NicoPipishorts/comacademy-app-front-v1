@@ -1,6 +1,15 @@
 import axios from "axios";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import type {
+	RequestSubscriptionAndroidProps,
+	RequestSubscriptionPropsByPlatforms,
+} from "react-native-iap";
+import {
+	getAndroidOfferToken,
+	getSubscriptionProductId,
+	type SubscriptionProduct,
+} from "../utils/iap";
 
 // Check if running in Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
@@ -71,20 +80,40 @@ const createIAPService = () => {
 		/**
 		 * Purchase a subscription
 		 */
-		async purchaseSubscription(productId: string, userId?: string) {
+		async purchaseSubscription(
+			product: SubscriptionProduct,
+			userId?: string
+		) {
 			try {
-				const request: any = {};
+				const sku = getSubscriptionProductId(product);
+				if (!sku) {
+					throw new Error("Invalid product identifier");
+				}
+
+				const request: RequestSubscriptionPropsByPlatforms = {};
 
 				if (Platform.OS === "ios") {
 					request.ios = {
-						sku: productId,
+						sku,
 						...(userId ? { appAccountToken: userId } : {}),
 					};
 				} else if (Platform.OS === "android") {
-					request.android = {
-						skus: [productId],
+					const androidRequest: RequestSubscriptionAndroidProps = {
+						skus: [sku],
 						...(userId ? { obfuscatedAccountIdAndroid: userId } : {}),
 					};
+
+					const offerToken = getAndroidOfferToken(product);
+					if (offerToken) {
+						androidRequest.subscriptionOffers = [
+							{
+								sku,
+								offerToken,
+							},
+						];
+					}
+
+					request.android = androidRequest;
 				}
 
 				if (!request.ios && !request.android) {

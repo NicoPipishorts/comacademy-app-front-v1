@@ -7,10 +7,16 @@ import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useSubscription } from "@/src/hooks/useSubscription";
+import {
+	formatSubscriptionPrice,
+	getSubscriptionProductId,
+	type SubscriptionProduct,
+} from "@/src/utils/iap";
 import Constants from "expo-constants";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
-import type { Product, ProductSubscription } from "react-native-iap";
+import type { PurchaseError } from "react-native-iap";
+import { ErrorCode } from "react-native-iap";
 import {
 	Alert,
 	KeyboardAvoidingView,
@@ -26,44 +32,6 @@ import {
 
 // Check if running in Expo Go
 const isExpoGo = Constants.appOwnership === "expo";
-
-type SubscriptionProduct = Product | ProductSubscription;
-
-const getSubscriptionProductId = (
-	product?: SubscriptionProduct | null
-): string | undefined => {
-	if (!product) return undefined;
-
-	const legacy = (product as SubscriptionProduct & {
-		productId?: string | null;
-	}).productId;
-
-	return legacy ?? product.id;
-};
-
-const formatSubscriptionPrice = (
-	product: SubscriptionProduct | undefined,
-	fallback: string
-): string => {
-	if (!product) return fallback;
-
-	if (product.displayPrice) {
-		return product.displayPrice;
-	}
-
-	const legacyLocalized = (product as {
-		localizedPrice?: string | null;
-	}).localizedPrice;
-	if (legacyLocalized) {
-		return legacyLocalized;
-	}
-
-	if (product.price != null) {
-		return `${product.price} ${product.currency}`.trim();
-	}
-
-	return fallback;
-};
 
 export default function SubscriptionScreen() {
 	const router = useRouter();
@@ -138,14 +106,14 @@ export default function SubscriptionScreen() {
 			),
 		[products]
 	);
-	const monthlyProductId = useMemo(
-		() => getSubscriptionProductId(monthlyProduct),
-		[monthlyProduct]
-	);
+	const monthlyProductId = useMemo(() => {
+		if (!monthlyProduct) return undefined;
+		return getSubscriptionProductId(monthlyProduct);
+	}, [monthlyProduct]);
 
-	const handlePurchase = async (productId: string) => {
+	const handlePurchase = async (product: SubscriptionProduct) => {
 		try {
-			await purchase(productId);
+			await purchase(product);
 			Alert.alert(
 				"Succès!",
 				"Votre abonnement a été activé avec succès. Profitez de tous les contenus premium!",
@@ -157,6 +125,10 @@ export default function SubscriptionScreen() {
 				]
 			);
 		} catch (err) {
+			const purchaseError = err as PurchaseError;
+			if (purchaseError?.code === ErrorCode.UserCancelled) {
+				return;
+			}
 			Alert.alert(
 				"Erreur",
 				"Une erreur est survenue lors de l'achat. Veuillez réessayer."
@@ -362,9 +334,7 @@ export default function SubscriptionScreen() {
 									hasActiveSubscription &&
 									monthlyProductId === subscription?.productId
 								}
-								onPress={() =>
-									monthlyProductId && handlePurchase(monthlyProductId)
-								}
+								onPress={() => handlePurchase(monthlyProduct)}
 								disabled={purchasing || !monthlyProductId}
 							/>
 						)}

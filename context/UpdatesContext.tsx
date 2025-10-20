@@ -122,6 +122,7 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 		isDownloading,
 		checkError,
 		downloadError,
+		currentlyRunning,
 	} = useUpdates();
 	const [latestUpdate, setLatestUpdate] = useState<UpdateInfoNew | undefined>(
 		undefined
@@ -130,15 +131,37 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	const [manualCheckInFlight, setManualCheckInFlight] = useState(false);
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
 	const lastCheckRef = useRef<number>(0);
+	const lastNotifiedUpdateIdRef = useRef<string | null>(null);
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const snackbarMessage = useMemo(() => UPDATE_COPY.snackbarMessage, []);
 
-	const storeUpdateIfValid = useCallback((update?: Updates.UpdateInfo) => {
-		if (update && update.type === Updates.UpdateInfoType.NEW) {
-			setLatestUpdate(update);
-			setSnackbarVisible(true);
+	useEffect(() => {
+		if (!lastNotifiedUpdateIdRef.current && currentlyRunning?.updateId) {
+			lastNotifiedUpdateIdRef.current = currentlyRunning.updateId;
 		}
+	}, [currentlyRunning?.updateId]);
+
+	const storeUpdateIfValid = useCallback((update?: Updates.UpdateInfo) => {
+		if (!update || update.type !== Updates.UpdateInfoType.NEW) {
+			return;
+		}
+
+		const updateId =
+			update.updateId ??
+			(update.manifest as Record<string, any> | undefined)?.id ??
+			update.createdAt?.toISOString();
+
+		if (updateId && lastNotifiedUpdateIdRef.current === updateId) {
+			return;
+		}
+
+		if (updateId) {
+			lastNotifiedUpdateIdRef.current = updateId;
+		}
+
+		setLatestUpdate(update);
+		setSnackbarVisible(true);
 	}, []);
 
 	useEffect(() => {
@@ -146,11 +169,8 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	}, [downloadedUpdate, storeUpdateIfValid]);
 
 	useEffect(() => {
-		// In some cases the hook sets availableUpdate before the fetch completes
-		if (!downloadedUpdate) {
-			storeUpdateIfValid(availableUpdate);
-		}
-	}, [availableUpdate, downloadedUpdate, storeUpdateIfValid]);
+		storeUpdateIfValid(availableUpdate);
+	}, [availableUpdate, storeUpdateIfValid]);
 
 	const throttledCheck = useCallback(
 		async (force?: boolean) => {
