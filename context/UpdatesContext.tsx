@@ -124,6 +124,9 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	const [latestUpdate, setLatestUpdate] = useState<UpdateInfoNew | undefined>(
 		undefined
 	);
+	const [pendingUpdate, setPendingUpdate] = useState<UpdateInfoNew | undefined>(
+		undefined
+	);
 	const [snackbarVisible, setSnackbarVisible] = useState(false);
 	const [manualCheckInFlight, setManualCheckInFlight] = useState(false);
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -139,35 +142,52 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 		}
 	}, [currentlyRunning?.updateId]);
 
-	const storeUpdateIfValid = useCallback((update?: Updates.UpdateInfo) => {
-		if (!update || update.type !== Updates.UpdateInfoType.NEW) {
-			return;
-		}
-
-		const updateId =
+	const resolveUpdateId = useCallback((update: Updates.UpdateInfoNew) => {
+		return (
 			update.updateId ??
 			(update.manifest as Record<string, any> | undefined)?.id ??
-			update.createdAt?.toISOString();
-
-		if (updateId && lastNotifiedUpdateIdRef.current === updateId) {
-			return;
-		}
-
-		if (updateId) {
-			lastNotifiedUpdateIdRef.current = updateId;
-		}
-
-		setLatestUpdate(update);
-		setSnackbarVisible(true);
+			update.createdAt?.toISOString()
+		);
 	}, []);
 
-	useEffect(() => {
-		storeUpdateIfValid(downloadedUpdate);
-	}, [downloadedUpdate, storeUpdateIfValid]);
+	const storePendingUpdate = useCallback((update?: Updates.UpdateInfo) => {
+		if (!update || update.type !== Updates.UpdateInfoType.NEW) {
+			setPendingUpdate(undefined);
+			return;
+		}
+		setPendingUpdate(update);
+	}, []);
+
+	const storeReadyUpdate = useCallback(
+		(update?: Updates.UpdateInfo) => {
+			if (!update || update.type !== Updates.UpdateInfoType.NEW) {
+				return;
+			}
+
+			const updateId = resolveUpdateId(update);
+
+			if (updateId && lastNotifiedUpdateIdRef.current === updateId) {
+				return;
+			}
+
+			if (updateId) {
+				lastNotifiedUpdateIdRef.current = updateId;
+			}
+
+			setPendingUpdate(undefined);
+			setLatestUpdate(update);
+			setSnackbarVisible(true);
+		},
+		[resolveUpdateId]
+	);
 
 	useEffect(() => {
-		storeUpdateIfValid(availableUpdate);
-	}, [availableUpdate, storeUpdateIfValid]);
+		storeReadyUpdate(downloadedUpdate);
+	}, [downloadedUpdate, storeReadyUpdate]);
+
+	useEffect(() => {
+		storePendingUpdate(availableUpdate);
+	}, [availableUpdate, storePendingUpdate]);
 
 	const throttledCheck = useCallback(
 		async (force?: boolean) => {
@@ -232,13 +252,13 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	}, [downloadError, showSnackbar]);
 
 	const openUpdateDetails = useCallback(() => {
-		if (!latestUpdate) {
+		if (!latestUpdate && !pendingUpdate) {
 			void throttledCheck(true);
 			return;
 		}
 		setSnackbarVisible(false);
 		bottomSheetRef.current?.present();
-	}, [latestUpdate, throttledCheck]);
+	}, [latestUpdate, pendingUpdate, throttledCheck]);
 
 	const dismissUpdateNotice = useCallback(() => {
 		setSnackbarVisible(false);
@@ -252,32 +272,57 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	}, [latestUpdate]);
 
 	const handleApplyUpdate = useCallback(async () => {
+		if (!latestUpdate) {
+			try {
+				setSnackbarVisible(false);
+				if (!isDownloading) {
+					await Updates.fetchUpdateAsync();
+				}
+				showSnackbar(
+					"La mise à jour est en cours de téléchargement...",
+					"info"
+				);
+			} catch (error) {
+				console.error("Failed to fetch update before applying", error);
+				showSnackbar("Le téléchargement de la mise à jour a échoué.", "error");
+				setSnackbarVisible(true);
+			} finally {
+				bottomSheetRef.current?.dismiss();
+			}
+			return;
+		}
+
+		const previousUpdate = latestUpdate;
 		try {
 			setSnackbarVisible(false);
 			bottomSheetRef.current?.dismiss();
+			setLatestUpdate(undefined);
 			await Updates.reloadAsync();
 		} catch (error) {
 			console.error("Failed to reload update", error);
 			showSnackbar("Le redémarrage pour la mise à jour a échoué.", "error");
 			setSnackbarVisible(true);
+			setLatestUpdate(previousUpdate);
 		}
-	}, [showSnackbar]);
+	}, [isDownloading, latestUpdate, showSnackbar]);
 
 	const releaseNotes = useMemo(() => {
-		const manifestNotes = latestUpdate
-			? extractReleaseNotes(latestUpdate)
+		const referenceUpdate = latestUpdate ?? pendingUpdate;
+		const manifestNotes = referenceUpdate
+			? extractReleaseNotes(referenceUpdate)
 			: undefined;
 		return manifestNotes ?? UPDATE_COPY.notes.join("\n\n");
-	}, [latestUpdate]);
+	}, [latestUpdate, pendingUpdate]);
 
 	const sheetSubtitle = useMemo(() => {
-		if (latestUpdate?.createdAt) {
-			return `Publiée le ${latestUpdate.createdAt.toLocaleString()} · ${
+		const referenceUpdate = latestUpdate ?? pendingUpdate;
+		if (referenceUpdate?.createdAt) {
+			return `Publiée le ${referenceUpdate.createdAt.toLocaleString()} · ${
 				UPDATE_COPY.versionTag
 			}`;
 		}
 		return `${UPDATE_COPY.subtitle} · ${UPDATE_COPY.versionTag}`;
-	}, [latestUpdate]);
+	}, [latestUpdate, pendingUpdate]);
 
 	const checkForUpdates = useCallback(
 		async ({ force }: { force?: boolean } = {}) => {
@@ -291,7 +336,9 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 			checkForUpdates,
 			openUpdateDetails,
 			dismissUpdateNotice,
-			hasPendingUpdate: Boolean(latestUpdate ?? isUpdatePending),
+			hasPendingUpdate: Boolean(
+				latestUpdate ?? pendingUpdate ?? isUpdatePending
+			),
 			isChecking: isChecking || manualCheckInFlight,
 			isDownloading,
 			latestUpdate,
@@ -301,6 +348,7 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 			openUpdateDetails,
 			dismissUpdateNotice,
 			latestUpdate,
+			pendingUpdate,
 			isUpdatePending,
 			isChecking,
 			manualCheckInFlight,
