@@ -28,8 +28,8 @@ if (isExpoGo) {
 const RNIap = isExpoGo ? null : require("react-native-iap");
 
 const PRODUCT_IDS = Platform.select({
-	ios: ["com.comacademy.monthly", "com.comacademy.yearly"],
-	android: ["monthly_subscription", "yearly_subscription"],
+	ios: ["fullAccess100"],
+	android: ["fullAccess100"],
 }) as string[];
 
 const getApiBaseUrl = () => {
@@ -80,10 +80,7 @@ const createIAPService = () => {
 		/**
 		 * Purchase a subscription
 		 */
-		async purchaseSubscription(
-			product: SubscriptionProduct,
-			userId?: string
-		) {
+		async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
 			try {
 				const sku = getSubscriptionProductId(product);
 				if (!sku) {
