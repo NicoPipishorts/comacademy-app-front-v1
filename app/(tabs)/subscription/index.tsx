@@ -1,3 +1,4 @@
+// app/(whatever)/subscription/index.tsx
 import { UseAuth } from "@/auth/AuthContext";
 import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
@@ -15,8 +16,6 @@ import {
 import Constants from "expo-constants";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
-import type { PurchaseError } from "react-native-iap";
-import { ErrorCode } from "react-native-iap";
 import {
 	Alert,
 	KeyboardAvoidingView,
@@ -29,14 +28,33 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import type { PurchaseError } from "react-native-iap";
+import { ErrorCode } from "react-native-iap";
 
-// Check if running in Expo Go
+// ===== Helpers =====
 const isExpoGo = Constants.appOwnership === "expo";
+
+// Safe wrapper so a weird product shape can’t blow up formatting
+const safeFormatPrice = (p: any, fallback = "") => {
+	try {
+		return (
+			formatSubscriptionPrice?.(p, fallback) ??
+			p?.priceString ??
+			p?.localizedPrice ??
+			p?.subscriptionOfferDetails?.[0]?.pricingPhases?.pricingPhaseList?.[0]
+				?.formattedPrice ??
+			fallback
+		);
+	} catch {
+		return fallback;
+	}
+};
 
 export default function SubscriptionScreen() {
 	const router = useRouter();
 	const { from } = useLocalSearchParams<{ from?: string | string[] }>();
 	const { session } = UseAuth();
+
 	const {
 		products,
 		subscription,
@@ -53,23 +71,55 @@ export default function SubscriptionScreen() {
 
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
+	// Debug: quick sanity logs to catch missing IAP methods in dev
+	useFocusEffect(
+		useCallback(() => {
+			console.log("[SubscriptionScreen] appOwnership:", Constants.appOwnership);
+			console.log(
+				"[SubscriptionScreen] products length:",
+				Array.isArray(products) ? products.length : "n/a"
+			);
+
+			const maybeIap = (() => {
+				try {
+					return require("react-native-iap");
+				} catch {
+					return null;
+				}
+			})();
+
+			if (maybeIap) {
+				console.log(
+					"[SubscriptionScreen] IAP methods:",
+					"getSubscriptions:",
+					typeof maybeIap.getSubscriptions,
+					"requestSubscription:",
+					typeof maybeIap.requestSubscription,
+					"initConnection:",
+					typeof maybeIap.initConnection
+				);
+			} else {
+				console.log(
+					"[SubscriptionScreen] react-native-iap not available (mock/Expo Go?)"
+				);
+			}
+
+			hideTabBar();
+			return () => showTabBar();
+			// we only want this on screen focus
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [hideTabBar, showTabBar])
+	);
+
 	const returnDestination = useMemo(() => {
 		if (!from) return undefined;
 		return Array.isArray(from) ? from[0] : from;
 	}, [from]);
 
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
-
 	const hasManualPremium = session?.user?.manualPremium ?? false;
 	const hasPremiumAccess = useMemo(() => {
 		if (hasManualPremium) return true;
 		if (session?.user?.hasPremiumAccess) return true;
-
 		const status = session?.user?.subscription?.status;
 		return (
 			status === "active" ||
@@ -83,7 +133,7 @@ export default function SubscriptionScreen() {
 	]);
 	const isFreeUser = !hasPremiumAccess;
 
-	// Map products to plan cards
+	// Try to “detect” monthly/yearly by id; otherwise we’ll fall back to rendering all products
 	const monthlyProduct = useMemo(
 		() =>
 			products.find((p) => {
@@ -94,18 +144,18 @@ export default function SubscriptionScreen() {
 			}),
 		[products]
 	);
+
 	const yearlyProduct = useMemo(
 		() =>
-			products.find(
-				(p) => {
-					const identifier = getSubscriptionProductId(p)?.toLowerCase();
-					return identifier
-						? identifier.includes("yearly") || identifier.includes("year")
-						: false;
-				}
-			),
+			products.find((p) => {
+				const identifier = getSubscriptionProductId(p)?.toLowerCase();
+				return identifier
+					? identifier.includes("yearly") || identifier.includes("year")
+					: false;
+			}),
 		[products]
 	);
+
 	const monthlyProductId = useMemo(() => {
 		if (!monthlyProduct) return undefined;
 		return getSubscriptionProductId(monthlyProduct);
@@ -117,18 +167,12 @@ export default function SubscriptionScreen() {
 			Alert.alert(
 				"Succès!",
 				"Votre abonnement a été activé avec succès. Profitez de tous les contenus premium!",
-				[
-					{
-						text: "OK",
-						onPress: () => router.back(),
-					},
-				]
+				[{ text: "OK", onPress: () => router.back() }]
 			);
 		} catch (err) {
 			const purchaseError = err as PurchaseError;
-			if (purchaseError?.code === ErrorCode.UserCancelled) {
-				return;
-			}
+			if (purchaseError?.code === ErrorCode.UserCancelled) return;
+			console.warn("[SubscriptionScreen] purchase error:", err);
 			Alert.alert(
 				"Erreur",
 				"Une erreur est survenue lors de l'achat. Veuillez réessayer."
@@ -146,6 +190,7 @@ export default function SubscriptionScreen() {
 				{ text: "OK" },
 			]);
 		} catch (err) {
+			console.warn("[SubscriptionScreen] restore error:", err);
 			Alert.alert(
 				"Erreur",
 				"Impossible de restaurer vos achats. Assurez-vous d'être connecté avec le même compte."
@@ -154,26 +199,20 @@ export default function SubscriptionScreen() {
 	};
 
 	const handlePrivacyPolicy = () => {
-		// TODO: Replace with your actual privacy policy URL
 		Linking.openURL("https://yourwebsite.com/privacy-policy");
 	};
 
 	const handleTermsOfService = () => {
-		// TODO: Replace with your actual terms of service URL
 		Linking.openURL("https://yourwebsite.com/terms-of-service");
 	};
 
 	const handleManageSubscription = () => {
 		if (isExpoGo) {
-			// Mock: Show cancel option for testing
 			Alert.alert(
 				"Gérer l'abonnement (Test)",
 				"Voulez-vous annuler votre abonnement de test ?",
 				[
-					{
-						text: "Annuler",
-						style: "cancel",
-					},
+					{ text: "Annuler", style: "cancel" },
 					{
 						text: "Résilier l'abonnement",
 						style: "destructive",
@@ -191,7 +230,6 @@ export default function SubscriptionScreen() {
 				]
 			);
 		} else {
-			// Production: Open native subscription management
 			if (Platform.OS === "ios") {
 				Linking.openURL("https://apps.apple.com/account/subscriptions");
 			} else if (Platform.OS === "android") {
@@ -289,7 +327,7 @@ export default function SubscriptionScreen() {
 							</View>
 							<View style={styles.benefitItem}>
 								<Text style={styles.benefitIcon}>📚</Text>
-								<Text style={styles.benefitText}>
+								<Text className='benefit-text' style={styles.benefitText}>
 									Tous les métiers et professions
 								</Text>
 							</View>
@@ -316,14 +354,11 @@ export default function SubscriptionScreen() {
 
 					{/* Subscription Plans */}
 					<View style={styles.plansSection}>
-						{/* Monthly Plan */}
+						{/* Prefer monthly if we detected it */}
 						{monthlyProduct && (
 							<SubscriptionPlanCard
 								title='Abonnement Mensuel'
-								price={formatSubscriptionPrice(
-									monthlyProduct,
-									"4,99 €"
-								)}
+								price={safeFormatPrice(monthlyProduct, "4,99 €")}
 								duration='/ mois'
 								features={[
 									"Accès illimité à tout le contenu",
@@ -339,7 +374,36 @@ export default function SubscriptionScreen() {
 							/>
 						)}
 
-						{!yearlyProduct && !monthlyProduct && (
+						{/* Fallback: if we didn’t detect monthly/yearly, render whatever we got */}
+						{!monthlyProduct && !yearlyProduct && products.length > 0 && (
+							<>
+								{products.map((p) => {
+									const id =
+										getSubscriptionProductId(p) ??
+										String(p.productId ?? Math.random());
+									return (
+										<SubscriptionPlanCard
+											key={id}
+											title={p.title || "Accès Com’Academy"}
+											price={safeFormatPrice(p, "4,99 €")}
+											duration=''
+											features={[
+												"Accès illimité à tout le contenu",
+												"Annulation à tout moment",
+											]}
+											isCurrentPlan={
+												hasActiveSubscription && id === subscription?.productId
+											}
+											onPress={() => handlePurchase(p as SubscriptionProduct)}
+											disabled={purchasing}
+										/>
+									);
+								})}
+							</>
+						)}
+
+						{/* No products at all */}
+						{products.length === 0 && (
 							<View style={styles.noProductsContainer}>
 								<Text style={styles.noProductsText}>
 									Les abonnements ne sont pas disponibles pour le moment.
@@ -354,7 +418,10 @@ export default function SubscriptionScreen() {
 					{/* Error Display */}
 					{error && (
 						<View style={styles.errorContainer}>
-							<Text style={styles.errorText}>⚠️ {error}</Text>
+							<Text style={styles.errorText}>
+								⚠️{" "}
+								{typeof error === "string" ? error : "Une erreur est survenue."}
+							</Text>
 						</View>
 					)}
 
@@ -381,20 +448,17 @@ export default function SubscriptionScreen() {
 
 					{/* Legal Links */}
 					<View style={styles.legalSection}>
-						{/* <Text style={styles.legalText}>
-							En vous abonnant, vous acceptez nos
-						</Text>
-						<View style={styles.legalLinks}>
-							<TouchableOpacity onPress={handleTermsOfService}>
-								<Text style={styles.legalLink}>Conditions d'utilisation</Text>
-							</TouchableOpacity>
-							<Text style={styles.legalSeparator}> et notre </Text>
-							<TouchableOpacity onPress={handlePrivacyPolicy}>
-								<Text style={styles.legalLink}>
-									Politique de confidentialité
-								</Text>
-							</TouchableOpacity>
-						</View> */}
+						{/* If you want to re-enable links, uncomment this block and set real URLs */}
+						{/* <Text style={styles.legalText}>En vous abonnant, vous acceptez nos</Text>
+            <View style={styles.legalLinks}>
+              <TouchableOpacity onPress={handleTermsOfService}>
+                <Text style={styles.legalLink}>Conditions d'utilisation</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalSeparator}> et notre </Text>
+              <TouchableOpacity onPress={handlePrivacyPolicy}>
+                <Text style={styles.legalLink}>Politique de confidentialité</Text>
+              </TouchableOpacity>
+            </View> */}
 						<Text style={styles.legalNote}>
 							L'abonnement se renouvelle automatiquement. Vous pouvez annuler à
 							tout moment depuis les paramètres de votre compte App Store ou
