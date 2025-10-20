@@ -16,7 +16,8 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useSubscriptionPrompt } from "@/hooks/useSubscriptionPrompt";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { NavigationType } from "@/types/general";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	Keyboard,
@@ -49,6 +50,7 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const [showOnboarding, setShowOnboarding] = useState(false);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
+	const navigation = useNavigation<NavigationType>();
 
 	useTrackPageMetrics({ page: "User" });
 
@@ -65,8 +67,9 @@ export default function User() {
 	// Subscription prompt hook
 	const totalAnsweredQuestions =
 		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
-	const { shouldShowModal, dismissModal } =
-		useSubscriptionPrompt(totalAnsweredQuestions);
+	const { shouldShowModal, dismissModal } = useSubscriptionPrompt(
+		totalAnsweredQuestions
+	);
 
 	const lastFetchTimeRef = useRef<number>(Date.now());
 
@@ -168,6 +171,21 @@ export default function User() {
 
 					<View style={styles.logoutContainer}>
 						<TouchableOpacity
+							onPress={() => navigation.navigate("iapBarebone")}
+							style={styles.logoutButton}>
+							<Text
+								style={{
+									color: colorWhite,
+									fontSize: FontSize16,
+									fontWeight: "bold",
+								}}>
+								IAP Barebones
+							</Text>
+						</TouchableOpacity>
+					</View>
+
+					<View style={styles.logoutContainer}>
+						<TouchableOpacity
 							onPress={() => logout()}
 							style={styles.logoutButton}>
 							<Text
@@ -198,7 +216,7 @@ export default function User() {
 			<UpgradeSubscriptionModal
 				visible={shouldShowModal}
 				onClose={dismissModal}
-				message="Félicitations ! Tu as atteint le niveau 1 ! Continue ton aventure avec un abonnement Premium pour débloquer tout le contenu."
+				message='Félicitations ! Tu as atteint le niveau 1 ! Continue ton aventure avec un abonnement Premium pour débloquer tout le contenu.'
 			/>
 		</KeyboardAvoidingView>
 	);
