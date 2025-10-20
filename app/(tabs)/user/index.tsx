@@ -175,7 +175,7 @@ export default function User() {
 							style={styles.logoutButton}>
 							<Text
 								style={{
-									color: colorWhite,
+									color: "#F0F",
 									fontSize: FontSize16,
 									fontWeight: "bold",
 								}}>

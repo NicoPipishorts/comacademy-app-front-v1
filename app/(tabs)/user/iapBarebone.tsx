@@ -12,19 +12,28 @@ function App() {
 				// User cancelled - don't show error
 				break;
 			case ErrorCode.BillingUnavailable:
-				Alert.alert("Purchases Unavailable", "Purchases are not allowed on this device");
+				Alert.alert(
+					"Purchases Unavailable",
+					"Purchases are not allowed on this device"
+				);
 				break;
 			case ErrorCode.ItemUnavailable:
 				Alert.alert("Product Unavailable", "This product is not available");
 				break;
 			case ErrorCode.NetworkError:
-				Alert.alert("Network Error", "Please check your connection and try again");
+				Alert.alert(
+					"Network Error",
+					"Please check your connection and try again"
+				);
 				break;
 			case ErrorCode.PurchaseError:
 				Alert.alert("Purchase Error", "Invalid payment information");
 				break;
 			default:
-				Alert.alert("Purchase Failed", error.message || "An unknown error occurred");
+				Alert.alert(
+					"Purchase Failed",
+					error.message || "An unknown error occurred"
+				);
 		}
 	};
 
@@ -74,13 +83,17 @@ function App() {
 			}
 		} catch (error) {
 			console.error("Receipt validation failed:", error);
-			Alert.alert("Validation Error", "Failed to validate receipt. Please contact support.");
+			Alert.alert(
+				"Validation Error",
+				"Failed to validate receipt. Please contact support."
+			);
 			return false;
 		}
 	};
 
 	return (
 		<View>
+			<ScreenHeaders content='IAP Barebones' />
 			{products.map((product) => (
 				<TouchableOpacity
 					key={product.id}
@@ -90,7 +103,6 @@ function App() {
 							type: "in-app",
 						})
 					}>
-					<ScreenHeaders content='IAP Barebones' />
 					<Text>
 						{product.title} - {product.displayPrice}
 					</Text>
