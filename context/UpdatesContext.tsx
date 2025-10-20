@@ -54,10 +54,7 @@ const UPDATE_COPY: StaticUpdateCopy = {
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: [
-		"Modifiication des skeletons Metier et Dico",
-		"Ajout de swipe down to refresh sur la page subscriptions",
-	],
+	notes: ["Amélioration des sur l'achat in app."],
 };
 
 type UpdatesContextValue = {
