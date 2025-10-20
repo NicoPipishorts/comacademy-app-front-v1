@@ -1,4 +1,8 @@
 import { Platform } from "react-native";
+import {
+	getSubscriptionProductId,
+	type SubscriptionProduct,
+} from "../utils/iap";
 
 /**
  * Mock IAP Service for Expo Go Testing
@@ -74,7 +78,12 @@ export const IAPService = {
 	/**
 	 * Purchase a subscription (mock)
 	 */
-	async purchaseSubscription(productId: string, userId?: string) {
+	async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
+		const productId = getSubscriptionProductId(product);
+		if (!productId) {
+			throw new Error("Invalid product identifier");
+		}
+
 		console.log("📱 [Mock IAP] Starting purchase:", { productId, userId });
 		await delay(1500);
 
