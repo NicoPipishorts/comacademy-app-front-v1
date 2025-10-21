@@ -47,14 +47,18 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: "v1.2.4.1",
+	versionTag: "v1.2.4.2",
 	snackbarMessage:
 		"Nouvelle mise à jour OTA faite. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: ["Amélioration des sur l'achat in app."],
+	notes: [
+		"Amélioration de mémoire cache.",
+		"Corrections de bugs mineurs.",
+		"Optrimisation des filtres par catégories.",
+	],
 };
 
 type UpdatesContextValue = {
