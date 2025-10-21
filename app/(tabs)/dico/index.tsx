@@ -4,10 +4,10 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
-import { useDicoIds } from "@/hooks/useGetDico";
+import { clearDicoCache, useDicoIds } from "@/hooks/useGetDico";
 import { NavigationType } from "@/types/general";
 import { useGlobalSearchParams, useNavigation } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import CategoriesCards from "../../../components/categories/categories";
 import DicoList from "./list";
@@ -17,11 +17,13 @@ const Dico = () => {
 	const { openDetails } = useGlobalSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
+	const [refreshing, setRefreshing] = useState(false);
 
 	const {
 		data: dataDico,
 		isLoading: isLoadingData,
 		isFetching: isFetchingData,
+		refetch,
 	} = useDicoIds(filterByCat);
 	const { data: dataCat, isLoading: isLoadingCat } = useCategoriesFull();
 
@@ -36,6 +38,20 @@ const Dico = () => {
 	const toggleTab = (index: number) => {
 		setActiveTab(index);
 	};
+
+	const handleRefresh = useCallback(() => {
+		setRefreshing(true);
+		void (async () => {
+			try {
+				await clearDicoCache(filterByCat ?? null);
+				await refetch();
+			} catch (error) {
+				console.error("Failed to refresh dico", error);
+			} finally {
+				setRefreshing(false);
+			}
+		})();
+	}, [filterByCat, refetch]);
 
 	// Enforce minimum loading time to prevent glitchy skeleton flashes
 
@@ -52,6 +68,8 @@ const Dico = () => {
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
 					isLoading={isLoadingData || isFetchingData}
+					refreshing={refreshing}
+					onRefresh={handleRefresh}
 				/>
 			)}
 

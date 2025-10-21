@@ -17,6 +17,7 @@ import React, {
 	useState,
 } from "react";
 import {
+	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -31,6 +32,8 @@ type Props = {
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
 	isLoading: boolean;
+	refreshing?: boolean;
+	onRefresh?: () => void;
 };
 
 const DicoList = ({
@@ -39,6 +42,8 @@ const DicoList = ({
 	filterByCat,
 	setFilterByCat,
 	isLoading,
+	refreshing = false,
+	onRefresh,
 }: Props) => {
 	const navigation = useNavigation<NavigationType>();
 	const scrollViewRef = useRef<ScrollView | null>(null);
@@ -200,6 +205,15 @@ const DicoList = ({
 			{!showSkeleton && !isLoading && data && (
 				<View style={styles.contentContainer}>
 					<ScrollView
+						refreshControl={
+							onRefresh ? (
+								<RefreshControl
+									refreshing={refreshing}
+									onRefresh={onRefresh}
+									tintColor={colorBlack}
+								/>
+							) : undefined
+						}
 						ref={scrollViewRef}
 						style={styles.listWrapper}
 						contentContainerStyle={styles.listContainer}

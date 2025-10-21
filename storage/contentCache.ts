@@ -37,3 +37,18 @@ export async function clearCacheEntry(suffix: string) {
 		console.error("Failed to clear cached content", error);
 	}
 }
+
+export async function clearCacheByPrefix(prefixSuffix: string) {
+	try {
+		const keys = await AsyncStorage.getAllKeys();
+		if (!keys.length) return;
+
+		const targetPrefix = keyFor(prefixSuffix);
+		const matchingKeys = keys.filter((key) => key.startsWith(targetPrefix));
+		if (matchingKeys.length) {
+			await AsyncStorage.multiRemove(matchingKeys);
+		}
+	} catch (error) {
+		console.error("Failed to clear cached content by prefix", error);
+	}
+}

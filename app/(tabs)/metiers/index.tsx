@@ -6,8 +6,8 @@ import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
-import { useGetMetiers } from "@/hooks/useGetMetiers";
-import React, { useState } from "react";
+import { clearMetiersCache, useGetMetiers } from "@/hooks/useGetMetiers";
+import React, { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
@@ -17,6 +17,7 @@ const Metier = () => {
 	const { auth } = useAuthSession();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
+	const [refreshing, setRefreshing] = useState(false);
 
 	useTrackPageMetrics({ page: "Metiers" });
 
@@ -24,40 +25,40 @@ const Metier = () => {
 		data: dataMetier,
 		isLoading: isLoadingMetier,
 		isFetching: isFetchingMetier,
+		refetch,
 	} = useGetMetiers(filterByCat);
-	const { data: dataCategory, isLoading: isLoadingCats } = useCategoriesFull();
-	const { data: dataFavoritesMetier, isLoading: isLoadingFavorites } =
-		useGetFavoriteMetiers(auth?.user.id);
+	const { data: dataCategory } = useCategoriesFull();
+	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(auth?.user.id);
 
 	const toggleTab = (index: number) => {
 		setActiveTab(index);
 	};
 
+	const handleRefresh = useCallback(() => {
+		setRefreshing(true);
+		void (async () => {
+			try {
+				await clearMetiersCache(filterByCat ?? null);
+				await refetch();
+			} catch (error) {
+				console.error("Failed to refresh metiers", error);
+			} finally {
+				setRefreshing(false);
+			}
+		})();
+	}, [filterByCat, refetch]);
+
 	const requiresFavorites = !!auth?.user?.id;
 	const favoritesReady = !requiresFavorites || !!dataFavoritesMetier;
-	const favoritesLoading =
-		requiresFavorites && isLoadingFavorites && !dataFavoritesMetier;
 
 	const listDepsReady = !!dataMetier && !!dataCategory && favoritesReady;
-
-	// Enforce minimum loading time to prevent glitchy skeleton flashes
-
-	const showListLoader = activeTab === 0 && !listDepsReady && !favoritesLoading;
 
 	const canShowList = activeTab === 0 && listDepsReady;
 	const canShowCategories = activeTab === 1 && !!dataCategory;
 
-	const showCategoriesLoader =
-		activeTab === 1 && (!dataCategory || isLoadingCats);
-
-	const showFavoritesLoader =
-		activeTab === 0 && !listDepsReady && favoritesLoading;
-
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<ScreenHeaders content='Métiers' />
-
-			{/* {showSkeletonList && <MetierListSkeleton />} */}
 
 			{canShowList && (
 				<MetierList
@@ -66,6 +67,8 @@ const Metier = () => {
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
 					isLoading={isLoadingMetier || isFetchingMetier}
+					refreshing={refreshing}
+					onRefresh={handleRefresh}
 				/>
 			)}
 
