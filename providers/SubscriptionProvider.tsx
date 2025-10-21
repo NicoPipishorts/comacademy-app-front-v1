@@ -12,8 +12,8 @@ import {
 	getSubscriptionProductId,
 	type SubscriptionProduct,
 } from "@/src/utils/iap";
+import { isUserCancelledError } from "@/src/utils/iapErrors";
 import type { PurchaseError } from "react-native-iap";
-import { ErrorCode } from "react-native-iap";
 
 type SubscriptionState = {
 	products: SubscriptionProduct[];
@@ -83,7 +83,7 @@ export const SubscriptionProvider = ({
 					},
 					(err: PurchaseError) => {
 						console.error("Purchase error:", err);
-						if (err?.code === ErrorCode.UserCancelled) {
+						if (isUserCancelledError(err)) {
 							setError(null);
 						} else {
 							setError(err?.message || "Purchase failed");
@@ -127,7 +127,7 @@ export const SubscriptionProvider = ({
 				await IAPService.purchaseSubscription(product, userId);
 			} catch (err) {
 				const purchaseError = err as PurchaseError;
-				if (purchaseError?.code === ErrorCode.UserCancelled) {
+				if (isUserCancelledError(purchaseError)) {
 					setError(null);
 				} else {
 					setError(purchaseError?.message || "Purchase failed");

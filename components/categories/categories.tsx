@@ -17,7 +17,11 @@ interface Props {
 	disabled?: boolean;
 }
 
-const CategoriesCards = ({ setFilterByCat, setActiveTab, disabled = false }: Props) => {
+const CategoriesCards = ({
+	setFilterByCat,
+	setActiveTab,
+	disabled = false,
+}: Props) => {
 	const { data: dataCategory } = useCategoriesFull();
 
 	const onPress = (filter: number) => {
@@ -35,9 +39,9 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab, disabled = false }: Pro
 					{dataCategory?.data.map((cat) => {
 						return (
 							<TouchableOpacity
-								key={cat.id}
+								key={cat.attributes.staticId}
 								disabled={disabled}
-								onPress={() => onPress(cat.id)}
+								onPress={() => onPress(cat.attributes.staticId)}
 								style={[
 									styles.card,
 									{ backgroundColor: `#${cat.attributes.backgroundColor}` },
@@ -45,7 +49,7 @@ const CategoriesCards = ({ setFilterByCat, setActiveTab, disabled = false }: Pro
 								]}>
 								<Image
 									source={{
-										uri: `${cat.attributes.smallIcon.data.attributes.url}`,
+										uri: `${cat.attributes.smallIcon.data?.attributes.url}`,
 									}}
 									style={styles.icon}
 								/>

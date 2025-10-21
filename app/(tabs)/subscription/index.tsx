@@ -13,6 +13,7 @@ import {
 	getSubscriptionProductId,
 	type SubscriptionProduct,
 } from "@/src/utils/iap";
+import { isUserCancelledError } from "@/src/utils/iapErrors";
 import Constants from "expo-constants";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
@@ -29,7 +30,6 @@ import {
 	View,
 } from "react-native";
 import type { PurchaseError } from "react-native-iap";
-import { ErrorCode } from "react-native-iap";
 
 // ===== Helpers =====
 const isExpoGo = Constants.appOwnership === "expo";
@@ -171,7 +171,7 @@ export default function SubscriptionScreen() {
 			);
 		} catch (err) {
 			const purchaseError = err as PurchaseError;
-			if (purchaseError?.code === ErrorCode.UserCancelled) return;
+			if (isUserCancelledError(purchaseError)) return;
 			console.warn("[SubscriptionScreen] purchase error:", err);
 			Alert.alert(
 				"Erreur",
