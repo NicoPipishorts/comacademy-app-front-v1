@@ -28,7 +28,7 @@ const RNIap = isExpoGo ? null : require("react-native-iap");
 // Keep identical IDs on both platforms (must match App Store / Play Console)
 const PRODUCT_IDS = Platform.select({
 	ios: ["fullAccess100"],
-	android: ["fullAccess100"],
+	android: ["monthly-unlimited", "yearly-unlimited"],
 }) as string[];
 
 const getApiBaseUrl = () => {
