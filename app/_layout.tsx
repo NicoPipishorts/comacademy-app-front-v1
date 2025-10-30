@@ -3,6 +3,7 @@ import "react-native-reanimated";
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import { UpdatesProvider } from "@/context/UpdatesContext";
+import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { NetworkProvider } from "@/providers/NetworkProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -27,28 +28,30 @@ if (Platform.OS === "ios") {
 export default function RootLayout() {
 	return (
 		<AuthProvider>
-			<QueryClientProvider client={queryClient}>
-				<GestureHandlerRootView style={{ flex: 1 }}>
-					<BottomSheetModalProvider>
-						<PaperProvider>
-							<SnackbarProvider>
-								<UpdatesProvider>
-									<NetworkProvider>
-										<TabProvider>
-											<Stack screenOptions={{ animation: "none" }}>
-												<Stack.Screen
-													name='(tabs)'
-													options={{ headerShown: false }}
-												/>
-											</Stack>
-										</TabProvider>
-									</NetworkProvider>
-								</UpdatesProvider>
-							</SnackbarProvider>
-						</PaperProvider>
-					</BottomSheetModalProvider>
-				</GestureHandlerRootView>
-			</QueryClientProvider>
+			<SubscriptionProvider>
+				<QueryClientProvider client={queryClient}>
+					<GestureHandlerRootView style={{ flex: 1 }}>
+						<BottomSheetModalProvider>
+							<PaperProvider>
+								<SnackbarProvider>
+									<UpdatesProvider>
+										<NetworkProvider>
+											<TabProvider>
+												<Stack screenOptions={{ animation: "none" }}>
+													<Stack.Screen
+														name='(tabs)'
+														options={{ headerShown: false }}
+													/>
+												</Stack>
+											</TabProvider>
+										</NetworkProvider>
+									</UpdatesProvider>
+								</SnackbarProvider>
+							</PaperProvider>
+						</BottomSheetModalProvider>
+					</GestureHandlerRootView>
+				</QueryClientProvider>
+			</SubscriptionProvider>
 		</AuthProvider>
 	);
 }

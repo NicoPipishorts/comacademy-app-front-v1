@@ -94,7 +94,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	const player = useVideoPlayer(source, (instance) => {
 		instance.loop = isLooping;
 		instance.muted = isMuted;
-		instance.timeUpdateEventInterval = 0.5;
+		instance.timeUpdateEventInterval = 1.0;
 	});
 
 	useEffect(() => {
@@ -108,8 +108,8 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 					allowsRecording: false,
 					shouldPlayInBackground: false,
 					shouldRouteThroughEarpiece: false,
-					interruptionMode: "doNotMix",
-					interruptionModeAndroid: "doNotMix",
+					interruptionMode: "mixWithOthers",
+					interruptionModeAndroid: "duckOthers",
 				});
 			} catch {
 				// ignore session configuration issues
@@ -159,7 +159,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	}, [player, isLooping]);
 
 	useEffect(() => {
-		player.timeUpdateEventInterval = 0.5;
+		player.timeUpdateEventInterval = 1.0;
 	}, [player]);
 
 	useEffect(() => {
@@ -319,13 +319,24 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		[player, emitStatus, syncDuration]
 	);
 
-	const memoizedProps = useMemo(
-		() => ({
+	const memoizedProps = useMemo(() => {
+		const props = {
 			nativeControls: useNativeControls,
 			contentFit: resizeMode,
-		}),
-		[useNativeControls, resizeMode]
-	);
+		};
+		return props;
+	}, [useNativeControls, resizeMode]);
+
+	// Cleanup player on unmount
+	useEffect(() => {
+		return () => {
+			try {
+				player.pause();
+			} catch {
+				// ignore cleanup errors
+			}
+		};
+	}, [player]);
 
 	return <VideoView player={player} style={style} {...memoizedProps} />;
 });

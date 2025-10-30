@@ -19,15 +19,29 @@ import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
-	metierId: number;
+	metierId?: number | null;
 }
 export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 	const { id } = useLocalSearchParams();
 	const [modalVisible, setModalVisible] = useState(false);
+	const insets = useSafeAreaInsets();
 
-	const metierId = paramsMetierId ? paramsMetierId : Number(id);
+	const routeIdParam = Array.isArray(id) ? id[0] : id;
+	const parsedRouteId =
+		routeIdParam !== undefined && routeIdParam !== null
+			? Number(routeIdParam)
+			: NaN;
+
+	const hasPropId =
+		typeof paramsMetierId === "number" && Number.isFinite(paramsMetierId);
+	const metierId = hasPropId
+		? (paramsMetierId as number)
+		: Number.isFinite(parsedRouteId)
+		? parsedRouteId
+		: null;
 	const { isAndroid } = useDeviceTypeCheckers();
 
 	const { data } = useGetMetierById(metierId);
@@ -42,6 +56,20 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 			return () => showTabBar();
 		}, [hideTabBar, showTabBar])
 	);
+
+	if (metierId == null) {
+		return (
+			<View style={[styles.wrapper, { paddingTop: isAndroid ? 70 : 20 }]}>
+				<View style={styles.headerContainer}>
+					<ReturnButton />
+					<ScreenHeaders content='Métiers' />
+				</View>
+				<Text style={styles.containerText}>
+					Aucun métier sélectionné. Veuillez revenir à la liste.
+				</Text>
+			</View>
+		);
+	}
 
 	if (!data) {
 		return <Loader />;
@@ -185,7 +213,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 					</Text>
 				</View>
 
-				<View>
+				<View style={{ marginBottom: insets.bottom + 20 }}>
 					<Text style={styles.containerText}>{data.data.attributes.BREF}</Text>
 				</View>
 			</ScrollView>

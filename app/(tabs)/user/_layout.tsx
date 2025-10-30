@@ -21,6 +21,14 @@ const UserLayout = () => {
 						presentation: "modal",
 					}}
 				/>
+				<Stack.Screen
+					name='iapBarebone'
+					options={{
+						headerShown: false,
+						headerTitle: "In-App Purchases",
+						presentation: "modal",
+					}}
+				/>
 			</Stack>
 		</GameProvider>
 	);

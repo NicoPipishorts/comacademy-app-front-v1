@@ -56,7 +56,7 @@ const LeJeuLayout = () => {
 				options={{
 					headerShown: false,
 					headerTitle: "Favorite Details",
-					presentation: "modal",
+					presentation: "card",
 				}}
 			/>
 			<Stack.Screen

@@ -409,6 +409,10 @@ const LesPetitesHistoires: React.FC = () => {
 						snapToAlignment='start'
 						decelerationRate='fast'
 						pagingEnabled={false}
+						windowSize={3}
+						maxToRenderPerBatch={2}
+						removeClippedSubviews={true}
+						initialNumToRender={1}
 					/>
 				</>
 			)}

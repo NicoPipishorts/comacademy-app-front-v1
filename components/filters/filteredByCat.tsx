@@ -29,7 +29,9 @@ export default function FilteredByCat({
 		title = categories;
 	} else {
 		// otherwise find the matching category in the payload
-		const match = categories.data.find((c) => c.id === filterByCat);
+		const match = categories.data.find(
+			(c) => c.attributes.staticId === filterByCat
+		);
 		title = match?.attributes.Title ?? "Unknown";
 	}
 
@@ -60,6 +62,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		alignSelf: "flex-start",
+		marginLeft: -5,
 	},
 	filterContainer: {
 		flexDirection: "row",

@@ -1,9 +1,12 @@
 import ThumbLikeButton from "@/components/buttons/thumbLike";
-import { colorYellow, primaryBackground } from "@/constants/colors";
-import ExpoVideo, { CompatVideoStatus, ManagedVideoHandle } from "@/components/media/ExpoVideo";
+import ExpoVideo, {
+	CompatVideoStatus,
+	ManagedVideoHandle,
+} from "@/components/media/ExpoVideo";
+import { primaryBackground } from "@/constants/colors";
 import { FeedItem } from "@/types/feed";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 interface Props {
 	data: FeedItem;
@@ -22,11 +25,9 @@ export default function FeedCardVideo({
 		width: 0,
 		height: 0,
 	});
-	const [isLoading, setIsLoading] = useState(true); // Loading state
 
 	useEffect(() => {
 		if (status?.didJustFinish && video.current) {
-			// Reset video position to the start
 			video.current.setPositionAsync(0);
 		}
 	}, [status]);
@@ -40,15 +41,6 @@ export default function FeedCardVideo({
 	return (
 		<View>
 			<View style={styles.container}>
-				{isLoading && (
-					<View style={styles.loaderContainer}>
-						<ActivityIndicator
-							size='large'
-							color={colorYellow}
-							style={{ backgroundColor: primaryBackground }}
-						/>
-					</View>
-				)}
 				<ExpoVideo
 					ref={video}
 					source={{
@@ -60,13 +52,12 @@ export default function FeedCardVideo({
 						backgroundColor: primaryBackground,
 					}}
 					shouldPlay={visibleItems.includes(data.id)}
+					isScreenFocused={true}
 					isLooping={false}
 					useNativeControls={true}
 					resizeMode='contain' // Maintain aspect ratio
 					onPlaybackStatusUpdate={(nextStatus) => setStatus(nextStatus)}
-					onLoadStart={() => setIsLoading(true)} // Show loader when loading starts
 					onReadyForDisplay={({ naturalSize }) => {
-						setIsLoading(false); // Hide loader when ready
 						const { width, height } = naturalSize || { width: 0, height: 0 };
 						if (width > 0 && height > 0) {
 							setVideoDimensions({ width, height });

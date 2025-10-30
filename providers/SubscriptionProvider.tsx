@@ -1,0 +1,236 @@
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import { UseAuth } from "@/auth/AuthContext";
+import { IAPService } from "@/src/services/iap.service";
+import {
+	getSubscriptionProductId,
+	type SubscriptionProduct,
+} from "@/src/utils/iap";
+import { isUserCancelledError } from "@/src/utils/iapErrors";
+import type { PurchaseError } from "react-native-iap";
+
+type SubscriptionState = {
+	products: SubscriptionProduct[];
+	subscription: any;
+	loading: boolean;
+	refreshing: boolean;
+	purchasing: boolean;
+	error: string | null;
+	purchase: (product: SubscriptionProduct) => Promise<void>;
+	restore: () => Promise<void>;
+	checkSubscription: () => Promise<any>;
+	cancelSubscription: () => Promise<boolean>;
+	refresh: () => Promise<void>;
+	hasActiveSubscription: boolean;
+};
+
+const SubscriptionContext = createContext<SubscriptionState | undefined>(
+	undefined
+);
+
+export const SubscriptionProvider = ({
+	children,
+}: {
+	children: React.ReactNode;
+}) => {
+	const { session } = UseAuth();
+	const [products, setProducts] = useState<SubscriptionProduct[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [purchasing, setPurchasing] = useState(false);
+	const [subscription, setSubscription] = useState<any>(null);
+	const [error, setError] = useState<string | null>(null);
+	const [refreshing, setRefreshing] = useState(false);
+
+	const checkSubscription = useCallback(async () => {
+		try {
+			const currentSub = await IAPService.checkSubscriptionStatus();
+			setSubscription(currentSub);
+			return currentSub;
+		} catch (err) {
+			console.error("Check subscription error:", err);
+			return null;
+		}
+	}, []);
+
+	const fetchProductsAndSubscription = useCallback(async () => {
+		const [availableProducts, currentSub] = await Promise.all([
+			IAPService.getProducts(),
+			IAPService.checkSubscriptionStatus(),
+		]);
+
+		setProducts(availableProducts);
+		setSubscription(currentSub);
+	}, []);
+
+	useEffect(() => {
+		let cleanup: (() => void) | undefined;
+
+		const init = async () => {
+			try {
+				await IAPService.initialize();
+
+				cleanup = IAPService.setupPurchaseListener(
+					(purchase) => {
+						console.log("Purchase successful:", purchase);
+						void checkSubscription();
+						setPurchasing(false);
+					},
+					(err: PurchaseError) => {
+						console.error("Purchase error:", err);
+						if (isUserCancelledError(err)) {
+							setError(null);
+						} else {
+							setError(err?.message || "Purchase failed");
+						}
+						setPurchasing(false);
+					}
+				);
+
+				await fetchProductsAndSubscription();
+			} catch (err: any) {
+				console.error("Failed to initialize IAP:", err);
+				setError(err?.message || "Failed to initialize purchases");
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		void init();
+
+		return () => {
+			cleanup?.();
+			void IAPService.endConnection();
+		};
+	}, [checkSubscription, fetchProductsAndSubscription]);
+
+	const purchase = useCallback(
+		async (product: SubscriptionProduct) => {
+			const sku = getSubscriptionProductId(product);
+			if (!sku) {
+				const invalidError = new Error("Invalid product identifier");
+				setError(invalidError.message);
+				throw invalidError;
+			}
+
+			try {
+				setPurchasing(true);
+				setError(null);
+				const userId = session?.user?.id
+					? String(session.user.id)
+					: undefined;
+				await IAPService.purchaseSubscription(product, userId);
+			} catch (err) {
+				const purchaseError = err as PurchaseError;
+				if (isUserCancelledError(purchaseError)) {
+					setError(null);
+				} else {
+					setError(purchaseError?.message || "Purchase failed");
+				}
+				setPurchasing(false);
+				throw err;
+			}
+		},
+		[session?.user?.id]
+	);
+
+	const refresh = useCallback(async () => {
+		try {
+			setRefreshing(true);
+			setError(null);
+			await fetchProductsAndSubscription();
+		} catch (err: any) {
+			console.error("Refresh error:", err);
+			setError(err?.message || "Refresh failed");
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchProductsAndSubscription]);
+
+	const restore = useCallback(async () => {
+		try {
+			setLoading(true);
+			setError(null);
+			await IAPService.restorePurchases();
+			await checkSubscription();
+		} catch (err: any) {
+			console.error("Restore error:", err);
+			setError(err?.message || "Restore failed");
+		} finally {
+			setLoading(false);
+		}
+	}, [checkSubscription]);
+
+	const cancelSubscription = useCallback(async () => {
+		try {
+			setLoading(true);
+			setError(null);
+			if (
+				"resetSubscription" in IAPService &&
+				typeof IAPService.resetSubscription === "function"
+			) {
+				await IAPService.resetSubscription();
+				await checkSubscription();
+				return true;
+			}
+			return false;
+		} catch (err: any) {
+			console.error("Cancel subscription error:", err);
+			setError(err?.message || "Cancel failed");
+			return false;
+		} finally {
+			setLoading(false);
+		}
+	}, [checkSubscription]);
+
+	const value = useMemo<SubscriptionState>(
+		() => ({
+			products,
+			subscription,
+			loading,
+			refreshing,
+			purchasing,
+			error,
+			purchase,
+			restore,
+			checkSubscription,
+			cancelSubscription,
+			refresh,
+			hasActiveSubscription: !!subscription,
+		}),
+		[
+			products,
+			subscription,
+			loading,
+			refreshing,
+			purchasing,
+			error,
+			purchase,
+			restore,
+			checkSubscription,
+			cancelSubscription,
+			refresh,
+		]
+	);
+
+	return (
+		<SubscriptionContext.Provider value={value}>
+			{children}
+		</SubscriptionContext.Provider>
+	);
+};
+
+export const useSubscriptionContext = () => {
+	const context = useContext(SubscriptionContext);
+	if (!context) {
+		throw new Error(
+			"useSubscription must be used within a SubscriptionProvider"
+		);
+	}
+	return context;
+};

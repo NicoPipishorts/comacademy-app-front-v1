@@ -1,8 +1,8 @@
 // File: src/components/leJeu/FinishedSession.tsx
 import Foundation from "@expo/vector-icons/Foundation";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -30,7 +30,6 @@ export default function FinishedSession() {
 	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
-	const { showTabBar } = useTabBarVisibility();
 	const {
 		sessionId,
 		setDataGame,
@@ -38,8 +37,16 @@ export default function FinishedSession() {
 		setGameStatus,
 		setQuestionsLeft,
 		setAnsweredCount,
-	} =
-		useGameContext();
+	} = useGameContext();
+
+	const { hideTabBar, showTabBar } = useTabBarVisibility();
+
+	useFocusEffect(
+		useCallback(() => {
+			hideTabBar();
+			return () => showTabBar();
+		}, [hideTabBar, showTabBar])
+	);
 
 	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
 
@@ -58,7 +65,7 @@ export default function FinishedSession() {
 
 			if (action === "end") {
 				showTabBar();
-				router.replace("/user");
+				router.replace("/leJeu");
 			} else if (action === "leaderBoard") {
 				showTabBar();
 				router.replace(`/user?openModal=leaderBoard&timestamp=${Date.now()}`);

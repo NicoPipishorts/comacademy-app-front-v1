@@ -1,10 +1,20 @@
 import useJwtToken from "@/hooks/useJwtToken";
+import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 import { MetierPayload, MetiersList } from "@/types/metiers";
+import { clearCollectionCache } from "@/src/utils/cacheHelpers";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 
-const fetchMetierById = async (token: string, id: number): Promise<any> => {
+const LEGACY_METIER_STORAGE_PREFIXES = ["metierList", "metiersList"];
+
+const fetchMetierById = async (
+	token: string,
+	id: number
+): Promise<MetierPayload> => {
+	if (!Number.isFinite(id) || id <= 0) {
+		throw new Error(`Invalid metier id "${id}"`);
+	}
+
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/metiers/${id}`,
@@ -23,23 +33,23 @@ const fetchMetierById = async (token: string, id: number): Promise<any> => {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = (await response.json()) as MetierPayload;
-		return data;
+		return (await response.json()) as MetierPayload;
 	} catch (error) {
 		console.error("Error fetching Metier by ID:", error);
 		throw error;
 	}
 };
 
-const useGetMetierById = (id: number) => {
+const useGetMetierById = (id?: number | null) => {
 	const { token } = useJwtToken();
+	const isValidId = Number.isFinite(id as number) && (id as number) > 0;
 
 	return useQuery<MetierPayload>({
-		queryKey: ["Metier", id],
-		queryFn: () => fetchMetierById(token, id),
+		queryKey: ["Metier", id ?? null],
+		queryFn: () => fetchMetierById(token, id as number),
 		staleTime: 1000 * 60 * 60 * 24 * 7,
 		gcTime: 1000 * 60 * 60 * 24 * 7,
-		enabled: !!token,
+		enabled: !!token && isValidId,
 	});
 };
 
@@ -57,7 +67,7 @@ const fetchMetiers = async (
 			`${process.env.EXPO_PUBLIC_API_URL}/metiers?${
 				filterByCat === null
 					? "fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500"
-					: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[CATEGORIE][$contains]=${filterByCat}`
+					: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[MainCat]=${filterByCat}`
 			}`,
 			{
 				headers: {
@@ -144,7 +154,8 @@ const useGetMetiers = (filterByCat: number | null) => {
 	}, [cacheKey, query.data]);
 
 	const data = query.data ?? cachedData;
-	const isLoading = (!hydrated && !cachedData) || (query.isLoading && !cachedData);
+	const isLoading =
+		(!hydrated && !cachedData) || (query.isLoading && !cachedData);
 	const isFetching = query.isFetching;
 
 	const refetch = useCallback(() => {
@@ -162,3 +173,12 @@ const useGetMetiers = (filterByCat: number | null) => {
 };
 
 export { useGetMetierById, useGetMetiers };
+
+export const clearMetiersCache = (filterByCat?: number | null) =>
+	clearCollectionCache({
+		filter: filterByCat,
+		queryKey: "metiersList",
+		storagePrefix: "metiers",
+		buildCacheKey: metierCacheKeyForFilter,
+		legacyPrefixes: LEGACY_METIER_STORAGE_PREFIXES,
+	});

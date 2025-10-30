@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchCategories = async (token: string): Promise<CategoriePayload> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*&sort=id:asc`,
+			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*&sort=staticId:asc`,
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -21,13 +21,16 @@ const fetchCategories = async (token: string): Promise<CategoriePayload> => {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = await response.json();
+		const raw = (await response.json()) as CategoriePayload;
 
 		// Transform the payload to replace IDs
-		data.data = data.data.map((item: any, index: number) => ({
-			...item,
-			id: index + 1, // Replace id with index + 1
-		}));
+		const data: CategoriePayload = {
+			...raw,
+			data: raw.data.map((item, index) => ({
+				...item,
+				id: index + 1, // Replace id with index + 1
+			})),
+		};
 
 		return data;
 	} catch (error) {

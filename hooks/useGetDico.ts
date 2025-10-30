@@ -1,11 +1,11 @@
 import useJwtToken from "@/hooks/useJwtToken";
+import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
+import { clearCollectionCache } from "@/src/utils/cacheHelpers";
 import { DicoLists, DicoPayload } from "@/types/dico";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-	loadCacheEntry,
-	saveCacheEntry,
-} from "@/storage/contentCache";
+
+const LEGACY_DICO_STORAGE_PREFIXES = ["dicoList", "dicosList"];
 
 const fetchDicoById = async (token: string, id: number): Promise<any> => {
 	try {
@@ -60,7 +60,7 @@ const fetchDicoIds = async (
 			`${process.env.EXPO_PUBLIC_API_URL}/dicos?${
 				filterByCat === null
 					? "fields[0]=Word&_fields=id,Word&pagination[limit]=2500"
-					: `fields[0]=Word&_fields=id,Word&pagination[limit]=2500&filters[Categories][$contains]=${filterByCat}`
+					: `fields[0]=Word&_fields=id,Word&pagination[limit]=2500&filters[MainCat]=${filterByCat}`
 			}`,
 			{
 				headers: {
@@ -144,7 +144,8 @@ const useDicoIds = (filterByCat: number | null) => {
 	}, [cacheKey, query.data]);
 
 	const data = query.data ?? cachedData;
-	const isLoading = (!hydrated && !cachedData) || (query.isLoading && !cachedData);
+	const isLoading =
+		(!hydrated && !cachedData) || (query.isLoading && !cachedData);
 	const isFetching = query.isFetching;
 
 	const refetch = useCallback(() => {
@@ -162,3 +163,12 @@ const useDicoIds = (filterByCat: number | null) => {
 };
 
 export { useDicoById, useDicoIds };
+
+export const clearDicoCache = (filterByCat?: number | null) =>
+	clearCollectionCache({
+		filter: filterByCat,
+		queryKey: "DicoIds",
+		storagePrefix: "dico",
+		buildCacheKey: cacheKeyForFilter,
+		legacyPrefixes: LEGACY_DICO_STORAGE_PREFIXES,
+	});
