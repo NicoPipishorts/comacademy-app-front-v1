@@ -81,6 +81,7 @@ export default function SubscriptionScreen() {
 			);
 
 			const maybeIap = (() => {
+				if (isExpoGo) return null;
 				try {
 					return require("react-native-iap");
 				} catch {
