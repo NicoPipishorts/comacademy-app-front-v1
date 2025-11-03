@@ -17,6 +17,15 @@ export interface FavoriteCitationsResponseFull {
 	};
 }
 
+const EMPTY_RESPONSE: FavoriteCitationsResponseFull = {
+	data: {
+		count: 0,
+		results: {
+			data: [],
+		},
+	},
+};
+
 const fetchPayload = async (
 	token: string,
 	userId: number
@@ -26,10 +35,11 @@ const fetchPayload = async (
 		{ headers: { Authorization: `Bearer ${token}` } }
 	);
 	if (!res.ok) {
-		if (res.status === 404) return null as any;
+		if (res.status === 404) return EMPTY_RESPONSE;
 		throw new Error(`HTTP error! status: ${res.status} ${await res.text()}`);
 	}
-	return res.json();
+	const data = await res.json();
+	return data as FavoriteCitationsResponseFull;
 };
 
 const useGetFavoriteCitationsFull = (userId: number) => {

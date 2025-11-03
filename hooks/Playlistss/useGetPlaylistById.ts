@@ -2,6 +2,20 @@ import useJwtToken from "@/hooks/useJwtToken";
 import { PlaylistContentGrouped } from "@/types/playlists";
 import { useQuery } from "@tanstack/react-query";
 
+const buildEmptyResponse = (playlistId: number): PlaylistContentGrouped => ({
+	data: {
+		id: playlistId,
+		attributes: {
+			name: "",
+			createdAt: "",
+			updatedAt: "",
+			publishedAt: "",
+			selectedColor: "",
+			playlist_contents: [],
+		},
+	},
+});
+
 const fetchData = async (
 	token: string,
 	id: number
@@ -18,7 +32,7 @@ const fetchData = async (
 
 		if (!response.ok) {
 			if (response.status === 404) {
-				return null;
+				return buildEmptyResponse(id);
 			}
 			console.error(
 				`Error fetching Playlists! status: ${response.status}`,
@@ -27,7 +41,7 @@ const fetchData = async (
 			throw new Error(`Error fetching Playlists! status: ${response.status}`);
 		}
 
-		const data = await response.json();
+		const data = (await response.json()) as any;
 
 		// Transform the response into the desired flattened structure
 		const playlistContents: PlaylistContentGrouped["data"]["attributes"]["playlist_contents"] =

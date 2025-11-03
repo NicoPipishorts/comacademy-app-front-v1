@@ -27,7 +27,11 @@ export interface SessionResultsAllquestions {
 }
 
 // Generic fetch function to reduce code duplication
-const fetchData = async <T>(url: string, token: string): Promise<T | null> => {
+const fetchData = async <T>(
+	url: string,
+	token: string,
+	fallback: T
+): Promise<T> => {
 	try {
 		const response = await fetch(url, {
 			headers: {
@@ -37,7 +41,7 @@ const fetchData = async <T>(url: string, token: string): Promise<T | null> => {
 
 		if (!response.ok) {
 			if (response.status === 404) {
-				return null;
+				return fallback;
 			}
 			const errorText = await response.text();
 			console.error(`HTTP error! status: ${response.status}`, errorText);
@@ -52,11 +56,28 @@ const fetchData = async <T>(url: string, token: string): Promise<T | null> => {
 	}
 };
 
+const EMPTY_END_OF_SESSION: EndOfGameSessionPayload = {
+	data: {
+		roundCommentaire: null,
+		totalAnsweredQuestions: 0,
+	},
+};
+
+const EMPTY_SESSION_RESULTS: SessionResultsPayload = {
+	data: {
+		correctAnswers: 0,
+		percentageCorrect: 0,
+		totalPoints: 0,
+		allQuestions: [],
+	},
+};
+
 // Fetch the end of session payload
 const fetchEndOfSessionPayload = (token: string, userId: number) =>
 	fetchData<EndOfGameSessionPayload>(
 		`${process.env.EXPO_PUBLIC_API_URL}/end-of-game-session/${userId}`,
-		token
+		token,
+		EMPTY_END_OF_SESSION
 	);
 
 // Hook to get the end of session data
@@ -74,7 +95,8 @@ const useGetEndOfSession = (userId: number) => {
 const fetchEndOfSessionResults = (token: string, gameId: number) =>
 	fetchData<SessionResultsPayload>(
 		`${process.env.EXPO_PUBLIC_API_URL}/end-of-game-session/results/${gameId}`,
-		token
+		token,
+		EMPTY_SESSION_RESULTS
 	);
 
 // Hook to get the session results
