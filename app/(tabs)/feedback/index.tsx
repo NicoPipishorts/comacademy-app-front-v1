@@ -31,7 +31,7 @@ import useAuthSession from "@/hooks/useAuthSession";
 const feedbackOptions = [
 	{ label: "Une idée/envie", value: "improvement" },
 	{ label: "Signaler un bug", value: "bug" },
-	{ label: "Une avis", value: "feedback" },
+	{ label: "Une remarque", value: "feedback" },
 	{ label: "Autres", value: "feedback" },
 ];
 
@@ -94,7 +94,7 @@ export default function Feedback() {
 						<View style={styles.textContainer}>
 							{[
 								"Vous avez une idée, une envie?",
-								"Un avis?",
+								"Une remarque?",
 								"Un bug à signaler ?",
 								"Faites-nous en part, nous serons ravis de vous lire.",
 							].map((line, i) => (
