@@ -246,6 +246,11 @@ export default function Jeu() {
 		return <Loader />;
 	}
 
+	const cardsTotal = dataGame.length;
+	const cardsSeen = cardsTotal > 0
+		? Math.min(cardsTotal, Math.max(1, cardsTotal - currentIndex))
+		: 0;
+
 	const handlePress = () => {
 		if (sessionId && auth?.user.id)
 			queryClient.invalidateQueries({ queryKey: QK.gameSession(sessionId) });
@@ -355,12 +360,14 @@ export default function Jeu() {
 				/>
 			)}
 
-			<View style={styles.containerBackButton}>
-				<Text style={styles.cardsLeftText}>{currentIndex + 1} / 15</Text>
-				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-					<Text style={styles.textBackButton}>Quitter</Text>
-				</TouchableOpacity>
-			</View>
+		<View style={styles.containerBackButton}>
+			<Text style={styles.cardsLeftText}>
+				{cardsSeen} / {cardsTotal}
+			</Text>
+			<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+				<Text style={styles.textBackButton}>Quitter</Text>
+			</TouchableOpacity>
+		</View>
 		</View>
 	);
 }
