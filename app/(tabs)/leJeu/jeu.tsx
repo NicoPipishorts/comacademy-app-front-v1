@@ -289,7 +289,8 @@ export default function Jeu() {
 	};
 
 	const onSwipe = (isRight: boolean) => {
-		if (!dataGame) return;
+		const userId = auth?.user.id;
+		if (!dataGame || !sessionId || !userId) return;
 		const currentCard = dataGame[currentIndex];
 		if (!currentCard) return;
 
@@ -297,8 +298,8 @@ export default function Jeu() {
 		showFeedback(correct === isRight ? Answer.true : Answer.false);
 
 		insertAnswer.mutate({
-			gameId: sessionId!,
-			userId: auth?.user.id,
+			gameId: sessionId,
+			userId,
 			questionId: currentCard.id,
 			categorie: currentCard.attributes.CATEGORIE,
 			answer: isRight,

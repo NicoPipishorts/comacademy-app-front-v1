@@ -18,25 +18,19 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 export default function QuestionsFavoritesList() {
 	const { auth } = useAuthSession();
 
-	const { data: favoriteResponse, isFetched } = useGetFavoriteQuestions(
-		auth?.user.id
-	);
+	const { data: favoriteResponse, isFetched } =
+		useGetFavoriteQuestions(auth?.user.id);
 	const { data: categories } = useCategories();
 	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 
-	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
+	const favoriteEntry = favoriteResponse?.data?.[0];
+const favoriteQuestions = favoriteEntry?.attributes?.questions?.data ?? [];
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(false);
 	useEffect(() => {
 		if (isFetched) {
-			if (
-				favoriteResponse.data[0]?.attributes.questions.data.length <= 0 ||
-				!favoriteResponse.data[0]?.attributes.questions.data
-			) {
-				setIsEmptyArray(true);
-			} else {
-				setIsEmptyArray(false);
-			}
+			setIsEmptyArray(favoriteQuestions.length === 0);
 		}
-	}, [favoriteResponse, isFetched]);
+	}, [favoriteQuestions, isFetched]);
 
 	if (!categories || !isFetched) {
 		return <Loader />;
@@ -56,23 +50,21 @@ export default function QuestionsFavoritesList() {
 
 				<View>
 					{!isEmptyArray &&
-						favoriteResponse.data[0]?.attributes.questions.data.map(
-							(question) => {
-								const categoriesColors =
-									colorByStaticId[question.attributes.CATEGORIE];
-								const categoriesIcons =
-									iconByStaticId[question.attributes.CATEGORIE];
+						favoriteQuestions.map((question) => {
+							const categoriesColors =
+								colorByStaticId[question.attributes.CATEGORIE];
+							const categoriesIcons =
+								iconByStaticId[question.attributes.CATEGORIE];
 
-								return (
-									<CardFavoriteQuestion
-										key={question.id}
-										data={question}
-										categoriesColors={categoriesColors}
-										categoriesIcons={categoriesIcons}
-									/>
-								);
-							}
-						)}
+							return (
+								<CardFavoriteQuestion
+									key={question.id}
+									data={question}
+									categoriesColors={categoriesColors}
+									categoriesIcons={categoriesIcons}
+								/>
+							);
+						})}
 					{isEmptyArray && (
 						<View
 							style={{

@@ -18,25 +18,20 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 export default function QuestionsFavoritesList() {
 	const { auth } = useAuthSession();
 
-	const { data: favoriteResponse, isFetched } = useGetFavoriteDicos(
-		auth?.user.id
-	);
+	const { data: favoriteResponse, isFetched } =
+		useGetFavoriteDicos(auth?.user.id);
 	const { data: categories } = useCategories();
 	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 
-	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(false);
+const favoriteEntry = favoriteResponse?.data?.[0];
+const favoriteWords = favoriteEntry?.attributes?.words?.data ?? [];
+
 	useEffect(() => {
 		if (isFetched) {
-			if (
-				favoriteResponse.data[0]?.attributes.words.data.length <= 0 ||
-				!favoriteResponse.data[0]?.attributes.words.data
-			) {
-				setIsEmptyArray(true);
-			} else {
-				setIsEmptyArray(false);
-			}
+			setIsEmptyArray(favoriteWords.length === 0);
 		}
-	}, [favoriteResponse, isFetched]);
+	}, [favoriteWords, isFetched]);
 
 	if (!categories || !isFetched) {
 		return <Loader />;
@@ -57,7 +52,7 @@ export default function QuestionsFavoritesList() {
 
 				<View>
 					{!isEmptyArray &&
-						favoriteResponse.data[0]?.attributes.words.data.map((word) => {
+						favoriteWords.map((word) => {
 							const categoriesColors =
 								colorByStaticId[word.attributes.Categories];
 							const categoriesIcons =

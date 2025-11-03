@@ -143,11 +143,11 @@ export default function User() {
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
-					<ShowNiveaux
-						totalPoints={scores.data[0].attributes.totalAnsweredQuestions}
-					/>
+					<ShowNiveaux totalPoints={totalAnsweredQuestions} />
 
-					{scores && <UserStats categoriesScore={scores} />}
+					{scores?.data?.length ? (
+						<UserStats categoriesScore={scores} />
+					) : null}
 
 					<View style={styles.cardWrapper}>
 						<View style={styles.cardTextContainer}>

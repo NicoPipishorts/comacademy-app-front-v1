@@ -17,8 +17,13 @@ export default function ALaUneDico() {
 		return null;
 	}
 
-	const dico = data.data[0].attributes;
-	const id = data.data[0].id;
+	const firstEntry = data?.data?.[0];
+	if (!firstEntry) {
+		return null;
+	}
+
+	const dico = firstEntry.attributes;
+	const id = firstEntry.id;
 	const handlePress = () => {
 		navigation.navigate("dico", { openDetails: id });
 	};
