@@ -8,8 +8,8 @@ import React, {
 
 // Define the shape of your context
 interface GameContextType {
-	dataGame: QuestionData[];
-	setDataGame: React.Dispatch<React.SetStateAction<QuestionData[]>>;
+	dataGame: QuestionData[] | null;
+	setDataGame: React.Dispatch<React.SetStateAction<QuestionData[] | null>>;
 	sessionId: number | null;
 	setSessionsId: React.Dispatch<React.SetStateAction<number | null>>;
 	questionsLeft: number | null;
@@ -27,7 +27,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 // Define the provider using React.FC, which includes children by default
 export const GameProvider: React.FC<PropsWithChildren> = ({ children }) => {
-	const [dataGame, setDataGame] = useState<QuestionData[]>(null);
+	const [dataGame, setDataGame] = useState<QuestionData[] | null>(null);
 	const [sessionId, setSessionsId] = useState<number | null>(null);
 	const [questionsLeft, setQuestionsLeft] = useState<number | null>(null);
 	const [gameStatus, setGameStatus] = useState<"in_progress" | "finished">(
