@@ -26,7 +26,10 @@
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false
 			},
-			"associatedDomains": ["applinks:YOUR_DOMAIN.com"]
+			"associatedDomains": [
+				"applinks:comacademy.fr",
+				"applinks:www.comacademy.fr"
+			]
 		},
 
 		"android": {
@@ -49,8 +52,8 @@
 					"data": [
 						{
 							"scheme": "https",
-							"host": "YOUR_DOMAIN.com",
-							"pathPrefix": "/auth/reset-password"
+							"host": "comacademy.fr",
+							"pathPrefix": "/api/reset-password"
 						}
 					],
 					"category": ["BROWSABLE", "DEFAULT"]
@@ -68,7 +71,16 @@
 			"expo-router",
 			"expo-font",
 			["react-native-iap", { "ios": { "with-folly-no-coroutines": true } }],
-			["expo-build-properties", { "android": { "kotlinVersion": "2.1.20" } }]
+			[
+				"expo-build-properties",
+				{
+					"android": {
+						"kotlinVersion": "2.1.20",
+						"enableProguardInReleaseBuilds": true,
+						"enableShrinkResourcesInReleaseBuilds": true
+					}
+				}
+			]
 		],
 		"experiments": { "typedRoutes": true },
 		"extra": {
