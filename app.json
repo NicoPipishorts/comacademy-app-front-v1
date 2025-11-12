@@ -71,7 +71,17 @@
 			"expo-router",
 			"expo-font",
 			["react-native-iap", { "ios": { "with-folly-no-coroutines": true } }],
-			["expo-build-properties", { "android": { "kotlinVersion": "2.1.20" } }]
+			[
+				"expo-build-properties",
+				{
+					"android": {
+						"kotlinVersion": "2.1.20",
+						"minifyEnabled": true,
+						"enableProguardInReleaseBuilds": true,
+						"enableShrinkResourcesInReleaseBuilds": true
+					}
+				}
+			]
 		],
 		"experiments": { "typedRoutes": true },
 		"extra": {
