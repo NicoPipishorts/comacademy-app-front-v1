@@ -50,6 +50,18 @@ target 'ComAcademy' do
   )
 
   post_install do |installer|
+
+  # react-native-iap (expo): Disable Folly coroutines to avoid including non-vendored <folly/coro/*> headers
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      defs = (config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)'])
+      defs << 'FOLLY_NO_CONFIG=1' unless defs.any? { |d| d.to_s.include?('FOLLY_NO_CONFIG') }
+      # Portability.h respects FOLLY_CFG_NO_COROUTINES to fully disable coroutine support
+      defs << 'FOLLY_CFG_NO_COROUTINES=1' unless defs.any? { |d| d.to_s.include?('FOLLY_CFG_NO_COROUTINES') }
+      defs << 'FOLLY_HAS_COROUTINES=0' unless defs.any? { |d| d.to_s.include?('FOLLY_HAS_COROUTINES') }
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+    end
+  end
     react_native_post_install(
       installer,
       config[:reactNativePath],
