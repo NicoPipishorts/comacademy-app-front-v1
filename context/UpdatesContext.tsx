@@ -34,6 +34,7 @@ import {
 } from "react-native";
 import { Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import appPackage from "../package.json";
 
 type StaticUpdateCopy = {
 	versionTag: string;
@@ -47,9 +48,8 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: "v1.2.4.2",
-	snackbarMessage:
-		"Nouvelle mise à jour OTA faite. Touchez pour voir ce qui change.",
+	versionTag: appPackage?.version ? `v${appPackage.version}` : "v1.0.0",
+	snackbarMessage: "Nouvelle mise à jour OTA. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
@@ -114,6 +114,42 @@ const extractReleaseNotes = (update?: UpdateInfoNew) => {
 	return undefined;
 };
 
+const serializeError = (error: unknown): string => {
+	if (!error) return "unknown";
+	if (error instanceof Error) {
+		return `${error.name}:${error.message}`;
+	}
+	if (typeof error === "string") {
+		return error;
+	}
+	try {
+		return JSON.stringify(error);
+	} catch {
+		return String(error);
+	}
+};
+
+const extractVersionFromUpdate = (
+	update?: Updates.UpdateInfoNew | Updates.UpdateInfo | null
+) => {
+	const manifest = update?.manifest as Record<string, any> | undefined;
+	if (!manifest) return undefined;
+	return (
+		manifest.version ??
+		manifest?.extra?.expoClient?.version ??
+		manifest?.extra?.eas?.appVersion ??
+		manifest?.metadata?.version ??
+		manifest?.metadata?.appVersion
+	);
+};
+
+const formatVersionTag = (version?: string) => {
+	if (!version || version.trim().length === 0) {
+		return UPDATE_COPY.versionTag;
+	}
+	return version.toLowerCase().startsWith("v") ? version : `v${version}`;
+};
+
 export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	const {
 		availableUpdate,
@@ -136,9 +172,19 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
 	const lastCheckRef = useRef<number>(0);
 	const lastNotifiedUpdateIdRef = useRef<string | null>(null);
+	const lastCheckErrorRef = useRef<string | null>(null);
+	const lastDownloadErrorRef = useRef<string | null>(null);
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
-	const snackbarMessage = useMemo(() => UPDATE_COPY.snackbarMessage, []);
+	const versionTag = useMemo(() => {
+		const referenceUpdate = latestUpdate ?? pendingUpdate ?? currentlyRunning;
+		const manifestVersion = extractVersionFromUpdate(referenceUpdate);
+		return formatVersionTag(manifestVersion ?? appPackage?.version);
+	}, [currentlyRunning, latestUpdate, pendingUpdate]);
+	const snackbarMessage = useMemo(
+		() => `${UPDATE_COPY.snackbarMessage} (${versionTag})`,
+		[versionTag]
+	);
 
 	useEffect(() => {
 		if (!lastNotifiedUpdateIdRef.current && currentlyRunning?.updateId) {
@@ -242,17 +288,34 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	}, [throttledCheck]);
 
 	useEffect(() => {
-		if (checkError) {
-			console.error("Update check error:", checkError);
-			showSnackbar("Impossible de vérifier les mises à jour.", "error");
+		if (!checkError) {
+			lastCheckErrorRef.current = null;
+			return;
 		}
-	}, [checkError, showSnackbar]);
+		if (latestUpdate || pendingUpdate) {
+			return;
+		}
+		const signature = serializeError(checkError);
+		if (lastCheckErrorRef.current === signature) {
+			return;
+		}
+		lastCheckErrorRef.current = signature;
+		console.error("Update check error:", checkError);
+		showSnackbar("Impossible de vérifier les mises à jour.", "error");
+	}, [checkError, latestUpdate, pendingUpdate, showSnackbar]);
 
 	useEffect(() => {
-		if (downloadError) {
-			console.error("Update download error:", downloadError);
-			showSnackbar("Le téléchargement de la mise à jour a échoué.", "error");
+		if (!downloadError) {
+			lastDownloadErrorRef.current = null;
+			return;
 		}
+		const signature = serializeError(downloadError);
+		if (lastDownloadErrorRef.current === signature) {
+			return;
+		}
+		lastDownloadErrorRef.current = signature;
+		console.error("Update download error:", downloadError);
+		showSnackbar("Le téléchargement de la mise à jour a échoué.", "error");
 	}, [downloadError, showSnackbar]);
 
 	const openUpdateDetails = useCallback(() => {
@@ -321,12 +384,10 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	const sheetSubtitle = useMemo(() => {
 		const referenceUpdate = latestUpdate ?? pendingUpdate;
 		if (referenceUpdate?.createdAt) {
-			return `Publiée le ${referenceUpdate.createdAt.toLocaleString()} · ${
-				UPDATE_COPY.versionTag
-			}`;
+			return `Publiée le ${referenceUpdate.createdAt.toLocaleString()} · ${versionTag}`;
 		}
-		return `${UPDATE_COPY.subtitle} · ${UPDATE_COPY.versionTag}`;
-	}, [latestUpdate, pendingUpdate]);
+		return `${UPDATE_COPY.subtitle} · ${versionTag}`;
+	}, [latestUpdate, pendingUpdate, versionTag]);
 
 	const checkForUpdates = useCallback(
 		async ({ force }: { force?: boolean } = {}) => {

@@ -53,6 +53,7 @@ target 'ComAcademy' do
 
   # react-native-iap (expo): Disable Folly coroutines to avoid including non-vendored <folly/coro/*> headers
   installer.pods_project.targets.each do |target|
+    next unless ['NitroIap', 'NitroModules'].include?(target.name)
     target.build_configurations.each do |config|
       defs = (config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)'])
       defs << 'FOLLY_NO_CONFIG=1' unless defs.any? { |d| d.to_s.include?('FOLLY_NO_CONFIG') }

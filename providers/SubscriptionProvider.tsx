@@ -4,6 +4,7 @@ import React, {
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import { UseAuth } from "@/auth/AuthContext";
@@ -46,6 +47,7 @@ export const SubscriptionProvider = ({
 	const [subscription, setSubscription] = useState<any>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
+	const hasInitializedRef = useRef(false);
 
 	const checkSubscription = useCallback(async () => {
 		try {
@@ -72,6 +74,20 @@ export const SubscriptionProvider = ({
 		let cleanup: (() => void) | undefined;
 
 		const init = async () => {
+			if (hasInitializedRef.current) {
+				return;
+			}
+
+			if (!process.env.EXPO_PUBLIC_API_URL) {
+				setError(
+					"Configuration manquante pour les achats (EXPO_PUBLIC_API_URL)."
+				);
+				setLoading(false);
+				return;
+			}
+
+			hasInitializedRef.current = true;
+
 			try {
 				await IAPService.initialize();
 
@@ -96,6 +112,7 @@ export const SubscriptionProvider = ({
 			} catch (err: any) {
 				console.error("Failed to initialize IAP:", err);
 				setError(err?.message || "Failed to initialize purchases");
+				hasInitializedRef.current = false;
 			} finally {
 				setLoading(false);
 			}
@@ -106,8 +123,24 @@ export const SubscriptionProvider = ({
 		return () => {
 			cleanup?.();
 			void IAPService.endConnection();
+			hasInitializedRef.current = false;
 		};
 	}, [checkSubscription, fetchProductsAndSubscription]);
+
+	useEffect(() => {
+		if (!hasInitializedRef.current) return;
+
+		void (async () => {
+			try {
+				await fetchProductsAndSubscription();
+			} catch (err) {
+				console.error(
+					"Failed to refresh subscriptions after session change:",
+					err
+				);
+			}
+		})();
+	}, [session?.user?.id, fetchProductsAndSubscription]);
 
 	const purchase = useCallback(
 		async (product: SubscriptionProduct) => {

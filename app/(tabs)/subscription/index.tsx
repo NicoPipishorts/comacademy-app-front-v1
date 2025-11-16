@@ -50,6 +50,155 @@ const safeFormatPrice = (p: any, fallback = "") => {
 	}
 };
 
+type DurationInfo = {
+	label: string;
+	days: number;
+};
+
+const isoPeriodPattern =
+	/^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/i;
+
+const isoPeriodToDurationInfo = (period?: string | null): DurationInfo | null => {
+	if (!period) return null;
+
+	const matches = isoPeriodPattern.exec(period);
+	if (!matches) return null;
+
+	const parse = (value?: string) =>
+		value ? Math.max(parseInt(value, 10), 0) : 0;
+
+	const years = parse(matches[1]);
+	if (years > 0) {
+		return {
+			label: years > 1 ? `/ ${years} ans` : "/ an",
+			days: years * 365,
+		};
+	}
+
+	const months = parse(matches[2]);
+	if (months > 0) {
+		return {
+			label: months > 1 ? `/ ${months} mois` : "/ mois",
+			days: months * 30,
+		};
+	}
+
+	const weeks = parse(matches[3]);
+	if (weeks > 0) {
+		return {
+			label: weeks > 1 ? `/ ${weeks} semaines` : "/ semaine",
+			days: weeks * 7,
+		};
+	}
+
+	const days = parse(matches[4]);
+	if (days > 0) {
+		return {
+			label: days > 1 ? `/ ${days} jours` : "/ jour",
+			days,
+		};
+	}
+
+	return null;
+};
+
+const iosDurationInfo = (
+	product: SubscriptionProduct
+): DurationInfo | null => {
+	const anyProduct = product as unknown as {
+		subscriptionPeriodNumberIOS?: string | number;
+		subscriptionPeriodUnitIOS?: string;
+	};
+
+	const unit = anyProduct.subscriptionPeriodUnitIOS;
+
+	if (!unit) return null;
+
+	const countRaw = anyProduct.subscriptionPeriodNumberIOS;
+	const count =
+		typeof countRaw === "string" ? parseInt(countRaw, 10) : countRaw;
+
+	if (!count || Number.isNaN(count)) {
+		return null;
+	}
+
+	const normalizedUnit = unit.toUpperCase();
+
+	switch (normalizedUnit) {
+		case "DAY":
+		case "DAYS":
+			return {
+				label: count > 1 ? `/ ${count} jours` : "/ jour",
+				days: count,
+			};
+		case "WEEK":
+		case "WEEKS":
+			return {
+				label: count > 1 ? `/ ${count} semaines` : "/ semaine",
+				days: count * 7,
+			};
+		case "MONTH":
+		case "MONTHS":
+			return {
+				label: count > 1 ? `/ ${count} mois` : "/ mois",
+				days: count * 30,
+			};
+		case "YEAR":
+		case "YEARS":
+			return {
+				label: count > 1 ? `/ ${count} ans` : "/ an",
+				days: count * 365,
+			};
+		default:
+			return null;
+	}
+};
+
+const androidDurationInfo = (
+	product: SubscriptionProduct
+): DurationInfo | null => {
+	const androidProduct = product as unknown as {
+		subscriptionOfferDetailsAndroid?: Array<{
+			pricingPhases?: {
+				pricingPhaseList?: Array<{ billingPeriod?: string | null }>;
+			};
+		}>;
+		subscriptionPeriodAndroid?: string | null;
+	};
+
+	if (Array.isArray(androidProduct.subscriptionOfferDetailsAndroid)) {
+		for (const offer of androidProduct.subscriptionOfferDetailsAndroid) {
+			const phases = offer?.pricingPhases?.pricingPhaseList;
+			if (!Array.isArray(phases)) continue;
+
+			const phaseWithPeriod = phases.find(
+				(phase) => !!phase?.billingPeriod
+			);
+			const info = isoPeriodToDurationInfo(
+				phaseWithPeriod?.billingPeriod ?? undefined
+			);
+			if (info) return info;
+		}
+	}
+
+	if (androidProduct.subscriptionPeriodAndroid) {
+		return isoPeriodToDurationInfo(androidProduct.subscriptionPeriodAndroid);
+	}
+
+	return null;
+};
+
+const getDurationInfoForProduct = (
+	product: SubscriptionProduct
+): DurationInfo | null =>
+	iosDurationInfo(product) ?? androidDurationInfo(product);
+
+const PLAN_FEATURES = [
+	"Accès illimité à tout le contenu",
+	"Annulation à tout moment",
+	"Mises à jour régulières de la bibliothèque",
+];
+
 export default function SubscriptionScreen() {
 	const router = useRouter();
 	const { from } = useLocalSearchParams<{ from?: string | string[] }>();
@@ -75,6 +224,11 @@ export default function SubscriptionScreen() {
 	useFocusEffect(
 		useCallback(() => {
 			console.log("[SubscriptionScreen] appOwnership:", Constants.appOwnership);
+			if (__DEV__ && Platform.OS === "android") {
+				console.log(
+					"[SubscriptionScreen] ⚠️ Installez la build via la piste interne Play pour tester les achats réels."
+				);
+			}
 			console.log(
 				"[SubscriptionScreen] products length:",
 				Array.isArray(products) ? products.length : "n/a"
@@ -134,33 +288,66 @@ export default function SubscriptionScreen() {
 	]);
 	const isFreeUser = !hasPremiumAccess;
 
-	// Try to “detect” monthly/yearly by id; otherwise we’ll fall back to rendering all products
-	const monthlyProduct = useMemo(
-		() =>
-			products.find((p) => {
-				const identifier = getSubscriptionProductId(p);
-				return identifier
-					? identifier.toLowerCase().includes("monthly")
-					: false;
-			}),
-		[products]
-	);
+	const plans = useMemo(() => {
+		const seen = new Set<string>();
 
-	const yearlyProduct = useMemo(
-		() =>
-			products.find((p) => {
-				const identifier = getSubscriptionProductId(p)?.toLowerCase();
-				return identifier
-					? identifier.includes("yearly") || identifier.includes("year")
-					: false;
-			}),
-		[products]
-	);
+		const mapped = products
+			.map((product) => {
+				const rawId =
+					getSubscriptionProductId(product) ||
+					(product as unknown as { productId?: string }).productId ||
+					(product as unknown as { id?: string }).id;
 
-	const monthlyProductId = useMemo(() => {
-		if (!monthlyProduct) return undefined;
-		return getSubscriptionProductId(monthlyProduct);
-	}, [monthlyProduct]);
+				if (!rawId) {
+					return null;
+				}
+
+				const id = String(rawId);
+				if (seen.has(id)) {
+					return null;
+				}
+				seen.add(id);
+
+				const durationInfo = getDurationInfoForProduct(product);
+
+				return {
+					id,
+					product,
+					title: product.title || "Accès Com’Academy",
+					price: safeFormatPrice(product, "—"),
+					duration: durationInfo?.label ?? "",
+					durationDays: durationInfo?.days ?? 0,
+				};
+			})
+			.filter(Boolean) as Array<{
+			id: string;
+			product: SubscriptionProduct;
+			title: string;
+			price: string;
+			duration: string;
+			durationDays: number;
+		}>;
+
+		if (mapped.length > 1) {
+			mapped.sort((a, b) => b.durationDays - a.durationDays);
+		}
+
+		return mapped;
+	}, [products]);
+
+	const activeProductId = useMemo(() => {
+		const candidates = [
+			subscription?.productId,
+			subscription?.product?.productId,
+			subscription?.sku,
+		];
+
+		const match = candidates.find(
+			(value) => typeof value === "string" && value.length > 0
+		);
+
+		return match ? String(match) : undefined;
+	}, [subscription]);
 
 	const handlePurchase = async (product: SubscriptionProduct) => {
 		try {
@@ -295,14 +482,6 @@ export default function SubscriptionScreen() {
 										</Text>
 									)
 								)}
-								{isExpoGo && (
-									<View style={styles.mockWarning}>
-										<Text style={styles.mockWarningText}>
-											⚠️ Mode Test: Le bouton ci-dessus permet de tester
-											l'annulation
-										</Text>
-									</View>
-								)}
 							</>
 						) : (
 							<>
@@ -314,10 +493,18 @@ export default function SubscriptionScreen() {
 								</Text>
 							</>
 						)}
-					</View>
+				</View>
 
-					{/* Benefits Section */}
-					<View style={styles.benefitsSection}>
+				{isExpoGo && (
+					<View style={styles.mockWarning}>
+						<Text style={styles.mockWarningText}>
+							⚠️ Mode test : les achats sont simulés dans Expo Go. Créez une build de développement pour tester les achats réels.
+						</Text>
+					</View>
+				)}
+
+				{/* Benefits Section */}
+				<View style={styles.benefitsSection}>
 						<Text style={styles.benefitsTitle}>Ce que vous obtenez:</Text>
 						<View style={styles.benefitsList}>
 							<View style={styles.benefitItem}>
@@ -355,62 +542,30 @@ export default function SubscriptionScreen() {
 
 					{/* Subscription Plans */}
 					<View style={styles.plansSection}>
-						{/* Prefer monthly if we detected it */}
-						{monthlyProduct && (
-							<SubscriptionPlanCard
-								title='Abonnement Mensuel'
-								price={safeFormatPrice(monthlyProduct, "4,99 €")}
-								duration='/ mois'
-								features={[
-									"Accès illimité à tout le contenu",
-									"Annulation à tout moment",
-									"Facturation mensuelle",
-								]}
-								isCurrentPlan={
-									hasActiveSubscription &&
-									monthlyProductId === subscription?.productId
-								}
-								onPress={() => handlePurchase(monthlyProduct)}
-								disabled={purchasing || !monthlyProductId}
-							/>
-						)}
-
-						{/* Fallback: if we didn’t detect monthly/yearly, render whatever we got */}
-						{!monthlyProduct && !yearlyProduct && products.length > 0 && (
-							<>
-								{products.map((p) => {
-									const id =
-										getSubscriptionProductId(p) ??
-										String(p.productId ?? Math.random());
-									return (
-										<SubscriptionPlanCard
-											key={id}
-											title={p.title || "Accès Com’Academy"}
-											price={safeFormatPrice(p, "4,99 €")}
-											duration=''
-											features={[
-												"Accès illimité à tout le contenu",
-												"Annulation à tout moment",
-											]}
-											isCurrentPlan={
-												hasActiveSubscription && id === subscription?.productId
-											}
-											onPress={() => handlePurchase(p as SubscriptionProduct)}
-											disabled={purchasing}
-										/>
-									);
-								})}
-							</>
-						)}
-
-						{/* No products at all */}
-						{products.length === 0 && (
+						{plans.length > 0 ? (
+							plans.map((plan, index) => (
+								<SubscriptionPlanCard
+									key={plan.id}
+									title={plan.title}
+									price={plan.price}
+									duration={plan.duration}
+									features={PLAN_FEATURES}
+									isPopular={plans.length > 1 && index === 0}
+									isCurrentPlan={
+										hasActiveSubscription && plan.id === activeProductId
+									}
+									onPress={() => handlePurchase(plan.product)}
+									disabled={purchasing}
+								/>
+							))
+						) : (
 							<View style={styles.noProductsContainer}>
 								<Text style={styles.noProductsText}>
 									Les abonnements ne sont pas disponibles pour le moment.
 								</Text>
 								<Text style={styles.noProductsSubtext}>
-									Veuillez réessayer plus tard.
+									Vérifiez la configuration App Store / Play Console ou
+									réessayez plus tard.
 								</Text>
 							</View>
 						)}
@@ -427,14 +582,12 @@ export default function SubscriptionScreen() {
 					)}
 
 					{/* Restore Purchases Button */}
-					{Platform.OS === "ios" && (
-						<TouchableOpacity
-							style={styles.restoreButton}
-							onPress={handleRestore}
-							disabled={purchasing}>
-							<Text style={styles.restoreButtonText}>Restaurer mes achats</Text>
-						</TouchableOpacity>
-					)}
+					<TouchableOpacity
+						style={styles.restoreButton}
+						onPress={handleRestore}
+						disabled={purchasing}>
+						<Text style={styles.restoreButtonText}>Restaurer mes achats</Text>
+					</TouchableOpacity>
 
 					{/* Free Plan Info */}
 					{isFreeUser && (

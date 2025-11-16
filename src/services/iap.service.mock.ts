@@ -65,6 +65,10 @@ export const IAPService = {
 		console.log("✅ [Mock IAP] Connection initialized");
 	},
 
+	async processPendingPurchases() {
+		console.log("📱 [Mock IAP] No pending purchases to process.");
+	},
+
 	/**
 	 * Get available products (mock)
 	 */
