@@ -9,24 +9,24 @@ import type {
 } from "react-native-iap";
 
 import {
+	normalizePurchase,
+	type NormalizedPurchase,
+} from "../iap/purchaseNormalizer";
+import {
 	getAndroidOfferToken,
 	getSubscriptionProductId,
 	type SubscriptionProduct,
 } from "../utils/iap";
-import {
-	normalizePurchase,
-	type NormalizedPurchase,
-} from "../iap/purchaseNormalizer";
+import type {
+	PendingPurchaseMetadata,
+	PurchaseValidationPayload,
+} from "./iap.types";
 import {
 	enqueuePendingPurchase,
 	getPendingPurchases,
 	removeMatchingPendingPurchase,
 	removePendingPurchase,
 } from "./iapReceiptQueue";
-import type {
-	PendingPurchaseMetadata,
-	PurchaseValidationPayload,
-} from "./iap.types";
 
 // Detect Expo Go (real IAP doesn't work there)
 const isExpoGo = Constants.appOwnership === "expo";
@@ -63,8 +63,8 @@ const getIapModuleSync = (): RNIapModule => {
 
 // Keep identical IDs on both platforms (must match App Store / Play Console)
 const PRODUCT_IDS = Platform.select({
-	ios: ["fullAccess100"],
-	android: ["monthly-unlimited", "yearly-unlimited"],
+	ios: ["fullAccess100", "fullAccess1200"], // both iOS products
+	android: ["comacademy_monthly_full"], // Android subscription *product* ID
 }) as string[];
 
 const getApiBaseUrl = () => {
@@ -134,14 +134,16 @@ const buildValidationPayload = (
 			(rawPurchase.transactionId as string | undefined),
 	};
 
-	const signedTransactionInfo = rawPurchase
-		.signedTransactionInfo as string | undefined;
+	const signedTransactionInfo = rawPurchase.signedTransactionInfo as
+		| string
+		| undefined;
 	if (signedTransactionInfo) {
 		payload.signedTransactionInfo = signedTransactionInfo;
 	}
 
-	const transactionReceipt = rawPurchase
-		.transactionReceipt as string | undefined;
+	const transactionReceipt = rawPurchase.transactionReceipt as
+		| string
+		| undefined;
 	if (transactionReceipt) {
 		payload.transactionReceipt = transactionReceipt;
 	}
@@ -299,7 +301,12 @@ const createIAPService = () => {
 		async getProducts() {
 			try {
 				const iap = await ensureIapModule();
+				console.log(
+					"[IAP] Calling getSubscriptions with PRODUCT_IDS =",
+					PRODUCT_IDS
+				);
 				const subs = await iap.getSubscriptions(PRODUCT_IDS);
+				console.log("[IAP] Store returned subscriptions:", subs);
 				return subs ?? [];
 			} catch (error) {
 				console.error("Failed to get subscriptions:", error);

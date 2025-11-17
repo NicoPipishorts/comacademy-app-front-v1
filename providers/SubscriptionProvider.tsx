@@ -1,3 +1,10 @@
+import { UseAuth } from "@/auth/AuthContext";
+import { IAPService } from "@/src/services/iap.service";
+import {
+	getSubscriptionProductId,
+	type SubscriptionProduct,
+} from "@/src/utils/iap";
+import { isUserCancelledError } from "@/src/utils/iapErrors";
 import React, {
 	createContext,
 	useCallback,
@@ -7,13 +14,6 @@ import React, {
 	useRef,
 	useState,
 } from "react";
-import { UseAuth } from "@/auth/AuthContext";
-import { IAPService } from "@/src/services/iap.service";
-import {
-	getSubscriptionProductId,
-	type SubscriptionProduct,
-} from "@/src/utils/iap";
-import { isUserCancelledError } from "@/src/utils/iapErrors";
 import type { PurchaseError } from "react-native-iap";
 
 type SubscriptionState = {
@@ -61,10 +61,15 @@ export const SubscriptionProvider = ({
 	}, []);
 
 	const fetchProductsAndSubscription = useCallback(async () => {
+		console.log("[IAP] Fetching products & subscription...");
+
 		const [availableProducts, currentSub] = await Promise.all([
 			IAPService.getProducts(),
 			IAPService.checkSubscriptionStatus(),
 		]);
+
+		console.log("[IAP] Products:", availableProducts);
+		console.log("[IAP] Current subscription:", currentSub);
 
 		setProducts(availableProducts);
 		setSubscription(currentSub);
@@ -85,6 +90,9 @@ export const SubscriptionProvider = ({
 				setLoading(false);
 				return;
 			}
+			// inside init()
+			console.log("[IAP] API URL:", process.env.EXPO_PUBLIC_API_URL);
+			console.log("[IAP] Initializing IAP…");
 
 			hasInitializedRef.current = true;
 
@@ -154,9 +162,7 @@ export const SubscriptionProvider = ({
 			try {
 				setPurchasing(true);
 				setError(null);
-				const userId = session?.user?.id
-					? String(session.user.id)
-					: undefined;
+				const userId = session?.user?.id ? String(session.user.id) : undefined;
 				await IAPService.purchaseSubscription(product, userId);
 			} catch (err) {
 				const purchaseError = err as PurchaseError;

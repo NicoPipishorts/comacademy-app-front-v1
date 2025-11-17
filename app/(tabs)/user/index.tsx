@@ -145,9 +145,7 @@ export default function User() {
 					}>
 					<ShowNiveaux totalPoints={totalAnsweredQuestions} />
 
-					{scores?.data?.length ? (
-						<UserStats categoriesScore={scores} />
-					) : null}
+					{scores?.data?.length ? <UserStats categoriesScore={scores} /> : null}
 
 					<View style={styles.cardWrapper}>
 						<View style={styles.cardTextContainer}>
@@ -169,7 +167,7 @@ export default function User() {
 
 					<UserAccount />
 
-					{/* <View style={styles.logoutContainer}>
+					<View style={styles.logoutContainer}>
 						<TouchableOpacity
 							onPress={() => navigation.navigate("iapBarebone")}
 							style={styles.logoutButton}>
@@ -182,7 +180,7 @@ export default function User() {
 								IAP Barebones
 							</Text>
 						</TouchableOpacity>
-					</View> */}
+					</View>
 
 					<View style={styles.logoutContainer}>
 						<TouchableOpacity
