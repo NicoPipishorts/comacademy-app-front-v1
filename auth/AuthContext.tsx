@@ -2,6 +2,7 @@ import { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY } from "@/constants";
 import { AuthResponse } from "@/types/credentials/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import React, {
@@ -13,13 +14,15 @@ import React, {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
-import { AppState, AppStateStatus } from "react-native";
+import { AppState, AppStateStatus, Platform } from "react-native";
 
 const AUTH_STORAGE_KEY = "auth";
 const TOKEN_STORAGE_KEY = "jwtToken";
+const BUILD_STORAGE_KEY = "auth.lastBuild";
 
 type DecodedToken = {
 	exp?: number;
@@ -42,6 +45,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 interface AuthProviderProps {
 	children: ReactNode;
 }
+
+const resolveBuildIdentifier = (): string => {
+	const expoConfig = Constants.expoConfig ?? {};
+	const candidateValues: Array<string | number | undefined | null> = [
+		Constants.nativeBuildVersion,
+		Platform.select({
+			ios: expoConfig?.ios?.buildNumber,
+			android: expoConfig?.android?.versionCode,
+			default: undefined,
+		}),
+		expoConfig?.version,
+		Constants.nativeApplicationVersion,
+	];
+
+	for (const candidate of candidateValues) {
+		if (typeof candidate === "string" && candidate.trim().length > 0) {
+			return candidate;
+		}
+		if (typeof candidate === "number" && Number.isFinite(candidate)) {
+			return String(candidate);
+		}
+	}
+
+	return "unknown";
+};
 
 const setAxiosAuthHeader = (value: string | null) => {
 	if (value) {
@@ -108,6 +136,7 @@ const removeStoredToken = async () => {
 export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	children,
 }) => {
+	const buildIdentifier = useMemo(() => resolveBuildIdentifier(), []);
 	const [session, setSession] = useState<AuthResponse | null>(null);
 	const [token, setToken] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -129,6 +158,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		setToken(null);
 		setAxiosAuthHeader(null);
 		await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+		await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
 		await removeStoredToken();
 	}, [clearExpiryTimer]);
 
@@ -161,8 +191,14 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const hydrateFromStorage = useCallback(async () => {
 		const [[, rawSession]] = await AsyncStorage.multiGet([AUTH_STORAGE_KEY]);
 		const storedToken = await readStoredToken();
+		const storedBuild = await AsyncStorage.getItem(BUILD_STORAGE_KEY);
 
 		if (!rawSession || !storedToken) {
+			await clearPersistedSession();
+			return false;
+		}
+
+		if (storedBuild && storedBuild !== buildIdentifier) {
 			await clearPersistedSession();
 			return false;
 		}
@@ -179,13 +215,16 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			setToken(storedToken);
 			setAxiosAuthHeader(storedToken);
 			scheduleTokenExpiryCheck(storedToken);
+			if (!storedBuild) {
+				await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
+			}
 			return true;
 		} catch (error) {
 			console.error("Failed to hydrate auth session", error);
 			await clearPersistedSession();
 			return false;
 		}
-	}, [clearPersistedSession, scheduleTokenExpiryCheck]);
+	}, [buildIdentifier, clearPersistedSession, scheduleTokenExpiryCheck]);
 
 	const checkLoggedIn = useCallback(async () => {
 		const isValid = await hydrateFromStorage();
@@ -195,6 +234,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const login = useCallback(
 		async (data: AuthResponse) => {
 			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+			await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
 			await persistToken(data.jwt);
 			setSession(data);
 			setToken(data.jwt);
@@ -202,7 +242,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			setAxiosAuthHeader(data.jwt);
 			scheduleTokenExpiryCheck(data.jwt);
 		},
-		[scheduleTokenExpiryCheck]
+		[buildIdentifier, scheduleTokenExpiryCheck]
 	);
 
 	const logout = useCallback(async () => {
