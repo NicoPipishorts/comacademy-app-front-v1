@@ -18,8 +18,8 @@
     <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.2.5</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.2.9</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -32,8 +32,8 @@
         </array>
       </dict>
     </array>
-    <key>CFBundleVersion</key>
-    <string>1.2.5</string>
+	<key>CFBundleVersion</key>
+	<string>1.2.9</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSMinimumSystemVersion</key>
