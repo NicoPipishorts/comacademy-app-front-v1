@@ -115,9 +115,9 @@ PODS:
   - EXUpdatesInterface (2.0.0):
     - ExpoModulesCore
   - FBLazyVector (0.81.5)
-  - hermes-engine (0.81.4):
-    - hermes-engine/Pre-built (= 0.81.4)
-  - hermes-engine/Pre-built (0.81.4)
+  - hermes-engine (0.81.5):
+    - hermes-engine/Pre-built (= 0.81.5)
+  - hermes-engine/Pre-built (0.81.5)
   - NitroIap (14.4.13):
     - hermes-engine
     - NitroModules
@@ -2512,7 +2512,7 @@ SPEC CHECKSUMS:
   EXUpdates: 499c1484e3930cbb1b0b4bd922c982e6fdeff465
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
-  hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
+  hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   NitroIap: 6b71826bebc1ba0007dbe37f99b017be878e940b
   NitroModules: c37ed7fb8c8194f2c79e0f7ae5b623e072d4cea7
   openiap: 01b7f3ebc28c77cf0c4a90ebb907067296380a5e
