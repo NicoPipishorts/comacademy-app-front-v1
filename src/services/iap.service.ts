@@ -304,6 +304,7 @@ const createIAPService = () => {
 		 * Fetch subscription products (NOT getProducts)
 		 */
 		async getProducts() {
+			debugIAP("getProducts triggered");
 			try {
 				const iap = await ensureIapModule();
 				debugIAP("Calling getSubscriptions with PRODUCT_IDS =", PRODUCT_IDS);
@@ -422,11 +423,14 @@ const createIAPService = () => {
 		 * Get user entitlements from your API
 		 */
 		async getEntitlements() {
+			debugIAP("Fetching entitlements");
 			try {
 				const apiBaseUrl = getApiBaseUrl();
 				const res = await axios.get(`${apiBaseUrl}/api/me/entitlements`);
+				debugIAP("Entitlements API response", res.data);
 				return res.data?.entitlements ?? [];
 			} catch (error) {
+				debugIAP("getEntitlements error", error);
 				console.error("Failed to get entitlements:", error);
 				throw error;
 			}
@@ -461,8 +465,10 @@ const createIAPService = () => {
 		 * Quick check: is there an active subscription entitlement?
 		 */
 		async checkSubscriptionStatus() {
+			debugIAP("checkSubscriptionStatus() triggered");
 			try {
 				const entitlements = await this.getEntitlements();
+				debugIAP("Entitlements fetched", entitlements);
 				return (
 					entitlements.find((e: any) => e?.active && e?.status === "active") ||
 					null

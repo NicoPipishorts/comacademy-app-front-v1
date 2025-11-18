@@ -1,5 +1,6 @@
 import { UseAuth } from "@/auth/AuthContext";
 import { IAPService } from "@/src/services/iap.service";
+import { debugIAP } from "@/src/utils/debug";
 import {
 	getSubscriptionProductId,
 	type SubscriptionProduct,
@@ -55,25 +56,25 @@ export const SubscriptionProvider = ({
 			setSubscription(currentSub);
 			return currentSub;
 		} catch (err) {
-			console.error("Check subscription error:", err);
+			debugIAP("Check subscription error:", err);
 			return null;
 		}
 	}, []);
 
 	const fetchProductsAndSubscription = useCallback(async () => {
 		try {
-			console.log("[IAP] Fetching products & subscription…");
+			debugIAP("[IAP] Fetching products & subscription…");
 			const [availableProducts, currentSub] = await Promise.all([
 				IAPService.getProducts(),
 				IAPService.checkSubscriptionStatus(),
 			]);
-			console.log("[IAP] Fetched products:", availableProducts);
-			console.log("[IAP] Fetched subscription:", currentSub);
+			debugIAP("[IAP] Fetched products:", availableProducts);
+			debugIAP("[IAP] Fetched subscription:", currentSub);
 
 			setProducts(availableProducts);
 			setSubscription(currentSub);
 		} catch (err: any) {
-			console.error("[IAP] fetchProductsAndSubscription error:", err);
+			debugIAP("[IAP] fetchProductsAndSubscription error:", err);
 			setError(
 				err?.message || String(err) || "Failed to fetch products/subscription"
 			);
@@ -96,8 +97,8 @@ export const SubscriptionProvider = ({
 				return;
 			}
 			// inside init()
-			console.log("[IAP] API URL:", process.env.EXPO_PUBLIC_API_URL);
-			console.log("[IAP] Initializing IAP…");
+			debugIAP("[IAP] API URL:", process.env.EXPO_PUBLIC_API_URL);
+			debugIAP("[IAP] Initializing IAP…");
 
 			hasInitializedRef.current = true;
 
@@ -106,12 +107,12 @@ export const SubscriptionProvider = ({
 
 				cleanup = IAPService.setupPurchaseListener(
 					(purchase) => {
-						console.log("Purchase successful:", purchase);
+						debugIAP("Purchase successful:", purchase);
 						void checkSubscription();
 						setPurchasing(false);
 					},
 					(err: PurchaseError) => {
-						console.error("Purchase error:", err);
+						debugIAP("Purchase error:", err);
 						if (isUserCancelledError(err)) {
 							setError(null);
 						} else {
@@ -123,8 +124,8 @@ export const SubscriptionProvider = ({
 
 				await fetchProductsAndSubscription();
 			} catch (err: any) {
-				console.error("Failed to initialize IAP:", err);
-				console.error(
+				debugIAP("Failed to initialize IAP:", err);
+				debugIAP(
 					"Failed to initialize IAP – full error:",
 					JSON.stringify(err, null, 2)
 				);
@@ -153,10 +154,7 @@ export const SubscriptionProvider = ({
 			try {
 				await fetchProductsAndSubscription();
 			} catch (err) {
-				console.error(
-					"Failed to refresh subscriptions after session change:",
-					err
-				);
+				debugIAP("Failed to refresh subscriptions after session change:", err);
 			}
 		})();
 	}, [session?.user?.id, fetchProductsAndSubscription]);
@@ -195,7 +193,7 @@ export const SubscriptionProvider = ({
 			setError(null);
 			await fetchProductsAndSubscription();
 		} catch (err: any) {
-			console.error("Refresh error:", err);
+			debugIAP("Refresh error:", err);
 			setError(err?.message || "Refresh failed");
 		} finally {
 			setRefreshing(false);
@@ -209,7 +207,7 @@ export const SubscriptionProvider = ({
 			await IAPService.restorePurchases();
 			await checkSubscription();
 		} catch (err: any) {
-			console.error("Restore error:", err);
+			debugIAP("Restore error:", err);
 			setError(err?.message || "Restore failed");
 		} finally {
 			setLoading(false);
@@ -230,7 +228,7 @@ export const SubscriptionProvider = ({
 			}
 			return false;
 		} catch (err: any) {
-			console.error("Cancel subscription error:", err);
+			debugIAP("Cancel subscription error:", err);
 			setError(err?.message || "Cancel failed");
 			return false;
 		} finally {
