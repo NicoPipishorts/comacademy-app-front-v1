@@ -6,6 +6,7 @@ const fetchCitations = async (
 	token: string,
 	category: string
 ): Promise<CitationsResponse> => {
+	console.log(category);
 	try {
 		const response = await fetch(
 			`${process.env.EXPO_PUBLIC_API_URL}/citations/by-category/${category}`,
@@ -24,8 +25,8 @@ const fetchCitations = async (
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = await response.json();
-		return data;
+		const responseData = await response.json();
+		return responseData as CitationsResponse;
 	} catch (error) {
 		console.error("Error fetching Les Cistations:", error);
 		throw error;
