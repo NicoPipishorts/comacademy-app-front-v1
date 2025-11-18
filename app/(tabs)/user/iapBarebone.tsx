@@ -1,5 +1,6 @@
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { useSubscription } from "@/src/hooks/useSubscription";
+import { __iapLogs } from "@/src/utils/debug";
 import React from "react";
 import { Button, ScrollView, Text, View } from "react-native";
 
@@ -28,6 +29,13 @@ const IapBareboneScreen = () => {
 			{products.length === 0 && (
 				<Text>No products returned from the store.</Text>
 			)}
+
+			<Text>Logs:</Text>
+			{__iapLogs.map((l, i) => (
+				<Text key={i} style={{ fontSize: 12 }}>
+					{l}
+				</Text>
+			))}
 
 			{products.map((p, index) => (
 				<View

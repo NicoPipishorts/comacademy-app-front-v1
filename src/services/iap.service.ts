@@ -12,6 +12,7 @@ import {
 	normalizePurchase,
 	type NormalizedPurchase,
 } from "../iap/purchaseNormalizer";
+import { debugIAP } from "../utils/debug";
 import {
 	getAndroidOfferToken,
 	getSubscriptionProductId,
@@ -279,14 +280,18 @@ const createIAPService = () => {
 		 * Initialize the IAP connection and clean pending purchases (Android)
 		 */
 		async initialize() {
+			debugIAP("Initializing IAP…");
 			try {
 				const iap = await ensureIapModule();
+				debugIAP("IAP module loaded");
 				await iap.initConnection();
+				debugIAP("initConnection success");
+
 				await processPendingPurchases().catch((error) => {
-					console.warn("Failed to process pending purchases on init:", error);
+					debugIAP("processPendingPurchases error", error);
 				});
 			} catch (error) {
-				console.error("IAP init failed:", error);
+				debugIAP("IAP init failed", error);
 				throw error;
 			}
 		},
@@ -301,10 +306,7 @@ const createIAPService = () => {
 		async getProducts() {
 			try {
 				const iap = await ensureIapModule();
-				console.log(
-					"[IAP] Calling getSubscriptions with PRODUCT_IDS =",
-					PRODUCT_IDS
-				);
+				debugIAP("Calling getSubscriptions with PRODUCT_IDS =", PRODUCT_IDS);
 				const subs = await iap.getSubscriptions(PRODUCT_IDS);
 				console.log("[IAP] Store returned subscriptions:", subs);
 				return subs ?? [];
@@ -318,20 +320,21 @@ const createIAPService = () => {
 		 * Request a subscription purchase
 		 */
 		async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
+			debugIAP("purchaseSubscription called", product);
 			try {
 				const sku = getSubscriptionProductId(product);
 				if (!sku) throw new Error("Invalid product identifier");
 
 				const iap = await ensureIapModule();
 				const request: RequestSubscriptionPropsByPlatforms = {};
-
 				if (Platform.OS === "ios") {
+					debugIAP("iOS subscription request", request);
 					request.ios = {
 						sku,
-						// Optional: used for App Store Server notifications linkage
 						...(userId ? { appAccountToken: userId } : {}),
 					};
 				} else if (Platform.OS === "android") {
+					debugIAP("Android subscription request", request);
 					const androidReq: RequestSubscriptionAndroidProps = {
 						skus: [sku],
 						// Policy: obfuscate your account ID; do not send raw PII
@@ -347,10 +350,12 @@ const createIAPService = () => {
 				}
 
 				// Use requestSubscription (not requestPurchase)
+				debugIAP("Calling requestSubscription()", sku);
 				const purchase: Purchase = await iap.requestSubscription(request);
-
+				debugIAP("requestSubscription success", purchase);
 				return purchase;
 			} catch (error) {
+				debugIAP("requestSubscription failed", error);
 				console.error("Failed to purchase subscription:", error);
 				throw error;
 			}
@@ -362,11 +367,14 @@ const createIAPService = () => {
 		 * - Android: use purchaseToken
 		 */
 		async completePurchase(purchase: Purchase) {
+			debugIAP("Calling completePurchase from listener");
+			debugIAP("completePurchase called", purchase);
 			const environment = __DEV__ ? "sandbox" : "production";
 			const apiBaseUrl = getApiBaseUrl();
 			const iap = await ensureIapModule();
 
 			const normalized = normalizePurchase(purchase);
+			debugIAP("Normalized purchase", normalized);
 			const metadata = createPendingMetadata(normalized);
 
 			let payload: PurchaseValidationPayload;
@@ -376,11 +384,12 @@ const createIAPService = () => {
 				console.error("Failed to build purchase payload:", prepError);
 				throw prepError;
 			}
-
+			debugIAP("Sending validation payload", payload);
 			try {
 				const res = await axios.post(`${apiBaseUrl}/api/iap/complete`, payload);
 
 				if (res.data?.ok) {
+					debugIAP("Backend validation response", res.data);
 					await removeMatchingPendingPurchase(metadata).catch((error) => {
 						console.warn(
 							"Failed to remove purchase from retry queue after success:",
@@ -399,6 +408,7 @@ const createIAPService = () => {
 
 				throw new Error("Backend verification failed");
 			} catch (error) {
+				debugIAP("completePurchase failed", error);
 				if (shouldEnqueueError(error)) {
 					await enqueuePendingPurchase(payload, metadata);
 				}
@@ -483,9 +493,11 @@ const createIAPService = () => {
 			onPurchase: (purchase: any) => void,
 			onError: (error: any) => void
 		) {
+			debugIAP("Setting up purchase listeners");
 			const RNIap = getIapModuleSync();
 			const purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(
 				async (purchase: any) => {
+					debugIAP("Setting up purchase listeners");
 					try {
 						await this.completePurchase(purchase);
 						onPurchase(purchase);
@@ -497,6 +509,7 @@ const createIAPService = () => {
 
 			const purchaseErrorSubscription = RNIap.purchaseErrorListener(
 				(error: any) => {
+					debugIAP("purchaseErrorListener", error);
 					console.warn("Purchase error:", error);
 					onError(error);
 				}
