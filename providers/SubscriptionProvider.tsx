@@ -61,18 +61,23 @@ export const SubscriptionProvider = ({
 	}, []);
 
 	const fetchProductsAndSubscription = useCallback(async () => {
-		console.log("[IAP] Fetching products & subscription...");
+		try {
+			console.log("[IAP] Fetching products & subscription…");
+			const [availableProducts, currentSub] = await Promise.all([
+				IAPService.getProducts(),
+				IAPService.checkSubscriptionStatus(),
+			]);
+			console.log("[IAP] Fetched products:", availableProducts);
+			console.log("[IAP] Fetched subscription:", currentSub);
 
-		const [availableProducts, currentSub] = await Promise.all([
-			IAPService.getProducts(),
-			IAPService.checkSubscriptionStatus(),
-		]);
-
-		console.log("[IAP] Products:", availableProducts);
-		console.log("[IAP] Current subscription:", currentSub);
-
-		setProducts(availableProducts);
-		setSubscription(currentSub);
+			setProducts(availableProducts);
+			setSubscription(currentSub);
+		} catch (err: any) {
+			console.error("[IAP] fetchProductsAndSubscription error:", err);
+			setError(
+				err?.message || String(err) || "Failed to fetch products/subscription"
+			);
+		}
 	}, []);
 
 	useEffect(() => {
@@ -119,7 +124,13 @@ export const SubscriptionProvider = ({
 				await fetchProductsAndSubscription();
 			} catch (err: any) {
 				console.error("Failed to initialize IAP:", err);
-				setError(err?.message || "Failed to initialize purchases");
+				console.error(
+					"Failed to initialize IAP – full error:",
+					JSON.stringify(err, null, 2)
+				);
+				setError(
+					err?.message || String(err) || "Failed to initialize purchases"
+				);
 				hasInitializedRef.current = false;
 			} finally {
 				setLoading(false);

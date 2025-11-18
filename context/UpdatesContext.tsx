@@ -48,17 +48,13 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: appPackage?.version ? `v${appPackage.version}` : "v1.0.0",
+	versionTag: appPackage?.version ? `v${appPackage.version}` : "1.2.10",
 	snackbarMessage: "Nouvelle mise à jour OTA. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: [
-		"Amélioration de mémoire cache.",
-		"Corrections de bugs mineurs.",
-		"Optrimisation des filtres par catégories.",
-	],
+	notes: ["chasing IAP logs."],
 };
 
 type UpdatesContextValue = {
@@ -130,7 +126,11 @@ const serializeError = (error: unknown): string => {
 };
 
 const extractVersionFromUpdate = (
-	update?: Updates.UpdateInfoNew | Updates.UpdateInfo | null
+	update?:
+		| Updates.UpdateInfoNew
+		| Updates.UpdateInfo
+		| Updates.CurrentlyRunningInfo
+		| null
 ) => {
 	const manifest = update?.manifest as Record<string, any> | undefined;
 	if (!manifest) return undefined;
