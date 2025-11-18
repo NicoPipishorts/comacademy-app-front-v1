@@ -58,6 +58,7 @@ const UPDATE_COPY: StaticUpdateCopy = {
 		"chasing IAP logs.",
 		"Updated OTA behavior",
 		"added login URL to snackbar",
+		"fix env vars",
 	],
 };
 
