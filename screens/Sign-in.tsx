@@ -58,10 +58,19 @@ const SignIn = () => {
 		navigation.navigate("(tabs)");
 	};
 
-	const onError = () => {
+	const onError = (error: any) => {
 		showSnackbar(
 			"Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.",
-			"error"
+			"error",
+			{
+				debugInfo: {
+					url: authUrl,
+					statusCode: error?.response?.status,
+					statusText: error?.response?.statusText,
+					errorMessage: error?.message,
+					timestamp: new Date().toISOString(),
+				},
+			}
 		);
 	};
 

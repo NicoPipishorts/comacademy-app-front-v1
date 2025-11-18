@@ -54,7 +54,11 @@ const UPDATE_COPY: StaticUpdateCopy = {
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: ["chasing IAP logs."],
+	notes: [
+		"chasing IAP logs.",
+		"Updated OTA behavior",
+		"added login URL to snackbar",
+	],
 };
 
 type UpdatesContextValue = {
@@ -133,14 +137,32 @@ const extractVersionFromUpdate = (
 		| null
 ) => {
 	const manifest = update?.manifest as Record<string, any> | undefined;
-	if (!manifest) return undefined;
-	return (
-		manifest.version ??
-		manifest?.extra?.expoClient?.version ??
-		manifest?.extra?.eas?.appVersion ??
-		manifest?.metadata?.version ??
-		manifest?.metadata?.appVersion
-	);
+	const runtimeFromUpdate =
+		update &&
+		"runtimeVersion" in update &&
+		typeof (update as { runtimeVersion?: string }).runtimeVersion === "string"
+			? (update as { runtimeVersion?: string }).runtimeVersion
+			: undefined;
+
+	const candidates: (string | undefined)[] = [
+		manifest?.version,
+		manifest?.extra?.expoClient?.version,
+		manifest?.extra?.eas?.appVersion,
+		manifest?.metadata?.version,
+		manifest?.metadata?.appVersion,
+		runtimeFromUpdate,
+		manifest?.runtimeVersion,
+		manifest?.extra?.expoClient?.runtimeVersion,
+		manifest?.metadata?.runtimeVersion,
+	];
+
+	for (const candidate of candidates) {
+		if (typeof candidate === "string" && candidate.trim().length > 0) {
+			return candidate;
+		}
+	}
+
+	return undefined;
 };
 
 const formatVersionTag = (version?: string) => {

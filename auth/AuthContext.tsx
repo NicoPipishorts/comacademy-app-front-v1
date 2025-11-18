@@ -55,7 +55,6 @@ const resolveBuildIdentifier = (): string => {
 			android: expoConfig?.android?.versionCode,
 			default: undefined,
 		}),
-		expoConfig?.version,
 		Constants.nativeApplicationVersion,
 	];
 
@@ -68,7 +67,12 @@ const resolveBuildIdentifier = (): string => {
 		}
 	}
 
-	return "unknown";
+	const fallbackVersion =
+		expoConfig?.version && expoConfig.version.trim().length > 0
+			? expoConfig.version
+			: "unknown";
+
+	return fallbackVersion;
 };
 
 const setAxiosAuthHeader = (value: string | null) => {
