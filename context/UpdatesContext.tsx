@@ -48,18 +48,13 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: appPackage?.version ? `v${appPackage.version}` : "1.2.10",
+	versionTag: appPackage?.version ? `v${appPackage.version}` : "1.2.10.1",
 	snackbarMessage: "Nouvelle mise à jour OTA. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: [
-		"chasing IAP logs.",
-		"Updated OTA behavior",
-		"added login URL to snackbar",
-		"fix env vars",
-	],
+	notes: ["chasing IAP logs.", "instealled new debugging tools."],
 };
 
 type UpdatesContextValue = {
@@ -88,7 +83,13 @@ type UpdatesProviderProps = {
 	children: ReactNode;
 };
 
-const extractReleaseNotes = (update?: UpdateInfoNew) => {
+const extractReleaseNotes = (
+	update?:
+		| UpdateInfoNew
+		| Updates.UpdateInfo
+		| Updates.CurrentlyRunningInfo
+		| null
+) => {
 	if (!update) return undefined;
 
 	const manifest: Record<string, any> | undefined =
@@ -130,6 +131,12 @@ const serializeError = (error: unknown): string => {
 	}
 };
 
+const parseVersionFromString = (value?: string) => {
+	if (!value) return undefined;
+	const match = value.match(/v?(\d+\.\d+\.\d+)/i);
+	return match ? match[1] : undefined;
+};
+
 const extractVersionFromUpdate = (
 	update?:
 		| Updates.UpdateInfoNew
@@ -161,6 +168,13 @@ const extractVersionFromUpdate = (
 		if (typeof candidate === "string" && candidate.trim().length > 0) {
 			return candidate;
 		}
+	}
+
+	const releaseNotesVersion = parseVersionFromString(
+		extractReleaseNotes(update)
+	);
+	if (releaseNotesVersion) {
+		return releaseNotesVersion;
 	}
 
 	return undefined;

@@ -68,8 +68,12 @@ const resolveBuildIdentifier = (): string => {
 	}
 
 	const fallbackVersion =
-		expoConfig?.version && expoConfig.version.trim().length > 0
-			? expoConfig.version
+		expoConfig?.extra?.eas?.appVersion &&
+		expoConfig.extra.eas.appVersion.trim().length > 0
+			? expoConfig.extra.eas.appVersion
+			: expoConfig?.version && expoConfig.version.trim().length > 0
+			?
+				`${expoConfig.version}-unknown`
 			: "unknown";
 
 	return fallbackVersion;
@@ -141,6 +145,10 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	children,
 }) => {
 	const buildIdentifier = useMemo(() => resolveBuildIdentifier(), []);
+	const shouldTrackBuild = useMemo(
+		() => buildIdentifier && buildIdentifier !== "unknown",
+		[buildIdentifier]
+	);
 	const [session, setSession] = useState<AuthResponse | null>(null);
 	const [token, setToken] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -202,7 +210,11 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			return false;
 		}
 
-		if (storedBuild && storedBuild !== buildIdentifier) {
+		if (
+			shouldTrackBuild &&
+			storedBuild &&
+			storedBuild !== buildIdentifier
+		) {
 			await clearPersistedSession();
 			return false;
 		}
@@ -219,8 +231,12 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			setToken(storedToken);
 			setAxiosAuthHeader(storedToken);
 			scheduleTokenExpiryCheck(storedToken);
-			if (!storedBuild) {
-				await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
+			if (shouldTrackBuild) {
+				if (!storedBuild) {
+					await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
+				}
+			} else if (storedBuild) {
+				await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
 			}
 			return true;
 		} catch (error) {
@@ -228,7 +244,12 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			await clearPersistedSession();
 			return false;
 		}
-	}, [buildIdentifier, clearPersistedSession, scheduleTokenExpiryCheck]);
+	}, [
+		buildIdentifier,
+		clearPersistedSession,
+		scheduleTokenExpiryCheck,
+		shouldTrackBuild,
+	]);
 
 	const checkLoggedIn = useCallback(async () => {
 		const isValid = await hydrateFromStorage();
@@ -238,7 +259,11 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const login = useCallback(
 		async (data: AuthResponse) => {
 			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
-			await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
+			if (shouldTrackBuild) {
+				await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
+			} else {
+				await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
+			}
 			await persistToken(data.jwt);
 			setSession(data);
 			setToken(data.jwt);
@@ -246,7 +271,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			setAxiosAuthHeader(data.jwt);
 			scheduleTokenExpiryCheck(data.jwt);
 		},
-		[buildIdentifier, scheduleTokenExpiryCheck]
+		[buildIdentifier, scheduleTokenExpiryCheck, shouldTrackBuild]
 	);
 
 	const logout = useCallback(async () => {
