@@ -2,7 +2,7 @@
 	"expo": {
 		"name": "Com'Academy",
 		"slug": "comacademy",
-		"version": "1.2.12",
+		"version": "1.2.13",
 		"orientation": "portrait",
 		"icon": "./assets/imgs/icons/favicon.png",
 		"scheme": "comacademy",
@@ -90,7 +90,7 @@
 			"eas": { "projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e" }
 		},
 		"owner": "nicopipishorts",
-		"runtimeVersion": "1.2.12",
+		"runtimeVersion": "1.2.13",
 		"updates": {
 			"url": "https://u.expo.dev/0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
 		}

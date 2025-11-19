@@ -62,22 +62,43 @@ export const SubscriptionProvider = ({
 	}, []);
 
 	const fetchProductsAndSubscription = useCallback(async () => {
+		debugIAP("Fetching products & subscription…");
+
+		// 1) PRODUCTS – this is what you care about now
 		try {
-			debugIAP("[IAP] Fetching products & subscription…");
-			const [availableProducts, currentSub] = await Promise.all([
-				IAPService.getProducts(),
-				IAPService.checkSubscriptionStatus(),
-			]);
-			debugIAP("[IAP] Fetched products:", availableProducts);
-			debugIAP("[IAP] Fetched subscription:", currentSub);
+			debugIAP("getProducts triggered");
+			const availableProducts = await IAPService.getProducts();
+
+			// Avoid JSON.stringify on the whole objects
+			debugIAP(
+				"Products fetched (count)",
+				Array.isArray(availableProducts)
+					? availableProducts.length
+					: "not array"
+			);
 
 			setProducts(availableProducts);
+		} catch (err: any) {
+			debugIAP("getProducts error", {
+				message: err?.message,
+				raw: String(err),
+			});
+			setError(err?.message || String(err) || "Failed to fetch products");
+			return; // no point continuing if products fail
+		}
+
+		// 2) ENTITLEMENTS – best-effort only, do NOT block UI
+		try {
+			debugIAP("checkSubscriptionStatus() triggered");
+			const currentSub = await IAPService.checkSubscriptionStatus();
+			debugIAP("Subscription status result", currentSub);
 			setSubscription(currentSub);
 		} catch (err: any) {
-			debugIAP("[IAP] fetchProductsAndSubscription error:", err);
-			setError(
-				err?.message || String(err) || "Failed to fetch products/subscription"
-			);
+			debugIAP("checkSubscriptionStatus error (ignored for now)", {
+				message: err?.message,
+				raw: String(err),
+			});
+			// Don’t call setError here – we’re focusing on products first
 		}
 	}, []);
 

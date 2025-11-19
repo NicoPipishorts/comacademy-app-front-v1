@@ -235,7 +235,7 @@ const createIAPService = () => {
 		for (const pendingItem of pending) {
 			try {
 				const res = await axios.post(
-					`${apiBaseUrl}/api/iap/complete`,
+					`${apiBaseUrl}/iap/complete`,
 					pendingItem.payload
 				);
 
@@ -426,7 +426,7 @@ const createIAPService = () => {
 			debugIAP("Fetching entitlements");
 			try {
 				const apiBaseUrl = getApiBaseUrl();
-				const res = await axios.get(`${apiBaseUrl}/api/me/entitlements`);
+				const res = await axios.get(`${apiBaseUrl}/me/entitlements`);
 				debugIAP("Entitlements API response", res.data);
 				return res.data?.entitlements ?? [];
 			} catch (error) {

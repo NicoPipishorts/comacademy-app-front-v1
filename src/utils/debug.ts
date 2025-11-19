@@ -1,10 +1,20 @@
 export const __iapLogs: string[] = [];
 
 export function debugIAP(message: string, data?: any) {
-	const formatted = data ? `${message} ${JSON.stringify(data)}` : message;
+	let formatted = message;
+
+	if (data !== undefined) {
+		try {
+			const safe =
+				typeof data === "string" || typeof data === "number"
+					? data
+					: JSON.stringify(data);
+			formatted += " " + String(safe);
+		} catch {
+			formatted += " [unserializable data]";
+		}
+	}
 
 	__iapLogs.push(formatted);
-
-	// Also send to console for dev
 	console.log("[IAP-DEBUG]", formatted);
 }
