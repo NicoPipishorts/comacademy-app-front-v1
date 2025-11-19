@@ -184,6 +184,21 @@ export default function User() {
 
 					<View style={styles.logoutContainer}>
 						<TouchableOpacity
+							onPress={() => navigation.navigate("iapRawDebug")}
+							style={styles.logoutButton}>
+							<Text
+								style={{
+									color: "#F0F",
+									fontSize: FontSize16,
+									fontWeight: "bold",
+								}}>
+								IAP Barebones
+							</Text>
+						</TouchableOpacity>
+					</View>
+
+					<View style={styles.logoutContainer}>
+						<TouchableOpacity
 							onPress={() => logout()}
 							style={styles.logoutButton}>
 							<Text

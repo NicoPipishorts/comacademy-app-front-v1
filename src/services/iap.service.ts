@@ -37,7 +37,8 @@ if (isExpoGo) {
 	);
 }
 
-type RNIapModule = typeof import("react-native-iap");
+// iap.service.ts (top of file, after isExpoGo)
+type RNIapModule = any; // keep it loose while we debug Nitro exports
 
 let cachedIapModule: RNIapModule | null = null;
 
@@ -47,10 +48,14 @@ const ensureIapModule = async (): Promise<RNIapModule> => {
 	}
 
 	if (!cachedIapModule) {
-		cachedIapModule = await import("react-native-iap");
+		const mod = await import("react-native-iap");
+
+		// In v14 the actual functions usually live on the default export
+		// so unwrap it if present.
+		cachedIapModule = (mod as any).default ?? mod;
 	}
 
-	return cachedIapModule;
+	return cachedIapModule!;
 };
 
 const getIapModuleSync = (): RNIapModule => {
@@ -59,7 +64,7 @@ const getIapModuleSync = (): RNIapModule => {
 			"react-native-iap module not initialised. Call IAPService.initialize() first."
 		);
 	}
-	return cachedIapModule;
+	return cachedIapModule!;
 };
 
 // Keep identical IDs on both platforms (must match App Store / Play Console)
@@ -307,11 +312,21 @@ const createIAPService = () => {
 			debugIAP("getProducts triggered");
 			try {
 				const iap = await ensureIapModule();
+
+				debugIAP("IAP module keys", Object.keys(iap));
+				debugIAP("typeof iap.getSubscriptions", typeof iap.getSubscriptions);
+
+				// v14 expects an object: { skus: [...] }
 				debugIAP("Calling getSubscriptions with PRODUCT_IDS =", PRODUCT_IDS);
-				const subs = await iap.getSubscriptions(PRODUCT_IDS);
-				console.log("[IAP] Store returned subscriptions:", subs);
+				const subs = await iap.getSubscriptions({ skus: PRODUCT_IDS });
+
+				debugIAP("getSubscriptions result", subs);
 				return subs ?? [];
 			} catch (error) {
+				debugIAP("getProducts error", {
+					message: (error as any)?.message,
+					raw: String(error),
+				});
 				console.error("Failed to get subscriptions:", error);
 				throw error;
 			}
