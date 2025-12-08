@@ -55,8 +55,8 @@ export default function RootLayout() {
 						</GestureHandlerRootView>
 					</QueryClientProvider>
 				</SubscriptionProvider>
+				<LogOverlay />
 			</AuthProvider>
-			<LogOverlay />
 		</SafeAreaProvider>
 	);
 }

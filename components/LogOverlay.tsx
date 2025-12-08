@@ -119,9 +119,6 @@ const styles = StyleSheet.create({
 	actionButtonSpacing: {
 		marginLeft: 12,
 	},
-	actionButton + actionButton: {
-		marginLeft: 12,
-	},
 	actionLabel: {
 		color: "#fff",
 		fontWeight: "600",
