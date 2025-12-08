@@ -2,17 +2,16 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { SingleCommandementResponse } from "@/types/commandements";
 import { useQuery } from "@tanstack/react-query";
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 
 const fetchData = async (
 	token: string,
 	itemId: number
 ): Promise<SingleCommandementResponse> => {
-	const res = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/commandements/${itemId}?populate=cards`,
-		{
-			headers: { Authorization: `Bearer ${token}` },
-		}
-	);
+	const url = buildApiUrl(`commandements/${itemId}?populate=cards`);
+	const res = await fetch(url, {
+		headers: { Authorization: `Bearer ${token}` },
+	});
 
 	if (!res.ok) {
 		const text = await res.text();

@@ -80,8 +80,9 @@ export default function StatsBar({
 			</View>
 			<View style={styles.containerProgressBars}>
 				{categories.data.map((cat, index) => {
+					const categoryScore = categoriesScore?.[cat.id];
 					const progression = Math.round(
-						categoriesScore[index + 1].percentageCorrect
+						categoryScore?.percentageCorrect ?? 0
 					);
 
 					return (
@@ -112,8 +113,9 @@ export default function StatsBar({
 
 			<View style={styles.cardsWrapper}>
 				{categories.data.map((cat, index) => {
+					const categoryScore = categoriesScore?.[cat.id];
 					const progression = Math.round(
-						categoriesScore[index + 1].percentageCorrect
+						categoryScore?.percentageCorrect ?? 0
 					);
 
 					return (

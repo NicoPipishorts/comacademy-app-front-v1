@@ -49,12 +49,13 @@ export default function ChangeAvatar() {
 		});
 	};
 
+	const attributes = data?.data?.attributes;
 	let userSelectedBgColor: string;
 
-	if (!data?.data) {
+	if (!attributes?.avatarBackgroundColor) {
 		userSelectedBgColor = colorYellow;
 	} else {
-		userSelectedBgColor = data?.data.attributes.avatarBackgroundColor;
+		userSelectedBgColor = attributes.avatarBackgroundColor;
 	}
 
 	return (

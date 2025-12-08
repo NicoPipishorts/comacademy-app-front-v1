@@ -3,18 +3,19 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { MultipleCommandementsResponse } from "@/types/commandements";
 import { useQuery } from "@tanstack/react-query";
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 
 const fetchCommandements = async (
 	token: string,
 	categoryId: number | null
 ): Promise<MultipleCommandementsResponse> => {
-	const baseUrl = process.env.EXPO_PUBLIC_API_URL;
 	// choose endpoint based on categoryId
 	const endpoint = categoryId
-		? `/commandements/by-category/${categoryId}`
-		: "/commandements";
+		? `commandements/by-category/${categoryId}`
+		: "commandements";
+	const url = buildApiUrl(endpoint);
 
-	const res = await fetch(`${baseUrl}${endpoint}`, {
+	const res = await fetch(url, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},

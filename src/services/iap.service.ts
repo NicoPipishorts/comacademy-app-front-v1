@@ -305,29 +305,27 @@ const createIAPService = () => {
 			await processPendingPurchases();
 		},
 
-		/**
-		 * Fetch subscription products (NOT getProducts)
-		 */
+		// iap.service.ts
 		async getProducts() {
 			debugIAP("getProducts triggered");
 			try {
 				const iap = await ensureIapModule();
 
-				debugIAP("IAP module keys", Object.keys(iap));
-				debugIAP("typeof iap.getSubscriptions", typeof iap.getSubscriptions);
+				debugIAP("RNIap keys", Object.keys(iap as any));
+				debugIAP("typeof iap.fetchProducts", typeof (iap as any).fetchProducts);
 
-				// v14 expects an object: { skus: [...] }
-				debugIAP("Calling getSubscriptions with PRODUCT_IDS =", PRODUCT_IDS);
-				const subs = await iap.getSubscriptions({ skus: PRODUCT_IDS });
+				const products = await (iap as any).fetchProducts({
+					skus: PRODUCT_IDS,
+					type: "subs",
+				});
 
-				debugIAP("getSubscriptions result", subs);
-				return subs ?? [];
+				debugIAP("fetchProducts result", products);
+				return products ?? [];
 			} catch (error) {
 				debugIAP("getProducts error", {
 					message: (error as any)?.message,
-					raw: String(error),
+					raw: error,
 				});
-				console.error("Failed to get subscriptions:", error);
 				throw error;
 			}
 		},
@@ -402,7 +400,7 @@ const createIAPService = () => {
 			}
 			debugIAP("Sending validation payload", payload);
 			try {
-				const res = await axios.post(`${apiBaseUrl}/api/iap/complete`, payload);
+				const res = await axios.post(`${apiBaseUrl}/iap/complete`, payload);
 
 				if (res.data?.ok) {
 					debugIAP("Backend validation response", res.data);

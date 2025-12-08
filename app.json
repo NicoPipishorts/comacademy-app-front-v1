@@ -2,14 +2,14 @@
 	"expo": {
 		"name": "Com'Academy",
 		"slug": "comacademy",
-		"version": "1.2.14",
+		"version": "1.2.16",
 		"orientation": "portrait",
 		"icon": "./assets/imgs/icons/favicon.png",
 		"scheme": "comacademy",
 		"userInterfaceStyle": "automatic",
 
 		"splash": {
-			"image": "./assets/imgs/splashScreen.png",
+			"image": "./assets/imgs/splash/splashScreen.png",
 			"resizeMode": "contain",
 			"backgroundColor": "#EDBE00"
 		},
@@ -35,13 +35,13 @@
 		"android": {
 			"adaptiveIcon": {
 				"backgroundColor": "#EDBE00",
-				"foregroundImage": "./assets/imgs/splashScreen.png"
+				"foregroundImage": "./assets/imgs/splash/splashScreen.png"
 			},
 
 			"softwareKeyboardLayoutMode": "resize",
 			"package": "com.nicopipishorts.comacademy",
 			"splash": {
-				"image": "./assets/imgs/splashScreen.png",
+				"image": "./assets/imgs/splash/splashScreen.png",
 				"resizeMode": "contain",
 				"backgroundColor": "#EDBE00"
 			},
@@ -90,7 +90,7 @@
 			"eas": { "projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e" }
 		},
 		"owner": "nicopipishorts",
-		"runtimeVersion": "1.2.14",
+		"runtimeVersion": "1.2.16",
 		"updates": {
 			"url": "https://u.expo.dev/0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
 		}

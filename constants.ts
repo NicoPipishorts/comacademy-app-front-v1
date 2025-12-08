@@ -1,5 +1,5 @@
 // e.g. bump this on every breaking‑session–cookie deploy
-const SESSION_MIGRATION_VERSION = "2025-07-23";
+const SESSION_MIGRATION_VERSION = "2025-11-19-build-identifier-fix";
 const STORAGE_MIGRATION_KEY = "migratingToV1.1";
 
 export { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY };

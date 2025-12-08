@@ -3,19 +3,18 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { CitationsMenuResponse } from "@/types/citationsMenu";
 import { useQuery } from "@tanstack/react-query";
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 
 const fetchCitationsMenu = async (
 	token: string
 ): Promise<CitationsMenuResponse> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/citations-menu`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const url = buildApiUrl("citations-menu");
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
 			console.error(

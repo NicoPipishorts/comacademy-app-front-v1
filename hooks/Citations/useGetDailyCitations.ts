@@ -1,19 +1,18 @@
 import { DailyCitationResponse } from "@/types/lesCitations";
 import { useQuery } from "@tanstack/react-query";
 import useJwtToken from "../useJwtToken";
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 
 const fetchCitations = async (
 	token: string
 ): Promise<DailyCitationResponse> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/citations/daily`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const url = buildApiUrl("citations/daily");
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
 			console.error(

@@ -9,28 +9,37 @@ import Loader from "../experience/loader";
 interface Props {
 	size?: number;
 }
+
 export default function AvatarInitials({ size }: Props) {
 	const { auth } = useAuthSession();
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetUserPreferences(auth?.user.id);
 
+	const attributes = data?.data?.attributes;
 	let backgroundColor: string;
 	if (!isFetched) {
 		return <Loader />;
 	}
 
-	if (!data?.data?.attributes.avatarBackgroundColor) {
+	if (!attributes?.avatarBackgroundColor) {
 		backgroundColor = colorYellow;
 	} else {
-		backgroundColor = data?.data?.attributes.avatarBackgroundColor;
+		backgroundColor = attributes.avatarBackgroundColor;
 	}
 
-	const initials = () => {
-		const firstLetter =
-			data?.data?.attributes.user.firstName?.split("")[0] || "";
-		const lastLetter = data?.data?.attributes.user.lastName?.split("")[0] || "";
+	const getInitial = (value?: string) => {
+		return value?.trim().charAt(0) || "";
+	};
 
-		return firstLetter + lastLetter;
+	const initials = () => {
+		const firstLetter = getInitial(
+			attributes?.user?.firstName ?? auth?.user?.firstName
+		);
+		const lastLetter = getInitial(
+			attributes?.user?.lastName ?? auth?.user?.lastName
+		);
+
+		return (firstLetter + lastLetter).toUpperCase();
 	};
 
 	return (
