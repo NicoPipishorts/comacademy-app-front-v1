@@ -102,8 +102,10 @@ const persistToken = async (token: string) => {
 
 	if (!storedSecurely) {
 		await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
+		logDevice("[AuthContext] persistToken saved via AsyncStorage");
 	} else {
 		await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+		logDevice("[AuthContext] persistToken saved securely; clearing AsyncStorage record");
 	}
 };
 
@@ -112,6 +114,7 @@ const readStoredToken = async (): Promise<string | null> => {
 		if (await SecureStore.isAvailableAsync()) {
 			const secureToken = await SecureStore.getItemAsync(TOKEN_STORAGE_KEY);
 			if (secureToken) {
+				logDevice("[AuthContext] readStoredToken from SecureStore");
 				return secureToken;
 			}
 		}
@@ -138,6 +141,7 @@ const removeStoredToken = async () => {
 
 	try {
 		await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+		logDevice("[AuthContext] removeStoredToken cleared AsyncStorage");
 	} catch (error) {
 		console.error("Failed to remove token from AsyncStorage", error);
 	}
@@ -195,6 +199,9 @@ const clearPersistedSession = useCallback(async () => {
 				expiryTimerRef.current = setTimeout(() => {
 					void clearPersistedSession();
 				}, msUntilExpiry);
+				logDevice("[AuthContext] scheduleTokenExpiryCheck", {
+					durationMs: msUntilExpiry,
+				});
 			} catch (error) {
 				console.error("Failed to schedule token expiry check", error);
 				void clearPersistedSession();
