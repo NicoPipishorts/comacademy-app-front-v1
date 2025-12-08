@@ -16,5 +16,4 @@ export function debugIAP(message: string, data?: any) {
 	}
 
 	__iapLogs.push(formatted);
-	console.log("[IAP-DEBUG]", formatted);
 }

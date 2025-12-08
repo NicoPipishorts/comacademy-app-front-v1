@@ -1,7 +1,8 @@
 import { AuthResponse } from "@/types/credentials/auth";
 import { FormPayload } from "@/screens/Register/Register";
 import { useMutation } from "@tanstack/react-query";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosError } from "axios";
+import { normalizeAuthResponse } from "@/helpers/strapi";
 
 export const useRegisterNewUser = (
 	onSuccess: (data: AuthResponse) => void,
@@ -10,11 +11,11 @@ export const useRegisterNewUser = (
 	return useMutation<AuthResponse, AxiosError, FormPayload>({
 		mutationFn: async (formPayload: FormPayload) => {
 			try {
-				const response: AxiosResponse<AuthResponse> = await axios.post(
+				const response = await axios.post(
 					process.env.EXPO_PUBLIC_REGISTER_URL,
 					{ ...formPayload, confirmed: true }
 				);
-				return response.data;
+				return normalizeAuthResponse(response.data);
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
 					const errorMessage = error.response?.data?.error?.message;

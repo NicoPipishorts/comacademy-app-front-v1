@@ -2,6 +2,8 @@ import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
 import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { ScoreByCategory } from "@/hooks/useGetUsersScore";
+import { resolveEntityAttributes } from "@/helpers/strapi";
+import { CategoriesAttributes } from "@/types/categories";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -18,19 +20,32 @@ interface Props {
 	totalPoints?: number;
 }
 
-const ProgressBar = ({ progression, backgroundColor }) => {
+interface ProgressBarProps {
+	progression: number;
+	backgroundColor?: string;
+}
+
+const sanitizeHexColor = (value?: string, fallback = "EDBE00") => {
+	if (!value) {
+		return fallback;
+	}
+
+	const trimmed = value.trim();
+	const withoutHash = trimmed.startsWith("#") ? trimmed.slice(1) : trimmed;
+
+	return withoutHash || fallback;
+};
+
+const ProgressBar = ({ progression, backgroundColor }: ProgressBarProps) => {
 	const animatedHeight = useSharedValue(0);
 
-	// Animate the height when the progression changes
 	useEffect(() => {
 		animatedHeight.value = withTiming(progression, { duration: 1000 });
 	}, [animatedHeight, progression]);
 
-	const animatedStyle = useAnimatedStyle(() => {
-		return {
-			height: `${animatedHeight.value}%`,
-		};
-	});
+	const animatedStyle = useAnimatedStyle(() => ({
+		height: `${animatedHeight.value}%`,
+	}));
 
 	return (
 		<View style={styles.wrapperProgressBar}>
@@ -38,12 +53,19 @@ const ProgressBar = ({ progression, backgroundColor }) => {
 				style={[
 					styles.contentProgressBar,
 					{
-						backgroundColor: `#${backgroundColor}`,
+						backgroundColor: `#${sanitizeHexColor(backgroundColor)}`,
 					},
 					animatedStyle,
 				]}
 			/>
 		</View>
+	);
+};
+
+const getCategoryAttributes = (cat: any): CategoriesAttributes | undefined => {
+	return (
+		resolveEntityAttributes<CategoriesAttributes>(cat) ??
+		(cat?.attributes as CategoriesAttributes | undefined)
 	);
 };
 
@@ -55,7 +77,7 @@ export default function StatsBar({
 }: Props) {
 	const { data: categories } = useCategoriesFull();
 
-	if (!categories || !categories.data) {
+	if (!categories?.data?.length) {
 		return null;
 	}
 
@@ -64,7 +86,7 @@ export default function StatsBar({
 			style={[
 				styles.wrapper,
 				{
-					shadowOpacity: shadowOpacity,
+					shadowOpacity,
 				},
 			]}>
 			<View
@@ -79,11 +101,12 @@ export default function StatsBar({
 				<Text style={styles.scoreText}>Ton score: {totalPoints}</Text>
 			</View>
 			<View style={styles.containerProgressBars}>
-				{categories.data.map((cat, index) => {
+				{categories.data.map((cat) => {
 					const categoryScore = categoriesScore?.[cat.id];
 					const progression = Math.round(
 						categoryScore?.percentageCorrect ?? 0
 					);
+					const attrs = getCategoryAttributes(cat);
 
 					return (
 						<View
@@ -94,7 +117,7 @@ export default function StatsBar({
 							}}>
 							<ProgressBar
 								progression={progression}
-								backgroundColor={cat.attributes.backgroundColor}
+								backgroundColor={attrs?.backgroundColor}
 							/>
 							<View
 								style={{
@@ -112,11 +135,12 @@ export default function StatsBar({
 			</View>
 
 			<View style={styles.cardsWrapper}>
-				{categories.data.map((cat, index) => {
+				{categories.data.map((cat) => {
 					const categoryScore = categoriesScore?.[cat.id];
 					const progression = Math.round(
 						categoryScore?.percentageCorrect ?? 0
 					);
+					const attrs = getCategoryAttributes(cat);
 
 					return (
 						<View
@@ -124,14 +148,20 @@ export default function StatsBar({
 							style={[
 								styles.cardContainer,
 								{
-									backgroundColor: `#${cat.attributes.backgroundColor}`,
+									backgroundColor: `#${sanitizeHexColor(
+										attrs?.backgroundColor
+									)}`,
 								},
 							]}>
 							<View>
-								<Text style={styles.cardText}>{cat.attributes.Title}</Text>
+								<Text style={styles.cardText}>
+									{attrs?.Title ?? attrs?.Name ?? ""}
+								</Text>
 							</View>
 							<View style={styles.containerScore}>
-								<Text style={styles.textScore}>{Math.round(progression)}</Text>
+								<Text style={styles.textScore}>
+									{Math.round(progression)}
+								</Text>
 								<Text style={styles.textPercentage}>%</Text>
 							</View>
 						</View>
@@ -218,7 +248,7 @@ const styles = StyleSheet.create({
 	textPercentage: {
 		color: colorWhite,
 		fontSize: 14,
-		fontWeight: "bold",
-		paddingBottom: 6,
+		fontWeight: "600",
+		marginLeft: 4,
 	},
 });

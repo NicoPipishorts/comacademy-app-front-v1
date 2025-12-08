@@ -1,5 +1,6 @@
 import { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY } from "@/constants";
 import { AuthResponse } from "@/types/credentials/auth";
+import { normalizeAuthResponse } from "@/helpers/strapi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Constants from "expo-constants";
@@ -221,13 +222,14 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 		try {
 			const parsedSession = JSON.parse(rawSession) as AuthResponse;
+			const normalizedSession = normalizeAuthResponse(parsedSession);
 			const decoded = jwtDecode<DecodedToken>(storedToken);
 			if (decoded.exp && decoded.exp * 1000 < Date.now()) {
 				await clearPersistedSession();
 				return false;
 			}
 
-			setSession(parsedSession);
+			setSession(normalizedSession);
 			setToken(storedToken);
 			setAxiosAuthHeader(storedToken);
 			scheduleTokenExpiryCheck(storedToken);
@@ -258,18 +260,19 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	const login = useCallback(
 		async (data: AuthResponse) => {
-			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+			const normalized = normalizeAuthResponse(data);
+			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalized));
 			if (shouldTrackBuild) {
 				await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
 			} else {
 				await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
 			}
-			await persistToken(data.jwt);
-			setSession(data);
-			setToken(data.jwt);
+			await persistToken(normalized.jwt);
+			setSession(normalized);
+			setToken(normalized.jwt);
 			setIsRegistering(false);
-			setAxiosAuthHeader(data.jwt);
-			scheduleTokenExpiryCheck(data.jwt);
+			setAxiosAuthHeader(normalized.jwt);
+			scheduleTokenExpiryCheck(normalized.jwt);
 		},
 		[buildIdentifier, scheduleTokenExpiryCheck, shouldTrackBuild]
 	);
@@ -324,13 +327,20 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		const interceptor = axios.interceptors.response.use(
 			(response) => response,
 			async (error) => {
-				// Check if it's an auth error (401 Unauthorized or 403 Forbidden)
-				if (error.response?.status === 401 || error.response?.status === 403) {
-					console.log(
-						`[AuthContext] Received ${error.response.status}, logging out...`
-					);
+				const status = error.response?.status;
+
+				// Determine if the failing request was sent with an auth header;
+				// skip logging out for unauthenticated requests (common during boot)
+				const headers = error.config?.headers;
+				const hadAuthHeader =
+					Boolean(headers?.Authorization || headers?.authorization) ||
+					Boolean(headers?.common?.Authorization || headers?.common?.authorization);
+
+				if (hadAuthHeader && (status === 401 || status === 403)) {
+					console.log(`[AuthContext] Received ${status}, logging out...`);
 					await clearPersistedSession();
 				}
+
 				return Promise.reject(error);
 			}
 		);

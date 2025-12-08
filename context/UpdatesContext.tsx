@@ -48,13 +48,13 @@ type StaticUpdateCopy = {
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: appPackage?.version ? `v${appPackage.version}` : "1.2.16",
+	versionTag: appPackage?.version ? `v${appPackage.version}` : "1.2.17",
 	snackbarMessage: "Nouvelle mise à jour OTA. Touchez pour voir ce qui change.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: ["chasing IAP logs.", "instealled new debugging tools."],
+	notes: ["Updated Strapi V4 to V5.", "instealled new debugging tools."],
 };
 
 type UpdatesContextValue = {

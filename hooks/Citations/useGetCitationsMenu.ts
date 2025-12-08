@@ -8,28 +8,27 @@ import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 const fetchCitationsMenu = async (
 	token: string
 ): Promise<CitationsMenuResponse> => {
-	try {
-		const url = buildApiUrl("citations-menu");
-		const response = await fetch(url, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
+	const url = buildApiUrl("citations-menu");
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
 
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
+	if (!response.ok) {
+		const message = `HTTP error! status: ${response.status}`;
+		const error = new Error(message);
+		(error as any).status = response.status;
+		try {
+			(error as any).body = await response.text();
+		} catch {
+			// ignore
 		}
-
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error fetching  Citations Menu:", error);
 		throw error;
 	}
+
+	const data = await response.json();
+	return data;
 };
 
 const useGetCitationsMenu = () => {

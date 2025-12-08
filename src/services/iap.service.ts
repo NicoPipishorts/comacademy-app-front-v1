@@ -31,11 +31,6 @@ import {
 
 // Detect Expo Go (real IAP doesn't work there)
 const isExpoGo = Constants.appOwnership === "expo";
-if (isExpoGo) {
-	console.warn(
-		"⚠️ Running in Expo Go — using MOCK IAP service. Build a dev/TestFlight build for real IAP."
-	);
-}
 
 // iap.service.ts (top of file, after isExpoGo)
 type RNIapModule = any; // keep it loose while we debug Nitro exports

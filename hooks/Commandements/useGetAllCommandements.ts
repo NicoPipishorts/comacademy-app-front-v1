@@ -22,9 +22,29 @@ const fetchCommandements = async (
 	});
 
 	if (!res.ok) {
-		const text = await res.text();
-		console.error(`Error fetching commandements:`, res.status, text);
-		throw new Error(`Failed to fetch commandements: ${res.status}`);
+		if (res.status === 404) {
+			return {
+				data: [],
+				meta: {
+					pagination: {
+						page: 1,
+						pageSize: 0,
+						pageCount: 0,
+						total: 0,
+					},
+				},
+			};
+		}
+
+		const message = `Failed to fetch commandements: ${res.status}`;
+		const error = new Error(message);
+		(error as any).status = res.status;
+		try {
+			(error as any).body = await res.text();
+		} catch {
+			// ignore body parsing errors
+		}
+		throw error;
 	}
 
 	return res.json();

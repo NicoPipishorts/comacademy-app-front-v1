@@ -60,10 +60,11 @@ const Citations = () => {
 				showsVerticalScrollIndicator={false}
 				style={{ paddingHorizontal: 20 }}
 				contentContainerStyle={{ paddingBottom: 100 }}>
-				{data?.data.cards.map((citation) => {
-					const locked = isFreeUser;
-					return (
-						<CardSimpleButtonCitrationsMenu
+				{(Array.isArray(data?.data?.cards) ? data.data.cards : []).map(
+					(citation) => {
+						const locked = isFreeUser;
+						return (
+							<CardSimpleButtonCitrationsMenu
 							key={citation.title}
 							image={citation.url}
 							content={citation.title}
