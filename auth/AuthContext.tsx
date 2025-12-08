@@ -1,6 +1,7 @@
 import { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY } from "@/constants";
 import { AuthResponse } from "@/types/credentials/auth";
 import { normalizeAuthResponse } from "@/helpers/strapi";
+import { logDevice } from "@/helpers/logDevice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Constants from "expo-constants";
@@ -165,15 +166,16 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		}
 	}, []);
 
-	const clearPersistedSession = useCallback(async () => {
-		clearExpiryTimer();
-		setSession(null);
-		setToken(null);
-		setAxiosAuthHeader(null);
-		await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-		await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
-		await removeStoredToken();
-	}, [clearExpiryTimer]);
+const clearPersistedSession = useCallback(async () => {
+	clearExpiryTimer();
+	setSession(null);
+	setToken(null);
+	setAxiosAuthHeader(null);
+	logDevice("[AuthContext] Clearing persisted session");
+	await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+	await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
+	await removeStoredToken();
+}, [clearExpiryTimer]);
 
 	const scheduleTokenExpiryCheck = useCallback(
 		(currentToken: string | null) => {
@@ -207,15 +209,23 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		const storedBuild = await AsyncStorage.getItem(BUILD_STORAGE_KEY);
 
 		if (!rawSession || !storedToken) {
+			logDevice("[AuthContext] hydrateFromStorage missing data", {
+				hasRawSession: Boolean(rawSession),
+				hasToken: Boolean(storedToken),
+			});
 			await clearPersistedSession();
 			return false;
 		}
 
-		if (
-			shouldTrackBuild &&
-			storedBuild &&
-			storedBuild !== buildIdentifier
-		) {
+			if (
+				shouldTrackBuild &&
+				storedBuild &&
+				storedBuild !== buildIdentifier
+			) {
+				logDevice("[AuthContext] hydrateFromStorage build mismatch", {
+					storedBuild,
+					buildIdentifier,
+				});
 			await clearPersistedSession();
 			return false;
 		}
@@ -224,7 +234,8 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			const parsedSession = JSON.parse(rawSession) as AuthResponse;
 			const normalizedSession = normalizeAuthResponse(parsedSession);
 			const decoded = jwtDecode<DecodedToken>(storedToken);
-			if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+				if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+					logDevice("[AuthContext] Stored token already expired");
 				await clearPersistedSession();
 				return false;
 			}
@@ -233,6 +244,9 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			setToken(storedToken);
 			setAxiosAuthHeader(storedToken);
 			scheduleTokenExpiryCheck(storedToken);
+			logDevice("[AuthContext] hydrateFromStorage success", {
+				userId: normalizedSession.user.id,
+			});
 			if (shouldTrackBuild) {
 				if (!storedBuild) {
 					await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
@@ -260,6 +274,10 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	const login = useCallback(
 		async (data: AuthResponse) => {
+			logDevice("[AuthContext] login invoked", {
+				userId: data.user.id,
+				build: buildIdentifier,
+			});
 			const normalized = normalizeAuthResponse(data);
 			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalized));
 			if (shouldTrackBuild) {
@@ -270,6 +288,10 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			await persistToken(normalized.jwt);
 			setSession(normalized);
 			setToken(normalized.jwt);
+			logDevice("[AuthContext] login stored session", {
+				userId: normalized.user.id,
+				hasToken: Boolean(normalized.jwt),
+			});
 			setIsRegistering(false);
 			setAxiosAuthHeader(normalized.jwt);
 			scheduleTokenExpiryCheck(normalized.jwt);
