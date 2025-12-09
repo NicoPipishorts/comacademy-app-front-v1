@@ -159,6 +159,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const [token, setToken] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [isRegistering, setIsRegistering] = useState<boolean>(false);
+	const loginPromiseRef = useRef<Promise<void> | null>(null);
 
 	const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const interceptorRef = useRef<number | null>(null);
@@ -275,6 +276,11 @@ const clearPersistedSession = useCallback(async () => {
 	]);
 
 	const checkLoggedIn = useCallback(async () => {
+		if (loginPromiseRef.current) {
+			logDevice("[AuthContext] checkLoggedIn awaiting login");
+			await loginPromiseRef.current;
+		}
+
 		const isValid = await hydrateFromStorage();
 		return isValid;
 	}, [hydrateFromStorage]);
@@ -285,23 +291,45 @@ const clearPersistedSession = useCallback(async () => {
 				userId: data.user.id,
 				build: buildIdentifier,
 			});
+
 			const normalized = normalizeAuthResponse(data);
-			await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalized));
-			if (shouldTrackBuild) {
-				await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
-			} else {
-				await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
+
+			const run = async () => {
+				await AsyncStorage.setItem(
+					AUTH_STORAGE_KEY,
+					JSON.stringify(normalized)
+				);
+				logDevice("[AuthContext] persistSession stored", {
+					length: JSON.stringify(normalized).length,
+				});
+
+				if (shouldTrackBuild) {
+					await AsyncStorage.setItem(BUILD_STORAGE_KEY, buildIdentifier);
+				} else {
+					await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
+				}
+
+				await persistToken(normalized.jwt);
+				setSession(normalized);
+				setToken(normalized.jwt);
+				logDevice("[AuthContext] login stored session", {
+					userId: normalized.user.id,
+					hasToken: Boolean(normalized.jwt),
+				});
+				setIsRegistering(false);
+				setAxiosAuthHeader(normalized.jwt);
+				scheduleTokenExpiryCheck(normalized.jwt);
+			};
+
+			const promise = run();
+			loginPromiseRef.current = promise;
+			try {
+				await promise;
+			} finally {
+				if (loginPromiseRef.current === promise) {
+					loginPromiseRef.current = null;
+				}
 			}
-			await persistToken(normalized.jwt);
-			setSession(normalized);
-			setToken(normalized.jwt);
-			logDevice("[AuthContext] login stored session", {
-				userId: normalized.user.id,
-				hasToken: Boolean(normalized.jwt),
-			});
-			setIsRegistering(false);
-			setAxiosAuthHeader(normalized.jwt);
-			scheduleTokenExpiryCheck(normalized.jwt);
 		},
 		[buildIdentifier, scheduleTokenExpiryCheck, shouldTrackBuild]
 	);
