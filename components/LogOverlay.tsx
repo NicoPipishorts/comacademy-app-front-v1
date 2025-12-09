@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-	Modal,
-	Pressable,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from "react-native";
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { clearLogs, LogEntry, subscribeLogs } from "@/logging/logStore";
@@ -34,6 +28,21 @@ const LogOverlay: React.FC = () => {
 	}, []);
 
 	const latestLogs = logs.slice(-MAX_PREVIEW_LOGS).reverse();
+	const copyLogsToClipboard = async () => {
+		const payload =
+			latestLogs.length > 0
+				? latestLogs
+						.map((entry) => formatLogEntry(entry))
+						.reverse()
+						.join("\n")
+				: "No logs available.";
+		try {
+			await Clipboard.setStringAsync(payload);
+			Alert.alert("Logs copied", "The most recent log entries are on your clipboard.");
+		} catch (error) {
+			Alert.alert("Copy failed", "Unable to copy logs.");
+		}
+	};
 
 	if (!visible) {
 		return (
@@ -59,6 +68,11 @@ const LogOverlay: React.FC = () => {
 								style={styles.actionButton}
 								onPress={() => clearLogs()}>
 								<Text style={styles.actionLabel}>Clear</Text>
+							</Pressable>
+							<Pressable
+								style={[styles.actionButton, styles.actionButtonSpacing]}
+								onPress={copyLogsToClipboard}>
+								<Text style={styles.actionLabel}>Copy</Text>
 							</Pressable>
 							<Pressable
 								style={[styles.actionButton, styles.actionButtonSpacing]}

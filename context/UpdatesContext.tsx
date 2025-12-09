@@ -54,7 +54,12 @@ const UPDATE_COPY: StaticUpdateCopy = {
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: ["Updated Strapi V4 to V5.", "instealled new debugging tools."],
+	notes: [
+		"Added login logs",
+		"Added cpoy logs button",
+		"Updated Strapi V4 to V5.",
+		"instealled new debugging tools.",
+	],
 };
 
 type UpdatesContextValue = {
