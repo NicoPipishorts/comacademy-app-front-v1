@@ -8,6 +8,7 @@ import {
 } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
+import { logDevice } from "@/helpers/logDevice";
 import { useSnackbar } from "@/context/snackBar";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import * as Updates from "expo-updates";
@@ -231,6 +232,9 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	useEffect(() => {
 		if (!lastNotifiedUpdateIdRef.current && currentlyRunning?.updateId) {
 			lastNotifiedUpdateIdRef.current = currentlyRunning.updateId;
+			logDevice("[Updates] initial lastNotifiedUpdateId", {
+				id: currentlyRunning.updateId,
+			});
 		}
 	}, [currentlyRunning?.updateId]);
 
@@ -264,6 +268,12 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 
 			if (updateId) {
 				lastNotifiedUpdateIdRef.current = updateId;
+				logDevice("[Updates] storeReadyUpdate", {
+					id: updateId,
+					versionTag: formatVersionTag(
+						extractVersionFromUpdate(update as Updates.UpdateInfoNew)
+					),
+				});
 			}
 
 			setPendingUpdate(undefined);
