@@ -26,6 +26,16 @@ const AUTH_STORAGE_KEY = "auth";
 const TOKEN_STORAGE_KEY = "jwtToken";
 const BUILD_STORAGE_KEY = "auth.lastBuild";
 
+const captureStackTrace = (): string | undefined => {
+	const stack = new Error().stack;
+	if (!stack) return undefined;
+	return stack
+		.split("\n")
+		.slice(2, 6)
+		.map((line) => line.trim())
+		.join(" | ");
+};
+
 type DecodedToken = {
 	exp?: number;
 };
@@ -159,6 +169,22 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	const [token, setToken] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [isRegistering, setIsRegistering] = useState<boolean>(false);
+	const sessionRef = useRef<AuthResponse | null>(null);
+	const tokenRef = useRef<string | null>(null);
+	const updateSessionState = useCallback(
+		(nextSession: AuthResponse | null) => {
+			sessionRef.current = nextSession;
+			setSession(nextSession);
+		},
+		[]
+	);
+	const updateTokenState = useCallback(
+		(nextToken: string | null) => {
+			tokenRef.current = nextToken;
+			setToken(nextToken);
+		},
+		[]
+	);
 	const loginPromiseRef = useRef<Promise<void> | null>(null);
 
 	const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -171,16 +197,30 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		}
 	}, []);
 
-const clearPersistedSession = useCallback(async () => {
-	clearExpiryTimer();
-	setSession(null);
-	setToken(null);
-	setAxiosAuthHeader(null);
-	logDevice("[AuthContext] Clearing persisted session");
-	await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-	await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
-	await removeStoredToken();
-}, [clearExpiryTimer]);
+	const clearPersistedSession = useCallback(
+		async (reason?: string) => {
+			clearExpiryTimer();
+			updateSessionState(null);
+			updateTokenState(null);
+			setAxiosAuthHeader(null);
+
+			const meta: Record<string, unknown> = {};
+			if (reason) meta.reason = reason;
+			const stack = captureStackTrace();
+			if (stack) meta.stack = stack;
+
+			logDevice(
+				"[AuthContext] Clearing persisted session",
+				Object.keys(meta).length ? meta : undefined,
+				"warn"
+			);
+
+			await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+			await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
+			await removeStoredToken();
+		},
+		[clearExpiryTimer, updateSessionState, updateTokenState]
+	);
 
 	const scheduleTokenExpiryCheck = useCallback(
 		(currentToken: string | null) => {
@@ -193,48 +233,59 @@ const clearPersistedSession = useCallback(async () => {
 
 				const msUntilExpiry = decoded.exp * 1000 - Date.now();
 				if (msUntilExpiry <= 0) {
-					void clearPersistedSession();
+					void clearPersistedSession("token already expired");
 					return;
 				}
 
 				expiryTimerRef.current = setTimeout(() => {
-					void clearPersistedSession();
+					void clearPersistedSession("token expiry timer fired");
 				}, msUntilExpiry);
 				logDevice("[AuthContext] scheduleTokenExpiryCheck", {
 					durationMs: msUntilExpiry,
 				});
 			} catch (error) {
 				console.error("Failed to schedule token expiry check", error);
-				void clearPersistedSession();
+				void clearPersistedSession("schedule token expiry failure");
 			}
 		},
 		[clearExpiryTimer, clearPersistedSession]
 	);
 
 	const hydrateFromStorage = useCallback(async () => {
-		const [[, rawSession]] = await AsyncStorage.multiGet([AUTH_STORAGE_KEY]);
+		const [[, storedRawSession]] = await AsyncStorage.multiGet([AUTH_STORAGE_KEY]);
 		const storedToken = await readStoredToken();
 		const storedBuild = await AsyncStorage.getItem(BUILD_STORAGE_KEY);
+		let rawSession = storedRawSession;
+
+		if (!rawSession && sessionRef.current && tokenRef.current) {
+			const fallbackPayload = JSON.stringify(sessionRef.current);
+			await AsyncStorage.setItem(AUTH_STORAGE_KEY, fallbackPayload);
+			rawSession = fallbackPayload;
+			logDevice(
+				"[AuthContext] hydrateFromStorage restored session from memory",
+				{ restoredLength: fallbackPayload.length }
+			);
+		}
 
 		if (!rawSession || !storedToken) {
 			logDevice("[AuthContext] hydrateFromStorage missing data", {
 				hasRawSession: Boolean(rawSession),
 				hasToken: Boolean(storedToken),
 			});
-			await clearPersistedSession();
+			await clearPersistedSession("missing auth payload");
 			return false;
 		}
 
-			if (
-				shouldTrackBuild &&
-				storedBuild &&
-				storedBuild !== buildIdentifier
-			) {
-				logDevice("[AuthContext] hydrateFromStorage build mismatch", {
-					storedBuild,
-					buildIdentifier,
-				});
-			await clearPersistedSession();
+		if (
+			shouldTrackBuild &&
+			storedBuild &&
+			storedBuild !== buildIdentifier
+		) {
+			logDevice("[AuthContext] hydrateFromStorage build mismatch", {
+				storedBuild,
+				buildIdentifier,
+			});
+			await clearPersistedSession("build mismatch");
 			return false;
 		}
 
@@ -242,14 +293,14 @@ const clearPersistedSession = useCallback(async () => {
 			const parsedSession = JSON.parse(rawSession) as AuthResponse;
 			const normalizedSession = normalizeAuthResponse(parsedSession);
 			const decoded = jwtDecode<DecodedToken>(storedToken);
-				if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-					logDevice("[AuthContext] Stored token already expired");
-				await clearPersistedSession();
+			if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+				logDevice("[AuthContext] Stored token already expired");
+				await clearPersistedSession("stored token expired");
 				return false;
 			}
 
-			setSession(normalizedSession);
-			setToken(storedToken);
+			updateSessionState(normalizedSession);
+			updateTokenState(storedToken);
 			setAxiosAuthHeader(storedToken);
 			scheduleTokenExpiryCheck(storedToken);
 			logDevice("[AuthContext] hydrateFromStorage success", {
@@ -265,7 +316,7 @@ const clearPersistedSession = useCallback(async () => {
 			return true;
 		} catch (error) {
 			console.error("Failed to hydrate auth session", error);
-			await clearPersistedSession();
+			await clearPersistedSession("hydrate parsing error");
 			return false;
 		}
 	}, [
@@ -273,6 +324,8 @@ const clearPersistedSession = useCallback(async () => {
 		clearPersistedSession,
 		scheduleTokenExpiryCheck,
 		shouldTrackBuild,
+		updateSessionState,
+		updateTokenState,
 	]);
 
 	const checkLoggedIn = useCallback(async () => {
@@ -310,8 +363,8 @@ const clearPersistedSession = useCallback(async () => {
 				}
 
 				await persistToken(normalized.jwt);
-				setSession(normalized);
-				setToken(normalized.jwt);
+				updateSessionState(normalized);
+				updateTokenState(normalized.jwt);
 				logDevice("[AuthContext] login stored session", {
 					userId: normalized.user.id,
 					hasToken: Boolean(normalized.jwt),
@@ -335,7 +388,7 @@ const clearPersistedSession = useCallback(async () => {
 	);
 
 	const logout = useCallback(async () => {
-		await clearPersistedSession();
+		await clearPersistedSession("explicit logout");
 		setIsRegistering(false);
 	}, [clearPersistedSession]);
 
@@ -343,7 +396,7 @@ const clearPersistedSession = useCallback(async () => {
 		const initializeAuth = async () => {
 			const seenVersion = await AsyncStorage.getItem(STORAGE_MIGRATION_KEY);
 			if (seenVersion !== SESSION_MIGRATION_VERSION) {
-				await clearPersistedSession();
+				await clearPersistedSession("migration version bump");
 				await AsyncStorage.setItem(
 					STORAGE_MIGRATION_KEY,
 					SESSION_MIGRATION_VERSION
@@ -394,8 +447,12 @@ const clearPersistedSession = useCallback(async () => {
 					Boolean(headers?.common?.Authorization || headers?.common?.authorization);
 
 				if (hadAuthHeader && (status === 401 || status === 403)) {
-					console.log(`[AuthContext] Received ${status}, logging out...`);
-					await clearPersistedSession();
+					logDevice(
+						`[AuthContext] Received ${status} response, logging out...`,
+						{ status, url: error.config?.url },
+						"warn"
+					);
+					await clearPersistedSession("http 401/403 response");
 				}
 
 				return Promise.reject(error);
