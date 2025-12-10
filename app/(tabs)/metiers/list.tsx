@@ -90,8 +90,8 @@ const MetierList = ({
 	useEffect(() => {
 		if (data && data.data) {
 			const mappedData = data.data.map((item) => ({
-				...item.attributes,
 				id: item.id,
+				METIER: item.METIER,
 			}));
 			const grouped = groupDataByFirstLetter(mappedData, "METIER");
 			setGroupedData(grouped);
@@ -164,9 +164,8 @@ const MetierList = ({
 
 				const filteredResults = data.data
 					.map((item) => ({
-						id: item.id, // Ensure that id is included
-						METIER: item.attributes.METIER,
-						// Include any other properties that are part of SelectedMetier
+						id: item.id,
+						METIER: item.METIER,
 					}))
 					.filter(
 						(item) =>
@@ -177,14 +176,13 @@ const MetierList = ({
 								.includes(normalizedQuery)
 					);
 
-				setFilteredData(filteredResults as SelectedMetier[]); // Ensure the type matches
+				setFilteredData(filteredResults as SelectedMetier[]);
 			} else {
 				// Reset to the original data if the search query is empty
 				setFilteredData(
 					data.data.map((item) => ({
 						id: item.id,
-						METIER: item.attributes.METIER,
-						// Include any other properties that are part of SelectedMetier
+						METIER: item.METIER,
 					}))
 				);
 			}

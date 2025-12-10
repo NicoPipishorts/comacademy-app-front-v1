@@ -47,12 +47,14 @@ const CategoriesCards = ({
 									{ backgroundColor: `#${cat.attributes.backgroundColor}` },
 									disabled && styles.cardDisabled,
 								]}>
-								<Image
-									source={{
-										uri: `${cat.attributes.smallIcon.data?.attributes.url}`,
-									}}
-									style={styles.icon}
-								/>
+								{cat.attributes.smallIcon?.data?.attributes?.url && (
+									<Image
+										source={{
+											uri: `${cat.attributes.smallIcon.data.attributes.url}`,
+										}}
+										style={styles.icon}
+									/>
+								)}
 								<Text style={styles.cardText}>{cat.attributes.Title}</Text>
 							</TouchableOpacity>
 						);

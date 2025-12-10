@@ -230,7 +230,7 @@ const TrenteSecondes: React.FC = () => {
 	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
-			const videoUri = item.attributes.videoUri;
+			const videoUri = item.videoUri?.url;
 			const isFocused = focusedIndex === index;
 			const isLocked = isFreeUser && index >= 5;
 
@@ -315,7 +315,15 @@ const TrenteSecondes: React.FC = () => {
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
-			{!showSkeleton && data && (
+			{!showSkeleton && data && reversedStories.length === 0 && (
+				<View style={styles.noDataContainer}>
+					<Text style={styles.noDataText}>
+						Aucune vidéo disponible pour le moment
+					</Text>
+				</View>
+			)}
+
+			{!showSkeleton && data && reversedStories.length > 0 && (
 				<>
 					<UpgradeSubscriptionModal
 						visible={showUpgradeModal}
@@ -355,7 +363,13 @@ const styles = StyleSheet.create({
 	list: { marginTop: 30, paddingHorizontal: 30 },
 	contentPadding: { paddingRight: 25 },
 	loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+	noDataContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 40,
+	},
+	noDataText: { fontSize: 16, color: "#666", textAlign: "center" },
 	cardWrapper: {
 		marginLeft: 10,
 		marginRight: 24,

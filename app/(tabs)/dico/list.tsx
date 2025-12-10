@@ -82,8 +82,8 @@ const DicoList = ({
 		if (data && data.data) {
 			const mappedData = data.data
 				.map((item) => ({
-					...item.attributes,
 					id: item.id,
+					Word: item.Word,
 				}))
 				.filter((item) => item.Word && item.Word !== "-")
 				.sort((a, b) => a.Word.localeCompare(b.Word));
@@ -154,7 +154,7 @@ const DicoList = ({
 				const filteredResults = data.data
 					.map((item) => ({
 						id: item.id,
-						Word: item.attributes.Word,
+						Word: item.Word,
 					}))
 					.filter(
 						(item) =>
@@ -172,7 +172,7 @@ const DicoList = ({
 					data.data
 						.map((item) => ({
 							id: item.id,
-							Word: item.attributes.Word,
+							Word: item.Word,
 						}))
 						.sort((a, b) => a.Word.localeCompare(b.Word))
 				);

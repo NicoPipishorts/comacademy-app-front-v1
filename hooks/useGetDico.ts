@@ -9,25 +9,47 @@ const LEGACY_DICO_STORAGE_PREFIXES = ["dicoList", "dicosList"];
 
 const fetchDicoById = async (token: string, id: number): Promise<any> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos/${id}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		// First get the list to find the documentId
+		const listUrl = `${process.env.EXPO_PUBLIC_API_URL}/dicos?filters[id][$eq]=${id}`;
+		const listResponse = await fetch(listUrl, {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+
+		if (!listResponse.ok) {
+			throw new Error(`Failed to find dico with id ${id}`);
+		}
+
+		const listResult = await listResponse.json() as { data: any[] };
+
+		if (!listResult.data || listResult.data.length === 0) {
+			throw new Error(`Dico with id ${id} not found`);
+		}
+
+		const documentId = listResult.data[0].documentId;
+
+		// Now fetch the full details using documentId
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos/${documentId}`;
+		console.log("Fetching Dico by documentId from:", url);
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
+			const text = await response.text();
 			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
+				`Dico by ID HTTP error! status: ${response.status}`,
+				text
 			);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = await response.json();
-		return data;
+		const result = await response.json();
+		console.log("Dico by ID Response:", result);
+
+		return result;
 	} catch (error) {
 		console.error("Error fetching Dico by Id:", error);
 		throw error;
@@ -56,28 +78,34 @@ const fetchDicoIds = async (
 	filterByCat: number | null
 ): Promise<DicoLists> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos?${
-				filterByCat === null
-					? "fields[0]=Word&_fields=id,Word&pagination[limit]=2500"
-					: `fields[0]=Word&_fields=id,Word&pagination[limit]=2500&filters[MainCat]=${filterByCat}`
-			}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const params = new URLSearchParams({
+			"fields[0]": "Word",
+		});
+
+		if (filterByCat !== null) {
+			params.set("filters[MainCat][$eq]", String(filterByCat));
+		}
+
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
+		console.log("Fetching Dicos from:", url);
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
+			const text = await response.text();
 			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
+				`Dicos HTTP error! status: ${response.status}`,
+				text
 			);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
 		const data = (await response.json()) as DicoLists;
+		console.log("Dicos Response:", data?.data?.length || 0, "items");
 		return data;
 	} catch (error) {
 		console.error("Error fetching Dicos:", error);

@@ -6,27 +6,29 @@ import { useQuery } from "@tanstack/react-query";
 
 const fetchCategories = async (token: string): Promise<CategorieColors> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/categories?fields[0]=backgroundColor&fields[1]=staticId&populate[smallIcon][fields][0]=url`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/categories/categoriesFullCustom`;
+		console.log("Fetching Categories (useCategories) from:", url);
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
+			const text = await response.text();
 			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
+				`Categories HTTP error! status: ${response.status}`,
+				text
 			);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
 		const data = await response.json();
+		console.log("Categories (useCategories) Response:", data?.data?.length || 0, "categories");
 		return data;
 	} catch (error) {
-		console.error("Error fetching  Categories by ID:", error);
+		console.error("Error fetching Categories by ID:", error);
 		throw error;
 	}
 };

@@ -44,16 +44,16 @@ export default function Secrets() {
 
 				{secrets?.data.map((secret, index) => {
 					const imageUrl =
-						secret.attributes.imageUrl ??
+						secret.imageUrl ??
 						"https://fearless-comfort-efded67ed1.media.strapiapp.com/3secrets_placeholder_e0a32b6000.png";
 					const locked = isItemLocked(index);
 
 					return (
 						<CardSimpleButtonSecrets
 							key={secret.id}
-							itemId={secret.id}
+							itemId={secret.documentId}
 							image={imageUrl}
-							content={secret.attributes.Brand}
+							content={secret.Brand}
 							locked={locked}
 							onPress={locked ? handleLockedItemPress : undefined}
 						/>

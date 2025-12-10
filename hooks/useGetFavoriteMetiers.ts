@@ -27,7 +27,6 @@ const fetchFavoriteMetiers = async (
 		"populate[metiers][fields][0]": "id",
 		"populate[metiers][fields][1]": "METIER",
 		"populate[metiers][fields][2]": "CATEGORIE",
-		"populate[metiers][pagination][pageSize]": 1000,
 	});
 
 	const res = await fetch(url, {
@@ -41,7 +40,9 @@ const fetchFavoriteMetiers = async (
 		throw new Error(`HTTP ${res.status}`);
 	}
 
-	return res.json();
+	const json = await res.json();
+	console.log("Fav Metiers Response:", JSON.stringify(json, null, 2));
+	return json;
 };
 
 const useGetFavoriteMetiers = (userId: number) => {

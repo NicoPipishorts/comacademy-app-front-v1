@@ -10,13 +10,21 @@ type CatItem = {
 type CategoriesPayload = { data: CatItem[] };
 
 export function buildCategoryLookups(
-	payload: CategoriesPayload,
+	payload?: CategoriesPayload,
 	apiBase = process.env.EXPO_PUBLIC_API_URL ?? ""
 ) {
 	const colorByStaticId: Record<number, string> = {};
 	const iconByStaticId: Record<number, string> = {};
 
+	// Handle undefined or empty payload
+	if (!payload || !payload.data) {
+		return { colorByStaticId, iconByStaticId };
+	}
+
 	for (const cat of payload.data) {
+		// Skip if attributes is missing
+		if (!cat.attributes) continue;
+
 		const sid = cat.attributes.staticId;
 
 		// color (prefix # if needed)

@@ -85,15 +85,15 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 			]}>
 			<View style={styles.headerContainer}>
 				<ReturnButton />
-				<ScreenHeaders content={data.data.attributes.METIER} />
+				<ScreenHeaders content={data.data.METIER} />
 			</View>
 
 			<ScrollView showsVerticalScrollIndicator={false}>
 				<View style={styles.wrapperIcons}>
 					<View style={styles.containerIcons}>
-						{data.data.attributes.CATEGORIE !== undefined &&
-						data.data.attributes.CATEGORIE !== null
-							? data.data.attributes.CATEGORIE.split(",").map((cat, index) => {
+						{data.data.CATEGORIE !== undefined &&
+						data.data.CATEGORIE !== null
+							? data.data.CATEGORIE.split(",").map((cat, index) => {
 									const categoryNumber = parseInt(cat, 10);
 									return (
 										<View key={index} style={{ marginRight: 8 }}>
@@ -126,7 +126,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				</View>
 
 				<View>
-					<Text style={styles.containerText}>{data.data.attributes.TITRE}</Text>
+					<Text style={styles.containerText}>{data.data.TITRE}</Text>
 				</View>
 
 				<HR />
@@ -137,7 +137,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 				<View>
 					<Text style={styles.containerText}>
-						{data.data.attributes.METIERS_SIMILAIRES}
+						{data.data.METIERS_SIMILAIRES}
 					</Text>
 				</View>
 
@@ -149,7 +149,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 				<View>
 					<Text style={styles.containerText}>
-						{data.data.attributes.ROLE_MISSIONS}
+						{data.data.ROLE_MISSIONS}
 					</Text>
 				</View>
 
@@ -159,11 +159,11 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 					<Text style={styles.textTitles}>Compétence</Text>
 				</View>
 
-				<UnorderedList array={data.data.attributes.COMPETENCES} />
+				<UnorderedList array={data.data.COMPETENCES} />
 
 				<GradientContainer
 					title='Notre Avis'
-					content={data.data.attributes.NOTRE_AVIS}
+					content={data.data.NOTRE_AVIS}
 					colors={["#EF6D8C", "#FAB837"]}
 				/>
 
@@ -173,7 +173,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 				<View>
 					<Text style={styles.containerText}>
-						{data.data.attributes.FORMATION}
+						{data.data.FORMATION}
 					</Text>
 				</View>
 
@@ -185,7 +185,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 				<View>
 					<Text style={styles.containerText}>
-						{data.data.attributes.SALAIRES}
+						{data.data.SALAIRES}
 					</Text>
 				</View>
 
@@ -197,13 +197,13 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 				<View>
 					<Text style={styles.containerText}>
-						{data.data.attributes.PORTRAIT_CHINOIS}
+						{data.data.PORTRAIT_CHINOIS}
 					</Text>
 				</View>
 
 				<GradientContainer
 					title='verbatim'
-					content={data.data.attributes.VERBATIM}
+					content={data.data.VERBATIM}
 					colors={["#0DA2CC", "#93F6A0"]}
 				/>
 
@@ -214,7 +214,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 				</View>
 
 				<View style={{ marginBottom: insets.bottom + 20 }}>
-					<Text style={styles.containerText}>{data.data.attributes.BREF}</Text>
+					<Text style={styles.containerText}>{data.data.BREF}</Text>
 				</View>
 			</ScrollView>
 

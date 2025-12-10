@@ -100,11 +100,11 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	// Fetch data
 	const { data: dicoData } = useDicoById(dicoId);
 
-	// Parse categories
+	// Parse categories (Strapi v5: no attributes wrapper)
 	const categories = useMemo(() => {
-		const s = dicoData?.data?.attributes?.Categories;
+		const s = dicoData?.data?.Categories;
 		return s ? s.split(",").map((c) => parseInt(c.trim(), 10)) : [];
-	}, [dicoData?.data?.attributes?.Categories]);
+	}, [dicoData?.data?.Categories]);
 
 	const handleModalOpen = useCallback(() => setModalVisible(true), []);
 	const handleModalClose = useCallback(() => setModalVisible(false), []);
@@ -113,7 +113,8 @@ export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 		return <Loader />;
 	}
 
-	const { Word, Definition, extraContext } = dicoData.data.attributes;
+	// Strapi v5: data directly without attributes wrapper
+	const { Word, Definition, extraContext } = dicoData.data;
 
 	return (
 		<SwipeToGoBack>

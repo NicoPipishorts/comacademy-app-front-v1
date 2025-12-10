@@ -83,13 +83,13 @@ const AnimatedCard = ({
 };
 
 interface SecretsDetailsProps {
-	itemId?: number;
+	itemId?: string;
 }
 
 export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 	const { isAndroid } = useDeviceTypeCheckers();
 	const { itemId: paramId } = useLocalSearchParams();
-	const secretsId = paramId ? Number(paramId) : itemId!;
+	const secretsId = paramId ? String(paramId) : itemId!;
 
 	const { data: secretsData, isFetched } = useGetSecretById(secretsId);
 
@@ -121,7 +121,7 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 	}
 
 	// Destructure Title + new Cards array
-	const { Title, Cards } = secretsData.data.attributes;
+	const { Title, Cards } = secretsData.data;
 
 	// Build the list of cards
 	const cardsData = [

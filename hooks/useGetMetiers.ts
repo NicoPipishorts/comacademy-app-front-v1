@@ -16,24 +16,47 @@ const fetchMetierById = async (
 	}
 
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/metiers/${id}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		// First get the list to find the documentId
+		const listUrl = `${process.env.EXPO_PUBLIC_API_URL}/metiers?filters[id][$eq]=${id}`;
+		const listResponse = await fetch(listUrl, {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+
+		if (!listResponse.ok) {
+			throw new Error(`Failed to find metier with id ${id}`);
+		}
+
+		const listResult = await listResponse.json() as { data: any[] };
+
+		if (!listResult.data || listResult.data.length === 0) {
+			throw new Error(`Metier with id ${id} not found`);
+		}
+
+		const documentId = listResult.data[0].documentId;
+
+		// Now fetch the full details using documentId
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/metiers/${documentId}`;
+		console.log("Fetching Metier by documentId from:", url);
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
+			const text = await response.text();
 			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
+				`Metier by ID HTTP error! status: ${response.status}`,
+				text
 			);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		return (await response.json()) as MetierPayload;
+		const result = await response.json();
+		console.log("Metier by ID Response:", result);
+
+		return result as MetierPayload;
 	} catch (error) {
 		console.error("Error fetching Metier by ID:", error);
 		throw error;
@@ -63,28 +86,34 @@ const fetchMetiers = async (
 	filterByCat: number | null
 ): Promise<MetiersList> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/metiers?${
-				filterByCat === null
-					? "fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500"
-					: `fields[0]=METIER&_fields=id,METIER&pagination[limit]=2500&filters[MainCat]=${filterByCat}`
-			}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const params = new URLSearchParams({
+			"fields[0]": "METIER",
+		});
+
+		if (filterByCat !== null) {
+			params.set("filters[MainCat][$eq]", String(filterByCat));
+		}
+
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/metiers?${params.toString()}`;
+		console.log("Fetching Metiers from:", url);
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
+			const text = await response.text();
 			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
+				`Metiers HTTP error! status: ${response.status}`,
+				text
 			);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
 		const data = (await response.json()) as MetiersList;
+		console.log("Metiers Response:", data?.data?.length || 0, "items");
 		return data;
 	} catch (error) {
 		console.error("Error fetching Metiers:", error);
