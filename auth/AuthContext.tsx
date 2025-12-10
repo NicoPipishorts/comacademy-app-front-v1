@@ -91,6 +91,28 @@ const resolveBuildIdentifier = (): string => {
 	return fallbackVersion;
 };
 
+const describeToken = (token?: string | null) => {
+	if (!token) {
+		return "none";
+	}
+
+	const short =
+		token.length > 16
+			? `${token.slice(0, 8)}…${token.slice(-8)}`
+			: token;
+
+	try {
+		const decoded = jwtDecode<DecodedToken>(token);
+		if (decoded.exp) {
+			return `${short} exp=${new Date(decoded.exp * 1000).toISOString()}`;
+		}
+	} catch {
+		// ignore decoding failures—still report the truncated token
+	}
+
+	return short;
+};
+
 const setAxiosAuthHeader = (value: string | null) => {
 	if (value) {
 		axios.defaults.headers.common.Authorization = `Bearer ${value}`;
@@ -112,10 +134,14 @@ const persistToken = async (token: string) => {
 
 	if (!storedSecurely) {
 		await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
-		logDevice("[AuthContext] persistToken saved via AsyncStorage");
+		logDevice("[AuthContext] persistToken saved via AsyncStorage", {
+			token: describeToken(token),
+		});
 	} else {
 		await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
-		logDevice("[AuthContext] persistToken saved securely; clearing AsyncStorage record");
+		logDevice("[AuthContext] persistToken saved securely; clearing AsyncStorage record", {
+			token: describeToken(token),
+		});
 	}
 };
 
@@ -271,6 +297,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			logDevice("[AuthContext] hydrateFromStorage missing data", {
 				hasRawSession: Boolean(rawSession),
 				hasToken: Boolean(storedToken),
+				tokenSnapshot: describeToken(storedToken),
 			});
 			await clearPersistedSession("missing auth payload");
 			return false;
@@ -305,6 +332,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			scheduleTokenExpiryCheck(storedToken);
 			logDevice("[AuthContext] hydrateFromStorage success", {
 				userId: normalizedSession.user.id,
+				token: describeToken(storedToken),
 			});
 			if (shouldTrackBuild) {
 				if (!storedBuild) {
@@ -362,9 +390,12 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 					await AsyncStorage.removeItem(BUILD_STORAGE_KEY);
 				}
 
-				await persistToken(normalized.jwt);
-				updateSessionState(normalized);
-				updateTokenState(normalized.jwt);
+			await persistToken(normalized.jwt);
+			logDevice("[AuthContext] login persisted token", {
+				token: describeToken(normalized.jwt),
+			});
+			updateSessionState(normalized);
+			updateTokenState(normalized.jwt);
 				logDevice("[AuthContext] login stored session", {
 					userId: normalized.user.id,
 					hasToken: Boolean(normalized.jwt),
@@ -449,7 +480,11 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 				if (hadAuthHeader && (status === 401 || status === 403)) {
 					logDevice(
 						`[AuthContext] Received ${status} response, logging out...`,
-						{ status, url: error.config?.url },
+						{
+							status,
+							url: error.config?.url,
+							token: describeToken(tokenRef.current),
+						},
 						"warn"
 					);
 					await clearPersistedSession("http 401/403 response");

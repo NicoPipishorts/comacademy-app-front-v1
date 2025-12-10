@@ -15,7 +15,7 @@ import {
 interface Props {
 	image: string;
 	content: string;
-	itemId: number;
+	itemId: string; // Changed to string to accept documentId
 	onPress?: () => void;
 	locked?: boolean;
 }

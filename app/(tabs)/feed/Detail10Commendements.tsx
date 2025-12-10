@@ -3,7 +3,7 @@ import CommandementsDetails from "../commandements/CommandementsDetails";
 
 export default function Detail10Commendements() {
 	const params = useLocalSearchParams();
-	const itemId = Number(params?.itemId);
+	const itemId = String(params?.itemId); // Keep as string (documentId)
 
 	return <CommandementsDetails itemId={itemId} />;
 }

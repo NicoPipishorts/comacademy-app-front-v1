@@ -6,9 +6,9 @@ import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 
 const fetchData = async (
 	token: string,
-	itemId: number
+	itemId: string
 ): Promise<SingleCommandementResponse> => {
-	const url = buildApiUrl(`commandements/${itemId}?populate=cards`);
+	const url = buildApiUrl(`commandements/${itemId}`);
 	const res = await fetch(url, {
 		headers: { Authorization: `Bearer ${token}` },
 	});
@@ -19,25 +19,46 @@ const fetchData = async (
 		throw new Error(`HTTP ${res.status}`);
 	}
 
-	// Parse as unknown, then narrow
-	const json: unknown = await res.json();
+	const responseData = (await res.json()) as {
+		data: {
+			id: number;
+			documentId: string;
+			Theme: string;
+			CardImage: string | null;
+			staticId: number;
+			KeyWord: string;
+			cards: Array<{
+				id: number;
+				titre: string;
+				contenus: string;
+				cta: string | null;
+				headerCard: boolean;
+			}>;
+		};
+	};
 
-	// Minimal runtime guard for Strapi v4 single
-	if (
-		typeof json === "object" &&
-		json !== null &&
-		"data" in json &&
-		typeof (json as any).data === "object" &&
-		(json as any).data !== null
-	) {
-		return json as SingleCommandementResponse;
-	}
+	// Transform flat structure to nested structure with attributes
+	const transformedData: SingleCommandementResponse = {
+		data: {
+			id: responseData.data.id,
+			attributes: {
+				Theme: responseData.data.Theme,
+				Active: true, // Not provided by API, defaulting to true
+				cards: responseData.data.cards.map((card) => ({
+					id: card.id,
+					titre: card.titre,
+					contenus: card.contenus,
+					cta: card.cta,
+					headerCard: card.headerCard,
+				})),
+			},
+		},
+	};
 
-	console.error("Unexpected response shape:", json);
-	throw new Error("Invalid API response shape for SingleCommandementResponse");
+	return transformedData;
 };
 
-const useGetCommandementById = (itemId: number) => {
+const useGetCommandementById = (itemId: string) => {
 	const { token } = useJwtToken();
 
 	return useQuery<SingleCommandementResponse>({

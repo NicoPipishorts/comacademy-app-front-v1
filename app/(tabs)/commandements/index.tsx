@@ -9,8 +9,8 @@ import CategoriesCards from "@/components/categories/categories";
 import Loader from "@/components/experience/loader";
 import FilteredByCat from "@/components/filters/filteredByCat";
 import FloatingTabBar from "@/components/FloatingTabBar";
-import ScreenHeaders from "@/components/ScreenHeaders";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
+import ScreenHeaders from "@/components/ScreenHeaders";
 
 import { primaryBackground } from "@/constants/colors";
 import useGetCommandements from "@/hooks/Commandements/useGetAllCommandements";
@@ -64,7 +64,7 @@ export default function TipsAndTactics() {
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
-				message="Les 5 premiers Tips and Tactics sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus."
+				message='Les 5 premiers Tips and Tactics sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus.'
 			/>
 
 			{/* only render when we have both a filter and at least one item */}
@@ -99,7 +99,7 @@ export default function TipsAndTactics() {
 						return (
 							<CardSimpleButtonCommandements
 								key={cmd.id}
-								itemId={cmd.id}
+								itemId={cmd.attributes.documentId}
 								content={cmd.attributes.Theme}
 								image={imageUrl}
 								locked={locked}

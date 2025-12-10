@@ -56,8 +56,6 @@ const LesCitations = () => {
 		? rawResults
 		: rawResults?.data ?? [];
 
-	console.log("Citations data:", citationsData);
-
 	if (!data || citationsData.length === 0) {
 		return (
 			<View style={styles.noDataContainer}>

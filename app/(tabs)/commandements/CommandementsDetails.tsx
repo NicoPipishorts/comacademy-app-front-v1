@@ -99,10 +99,15 @@ const AnimatedCard: React.FC<{
 	);
 };
 
-export default function CommandementsDetails() {
+interface CommandementsDetailsProps {
+	itemId?: string;
+}
+
+export default function CommandementsDetails({ itemId: propItemId }: CommandementsDetailsProps = {}) {
 	const { itemId: paramId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
-	const commandementId = paramId ? Number(paramId) : undefined;
+	// Use prop itemId if provided, otherwise use param (which should be documentId string)
+	const commandementId = propItemId ?? (paramId ? String(paramId) : undefined);
 	const { data: commandementData, isFetched } = useGetCommandementById(
 		commandementId!
 	);

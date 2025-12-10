@@ -47,7 +47,40 @@ const fetchCommandements = async (
 		throw error;
 	}
 
-	return res.json();
+	const responseData = (await res.json()) as {
+		data: Array<{
+			id: number;
+			documentId: string;
+			Theme: string;
+			CardImage: string | null;
+			staticId: number;
+			KeyWord: string;
+		}>;
+	};
+
+	// Transform the flat API structure to match the expected MultipleCommandementsResponse type
+	const transformedData: MultipleCommandementsResponse = {
+		data: responseData.data.map((item) => ({
+			id: item.id,
+			attributes: {
+				Theme: item.Theme,
+				Active: true, // Not provided by API, defaulting to true
+				imageUrl: item.CardImage,
+				catName: null, // Categories not included in list endpoint
+				documentId: item.documentId, // Store documentId for navigation
+			},
+		})),
+		meta: {
+			pagination: {
+				page: 1,
+				pageSize: responseData.data.length,
+				pageCount: 1,
+				total: responseData.data.length,
+			},
+		},
+	};
+
+	return transformedData;
 };
 
 export const useGetCommandements = (categoryId: number | null = null) => {
