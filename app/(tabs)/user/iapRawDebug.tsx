@@ -1,7 +1,8 @@
 import ScreenHeaders from "@/components/ScreenHeaders";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Alert, Button, ScrollView, Text, View } from "react-native";
 import Constants from "expo-constants";
+import * as Clipboard from "expo-clipboard";
 
 const IOS_PRODUCT_IDS = ["fullAccess100", "fullAccess1200"];
 const isExpoGo = Constants.appOwnership === "expo";
@@ -104,9 +105,41 @@ export default function IapRawDebug() {
 		};
 	}, [mockMode, pushLog]);
 
+	const copyAllToClipboard = async () => {
+		const debugInfo = [
+			"=== IAP RAW DEBUG INFO ===",
+			`Mode: ${mockMode ? "MOCK (Expo Go)" : "Native"}`,
+			`Bundle ID: ${Constants.expoConfig?.ios?.bundleIdentifier || Constants.expoConfig?.android?.package || "unknown"}`,
+			`Product IDs: ${IOS_PRODUCT_IDS.join(", ")}`,
+			"",
+			"=== MODULE KEYS ===",
+			JSON.stringify(keys, null, 2),
+			"",
+			"=== ERROR ===",
+			JSON.stringify(error, null, 2),
+			"",
+			"=== PRODUCTS ===",
+			JSON.stringify(products, null, 2),
+			"",
+			"=== LOGS ===",
+			...log,
+		].join("\n");
+
+		try {
+			await Clipboard.setStringAsync(debugInfo);
+			Alert.alert("Copied!", "Raw debug info copied to clipboard");
+		} catch (err) {
+			Alert.alert("Error", "Failed to copy to clipboard");
+		}
+	};
+
 	return (
 		<ScrollView style={{ flex: 1, padding: 16 }}>
 			<ScreenHeaders content='IAP RAW DEBUG' />
+
+			<View style={{ marginBottom: 16 }}>
+				<Button title='Copy All Debug Info' onPress={copyAllToClipboard} color='#007AFF' />
+			</View>
 
 			<View
 				style={{

@@ -469,6 +469,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 			(response) => response,
 			async (error) => {
 				const status = error.response?.status;
+				const url = error.config?.url || "";
 
 				// Determine if the failing request was sent with an auth header;
 				// skip logging out for unauthenticated requests (common during boot)
@@ -477,17 +478,33 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 					Boolean(headers?.Authorization || headers?.authorization) ||
 					Boolean(headers?.common?.Authorization || headers?.common?.authorization);
 
+				// Skip auto-logout for entitlements endpoint - it may fail during initial load
+				// without indicating an auth failure
+				const isEntitlementsEndpoint = url.includes("/me/entitlements");
+
 				if (hadAuthHeader && (status === 401 || status === 403)) {
-					logDevice(
-						`[AuthContext] Received ${status} response, logging out...`,
-						{
-							status,
-							url: error.config?.url,
-							token: describeToken(tokenRef.current),
-						},
-						"warn"
-					);
-					await clearPersistedSession("http 401/403 response");
+					if (isEntitlementsEndpoint && status === 403) {
+						logDevice(
+							`[AuthContext] Ignoring 403 from entitlements endpoint`,
+							{
+								status,
+								url,
+								token: describeToken(tokenRef.current),
+							},
+							"warn"
+						);
+					} else {
+						logDevice(
+							`[AuthContext] Received ${status} response, logging out...`,
+							{
+								status,
+								url,
+								token: describeToken(tokenRef.current),
+							},
+							"warn"
+						);
+						await clearPersistedSession("http 401/403 response");
+					}
 				}
 
 				return Promise.reject(error);

@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 const fetchCategories = async (token: string): Promise<CategorieColors> => {
 	try {
 		const url = `${process.env.EXPO_PUBLIC_API_URL}/categories/categoriesFullCustom`;
-		console.log("Fetching Categories (useCategories) from:", url);
 
 		const response = await fetch(url, {
 			headers: {
@@ -17,15 +16,12 @@ const fetchCategories = async (token: string): Promise<CategorieColors> => {
 
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(
-				`Categories HTTP error! status: ${response.status}`,
-				text
-			);
+			console.error(`Categories HTTP error! status: ${response.status}`, text);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = await response.json();
-		console.log("Categories (useCategories) Response:", data?.data?.length || 0, "categories");
+		const data = (await response.json()) as CategorieColors;
+
 		return data;
 	} catch (error) {
 		console.error("Error fetching Categories by ID:", error);
@@ -40,6 +36,7 @@ const useCategories = () => {
 		queryKey: ["Categories"],
 		queryFn: () => fetchCategories(token),
 		enabled: !!token,
+		initialData: { data: [] },
 	});
 };
 

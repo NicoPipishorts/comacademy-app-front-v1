@@ -19,5 +19,4 @@ export const logDevice = (
 ) => {
 	const payload = meta ? `${message} ${formatMeta(meta)}` : message;
 	appendLog(payload, level);
-	console.log(`[DeviceLog] ${payload}`);
 };

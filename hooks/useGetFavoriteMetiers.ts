@@ -41,7 +41,7 @@ const fetchFavoriteMetiers = async (
 	}
 
 	const json = await res.json();
-	console.log("Fav Metiers Response:", JSON.stringify(json, null, 2));
+
 	return json;
 };
 

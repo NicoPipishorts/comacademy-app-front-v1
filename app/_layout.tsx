@@ -15,7 +15,6 @@ import { Provider as PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../auth/AuthContext";
 import { queryClient } from "../hooks/reactQueryConfig";
-import LogOverlay from "@/components/LogOverlay";
 
 // ✅ NEW import from expo-audio
 import { setAudioModeAsync } from "expo-audio";
@@ -55,7 +54,6 @@ export default function RootLayout() {
 						</GestureHandlerRootView>
 					</QueryClientProvider>
 				</SubscriptionProvider>
-				<LogOverlay />
 			</AuthProvider>
 		</SafeAreaProvider>
 	);

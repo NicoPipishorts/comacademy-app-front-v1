@@ -281,9 +281,14 @@ const createIAPService = () => {
 		 */
 		async initialize() {
 			debugIAP("Initializing IAP…");
+			debugIAP("Running on platform", Platform.OS);
+			debugIAP("isExpoGo", isExpoGo);
+
 			try {
 				const iap = await ensureIapModule();
-				debugIAP("IAP module loaded");
+				debugIAP("IAP module loaded successfully");
+				debugIAP("IAP module type", typeof iap);
+
 				await iap.initConnection();
 				debugIAP("initConnection success");
 
@@ -291,7 +296,12 @@ const createIAPService = () => {
 					debugIAP("processPendingPurchases error", error);
 				});
 			} catch (error) {
-				debugIAP("IAP init failed", error);
+				debugIAP("IAP init failed", {
+					message: (error as any)?.message,
+					code: (error as any)?.code,
+					raw: String(error),
+				});
+				console.error("IAP initialization error:", error);
 				throw error;
 			}
 		},
@@ -303,24 +313,62 @@ const createIAPService = () => {
 		// iap.service.ts
 		async getProducts() {
 			debugIAP("getProducts triggered");
+			debugIAP("Platform", Platform.OS);
+			debugIAP("PRODUCT_IDS to fetch", PRODUCT_IDS);
+			debugIAP("App bundle ID", Constants.expoConfig?.ios?.bundleIdentifier || Constants.expoConfig?.android?.package || "unknown");
+			debugIAP("Build type", __DEV__ ? "development" : "production");
+
 			try {
 				const iap = await ensureIapModule();
 
 				debugIAP("RNIap keys", Object.keys(iap as any));
 				debugIAP("typeof iap.fetchProducts", typeof (iap as any).fetchProducts);
 
+				debugIAP("Calling fetchProducts with params", {
+					skus: PRODUCT_IDS,
+					type: "subs",
+				});
+
 				const products = await (iap as any).fetchProducts({
 					skus: PRODUCT_IDS,
 					type: "subs",
 				});
 
-				debugIAP("fetchProducts result", products);
+				debugIAP("fetchProducts result count", products?.length ?? 0);
+
+				if (products && products.length > 0) {
+					debugIAP("Products received successfully");
+					products.forEach((p: any, idx: number) => {
+						debugIAP(`Product ${idx + 1}`, {
+							productId: p.productId,
+							title: p.title,
+							price: p.price,
+						});
+					});
+				} else {
+					debugIAP("fetchProducts full result", products);
+				}
+
+				if (!products || products.length === 0) {
+					debugIAP("⚠️ WARNING: No products returned from App Store");
+					debugIAP("Troubleshooting checklist:");
+					debugIAP("1. Product IDs in code match App Store Connect exactly");
+					debugIAP(`   Expected: ${PRODUCT_IDS.join(", ")}`);
+					debugIAP("2. Products status is 'Ready to Submit' or approved");
+					debugIAP("3. Bundle ID matches: com.nicopipishorts.comacademy");
+					debugIAP("4. Paid Applications Agreement is signed");
+					debugIAP("5. For TestFlight: Products must be in 'Ready to Submit' status");
+					debugIAP("6. Wait 2-24 hours after product creation/approval");
+				}
+
 				return products ?? [];
 			} catch (error) {
 				debugIAP("getProducts error", {
 					message: (error as any)?.message,
-					raw: error,
+					code: (error as any)?.code,
+					raw: String(error),
 				});
+				console.error("IAP getProducts error:", error);
 				throw error;
 			}
 		},
@@ -430,8 +478,8 @@ const createIAPService = () => {
 		/**
 		 * Get user entitlements from your API
 		 */
-		async getEntitlements() {
-			debugIAP("Fetching entitlements");
+		async getEntitlements(retryCount = 0) {
+			debugIAP("Fetching entitlements", { attempt: retryCount + 1 });
 			try {
 				const apiBaseUrl = getApiBaseUrl();
 				const res = await axios.get(`${apiBaseUrl}/me/entitlements`);
@@ -439,6 +487,14 @@ const createIAPService = () => {
 				return res.data?.entitlements ?? [];
 			} catch (error) {
 				debugIAP("getEntitlements error", error);
+
+				// Retry once on 403 errors (may be a timing issue after login)
+				if (axios.isAxiosError(error) && error.response?.status === 403 && retryCount === 0) {
+					debugIAP("Retrying entitlements fetch after 403 (attempt 2)");
+					await new Promise(resolve => setTimeout(resolve, 1000));
+					return this.getEntitlements(1);
+				}
+
 				console.error("Failed to get entitlements:", error);
 				throw error;
 			}

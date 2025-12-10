@@ -1,6 +1,6 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 import { clearCollectionCache } from "@/src/utils/cacheHelpers";
+import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 import { DicoLists, DicoPayload } from "@/types/dico";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,7 +19,7 @@ const fetchDicoById = async (token: string, id: number): Promise<any> => {
 			throw new Error(`Failed to find dico with id ${id}`);
 		}
 
-		const listResult = await listResponse.json() as { data: any[] };
+		const listResult = (await listResponse.json()) as { data: any[] };
 
 		if (!listResult.data || listResult.data.length === 0) {
 			throw new Error(`Dico with id ${id} not found`);
@@ -29,7 +29,6 @@ const fetchDicoById = async (token: string, id: number): Promise<any> => {
 
 		// Now fetch the full details using documentId
 		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos/${documentId}`;
-		console.log("Fetching Dico by documentId from:", url);
 
 		const response = await fetch(url, {
 			headers: {
@@ -39,15 +38,11 @@ const fetchDicoById = async (token: string, id: number): Promise<any> => {
 
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(
-				`Dico by ID HTTP error! status: ${response.status}`,
-				text
-			);
+			console.error(`Dico by ID HTTP error! status: ${response.status}`, text);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
 		const result = await response.json();
-		console.log("Dico by ID Response:", result);
 
 		return result;
 	} catch (error) {
@@ -87,7 +82,6 @@ const fetchDicoIds = async (
 		}
 
 		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
-		console.log("Fetching Dicos from:", url);
 
 		const response = await fetch(url, {
 			headers: {
@@ -97,15 +91,11 @@ const fetchDicoIds = async (
 
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(
-				`Dicos HTTP error! status: ${response.status}`,
-				text
-			);
+			console.error(`Dicos HTTP error! status: ${response.status}`, text);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
 		const data = (await response.json()) as DicoLists;
-		console.log("Dicos Response:", data?.data?.length || 0, "items");
 		return data;
 	} catch (error) {
 		console.error("Error fetching Dicos:", error);

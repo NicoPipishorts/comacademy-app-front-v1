@@ -1,7 +1,7 @@
 import useJwtToken from "@/hooks/useJwtToken";
+import { clearCollectionCache } from "@/src/utils/cacheHelpers";
 import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 import { MetierPayload, MetiersList } from "@/types/metiers";
-import { clearCollectionCache } from "@/src/utils/cacheHelpers";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -26,7 +26,7 @@ const fetchMetierById = async (
 			throw new Error(`Failed to find metier with id ${id}`);
 		}
 
-		const listResult = await listResponse.json() as { data: any[] };
+		const listResult = (await listResponse.json()) as { data: any[] };
 
 		if (!listResult.data || listResult.data.length === 0) {
 			throw new Error(`Metier with id ${id} not found`);
@@ -36,7 +36,6 @@ const fetchMetierById = async (
 
 		// Now fetch the full details using documentId
 		const url = `${process.env.EXPO_PUBLIC_API_URL}/metiers/${documentId}`;
-		console.log("Fetching Metier by documentId from:", url);
 
 		const response = await fetch(url, {
 			headers: {
@@ -54,7 +53,6 @@ const fetchMetierById = async (
 		}
 
 		const result = await response.json();
-		console.log("Metier by ID Response:", result);
 
 		return result as MetierPayload;
 	} catch (error) {
@@ -94,8 +92,9 @@ const fetchMetiers = async (
 			params.set("filters[MainCat][$eq]", String(filterByCat));
 		}
 
-		const url = `${process.env.EXPO_PUBLIC_API_URL}/metiers?${params.toString()}`;
-		console.log("Fetching Metiers from:", url);
+		const url = `${
+			process.env.EXPO_PUBLIC_API_URL
+		}/metiers?${params.toString()}`;
 
 		const response = await fetch(url, {
 			headers: {
@@ -105,15 +104,11 @@ const fetchMetiers = async (
 
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(
-				`Metiers HTTP error! status: ${response.status}`,
-				text
-			);
+			console.error(`Metiers HTTP error! status: ${response.status}`, text);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
 		const data = (await response.json()) as MetiersList;
-		console.log("Metiers Response:", data?.data?.length || 0, "items");
 		return data;
 	} catch (error) {
 		console.error("Error fetching Metiers:", error);

@@ -46,8 +46,6 @@ const fetchMediaList = async (
 	token: string
 ): Promise<MediaListResponse> => {
 	const url = new URL(`${process.env.EXPO_PUBLIC_API_URL}/${route}`);
-	console.log('fetchMediaList - route:', route);
-	console.log('fetchMediaList - full URL:', url.toString());
 
 	const res = await fetch(url.toString(), {
 		headers: {

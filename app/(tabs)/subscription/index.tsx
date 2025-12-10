@@ -55,10 +55,11 @@ type DurationInfo = {
 	days: number;
 };
 
-const isoPeriodPattern =
-	/^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/i;
+const isoPeriodPattern = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/i;
 
-const isoPeriodToDurationInfo = (period?: string | null): DurationInfo | null => {
+const isoPeriodToDurationInfo = (
+	period?: string | null
+): DurationInfo | null => {
 	if (!period) return null;
 
 	const matches = isoPeriodPattern.exec(period);
@@ -102,9 +103,7 @@ const isoPeriodToDurationInfo = (period?: string | null): DurationInfo | null =>
 	return null;
 };
 
-const iosDurationInfo = (
-	product: SubscriptionProduct
-): DurationInfo | null => {
+const iosDurationInfo = (product: SubscriptionProduct): DurationInfo | null => {
 	const anyProduct = product as unknown as {
 		subscriptionPeriodNumberIOS?: string | number;
 		subscriptionPeriodUnitIOS?: string;
@@ -158,11 +157,11 @@ const androidDurationInfo = (
 	product: SubscriptionProduct
 ): DurationInfo | null => {
 	const androidProduct = product as unknown as {
-		subscriptionOfferDetailsAndroid?: Array<{
+		subscriptionOfferDetailsAndroid?: {
 			pricingPhases?: {
-				pricingPhaseList?: Array<{ billingPeriod?: string | null }>;
+				pricingPhaseList?: { billingPeriod?: string | null }[];
 			};
-		}>;
+		}[];
 		subscriptionPeriodAndroid?: string | null;
 	};
 
@@ -171,9 +170,7 @@ const androidDurationInfo = (
 			const phases = offer?.pricingPhases?.pricingPhaseList;
 			if (!Array.isArray(phases)) continue;
 
-			const phaseWithPeriod = phases.find(
-				(phase) => !!phase?.billingPeriod
-			);
+			const phaseWithPeriod = phases.find((phase) => !!phase?.billingPeriod);
 			const info = isoPeriodToDurationInfo(
 				phaseWithPeriod?.billingPeriod ?? undefined
 			);
@@ -319,14 +316,14 @@ export default function SubscriptionScreen() {
 					durationDays: durationInfo?.days ?? 0,
 				};
 			})
-			.filter(Boolean) as Array<{
+			.filter(Boolean) as {
 			id: string;
 			product: SubscriptionProduct;
 			title: string;
 			price: string;
 			duration: string;
 			durationDays: number;
-		}>;
+		}[];
 
 		if (mapped.length > 1) {
 			mapped.sort((a, b) => b.durationDays - a.durationDays);
@@ -493,18 +490,19 @@ export default function SubscriptionScreen() {
 								</Text>
 							</>
 						)}
-				</View>
-
-				{isExpoGo && (
-					<View style={styles.mockWarning}>
-						<Text style={styles.mockWarningText}>
-							⚠️ Mode test : les achats sont simulés dans Expo Go. Créez une build de développement pour tester les achats réels.
-						</Text>
 					</View>
-				)}
 
-				{/* Benefits Section */}
-				<View style={styles.benefitsSection}>
+					{isExpoGo && (
+						<View style={styles.mockWarning}>
+							<Text style={styles.mockWarningText}>
+								⚠️ Mode test : les achats sont simulés dans Expo Go. Créez une
+								build de développement pour tester les achats réels.
+							</Text>
+						</View>
+					)}
+
+					{/* Benefits Section */}
+					<View style={styles.benefitsSection}>
 						<Text style={styles.benefitsTitle}>Ce que vous obtenez:</Text>
 						<View style={styles.benefitsList}>
 							<View style={styles.benefitItem}>
