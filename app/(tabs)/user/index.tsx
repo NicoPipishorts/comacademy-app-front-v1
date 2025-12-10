@@ -167,7 +167,7 @@ export default function User() {
 
 					<UserAccount />
 
-					<View style={styles.logoutContainer}>
+					{/* <View style={styles.logoutContainer}>
 						<TouchableOpacity
 							onPress={() => navigation.navigate("iapBarebone")}
 							style={styles.logoutButton}>
@@ -195,7 +195,7 @@ export default function User() {
 								IAP Barebones
 							</Text>
 						</TouchableOpacity>
-					</View>
+					</View> */}
 
 					<View style={styles.logoutContainer}>
 						<TouchableOpacity
