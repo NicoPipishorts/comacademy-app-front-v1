@@ -65,7 +65,7 @@ const getIapModuleSync = (): RNIapModule => {
 // Keep identical IDs on both platforms (must match App Store / Play Console)
 const PRODUCT_IDS = Platform.select({
 	ios: ["fullAccess100", "fullAccess1200"], // both iOS products
-	android: ["comacademy_monthly_full"], // Android subscription *product* ID
+	android: ["full.access"], // Android subscription *product* ID with monthly-full and yearly-full base plans
 }) as string[];
 
 const getApiBaseUrl = () => {
