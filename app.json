@@ -33,10 +33,10 @@
 		},
 
 		"android": {
-			"icon": "./assets/imgs/AppIconAndroid.svg",
+			"icon": "./assets/imgs/AppIconAndroid.png",
 			"adaptiveIcon": {
 				"backgroundColor": "#EDBE00",
-				"foregroundImage": "./assets/imgs/AppIconAndroid.svg"
+				"foregroundImage": "./assets/imgs/AppIconAndroid.s.png"
 			},
 
 			"softwareKeyboardLayoutMode": "resize",
