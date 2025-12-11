@@ -36,7 +36,7 @@
 			"icon": "./assets/imgs/AppIconAndroid.png",
 			"adaptiveIcon": {
 				"backgroundColor": "#EDBE00",
-				"foregroundImage": "./assets/imgs/AppIconAndroid.s.png"
+				"foregroundImage": "./assets/imgs/AppIconAndroid.png"
 			},
 
 			"softwareKeyboardLayoutMode": "resize",
