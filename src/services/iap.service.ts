@@ -322,46 +322,96 @@ const createIAPService = () => {
 				const iap = await ensureIapModule();
 
 				debugIAP("RNIap keys", Object.keys(iap as any));
-				debugIAP("typeof iap.fetchProducts", typeof (iap as any).fetchProducts);
+				debugIAP("typeof iap.getSubscriptions", typeof iap.getSubscriptions);
 
-				debugIAP("Calling fetchProducts with params", {
+				debugIAP("Calling getSubscriptions with params", {
 					skus: PRODUCT_IDS,
-					type: "subs",
 				});
 
-				const products = await (iap as any).fetchProducts({
+				const products = await iap.getSubscriptions({
 					skus: PRODUCT_IDS,
-					type: "subs",
 				});
 
-				debugIAP("fetchProducts result count", products?.length ?? 0);
+				debugIAP("getSubscriptions result count", products?.length ?? 0);
 
-				if (products && products.length > 0) {
-					debugIAP("Products received successfully");
+				// For Android, expand subscription offers into separate product objects
+				let expandedProducts = products ?? [];
+				if (Platform.OS === "android" && products && products.length > 0) {
+					const expanded: any[] = [];
+
+					products.forEach((product: any) => {
+						const offers = product.subscriptionOfferDetailsAndroid;
+
+						if (offers && Array.isArray(offers) && offers.length > 0) {
+							debugIAP(`Product ${product.id} has ${offers.length} offers`);
+
+							// Create a separate product object for each offer/base plan
+							offers.forEach((offer: any, offerIndex: number) => {
+								const phase = offer.pricingPhases?.pricingPhaseList?.[0];
+
+								if (phase) {
+									const expandedProduct = {
+										...product,
+										// Create unique ID for each offer
+										id: `${product.id}_${offer.basePlanId || offerIndex}`,
+										productId: `${product.id}_${offer.basePlanId || offerIndex}`,
+										// Store original product ID for purchase
+										originalProductId: product.id,
+										// Store the specific offer details
+										selectedOffer: offer,
+										offerToken: offer.offerToken,
+										basePlanId: offer.basePlanId,
+										// Update pricing from this specific offer
+										price: phase.formattedPrice,
+										displayPrice: phase.formattedPrice,
+										subscriptionPeriodAndroid: phase.billingPeriod,
+										// Keep original offers array for purchase
+										subscriptionOfferDetailsAndroid: [offer],
+									};
+
+									expanded.push(expandedProduct);
+
+									debugIAP(`Expanded offer ${offerIndex + 1}`, {
+										id: expandedProduct.id,
+										basePlanId: offer.basePlanId,
+										price: phase.formattedPrice,
+										period: phase.billingPeriod,
+										offerToken: offer.offerToken,
+									});
+								}
+							});
+						} else {
+							// No offers found, use product as-is
+							expanded.push(product);
+						}
+					});
+
+					expandedProducts = expanded;
+					debugIAP("Total expanded products", expandedProducts.length);
+				} else if (products && products.length > 0) {
+					debugIAP("Products received successfully (iOS)");
 					products.forEach((p: any, idx: number) => {
 						debugIAP(`Product ${idx + 1}`, {
-							productId: p.productId,
+							productId: p.productId || p.id,
 							title: p.title,
 							price: p.price,
 						});
 					});
-				} else {
-					debugIAP("fetchProducts full result", products);
 				}
 
-				if (!products || products.length === 0) {
-					debugIAP("⚠️ WARNING: No products returned from App Store");
+				if (!expandedProducts || expandedProducts.length === 0) {
+					debugIAP("⚠️ WARNING: No products returned from Play Store");
 					debugIAP("Troubleshooting checklist:");
-					debugIAP("1. Product IDs in code match App Store Connect exactly");
+					debugIAP("1. Product IDs in code match Play Console exactly");
 					debugIAP(`   Expected: ${PRODUCT_IDS.join(", ")}`);
-					debugIAP("2. Products status is 'Ready to Submit' or approved");
-					debugIAP("3. Bundle ID matches: com.nicopipishorts.comacademy");
-					debugIAP("4. Paid Applications Agreement is signed");
-					debugIAP("5. For TestFlight: Products must be in 'Ready to Submit' status");
-					debugIAP("6. Wait 2-24 hours after product creation/approval");
+					debugIAP("2. Products status is 'Active' in Play Console");
+					debugIAP("3. Package ID matches: com.nicopipishorts.comacademy");
+					debugIAP("4. App must be published to a testing track (internal/closed/open)");
+					debugIAP("5. Test account must be added to the testing track");
+					debugIAP("6. Wait up to 24 hours after product creation");
 				}
 
-				return products ?? [];
+				return expandedProducts;
 			} catch (error) {
 				debugIAP("getProducts error", {
 					message: (error as any)?.message,
@@ -379,7 +429,9 @@ const createIAPService = () => {
 		async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
 			debugIAP("purchaseSubscription called", product);
 			try {
-				const sku = getSubscriptionProductId(product);
+				// For expanded Android products, use the original product ID
+				const productAny = product as any;
+				const sku = productAny.originalProductId || getSubscriptionProductId(product);
 				if (!sku) throw new Error("Invalid product identifier");
 
 				const iap = await ensureIapModule();
@@ -391,23 +443,31 @@ const createIAPService = () => {
 						...(userId ? { appAccountToken: userId } : {}),
 					};
 				} else if (Platform.OS === "android") {
-					debugIAP("Android subscription request", request);
+					debugIAP("Android subscription request");
 					const androidReq: RequestSubscriptionAndroidProps = {
 						skus: [sku],
 						// Policy: obfuscate your account ID; do not send raw PII
 						...(userId ? { obfuscatedAccountIdAndroid: userId } : {}),
 					};
 
-					const offerToken = getAndroidOfferToken(product);
+					// Use the offer token from the expanded product
+					const offerToken = productAny.offerToken || getAndroidOfferToken(product);
 					if (offerToken) {
 						androidReq.subscriptionOffers = [{ sku, offerToken }];
+						debugIAP("Using offer token", {
+							sku,
+							offerToken,
+							basePlanId: productAny.basePlanId,
+						});
+					} else {
+						debugIAP("⚠️ WARNING: No offer token found for subscription");
 					}
 
 					request.android = androidReq;
 				}
 
 				// Use requestSubscription (not requestPurchase)
-				debugIAP("Calling requestSubscription()", sku);
+				debugIAP("Calling requestSubscription()", { sku, request });
 				const purchase: Purchase = await iap.requestSubscription(request);
 				debugIAP("requestSubscription success", purchase);
 				return purchase;
