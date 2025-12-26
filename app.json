@@ -54,7 +54,12 @@
 						{
 							"scheme": "https",
 							"host": "comacademy.fr",
-							"pathPrefix": "/api/reset-password"
+							"pathPrefix": "/auth/reset-password"
+						},
+						{
+							"scheme": "https",
+							"host": "www.comacademy.fr",
+							"pathPrefix": "/auth/reset-password"
 						}
 					],
 					"category": ["BROWSABLE", "DEFAULT"]
