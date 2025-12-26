@@ -1,12 +1,12 @@
 [
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.nicopipishorts.comacademy",
-      "sha256_cert_fingerprints": [
-        "YOUR_SHA256_CERT_FINGERPRINT_HERE"
-      ]
-    }
-  }
+	{
+		"relation": ["delegate_permission/common.handle_all_urls"],
+		"target": {
+			"namespace": "android_app",
+			"package_name": "com.nicopipishorts.comacademy",
+			"sha256_cert_fingerprints": [
+				"E6:8E:B4:75:F2:70:CF:77:7B:1D:2B:6A:E7:D9:F0:10:47:54:24:B1:1E:88:87:61:06:BE:25:7E:7E:0E:28:B1"
+			]
+		}
+	}
 ]
