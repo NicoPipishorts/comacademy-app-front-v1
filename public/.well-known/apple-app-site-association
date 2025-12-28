@@ -3,7 +3,7 @@
 		"apps": [],
 		"details": [
 			{
-				"appID": "TEAM_ID.com.nicopipishorts.comacademy",
+				"appID": "6737241508.com.nicopipishorts.comacademy",
 				"paths": [
 					"/auth/reset-password",
 					"/auth/reset-password/*"
