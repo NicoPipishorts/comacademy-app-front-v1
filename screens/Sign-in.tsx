@@ -41,7 +41,6 @@ const SignIn = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const [forgotPrefillEmail, setForgotPrefillEmail] = useState("");
 	const [pendingResetCode, setPendingResetCode] = useState<string | null>(null);
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -82,7 +81,6 @@ const SignIn = () => {
 				"Si un compte est associé à cet email, un lien de réinitialisation a été envoyé.",
 				"success"
 			);
-			setForgotPrefillEmail("");
 			forgotPasswordSheetRef.current?.dismiss();
 		},
 		(error) => {
@@ -95,15 +93,13 @@ const SignIn = () => {
 	);
 
 	const openForgotPasswordSheet = useCallback(() => {
-		const trimmedEmail = email.trim();
-		setForgotPrefillEmail(trimmedEmail);
 		forgotPasswordMutation.reset();
 		// Close keyboard first, then present sheet on next frame to avoid race
 		Keyboard.dismiss();
 		requestAnimationFrame(() => {
 			forgotPasswordSheetRef.current?.present();
 		});
-	}, [email, forgotPasswordMutation]);
+	}, [forgotPasswordMutation]);
 
 	const resetPasswordMutation = useResetPasswordMutation(
 		resetPasswordUrl,
@@ -133,7 +129,6 @@ const SignIn = () => {
 	const handleForgotPasswordSubmit = useCallback(
 		(targetEmail: string) => {
 			const trimmedEmail = targetEmail.trim();
-			setForgotPrefillEmail(trimmedEmail);
 
 			if (!trimmedEmail) {
 				showSnackbar(
@@ -176,7 +171,6 @@ const SignIn = () => {
 	);
 
 	const handleForgotSheetDismiss = useCallback(() => {
-		setForgotPrefillEmail("");
 		forgotPasswordMutation.reset();
 	}, [forgotPasswordMutation]);
 
@@ -375,7 +369,7 @@ const SignIn = () => {
 
 			<ForgotPasswordSheet
 				ref={forgotPasswordSheetRef}
-				initialEmail={forgotPrefillEmail}
+				initialEmail={email}
 				isSubmitting={forgotPasswordMutation.isPending}
 				onSubmit={handleForgotPasswordSubmit}
 				onDismiss={handleForgotSheetDismiss}

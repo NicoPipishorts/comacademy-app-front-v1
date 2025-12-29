@@ -70,9 +70,9 @@ const ForgotPasswordSheet = forwardRef<
 		}, [email, onSubmit]);
 
 		const handleDismiss = useCallback(() => {
-			setEmail(initialEmail);
+			setEmail("");
 			onDismiss?.();
-		}, [initialEmail, onDismiss]);
+		}, [onDismiss]);
 
 		const buttonDisabled = isSubmitting || email.trim().length === 0;
 

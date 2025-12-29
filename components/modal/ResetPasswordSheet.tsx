@@ -74,8 +74,12 @@ const ResetPasswordSheet = forwardRef<
 		const snapPoints = useMemo(() => ["65%", "90%"], []);
 
 		useEffect(() => {
-			setPassword("");
-			setConfirmPassword("");
+			if (resetCode) {
+				setPassword("");
+				setConfirmPassword("");
+				setShowPassword(false);
+				setShowConfirmPassword(false);
+			}
 		}, [resetCode]);
 
 		useEffect(() => {
