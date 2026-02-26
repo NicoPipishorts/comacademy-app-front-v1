@@ -464,7 +464,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 	}, [token, scheduleTokenExpiryCheck]);
 
 	useEffect(() => {
-		// Setup axios response interceptor to handle 401/403 errors
+		// Setup axios response interceptor to handle auth failures.
 		const interceptor = axios.interceptors.response.use(
 			(response) => response,
 			async (error) => {
@@ -478,33 +478,30 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 					Boolean(headers?.Authorization || headers?.authorization) ||
 					Boolean(headers?.common?.Authorization || headers?.common?.authorization);
 
-				// Skip auto-logout for entitlements endpoint - it may fail during initial load
-				// without indicating an auth failure
-				const isEntitlementsEndpoint = url.includes("/me/entitlements");
-
-				if (hadAuthHeader && (status === 401 || status === 403)) {
-					if (isEntitlementsEndpoint && status === 403) {
-						logDevice(
-							`[AuthContext] Ignoring 403 from entitlements endpoint`,
-							{
-								status,
-								url,
-								token: describeToken(tokenRef.current),
-							},
-							"warn"
-						);
-					} else {
-						logDevice(
-							`[AuthContext] Received ${status} response, logging out...`,
-							{
-								status,
-								url,
-								token: describeToken(tokenRef.current),
-							},
-							"warn"
-						);
-						await clearPersistedSession("http 401/403 response");
-					}
+				// Important: 403s can happen for domain/business checks (IAP validation,
+				// entitlements timing, permissions) while the JWT is still valid.
+				// Only force logout on explicit unauthorized responses (401).
+				if (hadAuthHeader && status === 401) {
+					logDevice(
+						`[AuthContext] Received 401 response, logging out...`,
+						{
+							status,
+							url,
+							token: describeToken(tokenRef.current),
+						},
+						"warn"
+					);
+					await clearPersistedSession("http 401 response");
+				} else if (hadAuthHeader && status === 403) {
+					logDevice(
+						`[AuthContext] Received 403 response, keeping session`,
+						{
+							status,
+							url,
+							token: describeToken(tokenRef.current),
+						},
+						"warn"
+					);
 				}
 
 				return Promise.reject(error);

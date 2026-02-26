@@ -17,6 +17,13 @@ import React, {
 } from "react";
 import type { PurchaseError } from "react-native-iap";
 
+type PendingPurchaseRequest = {
+	sku: string;
+	resolve: () => void;
+	reject: (error: unknown) => void;
+	timeoutId: ReturnType<typeof setTimeout>;
+};
+
 type SubscriptionState = {
 	products: SubscriptionProduct[];
 	subscription: any;
@@ -51,6 +58,68 @@ export const SubscriptionProvider = ({
 	const [error, setError] = useState<string | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
 	const hasInitializedRef = useRef(false);
+	const pendingPurchaseRef = useRef<PendingPurchaseRequest | null>(null);
+
+	const resolvePurchaseEventSku = useCallback((purchase: any): string | undefined => {
+		if (typeof purchase?.productId === "string" && purchase.productId.length > 0) {
+			return purchase.productId;
+		}
+
+		if (Array.isArray(purchase?.products) && purchase.products.length > 0) {
+			const first = purchase.products[0];
+			if (typeof first === "string" && first.length > 0) {
+				return first;
+			}
+			if (
+				typeof first?.productId === "string" &&
+				first.productId.length > 0
+			) {
+				return first.productId;
+			}
+		}
+
+		if (typeof purchase?.sku === "string" && purchase.sku.length > 0) {
+			return purchase.sku;
+		}
+
+		return undefined;
+	}, []);
+
+	const clearPendingPurchase = useCallback(() => {
+		const pending = pendingPurchaseRef.current;
+		if (!pending) return;
+		clearTimeout(pending.timeoutId);
+		pendingPurchaseRef.current = null;
+	}, []);
+
+	const resolvePendingPurchase = useCallback(
+		(purchase: any) => {
+			const pending = pendingPurchaseRef.current;
+			if (!pending) return;
+
+			const purchaseSku = resolvePurchaseEventSku(purchase);
+			if (purchaseSku && purchaseSku !== pending.sku) {
+				return;
+			}
+
+			const { resolve } = pending;
+			clearPendingPurchase();
+			resolve();
+		},
+		[clearPendingPurchase, resolvePurchaseEventSku]
+	);
+
+	const rejectPendingPurchase = useCallback(
+		(reason: unknown) => {
+			const pending = pendingPurchaseRef.current;
+			if (!pending) return;
+
+			const { reject } = pending;
+			clearPendingPurchase();
+			reject(reason);
+		},
+		[clearPendingPurchase]
+	);
 
 	const checkSubscription = useCallback(async () => {
 		try {
@@ -160,10 +229,12 @@ export const SubscriptionProvider = ({
 					(purchase) => {
 						debugIAP("Purchase successful:", purchase);
 						void checkSubscription();
+						resolvePendingPurchase(purchase);
 						setPurchasing(false);
 					},
 					(err: PurchaseError) => {
 						debugIAP("Purchase error:", err);
+						rejectPendingPurchase(err);
 						if (isUserCancelledError(err)) {
 							setError(null);
 						} else {
@@ -192,11 +263,18 @@ export const SubscriptionProvider = ({
 		void init();
 
 		return () => {
+			clearPendingPurchase();
 			cleanup?.();
 			void IAPService.endConnection();
 			hasInitializedRef.current = false;
 		};
-	}, [checkSubscription, fetchProductsAndSubscription]);
+	}, [
+		checkSubscription,
+		clearPendingPurchase,
+		fetchProductsAndSubscription,
+		rejectPendingPurchase,
+		resolvePendingPurchase,
+	]);
 
 	useEffect(() => {
 		if (!hasInitializedRef.current) return;
@@ -223,8 +301,30 @@ export const SubscriptionProvider = ({
 				setPurchasing(true);
 				setError(null);
 				const userId = session?.user?.id ? String(session.user.id) : undefined;
+
+				const completionPromise = new Promise<void>((resolve, reject) => {
+					clearPendingPurchase();
+					const timeoutId = setTimeout(() => {
+						reject(
+							new Error(
+								"La confirmation d'achat prend trop de temps. Veuillez reessayer."
+							)
+						);
+						pendingPurchaseRef.current = null;
+					}, 90000);
+
+					pendingPurchaseRef.current = {
+						sku,
+						resolve,
+						reject,
+						timeoutId,
+					};
+				});
+
 				await IAPService.purchaseSubscription(product, userId);
+				await completionPromise;
 			} catch (err) {
+				rejectPendingPurchase(err);
 				const purchaseError = err as PurchaseError;
 				if (isUserCancelledError(purchaseError)) {
 					setError(null);
@@ -235,7 +335,7 @@ export const SubscriptionProvider = ({
 				throw err;
 			}
 		},
-		[session?.user?.id]
+		[clearPendingPurchase, rejectPendingPurchase, session?.user?.id]
 	);
 
 	const refresh = useCallback(async () => {

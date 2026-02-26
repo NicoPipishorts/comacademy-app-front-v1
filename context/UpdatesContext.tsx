@@ -51,13 +51,13 @@ const parseBooleanFlag = (value?: string): boolean =>
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	snackbarMessage: "Nouvelle mise a jour OTA disponible.",
-	title: "Nouveau contenu dispo",
-	subtitle: "Découvrez les nouveautés et correctifs clés",
+	snackbarMessage: "Mise a jour OTA disponible.",
+	title: "Mise a jour disponible",
+	subtitle: "Correctifs importants sur les achats et la stabilite",
 	logoutCtaLabel: "Se deconnecter",
 	closeCtaLabel: "Fermer",
 	defaultNotes:
-		"- IAP logs bottom sheet: scrollable list is now fixed.\n- OTA modal: optional logout CTA via EXPO_PUBLIC_OTA_SHOW_LOGOUT_CTA.",
+		"- Achat: correction d'un cas de deconnexion apres echec de verification.\n- Achat: meilleur suivi de la confirmation d'achat cote application.\n- IAP logs: la bottom sheet est maintenant scrollable.\n- OTA: bouton de deconnexion optionnel via EXPO_PUBLIC_OTA_SHOW_LOGOUT_CTA.",
 };
 
 type UpdatesContextValue = {
