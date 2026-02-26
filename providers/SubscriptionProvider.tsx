@@ -29,6 +29,7 @@ type SubscriptionState = {
 	checkSubscription: () => Promise<any>;
 	cancelSubscription: () => Promise<boolean>;
 	refresh: () => Promise<void>;
+	hasPremiumAccess: boolean;
 	hasActiveSubscription: boolean;
 };
 
@@ -46,13 +47,27 @@ export const SubscriptionProvider = ({
 	const [loading, setLoading] = useState(true);
 	const [purchasing, setPurchasing] = useState(false);
 	const [subscription, setSubscription] = useState<any>(null);
+	const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
 	const hasInitializedRef = useRef(false);
 
 	const checkSubscription = useCallback(async () => {
 		try {
-			const currentSub = await IAPService.checkSubscriptionStatus();
+			let currentSub = await IAPService.checkSubscriptionStatus();
+			if (
+				"getEntitlementsSnapshot" in IAPService &&
+				typeof IAPService.getEntitlementsSnapshot === "function"
+			) {
+				const snapshot = await IAPService.getEntitlementsSnapshot();
+				const snapshotHasPremiumAccess = Boolean(snapshot?.hasPremiumAccess);
+				setHasPremiumAccess(snapshotHasPremiumAccess);
+				if (!currentSub && snapshotHasPremiumAccess) {
+					currentSub = snapshot?.entitlements?.[0] ?? null;
+				}
+			} else {
+				setHasPremiumAccess(Boolean(currentSub));
+			}
 			setSubscription(currentSub);
 			return currentSub;
 		} catch (err) {
@@ -90,9 +105,24 @@ export const SubscriptionProvider = ({
 		// 2) ENTITLEMENTS – best-effort only, do NOT block UI
 		try {
 			debugIAP("checkSubscriptionStatus() triggered");
-			const currentSub = await IAPService.checkSubscriptionStatus();
-			debugIAP("Subscription status result", currentSub);
+			let currentSub = await IAPService.checkSubscriptionStatus();
+			let snapshotHasPremiumAccess = Boolean(currentSub);
+			if (
+				"getEntitlementsSnapshot" in IAPService &&
+				typeof IAPService.getEntitlementsSnapshot === "function"
+			) {
+				const snapshot = await IAPService.getEntitlementsSnapshot();
+				snapshotHasPremiumAccess = Boolean(snapshot?.hasPremiumAccess);
+				if (!currentSub && snapshotHasPremiumAccess) {
+					currentSub = snapshot?.entitlements?.[0] ?? null;
+				}
+			}
+			debugIAP("Subscription status result", {
+				currentSub,
+				hasPremiumAccess: snapshotHasPremiumAccess,
+			});
 			setSubscription(currentSub);
+			setHasPremiumAccess(snapshotHasPremiumAccess);
 		} catch (err: any) {
 			debugIAP("checkSubscriptionStatus error (ignored for now)", {
 				message: err?.message,
@@ -270,7 +300,8 @@ export const SubscriptionProvider = ({
 			checkSubscription,
 			cancelSubscription,
 			refresh,
-			hasActiveSubscription: !!subscription,
+			hasPremiumAccess,
+			hasActiveSubscription: hasPremiumAccess,
 		}),
 		[
 			products,
@@ -284,6 +315,7 @@ export const SubscriptionProvider = ({
 			checkSubscription,
 			cancelSubscription,
 			refresh,
+			hasPremiumAccess,
 		]
 	);
 

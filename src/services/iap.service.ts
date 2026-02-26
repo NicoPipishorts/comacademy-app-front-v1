@@ -1,9 +1,11 @@
 // iap.service.ts
 import axios from "axios";
 import Constants from "expo-constants";
+import * as Updates from "expo-updates";
 import { Platform } from "react-native";
 import type {
 	Purchase,
+	RequestPurchaseProps,
 	RequestSubscriptionAndroidProps,
 	RequestSubscriptionPropsByPlatforms,
 } from "react-native-iap";
@@ -36,6 +38,8 @@ const isExpoGo = Constants.appOwnership === "expo";
 type RNIapModule = any; // keep it loose while we debug Nitro exports
 
 let cachedIapModule: RNIapModule | null = null;
+let isIapConnected = false;
+let initConnectionPromise: Promise<void> | null = null;
 
 const ensureIapModule = async (): Promise<RNIapModule> => {
 	if (isExpoGo) {
@@ -62,11 +66,205 @@ const getIapModuleSync = (): RNIapModule => {
 	return cachedIapModule!;
 };
 
+const ensureConnection = async (): Promise<RNIapModule> => {
+	const iap = await ensureIapModule();
+
+	if (isIapConnected) {
+		return iap;
+	}
+
+	if (!initConnectionPromise) {
+		initConnectionPromise = (async () => {
+			debugIAP("initConnection requested");
+			await iap.initConnection();
+			isIapConnected = true;
+			debugIAP("initConnection success");
+		})().finally(() => {
+			initConnectionPromise = null;
+		});
+	}
+
+	await initConnectionPromise;
+	return iap;
+};
+
 // Keep identical IDs on both platforms (must match App Store / Play Console)
 const PRODUCT_IDS = Platform.select({
 	ios: ["fullAccess100", "fullAccess1200"], // both iOS products
 	android: ["full.access"], // Android subscription *product* ID with monthly-full and yearly-full base plans
 }) as string[];
+
+type BackendCatalogProduct = {
+	id?: string;
+	type?: string;
+};
+
+type EntitlementRecord = {
+	productId?: string;
+	status?: string;
+	expiresAt?: string | null;
+	platform?: string;
+	provider?: string;
+	[key: string]: unknown;
+};
+
+type EntitlementsSnapshot = {
+	entitlements: EntitlementRecord[];
+	hasPremiumAccess: boolean;
+};
+
+const ACTIVE_PREMIUM_STATUSES = new Set([
+	"active",
+	"grace_period",
+	"billing_retry",
+	"granted",
+]);
+
+let cachedCatalogProductIds: string[] | null = null;
+let lastCatalogFetchMs = 0;
+const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const normalizeEnvironmentValue = (value?: string | null): string | null => {
+	if (!value) return null;
+
+	const normalized = value.trim().toLowerCase();
+	if (normalized === "sandbox" || normalized === "production") {
+		return normalized;
+	}
+
+	return null;
+};
+
+const resolveDefaultValidationEnvironment = (
+	platform: "ios" | "android"
+): string => {
+	const envOverride = normalizeEnvironmentValue(process.env.EXPO_PUBLIC_IAP_ENV);
+	if (envOverride) {
+		return envOverride;
+	}
+
+	if (__DEV__) {
+		return "sandbox";
+	}
+
+	if (platform === "ios") {
+		const channel =
+			typeof Updates.channel === "string"
+				? Updates.channel.trim().toLowerCase()
+				: "";
+		if (channel && channel !== "production") {
+			return "sandbox";
+		}
+	}
+
+	return "production";
+};
+
+const fnv1a32 = (input: string): number => {
+	let hash = 0x811c9dc5;
+	for (let i = 0; i < input.length; i += 1) {
+		hash ^= input.charCodeAt(i);
+		hash = Math.imul(hash, 0x01000193);
+	}
+	return hash >>> 0;
+};
+
+const toHex32 = (value: number): string => value.toString(16).padStart(8, "0");
+
+const createDeterministicUuid = (rawValue: string): string => {
+	const seed = rawValue.trim();
+	const hex =
+		toHex32(fnv1a32(`${seed}:1`)) +
+		toHex32(fnv1a32(`${seed}:2`)) +
+		toHex32(fnv1a32(`${seed}:3`)) +
+		toHex32(fnv1a32(`${seed}:4`));
+
+	const chars = hex.split("");
+	chars[12] = "4";
+	const variant = (parseInt(chars[16], 16) & 0x3) | 0x8;
+	chars[16] = variant.toString(16);
+	const normalizedHex = chars.join("");
+
+	return `${normalizedHex.slice(0, 8)}-${normalizedHex.slice(8, 12)}-${normalizedHex.slice(12, 16)}-${normalizedHex.slice(16, 20)}-${normalizedHex.slice(20, 32)}`;
+};
+
+const createObfuscatedAccountId = (rawValue: string): string =>
+	`${toHex32(fnv1a32(`comacademy:${rawValue}:a`))}${toHex32(fnv1a32(`comacademy:${rawValue}:b`))}`;
+
+const normalizeCatalogResponse = (
+	payload: unknown
+): BackendCatalogProduct[] => {
+	if (Array.isArray(payload)) {
+		return payload as BackendCatalogProduct[];
+	}
+
+	if (
+		payload &&
+		typeof payload === "object" &&
+		Array.isArray((payload as { products?: unknown[] }).products)
+	) {
+		return (payload as { products: BackendCatalogProduct[] }).products;
+	}
+
+	return [];
+};
+
+const fetchBackendCatalogIds = async (forceRefresh = false): Promise<string[]> => {
+	const now = Date.now();
+	if (
+		!forceRefresh &&
+		cachedCatalogProductIds &&
+		now - lastCatalogFetchMs < CATALOG_CACHE_TTL_MS
+	) {
+		return cachedCatalogProductIds;
+	}
+
+	const apiBaseUrl = getApiBaseUrl();
+	const response = await axios.get(`${apiBaseUrl}/iap/products`);
+	const catalog = normalizeCatalogResponse(response.data);
+	const ids = catalog
+		.map((item) => (typeof item?.id === "string" ? item.id.trim() : ""))
+		.filter((id): id is string => id.length > 0);
+
+	if (!ids.length) {
+		throw new Error("Backend returned an empty IAP products allowlist");
+	}
+
+	cachedCatalogProductIds = Array.from(new Set(ids));
+	lastCatalogFetchMs = now;
+	return cachedCatalogProductIds;
+};
+
+const getPlatformAllowedIds = async (): Promise<string[]> => {
+	const catalogIds = await fetchBackendCatalogIds();
+	const allowed = PRODUCT_IDS.filter((id) => catalogIds.includes(id));
+
+	if (!allowed.length) {
+		throw new Error(
+			`No backend-allowed IAP products for ${Platform.OS}. Expected one of: ${PRODUCT_IDS.join(", ")}`
+		);
+	}
+
+	return allowed;
+};
+
+const isPremiumEntitlementActive = (entitlement: EntitlementRecord): boolean => {
+	const status = String(entitlement?.status ?? "").toLowerCase();
+	if (!ACTIVE_PREMIUM_STATUSES.has(status)) {
+		return false;
+	}
+
+	if (!entitlement?.expiresAt) {
+		return true;
+	}
+
+	const expiry = new Date(entitlement.expiresAt).getTime();
+	if (Number.isNaN(expiry)) {
+		return true;
+	}
+
+	return expiry > Date.now();
+};
 
 const getApiBaseUrl = () => {
 	const baseUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -118,7 +316,8 @@ const buildValidationPayload = (
 	}
 
 	const environmentIOS =
-		(rawPurchase.environmentIOS as string | undefined) || defaultEnvironment;
+		normalizeEnvironmentValue(rawPurchase.environmentIOS as string | undefined) ||
+		defaultEnvironment;
 
 	const payload: PurchaseValidationPayload = {
 		platform: "ios",
@@ -158,6 +357,16 @@ const buildValidationPayload = (
 		throw new Error("Missing originalTransactionId for iOS verification");
 	}
 
+	if (!payload.transactionId) {
+		throw new Error("Missing transactionId for iOS verification");
+	}
+
+	if (!payload.signedTransactionInfo) {
+		throw new Error(
+			"Missing signedTransactionInfo for iOS verification payload"
+		);
+	}
+
 	return payload;
 };
 
@@ -169,6 +378,18 @@ const shouldEnqueueError = (error: unknown): boolean => {
 	}
 
 	return error.response.status >= 500;
+};
+
+const extractAxiosErrorDetails = (error: unknown) => {
+	if (!axios.isAxiosError(error)) return null;
+
+	return {
+		status: error.response?.status,
+		url: error.config?.url,
+		method: error.config?.method,
+		data: error.response?.data,
+		message: error.message,
+	};
 };
 
 const purchaseMatchesMetadata = (
@@ -213,7 +434,7 @@ const createIAPService = () => {
 		if (!pending.length) return;
 
 		const apiBaseUrl = getApiBaseUrl();
-		const iap = await ensureIapModule();
+		const iap = await ensureConnection();
 
 		let cachedAvailablePurchases: Purchase[] | null = null;
 
@@ -285,12 +506,9 @@ const createIAPService = () => {
 			debugIAP("isExpoGo", isExpoGo);
 
 			try {
-				const iap = await ensureIapModule();
+				const iap = await ensureConnection();
 				debugIAP("IAP module loaded successfully");
 				debugIAP("IAP module type", typeof iap);
-
-				await iap.initConnection();
-				debugIAP("initConnection success");
 
 				await processPendingPurchases().catch((error) => {
 					debugIAP("processPendingPurchases error", error);
@@ -315,24 +533,44 @@ const createIAPService = () => {
 			debugIAP("getProducts triggered");
 			debugIAP("Platform", Platform.OS);
 			debugIAP("PRODUCT_IDS to fetch", PRODUCT_IDS);
-			debugIAP("App bundle ID", Constants.expoConfig?.ios?.bundleIdentifier || Constants.expoConfig?.android?.package || "unknown");
+			debugIAP(
+				"App bundle ID",
+				Constants.expoConfig?.ios?.bundleIdentifier ||
+					Constants.expoConfig?.android?.package ||
+					"unknown"
+			);
 			debugIAP("Build type", __DEV__ ? "development" : "production");
 
 			try {
-				const iap = await ensureIapModule();
+				const iap = await ensureConnection();
+				const allowedProductIds = await getPlatformAllowedIds();
 
 				debugIAP("RNIap keys", Object.keys(iap as any));
 				debugIAP("typeof iap.getSubscriptions", typeof iap.getSubscriptions);
+				debugIAP("typeof iap.fetchProducts", typeof iap.fetchProducts);
 
-				debugIAP("Calling getSubscriptions with params", {
-					skus: PRODUCT_IDS,
+				debugIAP("Calling subscription product fetch with params", {
+					skus: allowedProductIds,
 				});
 
-				const products = await iap.getSubscriptions({
-					skus: PRODUCT_IDS,
-				});
+				let products: any[] | null = null;
+				if (typeof iap.fetchProducts === "function") {
+					products = await iap.fetchProducts({
+						skus: allowedProductIds,
+						type: "subs",
+					});
+				} else if (typeof iap.getSubscriptions === "function") {
+					// Backward compatibility for older react-native-iap versions.
+					products = await iap.getSubscriptions({
+						skus: allowedProductIds,
+					});
+				} else {
+					throw new Error(
+						"IAP module does not expose fetchProducts/getSubscriptions"
+					);
+				}
 
-				debugIAP("getSubscriptions result count", products?.length ?? 0);
+				debugIAP("Subscription fetch result count", products?.length ?? 0);
 
 				// For Android, expand subscription offers into separate product objects
 				let expandedProducts = products ?? [];
@@ -399,16 +637,30 @@ const createIAPService = () => {
 					});
 				}
 
+				const allowedSet = new Set(allowedProductIds);
+				expandedProducts = expandedProducts.filter((product: any) => {
+					const backendId = String(
+						product?.originalProductId ?? product?.id ?? product?.productId ?? ""
+					);
+					return allowedSet.has(backendId);
+				});
+
 				if (!expandedProducts || expandedProducts.length === 0) {
-					debugIAP("⚠️ WARNING: No products returned from Play Store");
+					debugIAP("⚠️ WARNING: No products returned from store");
 					debugIAP("Troubleshooting checklist:");
-					debugIAP("1. Product IDs in code match Play Console exactly");
-					debugIAP(`   Expected: ${PRODUCT_IDS.join(", ")}`);
-					debugIAP("2. Products status is 'Active' in Play Console");
+					debugIAP("1. Product IDs in code match App Store Connect exactly");
+					debugIAP(`   Expected: ${allowedProductIds.join(", ")}`);
+					debugIAP(
+						"2. Subscriptions are 'Ready for Sale' and attached to this app version"
+					);
 					debugIAP("3. Package ID matches: com.nicopipishorts.comacademy");
-					debugIAP("4. App must be published to a testing track (internal/closed/open)");
-					debugIAP("5. Test account must be added to the testing track");
-					debugIAP("6. Wait up to 24 hours after product creation");
+					debugIAP(
+						"4. Test on a real build (TestFlight/dev client), not Expo Go"
+					);
+					debugIAP(
+						"5. Test account must be a Sandbox tester on iOS (Settings > App Store > Sandbox Account)"
+					);
+					debugIAP("6. Wait up to 24 hours after product creation/approval");
 				}
 
 				return expandedProducts;
@@ -433,21 +685,35 @@ const createIAPService = () => {
 				const productAny = product as any;
 				const sku = productAny.originalProductId || getSubscriptionProductId(product);
 				if (!sku) throw new Error("Invalid product identifier");
+				const allowedProductIds = await getPlatformAllowedIds();
+				if (!allowedProductIds.includes(sku)) {
+					throw new Error(
+						`Product ${sku} is not allowed by backend catalog for ${Platform.OS}`
+					);
+				}
 
-				const iap = await ensureIapModule();
+				const iap = await ensureConnection();
 				const request: RequestSubscriptionPropsByPlatforms = {};
 				if (Platform.OS === "ios") {
+					const appAccountToken = userId
+						? createDeterministicUuid(String(userId))
+						: undefined;
 					debugIAP("iOS subscription request", request);
 					request.ios = {
 						sku,
-						...(userId ? { appAccountToken: userId } : {}),
+						...(appAccountToken ? { appAccountToken } : {}),
 					};
 				} else if (Platform.OS === "android") {
+					const obfuscatedAccountId = userId
+						? createObfuscatedAccountId(String(userId))
+						: undefined;
 					debugIAP("Android subscription request");
 					const androidReq: RequestSubscriptionAndroidProps = {
 						skus: [sku],
 						// Policy: obfuscate your account ID; do not send raw PII
-						...(userId ? { obfuscatedAccountIdAndroid: userId } : {}),
+						...(obfuscatedAccountId
+							? { obfuscatedAccountIdAndroid: obfuscatedAccountId }
+							: {}),
 					};
 
 					// Use the offer token from the expanded product
@@ -466,13 +732,38 @@ const createIAPService = () => {
 					request.android = androidReq;
 				}
 
-				// Use requestSubscription (not requestPurchase)
-				debugIAP("Calling requestSubscription()", { sku, request });
-				const purchase: Purchase = await iap.requestSubscription(request);
-				debugIAP("requestSubscription success", purchase);
+				const purchaseRequest: RequestPurchaseProps = {
+					type: "subs",
+					request,
+				};
+
+				debugIAP("typeof iap.requestPurchase", typeof iap.requestPurchase);
+				debugIAP(
+					"typeof iap.requestSubscription",
+					typeof iap.requestSubscription
+				);
+
+				let purchase: Purchase;
+				if (typeof iap.requestPurchase === "function") {
+					debugIAP("Calling requestPurchase({ type: 'subs' })", {
+						sku,
+						request,
+					});
+					purchase = await iap.requestPurchase(purchaseRequest);
+				} else if (typeof iap.requestSubscription === "function") {
+					// Backward compatibility for older react-native-iap versions.
+					debugIAP("Calling requestSubscription() fallback", { sku, request });
+					purchase = await iap.requestSubscription(request);
+				} else {
+					throw new Error(
+						"IAP module does not expose requestPurchase/requestSubscription"
+					);
+				}
+
+				debugIAP("requestPurchase success", purchase);
 				return purchase;
 			} catch (error) {
-				debugIAP("requestSubscription failed", error);
+				debugIAP("requestPurchase failed", error);
 				console.error("Failed to purchase subscription:", error);
 				throw error;
 			}
@@ -486,11 +777,11 @@ const createIAPService = () => {
 		async completePurchase(purchase: Purchase) {
 			debugIAP("Calling completePurchase from listener");
 			debugIAP("completePurchase called", purchase);
-			const environment = __DEV__ ? "sandbox" : "production";
 			const apiBaseUrl = getApiBaseUrl();
-			const iap = await ensureIapModule();
+			const iap = await ensureConnection();
 
 			const normalized = normalizePurchase(purchase);
+			const environment = resolveDefaultValidationEnvironment(normalized.platform);
 			debugIAP("Normalized purchase", normalized);
 			const metadata = createPendingMetadata(normalized);
 
@@ -525,6 +816,11 @@ const createIAPService = () => {
 
 				throw new Error("Backend verification failed");
 			} catch (error) {
+				const axiosDetails = extractAxiosErrorDetails(error);
+				if (axiosDetails) {
+					debugIAP("completePurchase axios error", axiosDetails);
+				}
+
 				debugIAP("completePurchase failed", error);
 				if (shouldEnqueueError(error)) {
 					await enqueuePendingPurchase(payload, metadata);
@@ -538,26 +834,51 @@ const createIAPService = () => {
 		/**
 		 * Get user entitlements from your API
 		 */
-		async getEntitlements(retryCount = 0) {
+		async getEntitlementsSnapshot(retryCount = 0): Promise<EntitlementsSnapshot> {
 			debugIAP("Fetching entitlements", { attempt: retryCount + 1 });
 			try {
 				const apiBaseUrl = getApiBaseUrl();
 				const res = await axios.get(`${apiBaseUrl}/me/entitlements`);
 				debugIAP("Entitlements API response", res.data);
-				return res.data?.entitlements ?? [];
+				const rawEntitlements = Array.isArray(res.data?.entitlements)
+					? (res.data.entitlements as EntitlementRecord[])
+					: [];
+				const backendHasPremiumAccess =
+					typeof res.data?.hasPremiumAccess === "boolean"
+						? res.data.hasPremiumAccess
+						: rawEntitlements.some(isPremiumEntitlementActive);
+
+				return {
+					entitlements: rawEntitlements,
+					hasPremiumAccess: backendHasPremiumAccess,
+				};
 			} catch (error) {
+				const axiosDetails = extractAxiosErrorDetails(error);
+				if (axiosDetails) {
+					debugIAP("getEntitlements axios error", axiosDetails);
+				}
+
 				debugIAP("getEntitlements error", error);
 
 				// Retry once on 403 errors (may be a timing issue after login)
-				if (axios.isAxiosError(error) && error.response?.status === 403 && retryCount === 0) {
+				if (
+					axios.isAxiosError(error) &&
+					error.response?.status === 403 &&
+					retryCount === 0
+				) {
 					debugIAP("Retrying entitlements fetch after 403 (attempt 2)");
-					await new Promise(resolve => setTimeout(resolve, 1000));
-					return this.getEntitlements(1);
+					await new Promise((resolve) => setTimeout(resolve, 1000));
+					return this.getEntitlementsSnapshot(1);
 				}
 
 				console.error("Failed to get entitlements:", error);
 				throw error;
 			}
+		},
+
+		async getEntitlements(retryCount = 0) {
+			const snapshot = await this.getEntitlementsSnapshot(retryCount);
+			return snapshot.entitlements;
 		},
 
 		/**
@@ -566,7 +887,7 @@ const createIAPService = () => {
 		 */
 		async restorePurchases() {
 			try {
-				const RNIap = await ensureIapModule();
+				const RNIap = await ensureConnection();
 				const purchases = await RNIap.getAvailablePurchases();
 
 				const entitlements = await Promise.all(
@@ -591,11 +912,13 @@ const createIAPService = () => {
 		async checkSubscriptionStatus() {
 			debugIAP("checkSubscriptionStatus() triggered");
 			try {
-				const entitlements = await this.getEntitlements();
+				const snapshot = await this.getEntitlementsSnapshot();
+				const entitlements = snapshot.entitlements;
 				debugIAP("Entitlements fetched", entitlements);
 				return (
-					entitlements.find((e: any) => e?.active && e?.status === "active") ||
-					null
+					entitlements.find((entitlement) =>
+						isPremiumEntitlementActive(entitlement)
+					) || null
 				);
 			} catch (error) {
 				console.error("Failed to check subscription status:", error);
@@ -608,8 +931,13 @@ const createIAPService = () => {
 		 */
 		async endConnection() {
 			try {
+				if (!cachedIapModule || !isIapConnected) {
+					return;
+				}
+
 				const RNIap = getIapModuleSync();
 				await RNIap.endConnection();
+				isIapConnected = false;
 			} catch (error) {
 				console.error("Failed to end IAP connection:", error);
 			}

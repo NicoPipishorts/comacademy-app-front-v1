@@ -140,13 +140,18 @@ export const IAPService = {
 	/**
 	 * Get user entitlements (mock)
 	 */
-	async getEntitlements() {
+	async getEntitlementsSnapshot() {
 		await delay(500);
+		const entitlements: any[] = mockSubscriptionState ? [mockSubscriptionState] : [];
+		return {
+			entitlements,
+			hasPremiumAccess: entitlements.length > 0,
+		};
+	},
 
-		// Return the active subscription if a purchase was completed
-		const mockEntitlements: any[] = mockSubscriptionState ? [mockSubscriptionState] : [];
-
-		return mockEntitlements;
+	async getEntitlements() {
+		const snapshot = await this.getEntitlementsSnapshot();
+		return snapshot.entitlements;
 	},
 
 	/**

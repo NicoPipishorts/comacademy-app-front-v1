@@ -8,6 +8,7 @@ import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
+import axios, { AxiosError } from "axios";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import RegisterStep1 from "./Step1";
 import RegisterStep2 from "./Step2";
@@ -33,17 +34,42 @@ const Register = () => {
 		navigation.navigate("(tabs)");
 	};
 
-	const onError = (error) => {
-		const key = error.message.split(" ")[0];
-		const translation = () => {
-			switch (key) {
-				case "Email":
-					return "L'e-mail ou le nom d'utilisateur sont déjà pris";
-				default:
-					return error.message;
-			}
-		};
-		Alert.alert("L'inscription a échoué", translation());
+	const onError = (error: AxiosError | Error) => {
+		const backendMessage = axios.isAxiosError(error)
+			? ((error.response?.data as { error?: { message?: string } } | undefined)
+					?.error?.message ??
+			  error.message)
+			: error.message;
+
+		const normalizedMessage =
+			typeof backendMessage === "string" && backendMessage.trim()
+				? backendMessage.trim()
+				: "Une erreur est survenue pendant l'inscription.";
+		const loweredMessage = normalizedMessage.toLowerCase();
+
+		if (
+			loweredMessage.includes("already") &&
+			(loweredMessage.includes("email") || loweredMessage.includes("username"))
+		) {
+			Alert.alert(
+				"L'inscription a échoué",
+				"L'e-mail ou le nom d'utilisateur sont déjà utilisés."
+			);
+			return;
+		}
+
+		if (
+			loweredMessage.includes("username") &&
+			(loweredMessage.includes("invalid") || loweredMessage.includes("characters"))
+		) {
+			Alert.alert(
+				"L'inscription a échoué",
+				"Le pseudo contient des caractères non autorisés."
+			);
+			return;
+		}
+
+		Alert.alert("L'inscription a échoué", normalizedMessage);
 	};
 
 	const mutation = useRegisterNewUser(onSuccess, onError);
@@ -53,8 +79,7 @@ const Register = () => {
 			Alert.alert("Error", "Please complete all fields before proceeding.");
 			return;
 		}
-		const formPayloadToSubmit = { ...payload, profile: 2 };
-		mutation.mutate(formPayloadToSubmit);
+		mutation.mutate(payload);
 	};
 
 	useEffect(() => {

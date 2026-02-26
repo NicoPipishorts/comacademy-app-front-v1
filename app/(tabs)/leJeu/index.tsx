@@ -23,6 +23,7 @@ import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
+import { useSubscription } from "@/src/hooks/useSubscription";
 import { NavigationType } from "@/types/general";
 import { useFocusEffect, useNavigation } from "expo-router";
 // import { useMemo } from "react";
@@ -43,9 +44,11 @@ export default function LeJeu() {
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
 	const { session } = UseAuth();
+	const { hasPremiumAccess: backendHasPremiumAccess } = useSubscription();
 
 	// Check premium access status
 	const hasPremiumAccess = React.useMemo(() => {
+		if (backendHasPremiumAccess) return true;
 		if (session?.user?.manualPremium) return true;
 		if (session?.user?.hasPremiumAccess) return true;
 
@@ -56,6 +59,7 @@ export default function LeJeu() {
 			status === "billing_retry"
 		);
 	}, [
+		backendHasPremiumAccess,
 		session?.user?.manualPremium,
 		session?.user?.hasPremiumAccess,
 		session?.user?.subscription?.status,

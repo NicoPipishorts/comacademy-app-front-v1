@@ -33,6 +33,12 @@ import type { PurchaseError } from "react-native-iap";
 
 // ===== Helpers =====
 const isExpoGo = Constants.appOwnership === "expo";
+const PRIVACY_POLICY_URL =
+	process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ??
+	"https://comacademy.fr/politique-de-confidentialite";
+const TERMS_OF_SERVICE_URL =
+	process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL ??
+	"https://comacademy.fr/conditions-generales-d-utilisation";
 
 // Safe wrapper so a weird product shape can’t blow up formatting
 const safeFormatPrice = (p: any, fallback = "") => {
@@ -190,6 +196,21 @@ const getDurationInfoForProduct = (
 ): DurationInfo | null =>
 	iosDurationInfo(product) ?? androidDurationInfo(product);
 
+const matchesActivePlan = (
+	planId: string,
+	activeProductId: string | undefined
+): boolean => {
+	if (!activeProductId) return false;
+	if (planId === activeProductId) return true;
+
+	// Android plan cards may be expanded as "productId_basePlanId" while backend
+	// entitlements can store only the base productId.
+	if (planId.startsWith(`${activeProductId}_`)) return true;
+	if (activeProductId.startsWith(`${planId}_`)) return true;
+
+	return false;
+};
+
 const PLAN_FEATURES = [
 	"Accès illimité à tout le contenu",
 	"Annulation à tout moment",
@@ -212,6 +233,7 @@ export default function SubscriptionScreen() {
 		cancelSubscription,
 		refresh,
 		refreshing,
+		hasPremiumAccess: backendHasPremiumAccess,
 		hasActiveSubscription,
 	} = useSubscription();
 
@@ -243,10 +265,10 @@ export default function SubscriptionScreen() {
 			if (maybeIap) {
 				console.log(
 					"[SubscriptionScreen] IAP methods:",
-					"getSubscriptions:",
-					typeof maybeIap.getSubscriptions,
-					"requestSubscription:",
-					typeof maybeIap.requestSubscription,
+					"fetchProducts:",
+					typeof maybeIap.fetchProducts,
+					"requestPurchase:",
+					typeof maybeIap.requestPurchase,
 					"initConnection:",
 					typeof maybeIap.initConnection
 				);
@@ -270,6 +292,7 @@ export default function SubscriptionScreen() {
 
 	const hasManualPremium = session?.user?.manualPremium ?? false;
 	const hasPremiumAccess = useMemo(() => {
+		if (backendHasPremiumAccess) return true;
 		if (hasManualPremium) return true;
 		if (session?.user?.hasPremiumAccess) return true;
 		const status = session?.user?.subscription?.status;
@@ -279,6 +302,7 @@ export default function SubscriptionScreen() {
 			status === "billing_retry"
 		);
 	}, [
+		backendHasPremiumAccess,
 		hasManualPremium,
 		session?.user?.hasPremiumAccess,
 		session?.user?.subscription?.status,
@@ -383,12 +407,25 @@ export default function SubscriptionScreen() {
 		}
 	};
 
+	const openExternalLink = useCallback(async (url: string) => {
+		try {
+			const supported = await Linking.canOpenURL(url);
+			if (!supported) {
+				throw new Error(`Cannot open URL: ${url}`);
+			}
+			await Linking.openURL(url);
+		} catch (err) {
+			console.warn("[SubscriptionScreen] external link error:", err);
+			Alert.alert("Erreur", "Impossible d'ouvrir ce lien pour le moment.");
+		}
+	}, []);
+
 	const handlePrivacyPolicy = () => {
-		Linking.openURL("https://yourwebsite.com/privacy-policy");
+		void openExternalLink(PRIVACY_POLICY_URL);
 	};
 
 	const handleTermsOfService = () => {
-		Linking.openURL("https://yourwebsite.com/terms-of-service");
+		void openExternalLink(TERMS_OF_SERVICE_URL);
 	};
 
 	const handleManageSubscription = () => {
@@ -416,9 +453,11 @@ export default function SubscriptionScreen() {
 			);
 		} else {
 			if (Platform.OS === "ios") {
-				Linking.openURL("https://apps.apple.com/account/subscriptions");
+				void openExternalLink("https://apps.apple.com/account/subscriptions");
 			} else if (Platform.OS === "android") {
-				Linking.openURL("https://play.google.com/store/account/subscriptions");
+				void openExternalLink(
+					"https://play.google.com/store/account/subscriptions"
+				);
 			}
 		}
 	};
@@ -550,7 +589,8 @@ export default function SubscriptionScreen() {
 									features={PLAN_FEATURES}
 									isPopular={plans.length > 1 && index === 0}
 									isCurrentPlan={
-										hasActiveSubscription && plan.id === activeProductId
+										hasActiveSubscription &&
+										matchesActivePlan(plan.id, activeProductId)
 									}
 									onPress={() => handlePurchase(plan.product)}
 									disabled={purchasing}
@@ -600,17 +640,16 @@ export default function SubscriptionScreen() {
 
 					{/* Legal Links */}
 					<View style={styles.legalSection}>
-						{/* If you want to re-enable links, uncomment this block and set real URLs */}
-						{/* <Text style={styles.legalText}>En vous abonnant, vous acceptez nos</Text>
-            <View style={styles.legalLinks}>
-              <TouchableOpacity onPress={handleTermsOfService}>
-                <Text style={styles.legalLink}>Conditions d'utilisation</Text>
-              </TouchableOpacity>
-              <Text style={styles.legalSeparator}> et notre </Text>
-              <TouchableOpacity onPress={handlePrivacyPolicy}>
-                <Text style={styles.legalLink}>Politique de confidentialité</Text>
-              </TouchableOpacity>
-            </View> */}
+						<Text style={styles.legalText}>En vous abonnant, vous acceptez nos</Text>
+						<View style={styles.legalLinks}>
+							<TouchableOpacity onPress={handleTermsOfService}>
+								<Text style={styles.legalLink}>Conditions d'utilisation</Text>
+							</TouchableOpacity>
+							<Text style={styles.legalSeparator}> et notre </Text>
+							<TouchableOpacity onPress={handlePrivacyPolicy}>
+								<Text style={styles.legalLink}>Politique de confidentialité</Text>
+							</TouchableOpacity>
+						</View>
 						<Text style={styles.legalNote}>
 							L'abonnement se renouvelle automatiquement. Vous pouvez annuler à
 							tout moment depuis les paramètres de votre compte App Store ou

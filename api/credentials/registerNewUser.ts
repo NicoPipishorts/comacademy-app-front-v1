@@ -6,20 +6,53 @@ import { normalizeAuthResponse } from "@/helpers/strapi";
 
 export const useRegisterNewUser = (
 	onSuccess: (data: AuthResponse) => void,
-	onError: (error: AxiosError) => void
+	onError: (error: AxiosError | Error) => void
 ) => {
-	return useMutation<AuthResponse, AxiosError, FormPayload>({
+	return useMutation<AuthResponse, AxiosError | Error, FormPayload>({
 		mutationFn: async (formPayload: FormPayload) => {
 			try {
+				const registerPayload = {
+					username: formPayload.username,
+					email: formPayload.email,
+					password: formPayload.password,
+				};
+
 				const response = await axios.post(
 					process.env.EXPO_PUBLIC_REGISTER_URL,
-					{ ...formPayload, confirmed: true }
+					registerPayload
 				);
 				return normalizeAuthResponse(response.data);
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
-					const errorMessage = error.response?.data?.error?.message;
-					throw new Error(errorMessage);
+					const responseData = error.response?.data as
+						| {
+								error?: {
+									message?: string;
+									details?: {
+										errors?: { message?: string }[];
+									};
+								};
+								message?: string | string[];
+						  }
+						| undefined;
+
+					const directMessage =
+						responseData?.error?.message ?? responseData?.message;
+					const detailedMessage = responseData?.error?.details?.errors?.[0]?.message;
+
+					const backendMessage = Array.isArray(directMessage)
+						? directMessage.find(
+								(message) =>
+									typeof message === "string" && message.trim().length > 0
+						  )
+						: directMessage;
+
+					error.message =
+						(typeof backendMessage === "string" && backendMessage.trim()) ||
+						(typeof detailedMessage === "string" && detailedMessage.trim()) ||
+						error.message ||
+						"Une erreur est survenue pendant l'inscription.";
+					throw error;
 				}
 				throw error;
 			}

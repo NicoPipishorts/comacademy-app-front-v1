@@ -16,9 +16,9 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useSubscriptionPrompt } from "@/hooks/useSubscriptionPrompt";
-import { NavigationType } from "@/types/general";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useSubscription } from "@/src/hooks/useSubscription";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
 	Keyboard,
 	KeyboardAvoidingView,
@@ -50,7 +50,13 @@ export default function User() {
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const [showOnboarding, setShowOnboarding] = useState(false);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
-	const navigation = useNavigation<NavigationType>();
+	const {
+		subscription: entitlementSubscription,
+		hasPremiumAccess: backendHasPremiumAccess,
+		hasActiveSubscription,
+		refresh: refreshSubscription,
+		error: subscriptionError,
+	} = useSubscription();
 
 	useTrackPageMetrics({ page: "User" });
 
@@ -95,7 +101,7 @@ export default function User() {
 
 	const onRefresh = () => {
 		setRefreshing(true);
-		refetch().finally(() => {
+		Promise.allSettled([refetch(), refreshSubscription()]).finally(() => {
 			lastFetchTimeRef.current = Date.now();
 			setTimeout(() => {
 				setRefreshing(false);
@@ -123,6 +129,41 @@ export default function User() {
 	}, [refetch]);
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
+	const subscriptionStatus = auth?.user?.subscription?.status;
+	const hasPremiumAccess = useMemo(() => {
+		if (backendHasPremiumAccess) return true;
+		if (hasActiveSubscription) return true;
+		if (auth?.user?.manualPremium) return true;
+		if (auth?.user?.hasPremiumAccess) return true;
+		return (
+			subscriptionStatus === "active" ||
+			subscriptionStatus === "grace_period" ||
+			subscriptionStatus === "billing_retry"
+		);
+	}, [
+		auth?.user?.hasPremiumAccess,
+		auth?.user?.manualPremium,
+		backendHasPremiumAccess,
+		hasActiveSubscription,
+		subscriptionStatus,
+	]);
+
+	const formatDate = (value?: string | null) => {
+		if (!value) return "—";
+		const parsed = new Date(value);
+		if (Number.isNaN(parsed.getTime())) return value;
+		return parsed.toLocaleDateString("fr-FR");
+	};
+
+	const subscriptionStateLabel =
+		subscriptionStatus ??
+		entitlementSubscription?.status ??
+		(hasPremiumAccess ? "active" : "none");
+	const currentProductId =
+		auth?.user?.subscription?.productId ??
+		entitlementSubscription?.productId ??
+		"—";
+	const expirationDate = formatDate(auth?.user?.subscription?.expiresAt);
 
 	if (!scores) {
 		return <Loader />;
@@ -146,6 +187,44 @@ export default function User() {
 					<ShowNiveaux totalPoints={totalAnsweredQuestions} />
 
 					{scores?.data?.length ? <UserStats categoriesScore={scores} /> : null}
+
+					<View style={styles.subscriptionCard}>
+						<Text style={styles.subscriptionTitle}>Mon abonnement</Text>
+						<Text
+							style={[
+								styles.subscriptionState,
+								{
+									color: hasPremiumAccess ? "#2E7D32" : colorBlack,
+								},
+							]}>
+							{hasPremiumAccess
+								? "Premium actif"
+								: "Vous êtes en version gratuite"}
+						</Text>
+						<Text style={styles.subscriptionMeta}>
+							État: {subscriptionStateLabel}
+						</Text>
+						<Text style={styles.subscriptionMeta}>
+							Produit: {currentProductId || "—"}
+						</Text>
+						<Text style={styles.subscriptionMeta}>
+							Expiration: {expirationDate}
+						</Text>
+						{subscriptionError ? (
+							<Text style={styles.subscriptionWarning}>
+								Échec de la récupération des infos abonnement.
+							</Text>
+						) : null}
+						<TouchableOpacity
+							style={buttonBlack}
+							onPress={() => router.push("/subscription")}>
+							<Text style={styles.buttonText}>
+								{hasPremiumAccess
+									? "Gérer mon abonnement"
+									: "Voir les offres Premium"}
+							</Text>
+						</TouchableOpacity>
+					</View>
 
 					<View style={styles.cardWrapper}>
 						<View style={styles.cardTextContainer}>
@@ -295,6 +374,36 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		flexGrow: 1,
 		maxWidth: "50%",
+	},
+	subscriptionCard: {
+		display: "flex",
+		flexDirection: "column",
+		gap: 8,
+		marginBottom: 30,
+		width: "100%",
+		borderRadius: 25,
+		paddingHorizontal: 20,
+		paddingVertical: 24,
+		backgroundColor: colorWhite,
+	},
+	subscriptionTitle: {
+		fontSize: FontSize16,
+		fontWeight: "bold",
+		color: colorBlack,
+	},
+	subscriptionState: {
+		fontSize: FontSize16,
+		fontWeight: "700",
+		marginBottom: 2,
+	},
+	subscriptionMeta: {
+		fontSize: 13,
+		color: colorBlack,
+	},
+	subscriptionWarning: {
+		fontSize: 12,
+		color: "#b45309",
+		marginVertical: 4,
 	},
 	buttonText: {
 		color: colorWhite,

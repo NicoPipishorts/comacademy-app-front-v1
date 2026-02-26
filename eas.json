@@ -7,6 +7,9 @@
 			"distribution": "internal",
 			"autoIncrement": true,
 			"channel": "preview",
+			"env": {
+				"EXPO_PUBLIC_IAP_ENV": "sandbox"
+			},
 			"android": {
 				"buildType": "app-bundle",
 				"gradleCommand": ":app:bundleRelease"
@@ -14,6 +17,9 @@
 		},
 		"production": {
 			"node": "20.19.4",
+			"env": {
+				"EXPO_PUBLIC_IAP_ENV": "production"
+			},
 			"ios": {
 				"autoIncrement": true,
 				"image": "latest"

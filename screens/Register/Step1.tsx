@@ -31,6 +31,16 @@ interface Props {
 	formPayload: FormPayload;
 }
 
+const NAME_ALLOWED_CHAR_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/;
+const NAME_SANITIZE_REGEX = /[^A-Za-zÀ-ÖØ-öø-ÿ' -]/g;
+const NAME_INVALID_CHAR_REGEX = /[^A-Za-zÀ-ÖØ-öø-ÿ' -]/;
+
+const USERNAME_ALLOWED_CHAR_REGEX = /^[A-Za-z0-9._-]+$/;
+const USERNAME_SANITIZE_REGEX = /[^A-Za-z0-9._-]/g;
+const USERNAME_INVALID_CHAR_REGEX = /[^A-Za-z0-9._-]/;
+
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
 export default function RegisterStep1({
 	setStep,
 	formPayload,
@@ -60,47 +70,48 @@ export default function RegisterStep1({
 			lastName?: string;
 			email?: string;
 		} = {};
+		const cleanFirstName = firstName.trim();
+		const cleanLastName = lastName.trim();
+		const cleanUsername = username.trim();
+		const cleanEmail = email.trim().toLowerCase();
 
-		const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ\- ]+$/;
-
-		if (!firstName.trim()) {
+		if (!cleanFirstName) {
 			newErrors.firstName = "Prénom est requis.";
 			valid = false;
-		} else if (!nameRegex.test(firstName)) {
-			newErrors.firstName =
-				"Doit contenir des lettres, des tirets ou des espaces.";
+		} else if (!NAME_ALLOWED_CHAR_REGEX.test(cleanFirstName)) {
+			const invalidChar = cleanFirstName.match(NAME_INVALID_CHAR_REGEX)?.[0];
+			newErrors.firstName = invalidChar
+				? `Caractère non autorisé: "${invalidChar}".`
+				: "Caractères autorisés: lettres, apostrophes, espaces et tirets.";
 			valid = false;
 		}
 
-		if (!lastName.trim()) {
+		if (!cleanLastName) {
 			newErrors.lastName = "Nom est requis.";
 			valid = false;
-		} else if (!nameRegex.test(lastName)) {
-			newErrors.lastName =
-				"Doit contenir des lettres, des tirets ou des espaces.";
+		} else if (!NAME_ALLOWED_CHAR_REGEX.test(cleanLastName)) {
+			const invalidChar = cleanLastName.match(NAME_INVALID_CHAR_REGEX)?.[0];
+			newErrors.lastName = invalidChar
+				? `Caractère non autorisé: "${invalidChar}".`
+				: "Caractères autorisés: lettres, apostrophes, espaces et tirets.";
 			valid = false;
 		}
 
-		const usernameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ0-9\-]+$/;
-		if (!username.trim()) {
+		if (!cleanUsername) {
 			newErrors.username = "Le pseudo est requis.";
 			valid = false;
-		} else if (!usernameRegex.test(username)) {
-			// Find the first invalid character
-			const invalidChar = username.split('').find(char => !usernameRegex.test(char));
-			if (invalidChar) {
-				newErrors.username = `Caractère non autorisé: "${invalidChar}". Utilisez uniquement des lettres, chiffres ou tirets.`;
-			} else {
-				newErrors.username = "Doit contenir lettres, chiffres ou tirets.";
-			}
+		} else if (!USERNAME_ALLOWED_CHAR_REGEX.test(cleanUsername)) {
+			const invalidChar = cleanUsername.match(USERNAME_INVALID_CHAR_REGEX)?.[0];
+			newErrors.username = invalidChar
+				? `Caractère non autorisé: "${invalidChar}". Utilisez lettres, chiffres, point, underscore ou tiret.`
+				: "Caractères autorisés: lettres, chiffres, point, underscore et tiret.";
 			valid = false;
 		}
 
-		const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-		if (!email.trim()) {
+		if (!cleanEmail) {
 			newErrors.email = "Email est requis.";
 			valid = false;
-		} else if (!emailRegex.test(email)) {
+		} else if (!EMAIL_REGEX.test(cleanEmail)) {
 			newErrors.email = "Email n'est pas valide.";
 			valid = false;
 		}
@@ -120,10 +131,10 @@ export default function RegisterStep1({
 
 			const nextPayload = {
 				...(formPayload || ({} as FormPayload)),
-				firstName,
-				lastName,
-				email,
-				username,
+				firstName: firstName.trim(),
+				lastName: lastName.trim(),
+				email: email.trim().toLowerCase(),
+				username: username.trim(),
 			} as FormPayload;
 
 			setFormPayload(nextPayload);
@@ -183,7 +194,9 @@ export default function RegisterStep1({
 								]}>
 								<TextInput
 									style={styles.input}
-									onChangeText={setFirstName}
+									onChangeText={(text) =>
+										setFirstName(text.replace(NAME_SANITIZE_REGEX, ""))
+									}
 									value={firstName}
 									placeholder='Prénom'
 									placeholderTextColor={colorBlack}
@@ -191,6 +204,9 @@ export default function RegisterStep1({
 									returnKeyType='next'
 								/>
 							</View>
+							<Text style={styles.helperText}>
+								Caractères autorisés: lettres, apostrophes, espaces et tirets.
+							</Text>
 
 							{errors.lastName ? (
 								<Text style={styles.errorText}>{errors.lastName}</Text>
@@ -202,7 +218,9 @@ export default function RegisterStep1({
 								]}>
 								<TextInput
 									style={styles.input}
-									onChangeText={setLastName}
+									onChangeText={(text) =>
+										setLastName(text.replace(NAME_SANITIZE_REGEX, ""))
+									}
 									value={lastName}
 									placeholder='Nom'
 									placeholderTextColor={colorBlack}
@@ -210,6 +228,9 @@ export default function RegisterStep1({
 									returnKeyType='next'
 								/>
 							</View>
+							<Text style={styles.helperText}>
+								Caractères autorisés: lettres, apostrophes, espaces et tirets.
+							</Text>
 
 							{errors.username ? (
 								<Text style={styles.errorText}>{errors.username}</Text>
@@ -221,7 +242,9 @@ export default function RegisterStep1({
 								]}>
 								<TextInput
 									style={styles.input}
-									onChangeText={setUsername}
+									onChangeText={(text) =>
+										setUsername(text.replace(USERNAME_SANITIZE_REGEX, ""))
+									}
 									value={username}
 									autoCorrect={false}
 									placeholder='Pseudo'
@@ -230,6 +253,10 @@ export default function RegisterStep1({
 									returnKeyType='next'
 								/>
 							</View>
+							<Text style={styles.helperText}>
+								Caractères autorisés: lettres, chiffres, point, underscore et
+								tiret.
+							</Text>
 
 							{errors.email ? (
 								<Text style={styles.errorText}>{errors.email}</Text>
@@ -242,7 +269,9 @@ export default function RegisterStep1({
 								<TextInput
 									value={email}
 									autoCorrect={false}
-									onChangeText={(text) => setEmail(text.toLowerCase())}
+									onChangeText={(text) =>
+										setEmail(text.replace(/\s+/g, "").toLowerCase())
+									}
 									style={styles.input}
 									placeholder='Email'
 									placeholderTextColor={colorBlack}
@@ -252,6 +281,9 @@ export default function RegisterStep1({
 									returnKeyType='done'
 								/>
 							</View>
+							<Text style={styles.helperText}>
+								Format autorisé: nom@domaine.ext (sans espaces).
+							</Text>
 						</View>
 						<Pressable style={styles.buttonContainer} onPress={handleNext}>
 							<Text style={styles.buttonText}>Suivant</Text>
@@ -357,5 +389,13 @@ const styles = StyleSheet.create({
 		fontSize: FontSize12,
 		textAlign: "left",
 		marginBottom: 5,
+	},
+	helperText: {
+		width: "100%",
+		color: colorGrey,
+		fontSize: FontSize12,
+		textAlign: "left",
+		marginTop: -14,
+		marginBottom: 14,
 	},
 });

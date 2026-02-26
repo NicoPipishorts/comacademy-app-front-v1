@@ -50,30 +50,22 @@ export default function RegisterStep2({
 }: Props) {
 	const insets = useSafeAreaInsets();
 	const [newPassword, setNewPassword] = useState<string>("");
-	const [passwordConfirm, setPasswordConfirm] = useState<string>("");
 	const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
-	const [showPasswordConfirm, setShowPasswordConfirm] =
-		useState<boolean>(false);
 	const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
 	useEffect(() => {
 		if (formPayload?.profile != null) setSelectedOption(formPayload.profile);
 		if (formPayload?.password != null) {
 			setNewPassword(formPayload.password);
-			setPasswordConfirm(formPayload.password);
 		}
 	}, [formPayload]);
 
 	const [errors, setErrors] = useState<{
 		newPassword?: string;
-		passwordConfirm?: string;
 		selectedOption?: string;
 	}>({});
 
-	const toggleShowPassword = (field: "new" | "confirm") => {
-		if (field === "new") setShowNewPassword((v) => !v);
-		else setShowPasswordConfirm((v) => !v);
-	};
+	const toggleShowPassword = () => setShowNewPassword((v) => !v);
 
 	const handleOptionPress = (option: number) => {
 		if (selectedOption === option) {
@@ -89,26 +81,18 @@ export default function RegisterStep2({
 		let valid = true;
 		const newErrors: {
 			newPassword?: string;
-			passwordConfirm?: string;
 			selectedOption?: string;
 		} = {};
 
 		const passwordRegex =
-			/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+			/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 		if (!newPassword?.trim()) {
 			newErrors.newPassword = "Nouveau mot de passe est requis.";
 			valid = false;
 		} else if (!passwordRegex.test(newPassword)) {
-			newErrors.newPassword = "Le mot de passe n’est pas valide.";
-			valid = false;
-		}
-
-		if (!passwordConfirm?.trim()) {
-			newErrors.passwordConfirm = "Confirmation du mot de passe est requise.";
-			valid = false;
-		} else if (newPassword !== passwordConfirm) {
-			newErrors.passwordConfirm = "Les mots de passe ne correspondent pas.";
+			newErrors.newPassword =
+				"Utilisez 8+ caractères avec majuscule, minuscule, chiffre et @$!%*?&.";
 			valid = false;
 		}
 
@@ -220,52 +204,24 @@ export default function RegisterStep2({
 									value={newPassword}
 									onChangeText={setNewPassword}
 									style={styles.input}
-									placeholder='Nouveau Mot de Passe'
+									placeholder='Mot de Passe'
 									placeholderTextColor={colorBlack}
-									returnKeyType='next'
+									returnKeyType='done'
 								/>
 								<MaterialCommunityIcons
 									name={showNewPassword ? "eye-off" : "eye"}
 									size={24}
 									color={colorBlack}
 									style={styles.eyeIcon}
-									onPress={() => toggleShowPassword("new")}
+									onPress={toggleShowPassword}
 								/>
 							</View>
+							<Text style={styles.passwordHelperText}>
+								Caractères autorisés: lettres, chiffres et @$!%*?&
+							</Text>
 
 							{/* Strength meter */}
 							<PasswordStrengthMeter password={newPassword} />
-
-							{/* Confirm Password */}
-							{errors.passwordConfirm ? (
-								<Text style={styles.errorText}>{errors.passwordConfirm}</Text>
-							) : null}
-							<View
-								style={[
-									styles.passwordInputContainer,
-									{
-										borderBottomColor: errors.passwordConfirm
-											? colorRed
-											: colorGrey,
-									},
-								]}>
-								<TextInput
-									secureTextEntry={!showPasswordConfirm}
-									value={passwordConfirm}
-									onChangeText={setPasswordConfirm}
-									style={styles.input}
-									placeholder='Confirmer le Mot de Passe'
-									placeholderTextColor={colorBlack}
-									returnKeyType='done'
-								/>
-								<MaterialCommunityIcons
-									name={showPasswordConfirm ? "eye-off" : "eye"}
-									size={24}
-									color={colorBlack}
-									style={styles.eyeIcon}
-									onPress={() => toggleShowPassword("confirm")}
-								/>
-							</View>
 
 							{/* Requirements */}
 							<PasswordRequirements password={newPassword} />
@@ -355,6 +311,13 @@ const styles = StyleSheet.create({
 	},
 	eyeIcon: {
 		marginLeft: 10,
+	},
+	passwordHelperText: {
+		width: "100%",
+		color: colorGrey,
+		fontSize: FontSize12,
+		marginTop: -14,
+		marginBottom: 14,
 	},
 	buttonSubmit: {
 		backgroundColor: colorBlack,

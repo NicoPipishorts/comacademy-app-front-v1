@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Com'Academy - Réinitialiser le mot de passe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-yellow: #EDBE00;
+            --color-black: #000000;
+            --color-white: #FFFFFF;
+            --color-grey: #9E9E9E;
+            --color-dark-grey: #6B6B6B;
+            --color-error: #FF6B6B;
+            --color-success: #4CAF50;
+            --color-background: #F5F5F5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--color-background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--color-white);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo h1 {
+            color: var(--color-yellow);
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: var(--color-dark-grey);
+            font-size: 14px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-black);
+            margin-bottom: 12px;
+        }
+
+        .description {
+            font-size: 16px;
+            color: var(--color-dark-grey);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-black);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 48px;
+            font-size: 16px;
+            font-weight: 600;
+            border: 1px solid var(--color-grey);
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus {
+            border-color: var(--color-yellow);
+        }
+
+        input[type="password"].error {
+            border-color: var(--color-error);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 20px;
+            color: var(--color-dark-grey);
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: var(--color-black);
+        }
+
+        .password-requirements {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--color-background);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            color: var(--color-dark-grey);
+        }
+
+        .requirement:last-child {
+            margin-bottom: 0;
+        }
+
+        .requirement.valid {
+            color: var(--color-success);
+        }
+
+        .requirement::before {
+            content: "○";
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .requirement.valid::before {
+            content: "✓";
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: var(--color-grey);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s, background-color 0.3s;
+            background: var(--color-grey);
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: var(--color-error);
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #FFA726;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: var(--color-success);
+        }
+
+        .error-message {
+            margin-top: 8px;
+            color: var(--color-error);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--color-white);
+            background: var(--color-black);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: opacity 0.3s, transform 0.1s;
+            margin-top: 8px;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        .submit-button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-button.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .submit-button.loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 3px solid var(--color-white);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.error {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF9A9A;
+        }
+
+        .alert.success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #A5D6A7;
+        }
+
+        .success-container {
+            text-align: center;
+            display: none;
+        }
+
+        .success-container.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-success);
+            margin-bottom: 12px;
+        }
+
+        .success-message {
+            font-size: 16px;
+            color: var(--color-dark-grey);
+            margin-bottom: 24px;
+        }
+
+        .back-to-app {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--color-yellow);
+            color: var(--color-black);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        .back-to-app:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px;
+            }
+
+            .logo h1 {
+                font-size: 28px;
+            }
+
+            .title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Com'Academy</h1>
+            <p>Réinitialisation du mot de passe</p>
+        </div>
+
+        <div id="form-container">
+            <h2 class="title">Nouveau mot de passe</h2>
+            <p class="description">Choisissez un nouveau mot de passe répondant aux critères ci-dessous.</p>
+
+            <div id="alert" class="alert"></div>
+
+            <form id="reset-form">
+                <div class="form-group">
+                    <label for="password">Nouveau mot de passe</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" class="toggle-password" id="toggle-password" aria-label="Afficher le mot de passe">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="strength-bar"></div>
+                    </div>
+                    <div class="password-requirements">
+                        <div class="requirement" id="req-length">Au moins 8 caractères</div>
+                        <div class="requirement" id="req-uppercase">Une lettre majuscule</div>
+                        <div class="requirement" id="req-lowercase">Une lettre minuscule</div>
+                        <div class="requirement" id="req-number">Un chiffre</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirmer le mot de passe</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="confirm-password"
+                            name="confirmPassword"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" class="toggle-password" id="toggle-confirm" aria-label="Afficher le mot de passe">
+                            👁️
+                        </button>
+                    </div>
+                    <div id="match-error" class="error-message" style="display: none;">
+                        Les mots de passe ne correspondent pas.
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-button" id="submit-btn">
+                    Réinitialiser le mot de passe
+                </button>
+            </form>
+        </div>
+
+        <div id="success-container" class="success-container">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Mot de passe réinitialisé !</h2>
+            <p class="success-message">
+                Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
+            </p>
+            <a href="comacademy://signin" class="back-to-app">Retour à l'application</a>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - UPDATE THIS WITH YOUR PRODUCTION API URL
+        const API_BASE_URL = 'https://api.comacademy.fr/api';
+        const RESET_PASSWORD_ENDPOINT = `${API_BASE_URL}/auth/reset-password`;
+
+        // Get reset code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const resetCode = urlParams.get('code') || urlParams.get('token');
+
+        // DOM elements
+        const form = document.getElementById('reset-form');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const togglePassword = document.getElementById('toggle-password');
+        const toggleConfirm = document.getElementById('toggle-confirm');
+        const submitBtn = document.getElementById('submit-btn');
+        const alert = document.getElementById('alert');
+        const strengthBar = document.getElementById('strength-bar');
+        const matchError = document.getElementById('match-error');
+        const formContainer = document.getElementById('form-container');
+        const successContainer = document.getElementById('success-container');
+
+        // Requirements elements
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+
+        // Check if reset code exists
+        if (!resetCode) {
+            showAlert('error', 'Le lien de réinitialisation est invalide ou expiré. Veuillez demander un nouveau lien.');
+            submitBtn.disabled = true;
+        }
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        toggleConfirm.addEventListener('click', () => {
+            const type = confirmPasswordInput.type === 'password' ? 'text' : 'password';
+            confirmPasswordInput.type = type;
+            toggleConfirm.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // Password validation
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            // Update requirement indicators
+            reqLength.classList.toggle('valid', requirements.length);
+            reqUppercase.classList.toggle('valid', requirements.uppercase);
+            reqLowercase.classList.toggle('valid', requirements.lowercase);
+            reqNumber.classList.toggle('valid', requirements.number);
+
+            // Calculate strength
+            const validCount = Object.values(requirements).filter(Boolean).length;
+            let strength = 'weak';
+            strengthBar.className = 'password-strength-bar';
+
+            if (validCount === 4) {
+                strength = 'strong';
+                strengthBar.classList.add('strong');
+            } else if (validCount >= 2) {
+                strength = 'medium';
+                strengthBar.classList.add('medium');
+            } else {
+                strengthBar.classList.add('weak');
+            }
+
+            return Object.values(requirements).every(Boolean);
+        }
+
+        // Check if passwords match
+        function checkPasswordsMatch() {
+            const password = passwordInput.value;
+            const confirm = confirmPasswordInput.value;
+
+            if (confirm && password !== confirm) {
+                matchError.style.display = 'block';
+                confirmPasswordInput.classList.add('error');
+                return false;
+            } else {
+                matchError.style.display = 'none';
+                confirmPasswordInput.classList.remove('error');
+                return true;
+            }
+        }
+
+        // Real-time validation
+        passwordInput.addEventListener('input', () => {
+            validatePassword(passwordInput.value);
+            checkPasswordsMatch();
+        });
+
+        confirmPasswordInput.addEventListener('input', checkPasswordsMatch);
+
+        // Show alert
+        function showAlert(type, message) {
+            alert.className = `alert ${type} show`;
+            alert.textContent = message;
+            alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Hide alert
+        function hideAlert() {
+            alert.className = 'alert';
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const password = passwordInput.value;
+            const passwordConfirmation = confirmPasswordInput.value;
+
+            // Validate
+            if (!validatePassword(password)) {
+                showAlert('error', 'Le mot de passe ne respecte pas tous les critères requis.');
+                return;
+            }
+
+            if (!checkPasswordsMatch()) {
+                showAlert('error', 'Les mots de passe ne correspondent pas.');
+                return;
+            }
+
+            // Submit
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+
+            try {
+                const response = await fetch(RESET_PASSWORD_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: resetCode,
+                        password: password,
+                        passwordConfirmation: passwordConfirmation,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error?.message || 'Une erreur est survenue lors de la réinitialisation du mot de passe.');
+                }
+
+                // Success!
+                formContainer.style.display = 'none';
+                successContainer.classList.add('show');
+
+            } catch (error) {
+                console.error('Reset password error:', error);
+                showAlert('error', error.message || 'Impossible de réinitialiser le mot de passe. Veuillez réessayer.');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+            }
+        });
+    </script>
+</body>
+</html>
