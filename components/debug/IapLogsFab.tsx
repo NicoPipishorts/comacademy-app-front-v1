@@ -7,7 +7,11 @@ import {
 	colorWhite,
 	primaryBackground,
 } from "@/constants/colors";
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+	BottomSheetModal,
+	BottomSheetScrollView,
+	BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import * as Clipboard from "expo-clipboard";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -58,6 +62,7 @@ const IapLogsFab: React.FC = () => {
 				snapPoints={snapPoints}
 				backdropComponent={(props) => <BlurBackdrop {...props} />}
 				enablePanDownToClose
+				enableDynamicSizing={false}
 				handleIndicatorStyle={styles.hiddenIndicator}
 				backgroundStyle={styles.sheetBackground}
 			>
@@ -68,23 +73,6 @@ const IapLogsFab: React.FC = () => {
 						<Text style={styles.logCount}>{logs.length} entrées</Text>
 					</View>
 
-					<BottomSheetScrollView
-						style={styles.scrollView}
-						contentContainerStyle={styles.scrollContent}
-					>
-						{logs.length === 0 ? (
-							<Text style={styles.emptyText}>
-								Aucun log achat pour le moment.
-							</Text>
-						) : (
-							logs.map((line, index) => (
-								<View key={`${index}-${line.slice(0, 24)}`} style={styles.logRow}>
-									<Text style={styles.logText}>{line}</Text>
-								</View>
-							))
-						)}
-					</BottomSheetScrollView>
-
 					<View style={styles.actionsRow}>
 						<TouchableOpacity style={styles.secondaryButton} onPress={refreshLogs}>
 							<Text style={styles.secondaryButtonText}>Rafraîchir</Text>
@@ -93,6 +81,28 @@ const IapLogsFab: React.FC = () => {
 							<Text style={styles.primaryButtonText}>Copier</Text>
 						</TouchableOpacity>
 					</View>
+
+					<BottomSheetScrollView
+						style={styles.scrollView}
+						contentContainerStyle={styles.scrollContent}
+						nestedScrollEnabled
+						keyboardShouldPersistTaps='handled'
+						showsVerticalScrollIndicator
+					>
+						{logs.length === 0 ? (
+							<Text style={styles.emptyText}>
+								Aucun log achat pour le moment.
+							</Text>
+						) : (
+							logs.map((line, index) => (
+								<View key={`${index}-${line.slice(0, 24)}`} style={styles.logRow}>
+									<Text style={styles.logText} selectable>
+										{line}
+									</Text>
+								</View>
+							))
+						)}
+					</BottomSheetScrollView>
 				</BottomSheetView>
 			</BottomSheetModal>
 		</>
@@ -149,7 +159,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	scrollContent: {
-		paddingBottom: 10,
+		paddingBottom: 20,
 	},
 	emptyText: {
 		color: colorDarkGrey,
@@ -168,7 +178,7 @@ const styles = StyleSheet.create({
 		lineHeight: 18,
 	},
 	actionsRow: {
-		marginTop: 12,
+		marginBottom: 12,
 		flexDirection: "row",
 		justifyContent: "space-between",
 		gap: 10,
