@@ -14,7 +14,7 @@ export type NormalizedPurchase = {
 const resolveProductId = (purchase: Purchase): string => {
 	const anyPurchase = purchase as unknown as {
 		productId?: string;
-		products?: Array<{ productId?: string } | string>;
+		products?: ({ productId?: string } | string)[];
 		sku?: string;
 	};
 
@@ -34,6 +34,7 @@ const resolveProductId = (purchase: Purchase): string => {
 export const normalizePurchase = (purchase: Purchase): NormalizedPurchase => {
 	const anyPurchase = purchase as unknown as {
 		platform?: "ios" | "android";
+		id?: string;
 		orderId?: string;
 		transactionId?: string;
 		purchaseToken?: string;
@@ -69,7 +70,7 @@ export const normalizePurchase = (purchase: Purchase): NormalizedPurchase => {
 	return {
 		platform,
 		productId,
-		transactionId: anyPurchase.transactionId,
+		transactionId: anyPurchase.transactionId ?? anyPurchase.id,
 		originalTransactionId: originalTransactionId ?? undefined,
 		raw: purchase,
 	};

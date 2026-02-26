@@ -1,4 +1,5 @@
 import { UseAuth } from "@/auth/AuthContext";
+import { useSubscription } from "@/src/hooks/useSubscription";
 import { useCallback, useMemo, useState } from "react";
 
 type SubscriptionLimitConfig = { freeLimit: number };
@@ -15,9 +16,11 @@ export const useSubscriptionLimit = (
 	config: SubscriptionLimitConfig
 ): SubscriptionLimitReturn => {
 	const { session } = UseAuth();
+	const { hasPremiumAccess: backendHasPremiumAccess } = useSubscription();
 	const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
 	const hasPremiumAccess = useMemo(() => {
+		if (backendHasPremiumAccess) return true;
 		if (session?.user?.manualPremium) return true;
 		if (session?.user?.hasPremiumAccess) return true;
 
@@ -28,6 +31,7 @@ export const useSubscriptionLimit = (
 			status === "billing_retry"
 		);
 	}, [
+		backendHasPremiumAccess,
 		session?.user?.manualPremium,
 		session?.user?.hasPremiumAccess,
 		session?.user?.subscription?.status,

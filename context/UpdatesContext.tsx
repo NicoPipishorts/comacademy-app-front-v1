@@ -8,6 +8,7 @@ import {
 } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logDevice } from "@/helpers/logDevice";
 import { useSnackbar } from "@/context/snackBar";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
@@ -35,32 +36,24 @@ import {
 } from "react-native";
 import { Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import appPackage from "../package.json";
 
 type StaticUpdateCopy = {
-	versionTag: string;
 	snackbarMessage: string;
 	title: string;
 	subtitle: string;
 	primaryCtaLabel: string;
 	secondaryCtaLabel: string;
-	notes: string[];
+	defaultNotes: string;
 };
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
-	versionTag: appPackage?.version ? `v${appPackage.version}` : "1.2.17",
-	snackbarMessage: "Nouvelle mise à jour OTA. Touchez pour voir ce qui change.",
+	snackbarMessage: "Nouvelle mise a jour OTA disponible.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
 	primaryCtaLabel: "Redémarrer et mettre à jour",
 	secondaryCtaLabel: "Plus tard",
-	notes: [
-		"Added login logs",
-		"Added cpoy logs button",
-		"Updated Strapi V4 to V5.",
-		"instealled new debugging tools.",
-	],
+	defaultNotes: "Cette mise a jour contient des ameliorations et correctifs.",
 };
 
 type UpdatesContextValue = {
@@ -84,6 +77,7 @@ const UpdatesContext = createContext<UpdatesContextValue>({
 });
 
 const MIN_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const LAST_NOTIFIED_UPDATE_ID_STORAGE_KEY = "ota_last_notified_update_id";
 
 type UpdatesProviderProps = {
 	children: ReactNode;
@@ -151,12 +145,6 @@ const extractVersionFromUpdate = (
 		| null
 ) => {
 	const manifest = update?.manifest as Record<string, any> | undefined;
-	const runtimeFromUpdate =
-		update &&
-		"runtimeVersion" in update &&
-		typeof (update as { runtimeVersion?: string }).runtimeVersion === "string"
-			? (update as { runtimeVersion?: string }).runtimeVersion
-			: undefined;
 
 	const candidates: (string | undefined)[] = [
 		manifest?.version,
@@ -164,10 +152,6 @@ const extractVersionFromUpdate = (
 		manifest?.extra?.eas?.appVersion,
 		manifest?.metadata?.version,
 		manifest?.metadata?.appVersion,
-		runtimeFromUpdate,
-		manifest?.runtimeVersion,
-		manifest?.extra?.expoClient?.runtimeVersion,
-		manifest?.metadata?.runtimeVersion,
 	];
 
 	for (const candidate of candidates) {
@@ -188,7 +172,7 @@ const extractVersionFromUpdate = (
 
 const formatVersionTag = (version?: string) => {
 	if (!version || version.trim().length === 0) {
-		return UPDATE_COPY.versionTag;
+		return undefined;
 	}
 	return version.toLowerCase().startsWith("v") ? version : `v${version}`;
 };
@@ -212,6 +196,8 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	);
 	const [snackbarVisible, setSnackbarVisible] = useState(false);
 	const [manualCheckInFlight, setManualCheckInFlight] = useState(false);
+	const [hasHydratedLastNotified, setHasHydratedLastNotified] =
+		useState(false);
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
 	const lastCheckRef = useRef<number>(0);
 	const lastNotifiedUpdateIdRef = useRef<string | null>(null);
@@ -220,23 +206,68 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const versionTag = useMemo(() => {
-		const referenceUpdate = latestUpdate ?? pendingUpdate ?? currentlyRunning;
+		const referenceUpdate = latestUpdate ?? pendingUpdate;
 		const manifestVersion = extractVersionFromUpdate(referenceUpdate);
-		return formatVersionTag(manifestVersion ?? appPackage?.version);
-	}, [currentlyRunning, latestUpdate, pendingUpdate]);
+		return formatVersionTag(manifestVersion);
+	}, [latestUpdate, pendingUpdate]);
 	const snackbarMessage = useMemo(
-		() => `${UPDATE_COPY.snackbarMessage} (${versionTag})`,
+		() =>
+			versionTag
+				? `${UPDATE_COPY.snackbarMessage} (${versionTag})`
+				: UPDATE_COPY.snackbarMessage,
 		[versionTag]
 	);
 
 	useEffect(() => {
-		if (!lastNotifiedUpdateIdRef.current && currentlyRunning?.updateId) {
-			lastNotifiedUpdateIdRef.current = currentlyRunning.updateId;
-			logDevice("[Updates] initial lastNotifiedUpdateId", {
-				id: currentlyRunning.updateId,
+		let isMounted = true;
+
+		const hydrateLastNotifiedId = async () => {
+			try {
+				const storedId = await AsyncStorage.getItem(
+					LAST_NOTIFIED_UPDATE_ID_STORAGE_KEY
+				);
+				if (!isMounted || !storedId) return;
+				lastNotifiedUpdateIdRef.current = storedId;
+				logDevice("[Updates] restored lastNotifiedUpdateId", { id: storedId });
+			} catch (error) {
+				console.warn("Failed to restore OTA notification marker", error);
+			} finally {
+				if (isMounted) {
+					setHasHydratedLastNotified(true);
+				}
+			}
+		};
+
+		void hydrateLastNotifiedId();
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!hasHydratedLastNotified) return;
+
+		const runningUpdateId = currentlyRunning?.updateId;
+		if (!runningUpdateId) return;
+
+		if (!lastNotifiedUpdateIdRef.current) {
+			lastNotifiedUpdateIdRef.current = runningUpdateId;
+			void AsyncStorage.setItem(
+				LAST_NOTIFIED_UPDATE_ID_STORAGE_KEY,
+				runningUpdateId
+			);
+			logDevice("[Updates] initial running update marker", {
+				id: runningUpdateId,
 			});
 		}
-	}, [currentlyRunning?.updateId]);
+
+		if (lastNotifiedUpdateIdRef.current === runningUpdateId) {
+			setLatestUpdate(undefined);
+			setPendingUpdate(undefined);
+			setSnackbarVisible(false);
+		}
+	}, [currentlyRunning?.updateId, hasHydratedLastNotified]);
 
 	const resolveUpdateId = useCallback((update: Updates.UpdateInfoNew) => {
 		return (
@@ -256,11 +287,20 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 
 	const storeReadyUpdate = useCallback(
 		(update?: Updates.UpdateInfo) => {
+			if (!hasHydratedLastNotified) {
+				return;
+			}
+
 			if (!update || update.type !== Updates.UpdateInfoType.NEW) {
 				return;
 			}
 
 			const updateId = resolveUpdateId(update);
+			const runningUpdateId = currentlyRunning?.updateId;
+
+			if (updateId && runningUpdateId && updateId === runningUpdateId) {
+				return;
+			}
 
 			if (updateId && lastNotifiedUpdateIdRef.current === updateId) {
 				return;
@@ -268,6 +308,10 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 
 			if (updateId) {
 				lastNotifiedUpdateIdRef.current = updateId;
+				void AsyncStorage.setItem(
+					LAST_NOTIFIED_UPDATE_ID_STORAGE_KEY,
+					updateId
+				);
 				logDevice("[Updates] storeReadyUpdate", {
 					id: updateId,
 					versionTag: formatVersionTag(
@@ -280,7 +324,7 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 			setLatestUpdate(update);
 			setSnackbarVisible(true);
 		},
-		[resolveUpdateId]
+		[currentlyRunning?.updateId, hasHydratedLastNotified, resolveUpdateId]
 	);
 
 	useEffect(() => {
@@ -307,6 +351,8 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 				const result = await Updates.checkForUpdateAsync();
 				if (result.isAvailable) {
 					await Updates.fetchUpdateAsync();
+				} else {
+					setPendingUpdate(undefined);
 				}
 			} catch (error) {
 				console.error("Failed to check for OTA updates", error);
@@ -384,38 +430,33 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 	}, []);
 
 	const handleBottomSheetDismiss = useCallback(() => {
-		// Re-display the snackbar so the user can revisit the details later.
-		if (latestUpdate) {
-			setSnackbarVisible(true);
-		}
-	}, [latestUpdate]);
+		// Keep snackbar hidden when user dismisses details.
+		setSnackbarVisible(false);
+	}, []);
 
 	const handleApplyUpdate = useCallback(async () => {
-		if (!latestUpdate) {
-			try {
-				setSnackbarVisible(false);
-				if (!isDownloading) {
-					await Updates.fetchUpdateAsync();
-				}
-				showSnackbar(
-					"La mise à jour est en cours de téléchargement...",
-					"info"
-				);
-			} catch (error) {
-				console.error("Failed to fetch update before applying", error);
-				showSnackbar("Le téléchargement de la mise à jour a échoué.", "error");
-				setSnackbarVisible(true);
-			} finally {
-				bottomSheetRef.current?.dismiss();
-			}
-			return;
-		}
-
 		const previousUpdate = latestUpdate;
 		try {
 			setSnackbarVisible(false);
 			bottomSheetRef.current?.dismiss();
-			setLatestUpdate(undefined);
+
+			if (!latestUpdate) {
+				if (isDownloading) {
+					showSnackbar(
+						"La mise a jour est en cours de telechargement...",
+						"info"
+					);
+					return;
+				}
+
+				const fetchResult = await Updates.fetchUpdateAsync();
+				if (!fetchResult.isNew) {
+					showSnackbar("Aucune nouvelle mise a jour disponible.", "info");
+					setPendingUpdate(undefined);
+					return;
+				}
+			}
+
 			await Updates.reloadAsync();
 		} catch (error) {
 			console.error("Failed to reload update", error);
@@ -430,15 +471,21 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 		const manifestNotes = referenceUpdate
 			? extractReleaseNotes(referenceUpdate)
 			: undefined;
-		return manifestNotes ?? UPDATE_COPY.notes.join("\n\n");
+		return manifestNotes ?? UPDATE_COPY.defaultNotes;
 	}, [latestUpdate, pendingUpdate]);
 
 	const sheetSubtitle = useMemo(() => {
 		const referenceUpdate = latestUpdate ?? pendingUpdate;
 		if (referenceUpdate?.createdAt) {
-			return `Publiée le ${referenceUpdate.createdAt.toLocaleString()} · ${versionTag}`;
+			if (versionTag) {
+				return `Publiee le ${referenceUpdate.createdAt.toLocaleString()} · ${versionTag}`;
+			}
+			return `Publiee le ${referenceUpdate.createdAt.toLocaleString()}`;
 		}
-		return `${UPDATE_COPY.subtitle} · ${versionTag}`;
+		if (versionTag) {
+			return `${UPDATE_COPY.subtitle} · ${versionTag}`;
+		}
+		return UPDATE_COPY.subtitle;
 	}, [latestUpdate, pendingUpdate, versionTag]);
 
 	const checkForUpdates = useCallback(

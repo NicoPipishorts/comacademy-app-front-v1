@@ -2,6 +2,7 @@
 import axios from "axios";
 import Constants from "expo-constants";
 import * as Updates from "expo-updates";
+import { jwtDecode } from "jwt-decode";
 import { Platform } from "react-native";
 import type {
 	Purchase,
@@ -111,6 +112,11 @@ type EntitlementRecord = {
 type EntitlementsSnapshot = {
 	entitlements: EntitlementRecord[];
 	hasPremiumAccess: boolean;
+};
+
+type StoreKitTransactionClaims = {
+	transactionId?: string;
+	originalTransactionId?: string;
 };
 
 const ACTIVE_PREMIUM_STATUSES = new Set([
@@ -266,6 +272,45 @@ const isPremiumEntitlementActive = (entitlement: EntitlementRecord): boolean => 
 	return expiry > Date.now();
 };
 
+const parseStoreKitTransactionClaims = (
+	signedTransactionInfo?: string
+): StoreKitTransactionClaims => {
+	if (!signedTransactionInfo) return {};
+
+	try {
+		const decoded = jwtDecode<Record<string, unknown>>(signedTransactionInfo);
+		const resolveString = (...candidates: unknown[]): string | undefined => {
+			for (const candidate of candidates) {
+				if (typeof candidate === "string" && candidate.trim().length > 0) {
+					return candidate.trim();
+				}
+				if (typeof candidate === "number" && Number.isFinite(candidate)) {
+					return String(candidate);
+				}
+			}
+			return undefined;
+		};
+
+		const transactionId = resolveString(
+			decoded.transactionId,
+			decoded.transaction_id,
+			decoded.id
+		);
+		const originalTransactionId = resolveString(
+			decoded.originalTransactionId,
+			decoded.original_transaction_id,
+			decoded.originalTransactionIdentifier
+		);
+
+		return {
+			transactionId,
+			originalTransactionId,
+		};
+	} catch {
+		return {};
+	}
+};
+
 const getApiBaseUrl = () => {
 	const baseUrl = process.env.EXPO_PUBLIC_API_URL;
 	if (!baseUrl) throw new Error("EXPO_PUBLIC_API_URL is not configured");
@@ -319,24 +364,31 @@ const buildValidationPayload = (
 		normalizeEnvironmentValue(rawPurchase.environmentIOS as string | undefined) ||
 		defaultEnvironment;
 
+	const fallbackSignedTransactionInfo =
+		(rawPurchase.signedTransactionInfo as string | undefined) ||
+		(rawPurchase.purchaseToken as string | undefined);
+	const parsedClaims = parseStoreKitTransactionClaims(fallbackSignedTransactionInfo);
+	const fallbackTransactionId =
+		(rawPurchase.transactionId as string | undefined) ||
+		(rawPurchase.id as string | undefined) ||
+		parsedClaims.transactionId;
+	const fallbackOriginalTransactionId =
+		(rawPurchase.originalTransactionIdentifierIOS as string | undefined) ||
+		(rawPurchase.originalTransactionIdentifier as string | undefined) ||
+		(rawPurchase.originalTransactionId as string | undefined) ||
+		parsedClaims.originalTransactionId ||
+		fallbackTransactionId;
+
 	const payload: PurchaseValidationPayload = {
 		platform: "ios",
 		productId: normalized.productId,
 		environment: environmentIOS,
 		originalTransactionId:
-			normalized.originalTransactionId ||
-			(rawPurchase.originalTransactionIdentifierIOS as string | undefined) ||
-			(rawPurchase.originalTransactionIdentifier as string | undefined) ||
-			(rawPurchase.originalTransactionId as string | undefined) ||
-			(rawPurchase.transactionId as string | undefined),
-		transactionId:
-			normalized.transactionId ||
-			(rawPurchase.transactionId as string | undefined),
+			normalized.originalTransactionId || fallbackOriginalTransactionId,
+		transactionId: normalized.transactionId || fallbackTransactionId,
 	};
 
-	const signedTransactionInfo = rawPurchase.signedTransactionInfo as
-		| string
-		| undefined;
+	const signedTransactionInfo = fallbackSignedTransactionInfo;
 	if (signedTransactionInfo) {
 		payload.signedTransactionInfo = signedTransactionInfo;
 	}

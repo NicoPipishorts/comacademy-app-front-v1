@@ -229,6 +229,7 @@ export default function SubscriptionScreen() {
 		purchasing,
 		error,
 		purchase,
+		checkSubscription,
 		restore,
 		cancelSubscription,
 		refresh,
@@ -370,13 +371,44 @@ export default function SubscriptionScreen() {
 		return match ? String(match) : undefined;
 	}, [subscription]);
 
+	const navigateAfterPurchase = useCallback(() => {
+		if (returnDestination && returnDestination !== "/subscription") {
+			router.replace(returnDestination as any);
+			return;
+		}
+		router.replace("/activity");
+	}, [returnDestination, router]);
+
+	const waitForActivation = useCallback(async () => {
+		const maxAttempts = 8;
+		for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+			const entitlement = await checkSubscription();
+			if (entitlement) {
+				return true;
+			}
+			await new Promise((resolve) => setTimeout(resolve, 1200));
+		}
+		return false;
+	}, [checkSubscription]);
+
 	const handlePurchase = async (product: SubscriptionProduct) => {
 		try {
 			await purchase(product);
+			const isActivated = await waitForActivation();
+			await refresh();
+
+			if (!isActivated) {
+				Alert.alert(
+					"Achat en cours de confirmation",
+					"Votre achat a ete recu. L'activation peut prendre quelques instants. Ouvrez la page plus tard ou utilisez 'Restaurer mes achats'."
+				);
+				return;
+			}
+
 			Alert.alert(
 				"Succès!",
 				"Votre abonnement a été activé avec succès. Profitez de tous les contenus premium!",
-				[{ text: "OK", onPress: () => router.back() }]
+				[{ text: "OK", onPress: navigateAfterPurchase }]
 			);
 		} catch (err) {
 			const purchaseError = err as PurchaseError;
@@ -384,7 +416,9 @@ export default function SubscriptionScreen() {
 			console.warn("[SubscriptionScreen] purchase error:", err);
 			Alert.alert(
 				"Erreur",
-				"Une erreur est survenue lors de l'achat. Veuillez réessayer."
+				typeof purchaseError?.message === "string"
+					? purchaseError.message
+					: "Une erreur est survenue lors de l'achat. Veuillez reessayer."
 			);
 		}
 	};
