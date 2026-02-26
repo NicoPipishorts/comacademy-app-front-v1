@@ -8,8 +8,8 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import {
+	BottomSheetFlatList,
 	BottomSheetModal,
-	BottomSheetScrollView,
 	BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import * as Clipboard from "expo-clipboard";
@@ -47,6 +47,22 @@ const IapLogsFab: React.FC = () => {
 		}
 	}, [logs]);
 
+	const renderLogItem = useCallback(
+		({ item }: { item: string }) => (
+			<View style={styles.logRow}>
+				<Text style={styles.logText}>
+					{item}
+				</Text>
+			</View>
+		),
+		[]
+	);
+
+	const keyExtractor = useCallback(
+		(item: string, index: number) => `${index}-${item.slice(0, 24)}`,
+		[]
+	);
+
 	return (
 		<>
 			<Pressable
@@ -82,27 +98,23 @@ const IapLogsFab: React.FC = () => {
 						</TouchableOpacity>
 					</View>
 
-					<BottomSheetScrollView
-						style={styles.scrollView}
-						contentContainerStyle={styles.scrollContent}
-						nestedScrollEnabled
-						keyboardShouldPersistTaps='handled'
-						showsVerticalScrollIndicator
-					>
-						{logs.length === 0 ? (
-							<Text style={styles.emptyText}>
-								Aucun log achat pour le moment.
-							</Text>
-						) : (
-							logs.map((line, index) => (
-								<View key={`${index}-${line.slice(0, 24)}`} style={styles.logRow}>
-									<Text style={styles.logText} selectable>
-										{line}
-									</Text>
-								</View>
-							))
-						)}
-					</BottomSheetScrollView>
+					{logs.length === 0 ? (
+						<View style={styles.emptyState}>
+							<Text style={styles.emptyText}>Aucun log achat pour le moment.</Text>
+						</View>
+					) : (
+						<BottomSheetFlatList
+							style={styles.list}
+							contentContainerStyle={styles.listContent}
+							data={logs}
+							renderItem={renderLogItem}
+							keyExtractor={keyExtractor}
+							scrollEnabled
+							nestedScrollEnabled
+							keyboardShouldPersistTaps='handled'
+							showsVerticalScrollIndicator
+						/>
+					)}
 				</BottomSheetView>
 			</BottomSheetModal>
 		</>
@@ -155,17 +167,20 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: colorDarkGrey,
 	},
-	scrollView: {
+	list: {
 		flex: 1,
 	},
-	scrollContent: {
+	listContent: {
 		paddingBottom: 20,
+	},
+	emptyState: {
+		flex: 1,
+		justifyContent: "center",
 	},
 	emptyText: {
 		color: colorDarkGrey,
 		fontSize: 13,
 		textAlign: "center",
-		marginTop: 24,
 	},
 	logRow: {
 		paddingVertical: 8,

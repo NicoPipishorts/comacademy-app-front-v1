@@ -6,9 +6,9 @@ import {
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
-import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UseAuth } from "@/auth/AuthContext";
 import { logDevice } from "@/helpers/logDevice";
 import { useSnackbar } from "@/context/snackBar";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
@@ -41,19 +41,23 @@ type StaticUpdateCopy = {
 	snackbarMessage: string;
 	title: string;
 	subtitle: string;
-	primaryCtaLabel: string;
-	secondaryCtaLabel: string;
+	logoutCtaLabel: string;
+	closeCtaLabel: string;
 	defaultNotes: string;
 };
+
+const parseBooleanFlag = (value?: string): boolean =>
+	/^(1|true|yes|on)$/i.test(String(value ?? "").trim());
 
 // Centralised copy block so you can tweak messaging/version without digging into logic.
 const UPDATE_COPY: StaticUpdateCopy = {
 	snackbarMessage: "Nouvelle mise a jour OTA disponible.",
 	title: "Nouveau contenu dispo",
 	subtitle: "Découvrez les nouveautés et correctifs clés",
-	primaryCtaLabel: "Redémarrer et mettre à jour",
-	secondaryCtaLabel: "Plus tard",
-	defaultNotes: "Cette mise a jour contient des ameliorations et correctifs.",
+	logoutCtaLabel: "Se deconnecter",
+	closeCtaLabel: "Fermer",
+	defaultNotes:
+		"- IAP logs bottom sheet: scrollable list is now fixed.\n- OTA modal: optional logout CTA via EXPO_PUBLIC_OTA_SHOW_LOGOUT_CTA.",
 };
 
 type UpdatesContextValue = {
@@ -78,6 +82,9 @@ const UpdatesContext = createContext<UpdatesContextValue>({
 
 const MIN_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const LAST_NOTIFIED_UPDATE_ID_STORAGE_KEY = "ota_last_notified_update_id";
+const SHOW_OTA_LOGOUT_CTA = parseBooleanFlag(
+	process.env.EXPO_PUBLIC_OTA_SHOW_LOGOUT_CTA
+);
 
 type UpdatesProviderProps = {
 	children: ReactNode;
@@ -188,6 +195,7 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 		downloadError,
 		currentlyRunning,
 	} = useUpdates();
+	const { logout } = UseAuth();
 	const [latestUpdate, setLatestUpdate] = useState<UpdateInfoNew | undefined>(
 		undefined
 	);
@@ -434,37 +442,18 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 		setSnackbarVisible(false);
 	}, []);
 
-	const handleApplyUpdate = useCallback(async () => {
-		const previousUpdate = latestUpdate;
+	const handleLogoutFromUpdate = useCallback(async () => {
 		try {
 			setSnackbarVisible(false);
 			bottomSheetRef.current?.dismiss();
-
-			if (!latestUpdate) {
-				if (isDownloading) {
-					showSnackbar(
-						"La mise a jour est en cours de telechargement...",
-						"info"
-					);
-					return;
-				}
-
-				const fetchResult = await Updates.fetchUpdateAsync();
-				if (!fetchResult.isNew) {
-					showSnackbar("Aucune nouvelle mise a jour disponible.", "info");
-					setPendingUpdate(undefined);
-					return;
-				}
-			}
-
-			await Updates.reloadAsync();
+			await logout();
+			showSnackbar("Vous avez ete deconnecte.", "info");
 		} catch (error) {
-			console.error("Failed to reload update", error);
-			showSnackbar("Le redémarrage pour la mise à jour a échoué.", "error");
+			console.error("Failed to logout from OTA modal", error);
+			showSnackbar("Impossible de se deconnecter pour le moment.", "error");
 			setSnackbarVisible(true);
-			setLatestUpdate(previousUpdate);
 		}
-	}, [isDownloading, latestUpdate, showSnackbar]);
+	}, [logout, showSnackbar]);
 
 	const releaseNotes = useMemo(() => {
 		const referenceUpdate = latestUpdate ?? pendingUpdate;
@@ -560,18 +549,20 @@ export const UpdatesProvider = ({ children }: UpdatesProviderProps) => {
 							<Text style={styles.releaseNotes}>{releaseNotes}</Text>
 						</View>
 						<View style={styles.actions}>
-							<Pressable
-								onPress={handleApplyUpdate}
-								style={[buttonBlack, styles.primaryButton]}>
-								<Text style={styles.primaryButtonText}>
-									{UPDATE_COPY.primaryCtaLabel}
-								</Text>
-							</Pressable>
+							{SHOW_OTA_LOGOUT_CTA ? (
+								<Pressable
+									onPress={handleLogoutFromUpdate}
+									style={styles.primaryAction}>
+									<Text style={styles.primaryActionText}>
+										{UPDATE_COPY.logoutCtaLabel}
+									</Text>
+								</Pressable>
+							) : null}
 							<Pressable
 								onPress={() => bottomSheetRef.current?.dismiss()}
 								style={styles.secondaryAction}>
 								<Text style={styles.secondaryActionText}>
-									{UPDATE_COPY.secondaryCtaLabel}
+									{UPDATE_COPY.closeCtaLabel}
 								</Text>
 							</Pressable>
 						</View>
@@ -657,10 +648,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 		marginTop: "auto",
 	},
-	primaryButton: {
+	primaryAction: {
 		width: "100%",
+		backgroundColor: colorBlack,
+		borderRadius: 12,
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		alignItems: "center",
 	},
-	primaryButtonText: {
+	primaryActionText: {
 		color: colorWhite,
 		fontWeight: "bold",
 		fontSize: FontSize16,
