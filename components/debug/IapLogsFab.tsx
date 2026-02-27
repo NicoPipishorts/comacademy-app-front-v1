@@ -20,6 +20,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { __iapLogs } from "@/src/utils/debug";
 
 const SNAP_POINTS = ["45%", "85%"];
+const SHOW_IAP_LOGS =
+	process.env.EXPO_PUBLIC_SHOW_IAP_LOGS === "1" ||
+	process.env.EXPO_PUBLIC_SHOW_IAP_LOGS === "true";
 
 const IapLogsFab: React.FC = () => {
 	const insets = useSafeAreaInsets();
@@ -62,6 +65,10 @@ const IapLogsFab: React.FC = () => {
 		(item: string, index: number) => `${index}-${item.slice(0, 24)}`,
 		[]
 	);
+
+	if (!SHOW_IAP_LOGS) {
+		return null;
+	}
 
 	return (
 		<>
