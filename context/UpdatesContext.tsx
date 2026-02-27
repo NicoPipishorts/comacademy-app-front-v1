@@ -53,11 +53,12 @@ const parseBooleanFlag = (value?: string): boolean =>
 const UPDATE_COPY: StaticUpdateCopy = {
 	snackbarMessage: "Mise a jour OTA disponible.",
 	title: "Mise a jour disponible",
-	subtitle: "Correctifs importants sur les abonnements, achats et la stabilite",
+	subtitle:
+		"Correctif du lien de reinitialisation de mot de passe (deep link)",
 	logoutCtaLabel: "Se deconnecter",
 	closeCtaLabel: "Fermer",
 	defaultNotes:
-		"- Achat: correction d'un cas de deconnexion apres echec de verification.\n- Abonnement: retours de confirmation et succes affiches en bottom sheet.\n- Navigation: le bouton Retour sur la page abonnement suit maintenant l'historique.\n- Profil: affichage mensuel/annuel a la place des IDs produit, avec fallback date d'expiration.\n- iOS: meilleure guidance pour le passage annuel -> mensuel via l'App Store.\n- Tarifs affiches: 5,99 EUR / mois et 49,99 EUR / an.\n- IAP logs: la bottom sheet est scrollable.\n- OTA: bouton de deconnexion optionnel via EXPO_PUBLIC_OTA_SHOW_LOGOUT_CTA.",
+		"- Deep link: prise en charge explicite de /auth/reset-password.\n- Reset password: lecture des parametres code et email depuis l'URL.\n- Ouverture de lien: gestion au demarrage (getInitialURL) et en arriere-plan (addEventListener).",
 };
 
 type UpdatesContextValue = {

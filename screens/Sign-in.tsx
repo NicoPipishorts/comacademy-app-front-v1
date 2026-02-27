@@ -29,6 +29,11 @@ import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
+import {
+	parseResetPasswordDeepLink,
+	processInitialDeepLink,
+	subscribeToDeepLinks,
+} from "@/src/utils/resetPasswordDeepLink";
 
 const SignIn = () => {
 	const insets = useSafeAreaInsets();
@@ -181,36 +186,14 @@ const SignIn = () => {
 	}, [resetPasswordMutation]);
 
 	const handleDeepLink = useCallback((url: string | null) => {
-		if (!url) return;
+		const payload = parseResetPasswordDeepLink(url);
+		if (!payload) return;
 
-		const parsed = Linking.parse(url);
-		const { path, queryParams } = parsed;
-		const codeParam =
-			typeof queryParams?.code === "string"
-				? queryParams.code
-				: typeof queryParams?.token === "string"
-				? queryParams.token
-				: typeof queryParams?.reset_code === "string"
-				? queryParams.reset_code
-				: null;
-
-		if (!codeParam) return;
-
-		const normalizedPath = path?.toLowerCase() ?? "";
-		if (
-			normalizedPath &&
-			!normalizedPath.includes("reset-password") &&
-			!normalizedPath.includes("password-reset") &&
-			!normalizedPath.includes("auth/reset-password")
-		) {
-			return;
+		if (payload.email) {
+			setEmail(payload.email);
 		}
 
-		if (typeof queryParams?.email === "string") {
-			setEmail(queryParams.email);
-		}
-
-		setPendingResetCode(codeParam);
+		setPendingResetCode(payload.code);
 		latestResetPasswordRef.current = "";
 		// Close keyboard before presenting the reset sheet
 		Keyboard.dismiss();
@@ -220,20 +203,18 @@ const SignIn = () => {
 	}, []);
 
 	useEffect(() => {
-		const fetchInitialUrl = async () => {
-			try {
-				const initialUrl = await Linking.getInitialURL();
-				handleDeepLink(initialUrl);
-			} catch (error) {
+		void processInitialDeepLink({
+			getInitialUrl: Linking.getInitialURL,
+			onUrl: handleDeepLink,
+			onError: (error) => {
 				console.error("Failed to get initial URL", error);
-			}
-		};
+			},
+		});
 
-		void fetchInitialUrl();
-
-		const subscription = Linking.addEventListener("url", ({ url }) =>
-			handleDeepLink(url)
-		);
+		const subscription = subscribeToDeepLinks({
+			addUrlListener: (handler) => Linking.addEventListener("url", handler),
+			onUrl: handleDeepLink,
+		});
 
 		return () => {
 			subscription.remove();
