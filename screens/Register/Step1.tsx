@@ -56,20 +56,53 @@ export default function RegisterStep1({
 	const { setIsRegistering } = UseAuth();
 
 	const [errors, setErrors] = useState<{
-		firstName?: string | null;
-		lastName?: string | null;
-		email?: string | null;
-		username?: string | null;
-	}>({});
+		firstName: string | null;
+		lastName: string | null;
+		email: string | null;
+		username: string | null;
+	}>({
+		firstName: null,
+		lastName: null,
+		email: null,
+		username: null,
+	});
+
+	const updateFieldError = (
+		field: "firstName" | "lastName" | "email" | "username",
+		message: string | null
+	) => {
+		setErrors((prev) => ({ ...prev, [field]: message }));
+	};
+
+	const clearInvalidCharError = (
+		field: "firstName" | "lastName" | "username",
+		nextValue: string
+	) => {
+		setErrors((prev) => {
+			if (
+				prev[field] &&
+				prev[field]?.startsWith("Caractère non autorisé") &&
+				nextValue.length > 0
+			) {
+				return { ...prev, [field]: null };
+			}
+			return prev;
+		});
+	};
 
 	const validateForm = () => {
 		let valid = true;
 		const newErrors: {
-			username?: string;
-			firstName?: string;
-			lastName?: string;
-			email?: string;
-		} = {};
+			username: string | null;
+			firstName: string | null;
+			lastName: string | null;
+			email: string | null;
+		} = {
+			username: null,
+			firstName: null,
+			lastName: null,
+			email: null,
+		};
 		const cleanFirstName = firstName.trim();
 		const cleanLastName = lastName.trim();
 		const cleanUsername = username.trim();
@@ -182,108 +215,149 @@ export default function RegisterStep1({
 								<Text style={styles.title}>Venez com' vous êtes !</Text>
 							</View>
 
-							{errors.firstName ? (
-								<Text style={styles.errorText}>{errors.firstName}</Text>
-							) : null}
-							<View
-								style={[
-									styles.inputContainer,
-									{
-										borderBottomColor: errors.firstName ? colorRed : colorGrey,
-									},
-								]}>
-								<TextInput
-									style={styles.input}
-									onChangeText={(text) =>
-										setFirstName(text.replace(NAME_SANITIZE_REGEX, ""))
-									}
-									value={firstName}
-									placeholder='Prénom'
-									placeholderTextColor={colorBlack}
-									autoCapitalize='words'
-									returnKeyType='next'
-								/>
+							<View style={styles.fieldWrapper}>
+								{errors.firstName ? (
+									<View style={styles.errorTooltip}>
+										<Text style={styles.errorTooltipText}>{errors.firstName}</Text>
+									</View>
+								) : null}
+								<View
+									style={[
+										styles.inputContainer,
+										{
+											borderBottomColor: errors.firstName ? colorRed : colorGrey,
+										},
+									]}>
+									<TextInput
+										style={styles.input}
+										onChangeText={(text) => {
+											const invalidChar = text.match(NAME_INVALID_CHAR_REGEX)?.[0];
+											if (invalidChar) {
+												updateFieldError(
+													"firstName",
+													`Caractère non autorisé: "${invalidChar}".`
+												);
+											} else {
+												clearInvalidCharError(
+													"firstName",
+													text.replace(NAME_SANITIZE_REGEX, "")
+												);
+											}
+											setFirstName(text.replace(NAME_SANITIZE_REGEX, ""));
+										}}
+										value={firstName}
+										placeholder='Prénom'
+										placeholderTextColor={colorBlack}
+										autoCapitalize='words'
+										returnKeyType='next'
+									/>
+								</View>
 							</View>
-							<Text style={styles.helperText}>
-								Caractères autorisés: lettres, apostrophes, espaces et tirets.
-							</Text>
 
-							{errors.lastName ? (
-								<Text style={styles.errorText}>{errors.lastName}</Text>
-							) : null}
-							<View
-								style={[
-									styles.inputContainer,
-									{ borderBottomColor: errors.lastName ? colorRed : colorGrey },
-								]}>
-								<TextInput
-									style={styles.input}
-									onChangeText={(text) =>
-										setLastName(text.replace(NAME_SANITIZE_REGEX, ""))
-									}
-									value={lastName}
-									placeholder='Nom'
-									placeholderTextColor={colorBlack}
-									autoCapitalize='words'
-									returnKeyType='next'
-								/>
+							<View style={styles.fieldWrapper}>
+								{errors.lastName ? (
+									<View style={styles.errorTooltip}>
+										<Text style={styles.errorTooltipText}>{errors.lastName}</Text>
+									</View>
+								) : null}
+								<View
+									style={[
+										styles.inputContainer,
+										{ borderBottomColor: errors.lastName ? colorRed : colorGrey },
+									]}>
+									<TextInput
+										style={styles.input}
+										onChangeText={(text) => {
+											const invalidChar = text.match(NAME_INVALID_CHAR_REGEX)?.[0];
+											if (invalidChar) {
+												updateFieldError(
+													"lastName",
+													`Caractère non autorisé: "${invalidChar}".`
+												);
+											} else {
+												clearInvalidCharError(
+													"lastName",
+													text.replace(NAME_SANITIZE_REGEX, "")
+												);
+											}
+											setLastName(text.replace(NAME_SANITIZE_REGEX, ""));
+										}}
+										value={lastName}
+										placeholder='Nom'
+										placeholderTextColor={colorBlack}
+										autoCapitalize='words'
+										returnKeyType='next'
+									/>
+								</View>
 							</View>
-							<Text style={styles.helperText}>
-								Caractères autorisés: lettres, apostrophes, espaces et tirets.
-							</Text>
 
-							{errors.username ? (
-								<Text style={styles.errorText}>{errors.username}</Text>
-							) : null}
-							<View
-								style={[
-									styles.inputContainer,
-									{ borderBottomColor: errors.username ? colorRed : colorGrey },
-								]}>
-								<TextInput
-									style={styles.input}
-									onChangeText={(text) =>
-										setUsername(text.replace(USERNAME_SANITIZE_REGEX, ""))
-									}
-									value={username}
-									autoCorrect={false}
-									placeholder='Pseudo'
-									placeholderTextColor={colorBlack}
-									autoCapitalize='none'
-									returnKeyType='next'
-								/>
+							<View style={styles.fieldWrapper}>
+								{errors.username ? (
+									<View style={styles.errorTooltip}>
+										<Text style={styles.errorTooltipText}>{errors.username}</Text>
+									</View>
+								) : null}
+								<View
+									style={[
+										styles.inputContainer,
+										{ borderBottomColor: errors.username ? colorRed : colorGrey },
+									]}>
+									<TextInput
+										style={styles.input}
+										onChangeText={(text) => {
+											const invalidChar =
+												text.match(USERNAME_INVALID_CHAR_REGEX)?.[0];
+											if (invalidChar) {
+												updateFieldError(
+													"username",
+													`Caractère non autorisé: "${invalidChar}". Utilisez lettres, chiffres, point, underscore ou tiret.`
+												);
+											} else {
+												clearInvalidCharError(
+													"username",
+													text.replace(USERNAME_SANITIZE_REGEX, "")
+												);
+											}
+											setUsername(text.replace(USERNAME_SANITIZE_REGEX, ""));
+										}}
+										value={username}
+										autoCorrect={false}
+										placeholder='Pseudo'
+										placeholderTextColor={colorBlack}
+										autoCapitalize='none'
+										returnKeyType='next'
+									/>
+								</View>
 							</View>
-							<Text style={styles.helperText}>
-								Caractères autorisés: lettres, chiffres, point, underscore et
-								tiret.
-							</Text>
 
-							{errors.email ? (
-								<Text style={styles.errorText}>{errors.email}</Text>
-							) : null}
-							<View
-								style={[
-									styles.inputContainer,
-									{ borderBottomColor: errors.email ? colorRed : colorGrey },
-								]}>
-								<TextInput
-									value={email}
-									autoCorrect={false}
-									onChangeText={(text) =>
-										setEmail(text.replace(/\s+/g, "").toLowerCase())
-									}
-									style={styles.input}
-									placeholder='Email'
-									placeholderTextColor={colorBlack}
-									keyboardType='email-address'
-									textContentType='emailAddress'
-									autoCapitalize='none'
-									returnKeyType='done'
-								/>
+							<View style={styles.fieldWrapper}>
+								{errors.email ? (
+									<View style={styles.errorTooltip}>
+										<Text style={styles.errorTooltipText}>{errors.email}</Text>
+									</View>
+								) : null}
+								<View
+									style={[
+										styles.inputContainer,
+										{ borderBottomColor: errors.email ? colorRed : colorGrey },
+									]}>
+									<TextInput
+										value={email}
+										autoCorrect={false}
+										onChangeText={(text) => {
+											updateFieldError("email", null);
+											setEmail(text.replace(/\s+/g, "").toLowerCase());
+										}}
+										style={styles.input}
+										placeholder='Email'
+										placeholderTextColor={colorBlack}
+										keyboardType='email-address'
+										textContentType='emailAddress'
+										autoCapitalize='none'
+										returnKeyType='done'
+									/>
+								</View>
 							</View>
-							<Text style={styles.helperText}>
-								Format autorisé: nom@domaine.ext (sans espaces).
-							</Text>
 						</View>
 						<Pressable style={styles.buttonContainer} onPress={handleNext}>
 							<Text style={styles.buttonText}>Suivant</Text>
@@ -345,6 +419,23 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		width: "100%",
 	},
+	fieldWrapper: {
+		width: "100%",
+	},
+	errorTooltip: {
+		alignSelf: "flex-start",
+		maxWidth: "100%",
+		backgroundColor: colorBlack,
+		borderRadius: 8,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		marginBottom: 8,
+	},
+	errorTooltipText: {
+		color: colorWhite,
+		fontSize: FontSize12,
+		textAlign: "left",
+	},
 	input: {
 		flex: 1,
 		backgroundColor: "transparent",
@@ -382,20 +473,5 @@ const styles = StyleSheet.create({
 		color: primaryBackground,
 		fontWeight: "bold",
 		fontSize: FontSize12,
-	},
-	errorText: {
-		minWidth: "100%",
-		color: "red",
-		fontSize: FontSize12,
-		textAlign: "left",
-		marginBottom: 5,
-	},
-	helperText: {
-		width: "100%",
-		color: colorGrey,
-		fontSize: FontSize12,
-		textAlign: "left",
-		marginTop: -14,
-		marginBottom: 14,
 	},
 });

@@ -309,6 +309,12 @@ export default function SubscriptionScreen() {
 		if (!from) return undefined;
 		return Array.isArray(from) ? from[0] : from;
 	}, [from]);
+	const safeReturnDestination = useMemo(() => {
+		if (returnDestination && returnDestination !== "/subscription") {
+			return returnDestination;
+		}
+		return "/user";
+	}, [returnDestination]);
 
 	const hasManualPremium = session?.user?.manualPremium ?? false;
 	const hasPremiumAccess = useMemo(() => {
@@ -572,10 +578,10 @@ export default function SubscriptionScreen() {
 
 	return (
 		<KeyboardAvoidingView
-			behavior={Platform.OS === "ios" ? "padding" : "height"}
-			style={styles.wrapper}>
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+				style={styles.wrapper}>
 				<View style={[styles.innerWrapper, { paddingTop: 20 }]}>
-					<ReturnButton />
+					<ReturnButton destination={safeReturnDestination} />
 					<ScreenHeaders content='Abonnement Premium' paddingTop={0} />
 
 				<ScrollView
