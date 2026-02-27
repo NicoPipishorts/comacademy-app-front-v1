@@ -14,9 +14,10 @@ import {
 	type SubscriptionProduct,
 } from "@/src/utils/iap";
 import { isUserCancelledError } from "@/src/utils/iapErrors";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import Constants from "expo-constants";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
 	Alert,
 	KeyboardAvoidingView,
@@ -39,6 +40,20 @@ const PRIVACY_POLICY_URL =
 const TERMS_OF_SERVICE_URL =
 	process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL ??
 	"https://comacademy.fr/conditions-generales-d-utilisation";
+
+const FORCED_EURO_PLAN_DISPLAY: Record<
+	string,
+	{ price: string; duration: string; durationDays: number }
+> = {
+	fullAccess100: { price: "5,99 €", duration: "/ mois", durationDays: 30 },
+	fullAccess1200: { price: "49,99 €", duration: "/ an", durationDays: 365 },
+};
+
+type PurchaseFeedbackState = {
+	title: string;
+	message: string;
+	action: "close" | "navigate";
+};
 
 // Safe wrapper so a weird product shape can’t blow up formatting
 const safeFormatPrice = (p: any, fallback = "") => {
@@ -221,6 +236,10 @@ export default function SubscriptionScreen() {
 	const router = useRouter();
 	const { from } = useLocalSearchParams<{ from?: string | string[] }>();
 	const { session } = UseAuth();
+	const purchaseFeedbackSheetRef = useRef<BottomSheetModal>(null);
+	const purchaseFeedbackSnapPoints = useMemo(() => ["36%"], []);
+	const [purchaseFeedback, setPurchaseFeedback] =
+		useState<PurchaseFeedbackState | null>(null);
 
 	const {
 		products,
@@ -331,14 +350,16 @@ export default function SubscriptionScreen() {
 				seen.add(id);
 
 				const durationInfo = getDurationInfoForProduct(product);
+				const forcedPlanDisplay = FORCED_EURO_PLAN_DISPLAY[id];
 
 				return {
 					id,
 					product,
 					title: product.title || "Accès Com’Academy",
-					price: safeFormatPrice(product, "—"),
-					duration: durationInfo?.label ?? "",
-					durationDays: durationInfo?.days ?? 0,
+					price: forcedPlanDisplay?.price ?? safeFormatPrice(product, "—"),
+					duration: forcedPlanDisplay?.duration ?? durationInfo?.label ?? "",
+					durationDays:
+						forcedPlanDisplay?.durationDays ?? durationInfo?.days ?? 0,
 				};
 			})
 			.filter(Boolean) as {
@@ -379,6 +400,23 @@ export default function SubscriptionScreen() {
 		router.replace("/activity");
 	}, [returnDestination, router]);
 
+	const openPurchaseFeedbackSheet = useCallback(
+		(payload: PurchaseFeedbackState) => {
+			setPurchaseFeedback(payload);
+			purchaseFeedbackSheetRef.current?.present();
+		},
+		[]
+	);
+
+	const closePurchaseFeedbackSheet = useCallback(() => {
+		const action = purchaseFeedback?.action;
+		purchaseFeedbackSheetRef.current?.dismiss();
+		setPurchaseFeedback(null);
+		if (action === "navigate") {
+			navigateAfterPurchase();
+		}
+	}, [navigateAfterPurchase, purchaseFeedback?.action]);
+
 	const waitForActivation = useCallback(async () => {
 		const maxAttempts = 8;
 		for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -392,24 +430,50 @@ export default function SubscriptionScreen() {
 	}, [checkSubscription]);
 
 	const handlePurchase = async (product: SubscriptionProduct) => {
+		const selectedProductId = getSubscriptionProductId(product);
+		const isDowngradeFromYearlyToMonthly =
+			Platform.OS === "ios" &&
+			hasActiveSubscription &&
+			activeProductId === "fullAccess1200" &&
+			selectedProductId === "fullAccess100";
+
+		if (isDowngradeFromYearlyToMonthly) {
+			Alert.alert(
+				"Changement d'abonnement",
+				"Sur iOS, le passage de l'abonnement annuel au mensuel est gere par l'App Store et prend effet au prochain renouvellement.",
+				[
+					{
+						text: "Ouvrir App Store",
+						onPress: () =>
+							void openExternalLink("https://apps.apple.com/account/subscriptions"),
+					},
+					{ text: "OK", style: "cancel" },
+				]
+			);
+			return;
+		}
+
 		try {
 			await purchase(product);
 			const isActivated = await waitForActivation();
 			await refresh();
 
 			if (!isActivated) {
-				Alert.alert(
-					"Achat en cours de confirmation",
-					"Votre achat a ete recu. L'activation peut prendre quelques instants. Ouvrez la page plus tard ou utilisez 'Restaurer mes achats'."
-				);
+				openPurchaseFeedbackSheet({
+					title: "Achat en cours de confirmation",
+					message:
+						"Votre achat a ete recu. L'activation peut prendre quelques instants. Ouvrez la page plus tard ou utilisez 'Restaurer mes achats'.",
+					action: "close",
+				});
 				return;
 			}
 
-			Alert.alert(
-				"Succès!",
-				"Votre abonnement a été activé avec succès. Profitez de tous les contenus premium!",
-				[{ text: "OK", onPress: navigateAfterPurchase }]
-			);
+			openPurchaseFeedbackSheet({
+				title: "Succès !",
+				message:
+					"Votre abonnement a ete active avec succes. Profitez de tous les contenus premium !",
+				action: "navigate",
+			});
 		} catch (err) {
 			const purchaseError = err as PurchaseError;
 			if (isUserCancelledError(purchaseError)) return;
@@ -510,9 +574,9 @@ export default function SubscriptionScreen() {
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 			style={styles.wrapper}>
-			<View style={[styles.innerWrapper, { paddingTop: 20 }]}>
-				<ReturnButton destination={returnDestination} />
-				<ScreenHeaders content='Abonnement Premium' paddingTop={0} />
+				<View style={[styles.innerWrapper, { paddingTop: 20 }]}>
+					<ReturnButton />
+					<ScreenHeaders content='Abonnement Premium' paddingTop={0} />
 
 				<ScrollView
 					showsVerticalScrollIndicator={false}
@@ -690,10 +754,31 @@ export default function SubscriptionScreen() {
 							Google Play.
 						</Text>
 					</View>
-				</ScrollView>
-			</View>
-		</KeyboardAvoidingView>
-	);
+					</ScrollView>
+				</View>
+
+				<BottomSheetModal
+					ref={purchaseFeedbackSheetRef}
+					index={0}
+					snapPoints={purchaseFeedbackSnapPoints}
+					enablePanDownToClose
+					backgroundStyle={styles.feedbackSheetBackground}>
+					<BottomSheetView style={styles.feedbackSheetContent}>
+						<Text style={styles.feedbackSheetTitle}>
+							{purchaseFeedback?.title ?? ""}
+						</Text>
+						<Text style={styles.feedbackSheetMessage}>
+							{purchaseFeedback?.message ?? ""}
+						</Text>
+						<TouchableOpacity
+							style={styles.feedbackSheetButton}
+							onPress={closePurchaseFeedbackSheet}>
+							<Text style={styles.feedbackSheetButtonText}>OK</Text>
+						</TouchableOpacity>
+					</BottomSheetView>
+				</BottomSheetModal>
+			</KeyboardAvoidingView>
+		);
 }
 
 const styles = StyleSheet.create({
@@ -908,5 +993,40 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 		lineHeight: 16,
 		marginTop: 10,
+	},
+	feedbackSheetBackground: {
+		backgroundColor: colorWhite,
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+	},
+	feedbackSheetContent: {
+		paddingHorizontal: 20,
+		paddingBottom: 22,
+		paddingTop: 8,
+	},
+	feedbackSheetTitle: {
+		fontSize: 22,
+		fontWeight: "700",
+		color: colorBlack,
+		marginBottom: 10,
+	},
+	feedbackSheetMessage: {
+		fontSize: FontSize16,
+		lineHeight: 24,
+		color: colorBlack,
+		marginBottom: 18,
+	},
+	feedbackSheetButton: {
+		backgroundColor: colorBlack,
+		borderRadius: 50,
+		minHeight: 48,
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 20,
+	},
+	feedbackSheetButtonText: {
+		color: colorWhite,
+		fontSize: FontSize16,
+		fontWeight: "700",
 	},
 });

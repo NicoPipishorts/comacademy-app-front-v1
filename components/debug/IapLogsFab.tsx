@@ -78,6 +78,7 @@ const IapLogsFab: React.FC = () => {
 				snapPoints={snapPoints}
 				backdropComponent={(props) => <BlurBackdrop {...props} />}
 				enablePanDownToClose
+				enableContentPanningGesture={false}
 				enableDynamicSizing={false}
 				handleIndicatorStyle={styles.hiddenIndicator}
 				backgroundStyle={styles.sheetBackground}
@@ -112,6 +113,7 @@ const IapLogsFab: React.FC = () => {
 							scrollEnabled
 							nestedScrollEnabled
 							keyboardShouldPersistTaps='handled'
+							scrollEventThrottle={16}
 							showsVerticalScrollIndicator
 						/>
 					)}

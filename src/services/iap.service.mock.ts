@@ -190,7 +190,7 @@ export const IAPService = {
 	 */
 	setupPurchaseListener(
 		onPurchase: (purchase: any) => void,
-		onError: (error: any) => void
+		onError: (error: any, purchase?: any) => void
 	) {
 
 		// Store the callbacks so purchaseSubscription can use them

@@ -39,6 +39,27 @@ interface CategoryResult {
 
 export type ResultAccumulator = Record<number, CategoryResult>;
 
+const toSubscriptionLabel = (productId?: string | null): string => {
+	if (!productId) return "—";
+
+	const normalized = productId.trim();
+	const lower = normalized.toLowerCase();
+
+	if (normalized === "fullAccess100") return "Abonnement mensuel";
+	if (normalized === "fullAccess1200") return "Abonnement annuel";
+
+	if (lower.includes("month") || lower.includes("mensuel")) {
+		return "Abonnement mensuel";
+	}
+	if (lower.includes("year") || lower.includes("annual") || lower.includes("annuel")) {
+		return "Abonnement annuel";
+	}
+
+	if (normalized === "full.access") return "Abonnement Premium";
+
+	return normalized;
+};
+
 export default function User() {
 	const router = useRouter();
 	const { openModal, timestamp } = useLocalSearchParams();
@@ -159,11 +180,29 @@ export default function User() {
 		subscriptionStatus ??
 		entitlementSubscription?.status ??
 		(hasPremiumAccess ? "active" : "none");
-	const currentProductId =
+	const resolvedProductId =
 		auth?.user?.subscription?.productId ??
 		entitlementSubscription?.productId ??
-		"—";
-	const expirationDate = formatDate(auth?.user?.subscription?.expiresAt);
+		null;
+	const currentProductLabel = toSubscriptionLabel(resolvedProductId);
+	const resolvedExpirationDateRaw =
+		auth?.user?.subscription?.expiresAt ?? entitlementSubscription?.expiresAt ?? null;
+	const expirationDate = useMemo(() => {
+		if (resolvedExpirationDateRaw) {
+			return formatDate(resolvedExpirationDateRaw);
+		}
+		if (!hasPremiumAccess) {
+			return "—";
+		}
+		if (auth?.user?.manualPremium) {
+			return "Accès manuel";
+		}
+		return "Non communiquée";
+	}, [
+		auth?.user?.manualPremium,
+		hasPremiumAccess,
+		resolvedExpirationDateRaw,
+	]);
 
 	if (!scores) {
 		return <Loader />;
@@ -190,26 +229,26 @@ export default function User() {
 
 					<View style={styles.subscriptionCard}>
 						<Text style={styles.subscriptionTitle}>Mon abonnement</Text>
-						<Text
-							style={[
-								styles.subscriptionState,
-								{
-									color: hasPremiumAccess ? "#2E7D32" : colorBlack,
-								},
-							]}>
-							{hasPremiumAccess
-								? "Premium actif"
-								: "Vous êtes en version gratuite"}
-						</Text>
-						<Text style={styles.subscriptionMeta}>
-							État: {subscriptionStateLabel}
-						</Text>
-						<Text style={styles.subscriptionMeta}>
-							Produit: {currentProductId || "—"}
-						</Text>
-						<Text style={styles.subscriptionMeta}>
-							Expiration: {expirationDate}
-						</Text>
+							<Text
+								style={[
+									styles.subscriptionState,
+									{
+										color: hasPremiumAccess ? "#2E7D32" : colorBlack,
+									},
+								]}>
+								{hasPremiumAccess
+									? "Premium actif"
+									: "Vous êtes en version gratuite"}
+							</Text>
+							<Text style={styles.subscriptionMeta}>
+								État: {subscriptionStateLabel}
+							</Text>
+							<Text style={styles.subscriptionMeta}>
+								Produit: {currentProductLabel}
+							</Text>
+							<Text style={styles.subscriptionMeta}>
+								Expiration: {expirationDate}
+							</Text>
 						{subscriptionError ? (
 							<Text style={styles.subscriptionWarning}>
 								Échec de la récupération des infos abonnement.

@@ -22,6 +22,7 @@ type PendingPurchaseRequest = {
 	resolve: () => void;
 	reject: (error: unknown) => void;
 	timeoutId: ReturnType<typeof setTimeout>;
+	startedAtMs: number;
 };
 
 type SubscriptionState = {
@@ -43,6 +44,7 @@ type SubscriptionState = {
 const SubscriptionContext = createContext<SubscriptionState | undefined>(
 	undefined
 );
+const PURCHASE_CONFIRMATION_TIMEOUT_MS = 30_000;
 
 export const SubscriptionProvider = ({
 	children,
@@ -85,6 +87,60 @@ export const SubscriptionProvider = ({
 		return undefined;
 	}, []);
 
+	const resolveTransactionReason = useCallback((purchase: any): string | undefined => {
+		const candidates = [
+			purchase?.transactionReasonIOS,
+			purchase?.reasonIOS,
+			purchase?.reasonStringRepresentationIOS,
+		];
+
+		for (const candidate of candidates) {
+			if (typeof candidate === "string" && candidate.trim().length > 0) {
+				return candidate.trim().toUpperCase();
+			}
+		}
+
+		return undefined;
+	}, []);
+
+	const resolveTransactionDateMs = useCallback((purchase: any): number | undefined => {
+		const raw = purchase?.transactionDate;
+		if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+		if (typeof raw === "string" && raw.trim().length > 0) {
+			const numeric = Number(raw);
+			if (Number.isFinite(numeric)) return numeric;
+			const parsed = Date.parse(raw);
+			if (Number.isFinite(parsed)) return parsed;
+		}
+		return undefined;
+	}, []);
+
+	const matchesPendingPurchase = useCallback(
+		(pending: PendingPurchaseRequest, purchase: any): boolean => {
+			const purchaseSku = resolvePurchaseEventSku(purchase);
+			if (purchaseSku && purchaseSku !== pending.sku) {
+				return false;
+			}
+
+			// Ignore subscription renewal events for a user-initiated purchase request.
+			const reason = resolveTransactionReason(purchase);
+			if (reason === "RENEWAL") {
+				return false;
+			}
+
+			const transactionDateMs = resolveTransactionDateMs(purchase);
+			if (
+				typeof transactionDateMs === "number" &&
+				transactionDateMs + 5000 < pending.startedAtMs
+			) {
+				return false;
+			}
+
+			return true;
+		},
+		[resolvePurchaseEventSku, resolveTransactionDateMs, resolveTransactionReason]
+	);
+
 	const clearPendingPurchase = useCallback(() => {
 		const pending = pendingPurchaseRef.current;
 		if (!pending) return;
@@ -93,32 +149,33 @@ export const SubscriptionProvider = ({
 	}, []);
 
 	const resolvePendingPurchase = useCallback(
-		(purchase: any) => {
+		(purchase: any): boolean => {
 			const pending = pendingPurchaseRef.current;
-			if (!pending) return;
-
-			const purchaseSku = resolvePurchaseEventSku(purchase);
-			if (purchaseSku && purchaseSku !== pending.sku) {
-				return;
-			}
+			if (!pending) return false;
+			if (!matchesPendingPurchase(pending, purchase)) return false;
 
 			const { resolve } = pending;
 			clearPendingPurchase();
 			resolve();
+			return true;
 		},
-		[clearPendingPurchase, resolvePurchaseEventSku]
+		[clearPendingPurchase, matchesPendingPurchase]
 	);
 
 	const rejectPendingPurchase = useCallback(
-		(reason: unknown) => {
+		(reason: unknown, purchase?: any): boolean => {
 			const pending = pendingPurchaseRef.current;
-			if (!pending) return;
+			if (!pending) return false;
+			if (purchase && !matchesPendingPurchase(pending, purchase)) {
+				return false;
+			}
 
 			const { reject } = pending;
 			clearPendingPurchase();
 			reject(reason);
+			return true;
 		},
-		[clearPendingPurchase]
+		[clearPendingPurchase, matchesPendingPurchase]
 	);
 
 	const checkSubscription = useCallback(async () => {
@@ -232,9 +289,23 @@ export const SubscriptionProvider = ({
 						resolvePendingPurchase(purchase);
 						setPurchasing(false);
 					},
-					(err: PurchaseError) => {
+					(err: PurchaseError, purchase?: any) => {
 						debugIAP("Purchase error:", err);
-						rejectPendingPurchase(err);
+						const didRejectPendingPurchase = rejectPendingPurchase(err, purchase);
+						if (!didRejectPendingPurchase && purchase) {
+							const reason = resolveTransactionReason(purchase);
+							if (reason === "RENEWAL") {
+								debugIAP(
+									"Ignoring renewal failure for active paywall flow",
+									{
+										reason,
+										sku: resolvePurchaseEventSku(purchase),
+									}
+								);
+								return;
+							}
+						}
+
 						if (isUserCancelledError(err)) {
 							setError(null);
 						} else {
@@ -273,6 +344,8 @@ export const SubscriptionProvider = ({
 		clearPendingPurchase,
 		fetchProductsAndSubscription,
 		rejectPendingPurchase,
+		resolvePurchaseEventSku,
+		resolveTransactionReason,
 		resolvePendingPurchase,
 	]);
 
@@ -307,17 +380,18 @@ export const SubscriptionProvider = ({
 					const timeoutId = setTimeout(() => {
 						reject(
 							new Error(
-								"La confirmation d'achat prend trop de temps. Veuillez reessayer."
+								"Impossible de confirmer l'achat. Verifiez votre compte App Store Sandbox puis reessayez."
 							)
 						);
 						pendingPurchaseRef.current = null;
-					}, 90000);
+					}, PURCHASE_CONFIRMATION_TIMEOUT_MS);
 
 					pendingPurchaseRef.current = {
 						sku,
 						resolve,
 						reject,
 						timeoutId,
+						startedAtMs: Date.now(),
 					};
 				});
 

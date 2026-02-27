@@ -802,6 +802,11 @@ const createIAPService = () => {
 						request,
 					});
 					purchase = await iap.requestPurchase(purchaseRequest);
+					if (Array.isArray(purchase) && purchase.length === 0) {
+						debugIAP(
+							"requestPurchase returned an empty array; waiting for purchaseUpdatedListener event"
+						);
+					}
 				} else if (typeof iap.requestSubscription === "function") {
 					// Backward compatibility for older react-native-iap versions.
 					debugIAP("Calling requestSubscription() fallback", { sku, request });
@@ -1001,7 +1006,7 @@ const createIAPService = () => {
 		 */
 		setupPurchaseListener(
 			onPurchase: (purchase: any) => void,
-			onError: (error: any) => void
+			onError: (error: any, purchase?: any) => void
 		) {
 			debugIAP("Setting up purchase listeners");
 			const RNIap = getIapModuleSync();
@@ -1012,7 +1017,7 @@ const createIAPService = () => {
 						await this.completePurchase(purchase);
 						onPurchase(purchase);
 					} catch (err) {
-						onError(err);
+						onError(err, purchase);
 					}
 				}
 			);
