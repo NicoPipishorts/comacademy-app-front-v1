@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		paddingHorizontal: 24,
-		backgroundColor: colorWhite,
+		backgroundColor: "#F5F5F5",
 	},
 	layout: {
 		flex: 1,
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
 		marginBottom: 14,
 		borderWidth: 1,
 		borderColor: colorGrey,
-		backgroundColor: colorWhite,
+		backgroundColor: "#F5F5F5",
 	},
 	input: {
 		flex: 1,
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
 		borderRadius: 26,
 		borderWidth: 1,
 		borderColor: colorGrey,
-		backgroundColor: colorWhite,
+		backgroundColor: "#F5F5F5",
 		alignItems: "center",
 		justifyContent: "center",
 		flexDirection: "row",

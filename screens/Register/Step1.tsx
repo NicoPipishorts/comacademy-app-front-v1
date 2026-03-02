@@ -4,24 +4,31 @@ import {
 	colorGrey,
 	colorRed,
 	colorWhite,
-	primaryBackground,
 } from "@/constants/colors";
-import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize12, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, {
+	Dispatch,
+	SetStateAction,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
-	Image,
+	Dimensions,
 	Keyboard,
 	KeyboardAvoidingView,
+	type NativeScrollEvent,
+	type NativeSyntheticEvent,
 	Platform,
 	Pressable,
+	ScrollView,
 	StyleSheet,
 	Text,
 	TextInput,
 	TouchableWithoutFeedback,
 	View,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FormPayload } from "./Register";
 
@@ -54,6 +61,14 @@ export default function RegisterStep1({
 	const [username, setUsername] = useState<string>(formPayload?.username || "");
 	const [email, setEmail] = useState<string>(formPayload?.email || "");
 	const { setIsRegistering } = UseAuth();
+	const firstNameInputRef = useRef<TextInput>(null);
+	const lastNameInputRef = useRef<TextInput>(null);
+	const usernameInputRef = useRef<TextInput>(null);
+	const emailInputRef = useRef<TextInput>(null);
+	const scrollViewRef = useRef<ScrollView>(null);
+	const scrollOffsetRef = useRef(0);
+	const keyboardHeightRef = useRef(0);
+	const [keyboardInset, setKeyboardInset] = useState(0);
 
 	const [errors, setErrors] = useState<{
 		firstName: string | null;
@@ -74,19 +89,31 @@ export default function RegisterStep1({
 		setErrors((prev) => ({ ...prev, [field]: message }));
 	};
 
-	const clearInvalidCharError = (
+	const revalidateNameLikeFieldError = (
 		field: "firstName" | "lastName" | "username",
-		nextValue: string
+		nextValue: string,
+		requiredMessage: string
 	) => {
 		setErrors((prev) => {
-			if (
-				prev[field] &&
-				prev[field]?.startsWith("Caractère non autorisé") &&
-				nextValue.length > 0
-			) {
-				return { ...prev, [field]: null };
-			}
-			return prev;
+			if (!prev[field]) return prev;
+			const nextError = nextValue.trim().length === 0 ? requiredMessage : null;
+			if (prev[field] === nextError) return prev;
+			return { ...prev, [field]: nextError };
+		});
+	};
+
+	const revalidateEmailError = (nextEmail: string) => {
+		setErrors((prev) => {
+			if (!prev.email) return prev;
+			const trimmedEmail = nextEmail.trim();
+			const nextError =
+				trimmedEmail.length === 0
+					? "Email est requis."
+					: EMAIL_REGEX.test(trimmedEmail)
+						? null
+						: "Email n'est pas valide.";
+			if (prev.email === nextError) return prev;
+			return { ...prev, email: nextError };
 		});
 	};
 
@@ -175,7 +202,8 @@ export default function RegisterStep1({
 		}
 	};
 
-	const handleCancle = () => {
+	const handleGoToLogin = () => {
+		Keyboard.dismiss();
 		setFormPayload(null as unknown as FormPayload);
 		setIsRegistering(false);
 	};
@@ -185,10 +213,60 @@ export default function RegisterStep1({
 		| "height"
 		| "position"
 		| undefined;
+	const KEYBOARD_GAP = 16;
+
+	const handleScroll = useCallback(
+		(event: NativeSyntheticEvent<NativeScrollEvent>) => {
+			scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+		},
+		[]
+	);
+
+	const ensureInputVisible = useCallback((inputRef: React.RefObject<TextInput>) => {
+		requestAnimationFrame(() => {
+			const keyboardHeight = keyboardHeightRef.current;
+			if (!keyboardHeight) return;
+
+			inputRef.current?.measureInWindow((_x, y, _width, height) => {
+				const keyboardTop = Dimensions.get("window").height - keyboardHeight;
+				const desiredBottom = keyboardTop - KEYBOARD_GAP;
+				const fieldBottom = y + height;
+
+				if (fieldBottom > desiredBottom) {
+					const delta = fieldBottom - desiredBottom;
+					scrollViewRef.current?.scrollTo({
+						y: Math.max(0, scrollOffsetRef.current + delta),
+						animated: true,
+					});
+				}
+			});
+		});
+	}, []);
 
 	const bottomInset = Math.max(insets.bottom, 20);
-	// Offset accounts for top inset + your header/logo height (tweak if needed)
-	const keyboardOffset = (Platform.OS === "ios" ? insets.top : 0) + 80;
+	const keyboardOffset = 0;
+
+	useEffect(() => {
+		const showEvent =
+			Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+		const hideEvent =
+			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+		const showSub = Keyboard.addListener(showEvent, (event) => {
+			const height = event.endCoordinates?.height ?? 0;
+			keyboardHeightRef.current = height;
+			setKeyboardInset(height);
+		});
+		const hideSub = Keyboard.addListener(hideEvent, () => {
+			keyboardHeightRef.current = 0;
+			setKeyboardInset(0);
+		});
+
+		return () => {
+			showSub.remove();
+			hideSub.remove();
+		};
+	}, []);
 
 	return (
 		<KeyboardAvoidingView
@@ -198,15 +276,18 @@ export default function RegisterStep1({
 			<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 				<View style={{ flex: 1 }}>
 					<ScrollView
+						ref={scrollViewRef}
 						contentContainerStyle={{
 							flexGrow: 1,
 							justifyContent: "center",
 							paddingHorizontal: 10,
 							paddingTop: 0,
-							paddingBottom: bottomInset + 20, // keeps footer visible when keyboard open
+							paddingBottom: bottomInset + 20 + keyboardInset + KEYBOARD_GAP,
 						}}
 						keyboardShouldPersistTaps='handled'
 						showsVerticalScrollIndicator={false}
+						onScroll={handleScroll}
+						scrollEventThrottle={16}
 						keyboardDismissMode={
 							Platform.OS === "ios" ? "interactive" : "on-drag"
 						}>
@@ -221,16 +302,22 @@ export default function RegisterStep1({
 										<Text style={styles.errorTooltipText}>{errors.firstName}</Text>
 									</View>
 								) : null}
-								<View
+								<Pressable
 									style={[
 										styles.inputContainer,
 										{
-											borderBottomColor: errors.firstName ? colorRed : colorGrey,
+											borderColor: errors.firstName ? colorRed : colorGrey,
 										},
-									]}>
+									]}
+									onPress={() => {
+										firstNameInputRef.current?.focus();
+										ensureInputVisible(firstNameInputRef);
+									}}>
 									<TextInput
+										ref={firstNameInputRef}
 										style={styles.input}
 										onChangeText={(text) => {
+											const sanitizedValue = text.replace(NAME_SANITIZE_REGEX, "");
 											const invalidChar = text.match(NAME_INVALID_CHAR_REGEX)?.[0];
 											if (invalidChar) {
 												updateFieldError(
@@ -238,20 +325,24 @@ export default function RegisterStep1({
 													`Caractère non autorisé: "${invalidChar}".`
 												);
 											} else {
-												clearInvalidCharError(
+												revalidateNameLikeFieldError(
 													"firstName",
-													text.replace(NAME_SANITIZE_REGEX, "")
+													sanitizedValue,
+													"Prénom est requis."
 												);
 											}
-											setFirstName(text.replace(NAME_SANITIZE_REGEX, ""));
+											setFirstName(sanitizedValue);
 										}}
 										value={firstName}
 										placeholder='Prénom'
 										placeholderTextColor={colorBlack}
 										autoCapitalize='words'
 										returnKeyType='next'
+										blurOnSubmit={false}
+										onFocus={() => ensureInputVisible(firstNameInputRef)}
+										onSubmitEditing={() => lastNameInputRef.current?.focus()}
 									/>
-								</View>
+								</Pressable>
 							</View>
 
 							<View style={styles.fieldWrapper}>
@@ -260,14 +351,20 @@ export default function RegisterStep1({
 										<Text style={styles.errorTooltipText}>{errors.lastName}</Text>
 									</View>
 								) : null}
-								<View
+								<Pressable
 									style={[
 										styles.inputContainer,
-										{ borderBottomColor: errors.lastName ? colorRed : colorGrey },
-									]}>
+										{ borderColor: errors.lastName ? colorRed : colorGrey },
+									]}
+									onPress={() => {
+										lastNameInputRef.current?.focus();
+										ensureInputVisible(lastNameInputRef);
+									}}>
 									<TextInput
+										ref={lastNameInputRef}
 										style={styles.input}
 										onChangeText={(text) => {
+											const sanitizedValue = text.replace(NAME_SANITIZE_REGEX, "");
 											const invalidChar = text.match(NAME_INVALID_CHAR_REGEX)?.[0];
 											if (invalidChar) {
 												updateFieldError(
@@ -275,20 +372,24 @@ export default function RegisterStep1({
 													`Caractère non autorisé: "${invalidChar}".`
 												);
 											} else {
-												clearInvalidCharError(
+												revalidateNameLikeFieldError(
 													"lastName",
-													text.replace(NAME_SANITIZE_REGEX, "")
+													sanitizedValue,
+													"Nom est requis."
 												);
 											}
-											setLastName(text.replace(NAME_SANITIZE_REGEX, ""));
+											setLastName(sanitizedValue);
 										}}
 										value={lastName}
 										placeholder='Nom'
 										placeholderTextColor={colorBlack}
 										autoCapitalize='words'
 										returnKeyType='next'
+										blurOnSubmit={false}
+										onFocus={() => ensureInputVisible(lastNameInputRef)}
+										onSubmitEditing={() => usernameInputRef.current?.focus()}
 									/>
-								</View>
+								</Pressable>
 							</View>
 
 							<View style={styles.fieldWrapper}>
@@ -297,14 +398,23 @@ export default function RegisterStep1({
 										<Text style={styles.errorTooltipText}>{errors.username}</Text>
 									</View>
 								) : null}
-								<View
+								<Pressable
 									style={[
 										styles.inputContainer,
-										{ borderBottomColor: errors.username ? colorRed : colorGrey },
-									]}>
+										{ borderColor: errors.username ? colorRed : colorGrey },
+									]}
+									onPress={() => {
+										usernameInputRef.current?.focus();
+										ensureInputVisible(usernameInputRef);
+									}}>
 									<TextInput
+										ref={usernameInputRef}
 										style={styles.input}
 										onChangeText={(text) => {
+											const sanitizedValue = text.replace(
+												USERNAME_SANITIZE_REGEX,
+												""
+											);
 											const invalidChar =
 												text.match(USERNAME_INVALID_CHAR_REGEX)?.[0];
 											if (invalidChar) {
@@ -313,12 +423,13 @@ export default function RegisterStep1({
 													`Caractère non autorisé: "${invalidChar}". Utilisez lettres, chiffres, point, underscore ou tiret.`
 												);
 											} else {
-												clearInvalidCharError(
+												revalidateNameLikeFieldError(
 													"username",
-													text.replace(USERNAME_SANITIZE_REGEX, "")
+													sanitizedValue,
+													"Le pseudo est requis."
 												);
 											}
-											setUsername(text.replace(USERNAME_SANITIZE_REGEX, ""));
+											setUsername(sanitizedValue);
 										}}
 										value={username}
 										autoCorrect={false}
@@ -326,8 +437,11 @@ export default function RegisterStep1({
 										placeholderTextColor={colorBlack}
 										autoCapitalize='none'
 										returnKeyType='next'
+										blurOnSubmit={false}
+										onFocus={() => ensureInputVisible(usernameInputRef)}
+										onSubmitEditing={() => emailInputRef.current?.focus()}
 									/>
-								</View>
+								</Pressable>
 							</View>
 
 							<View style={styles.fieldWrapper}>
@@ -336,17 +450,25 @@ export default function RegisterStep1({
 										<Text style={styles.errorTooltipText}>{errors.email}</Text>
 									</View>
 								) : null}
-								<View
+								<Pressable
 									style={[
 										styles.inputContainer,
-										{ borderBottomColor: errors.email ? colorRed : colorGrey },
-									]}>
+										{ borderColor: errors.email ? colorRed : colorGrey },
+									]}
+									onPress={() => {
+										emailInputRef.current?.focus();
+										ensureInputVisible(emailInputRef);
+									}}>
 									<TextInput
+										ref={emailInputRef}
 										value={email}
 										autoCorrect={false}
 										onChangeText={(text) => {
-											updateFieldError("email", null);
-											setEmail(text.replace(/\s+/g, "").toLowerCase());
+											const normalizedEmail = text
+												.replace(/\s+/g, "")
+												.toLowerCase();
+											revalidateEmailError(normalizedEmail);
+											setEmail(normalizedEmail);
 										}}
 										style={styles.input}
 										placeholder='Email'
@@ -355,37 +477,26 @@ export default function RegisterStep1({
 										textContentType='emailAddress'
 										autoCapitalize='none'
 										returnKeyType='done'
+										onFocus={() => ensureInputVisible(emailInputRef)}
+										onSubmitEditing={() => Keyboard.dismiss()}
 									/>
-								</View>
+								</Pressable>
 							</View>
 						</View>
 						<Pressable style={styles.buttonContainer} onPress={handleNext}>
 							<Text style={styles.buttonText}>Suivant</Text>
-							<View
-								style={{
-									justifyContent: "center",
-									alignContent: "center",
-									backgroundColor: colorBlack,
-									borderRadius: 16,
-									padding: 5,
-									marginLeft: 10,
-								}}>
-								<Image
-									source={require("@/assets/imgs/icons/chevron_white.png")}
-									style={{
-										width: 18,
-										height: 18,
-										transform: [{ rotate: "180deg" }],
-										marginLeft: 2,
-									}}
-								/>
-							</View>
 						</Pressable>
 
-						<Pressable style={buttonBlack} onPress={handleCancle}>
-							<Text style={styles.buttonTextRevenir}>Annuler</Text>
-						</Pressable>
 					</ScrollView>
+
+					<View style={[styles.loginRow, { paddingBottom: bottomInset }]}>
+						<Text style={styles.loginText}>
+							J&apos;ai déjà un compte :{" "}
+							<Text style={styles.loginLinkText} onPress={handleGoToLogin}>
+								ce connecter
+							</Text>
+						</Text>
+					</View>
 				</View>
 			</TouchableWithoutFeedback>
 		</KeyboardAvoidingView>
@@ -395,6 +506,7 @@ export default function RegisterStep1({
 const styles = StyleSheet.create({
 	avoidingContainer: {
 		flex: 1,
+		backgroundColor: "#F5F5F5",
 	},
 	formContainer: {
 		width: "100%",
@@ -411,13 +523,13 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
-		borderRadius: 8,
-		paddingHorizontal: 10,
-		marginBottom: 20,
-		borderWidth: 0,
-		paddingBottom: 20,
-		borderBottomWidth: 1,
+		borderRadius: 14,
+		paddingHorizontal: 14,
+		marginBottom: 14,
+		borderWidth: 1,
 		width: "100%",
+		minHeight: 56,
+		backgroundColor: "#F5F5F5",
 	},
 	fieldWrapper: {
 		width: "100%",
@@ -442,36 +554,34 @@ const styles = StyleSheet.create({
 		color: colorBlack,
 		fontSize: FontSize16,
 		fontWeight: "bold",
+		paddingVertical: 12,
 	},
 	buttonContainer: {
-		flexDirection: "row",
+		backgroundColor: colorBlack,
+		width: "100%",
+		minHeight: 52,
+		borderRadius: 26,
 		alignItems: "center",
-		backgroundColor: colorWhite,
-		padding: 10,
-		paddingLeft: 20,
-		borderRadius: 50,
-		alignSelf: "center",
+		justifyContent: "center",
 		marginBottom: 10,
 	},
 	buttonText: {
 		fontSize: FontSize16,
-		color: colorBlack,
+		color: colorWhite,
 		fontWeight: "bold",
 	},
-	buttonRevenir: {
-		display: "flex",
+	loginRow: {
+		width: "100%",
 		alignItems: "center",
 		justifyContent: "center",
-		alignSelf: "center",
-		marginTop: 10,
-		backgroundColor: colorBlack,
-		paddingHorizontal: 24,
-		paddingVertical: 8,
-		borderRadius: 50,
+		paddingTop: 12,
 	},
-	buttonTextRevenir: {
-		color: primaryBackground,
+	loginText: {
 		fontWeight: "bold",
-		fontSize: FontSize12,
+		color: colorBlack,
+	},
+	loginLinkText: {
+		fontWeight: "bold",
+		color: colorBlack,
 	},
 });

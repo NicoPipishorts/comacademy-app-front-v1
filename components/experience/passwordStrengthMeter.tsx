@@ -1,8 +1,8 @@
 import {
+	colorGrey,
 	colorGreen,
 	colorOrange,
 	colorRed,
-	primaryBackground,
 } from "@/constants/colors";
 import { getPasswordRequirements } from "@/helpers/passwordRequirement";
 import React, { useEffect, useMemo } from "react";
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
 	strengthMeterContainer: {
 		width: "100%",
 		height: 10,
-		backgroundColor: primaryBackground,
+		backgroundColor: colorGrey,
 		borderRadius: 5,
 		overflow: "hidden",
 		marginBottom: 20,

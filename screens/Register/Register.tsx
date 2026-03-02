@@ -94,7 +94,11 @@ const Register = () => {
 
 	return (
 		<View style={styles.container}>
-			<View style={[styles.logoContainer, { paddingTop: insets.top }]}>
+			<View
+				style={[
+					styles.logoContainer,
+					{ paddingTop: Math.max(insets.top, 20) + 12 },
+				]}>
 				<LogoPageTop />
 			</View>
 
@@ -108,7 +112,6 @@ const Register = () => {
 				)}
 				{step === 2 && (
 					<RegisterStep2
-						setStep={setStep}
 						formPayload={formPayload as any}
 						setFormPayload={setFormPayload as any}
 						handleLogin={handleLogin}
@@ -123,16 +126,18 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		width: "100%",
-		padding: 10,
-		paddingVertical: 30,
+		paddingHorizontal: 24,
 		alignItems: "center",
-		justifyContent: "center",
+		justifyContent: "flex-start",
+		backgroundColor: "#F5F5F5",
 	},
 	scrollContainer: {
 		minWidth: "100%",
 	},
 	logoContainer: {
-		marginBottom: 20,
+		width: "100%",
+		alignItems: "center",
+		marginBottom: 12,
 	},
 	logo: {
 		width: 150,
