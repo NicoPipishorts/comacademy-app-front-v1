@@ -86,9 +86,9 @@ const ForgotPasswordSheet = forwardRef<
 		}, [email, onSubmit]);
 
 		const handleDismiss = useCallback(() => {
-			setEmail("");
+			setEmail(initialEmail);
 			onDismiss?.();
-		}, [onDismiss]);
+		}, [initialEmail, onDismiss]);
 
 		const normalizedEmail = email.trim().toLowerCase();
 		const hasTypedEmail = normalizedEmail.length > 0;

@@ -16,7 +16,6 @@ export default function PasswordRequirements({ password }: Props) {
 		{ key: "uppercase", label: "Une majuscule" },
 		{ key: "lowercase", label: "Une minuscule" },
 		{ key: "number", label: "Un chiffre" },
-		{ key: "special", label: "Un caractère spécial (@$!%*?&)" },
 	] as const;
 
 	return (

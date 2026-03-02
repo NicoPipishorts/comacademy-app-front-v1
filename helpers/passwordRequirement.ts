@@ -3,7 +3,6 @@ export type PasswordReqs = {
 	uppercase: boolean;
 	lowercase: boolean;
 	number: boolean;
-	special: boolean;
 };
 
 export function getPasswordRequirements(
@@ -15,6 +14,5 @@ export function getPasswordRequirements(
 		uppercase: /[A-Z]/.test(p),
 		lowercase: /[a-z]/.test(p),
 		number: /[0-9]/.test(p),
-		special: /[@$!%*?&]/.test(p),
 	};
 }

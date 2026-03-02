@@ -147,6 +147,8 @@ const ResetPasswordSheet = forwardRef<
 								autoCapitalize='none'
 								secureTextEntry={!showPassword}
 								textContentType='newPassword'
+								autoComplete='new-password'
+								passwordRules='minlength: 8; required: upper; required: lower; required: digit;'
 								autoCorrect={false}
 							/>
 							<MaterialCommunityIcons

@@ -90,15 +90,14 @@ export default function RegisterStep2({
 			selectedOption?: string;
 		} = {};
 
-		const passwordRegex =
-			/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+		const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)\S{8,}$/;
 
 		if (!newPassword?.trim()) {
 			newErrors.newPassword = "Nouveau mot de passe est requis.";
 			valid = false;
 		} else if (!passwordRegex.test(newPassword)) {
 			newErrors.newPassword =
-				"Utilisez 8+ caractères avec majuscule, minuscule, chiffre et @$!%*?&.";
+				"Utilisez 8+ caractères avec majuscule, minuscule et chiffre.";
 			valid = false;
 		}
 
@@ -265,6 +264,9 @@ export default function RegisterStep2({
 									style={styles.input}
 									placeholder='Mot de Passe'
 									placeholderTextColor={colorBlack}
+									textContentType='newPassword'
+									autoComplete='new-password'
+									passwordRules='minlength: 8; required: upper; required: lower; required: digit;'
 									returnKeyType='done'
 									onFocus={() => ensureInputVisible(passwordInputRef)}
 									onSubmitEditing={() => Keyboard.dismiss()}
@@ -282,7 +284,7 @@ export default function RegisterStep2({
 								</Pressable>
 							</Pressable>
 							<Text style={styles.passwordHelperText}>
-								Caractères autorisés: lettres, chiffres et @$!%*?&
+								Utilisez 8+ caractères avec majuscule, minuscule et chiffre.
 							</Text>
 
 							{/* Strength meter */}
