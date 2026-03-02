@@ -5,6 +5,35 @@ import React from "react";
 import { Alert, Button, ScrollView, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 
+const FORCED_EURO_PLAN_DISPLAY: Record<
+	string,
+	{ title: string; price: string; duration: string }
+> = {
+	fullAccess100: { title: "Premium mensuel", price: "5,99 €", duration: "/ mois" },
+	fullAccess1200: { title: "Premium annuel", price: "49,99 €", duration: "/ an" },
+};
+
+const resolveDebugPlanDisplay = (product: any) => {
+	const productId =
+		(typeof product?.productId === "string" && product.productId) ||
+		(typeof product?.id === "string" && product.id) ||
+		"";
+	const forced = FORCED_EURO_PLAN_DISPLAY[productId];
+	if (forced) {
+		return {
+			productId,
+			title: forced.title,
+			price: `${forced.price} ${forced.duration}`.trim(),
+		};
+	}
+
+	return {
+		productId,
+		title: product?.title ?? "Unknown",
+		price: product?.localizedPrice || product?.price || "N/A",
+	};
+};
+
 const IapBareboneScreen = () => {
 	const { loading, error, products, subscription, refresh, purchase } =
 		useSubscription();
@@ -23,15 +52,18 @@ const IapBareboneScreen = () => {
 			"=== PRODUCTS ===",
 			products.length === 0
 				? "No products returned"
-				: products.map((p, i) =>
-					`Product ${i + 1}: ${p.productId} - ${p.title} - ${p.localizedPrice || p.price}`
-				  ).join("\n"),
+				: products
+						.map((p, i) => {
+							const display = resolveDebugPlanDisplay(p);
+							return `Product ${i + 1}: ${display.productId} - ${display.title} - ${display.price}`;
+						})
+						.join("\n"),
 		].join("\n");
 
 		try {
 			await Clipboard.setStringAsync(statusInfo);
 			Alert.alert("Copied!", "Debug info copied to clipboard");
-		} catch (err) {
+		} catch {
 			Alert.alert("Error", "Failed to copy to clipboard");
 		}
 	};
@@ -89,6 +121,9 @@ const IapBareboneScreen = () => {
 			)}
 
 			{products.map((p, index) => (
+				(() => {
+					const display = resolveDebugPlanDisplay(p);
+					return (
 				<View
 					key={p.productId ?? `${p.title}-${index}`}
 					style={{
@@ -97,19 +132,17 @@ const IapBareboneScreen = () => {
 						borderWidth: 1,
 						borderRadius: 8,
 					}}>
-					<Text style={{ fontWeight: "600" }}>{p.title}</Text>
+					<Text style={{ fontWeight: "600" }}>{display.title}</Text>
 					<Text>{p.description}</Text>
-					<Text>
-						Price:{" "}
-						{"localizedPrice" in p && p.localizedPrice
-							? p.localizedPrice
-							: p.price}
-					</Text>
+					<Text>Product ID: {display.productId || "N/A"}</Text>
+					<Text>Price: {display.price}</Text>
 
 					<View style={{ marginTop: 8 }}>
 						<Button title='Purchase' onPress={() => purchase(p)} />
 					</View>
 				</View>
+					);
+				})()
 			))}
 		</ScrollView>
 	);

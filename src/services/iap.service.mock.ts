@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import {
 	getSubscriptionProductId,
 	type SubscriptionProduct,
@@ -15,37 +14,37 @@ import {
  */
 
 // Mock product data
-const YEARLY_SKU = Platform.select({
-	ios: "com.comacademy.yearly",
-	android: "yearly_subscription",
-}) as string;
-const MONTHLY_SKU = Platform.select({
-	ios: "com.comacademy.monthly",
-	android: "monthly_subscription",
-}) as string;
+const YEARLY_SKU = "fullAccess1200";
+const MONTHLY_SKU = "fullAccess100";
 
 const MOCK_PRODUCTS = [
 	{
 		id: YEARLY_SKU,
 		productId: YEARLY_SKU,
-		title: "Abonnement Annuel",
-		description: "Accès premium pendant 1 an",
-		price: "29.99",
-		localizedPrice: "29,99 €",
-		displayPrice: "29,99 €",
+		title: "Premium annuel",
+		description: "Illimité • 2 mois offerts • 12 mois d’engagement",
+		price: "49.99",
+		localizedPrice: "49,99 €",
+		displayPrice: "49,99 €",
 		currency: "EUR",
 		type: "subs" as const,
+		subscriptionPeriodUnitIOS: "YEAR",
+		subscriptionPeriodNumberIOS: "1",
+		subscriptionPeriodAndroid: "P1Y",
 	},
 	{
 		id: MONTHLY_SKU,
 		productId: MONTHLY_SKU,
-		title: "Abonnement Mensuel",
-		description: "Accès premium pendant 1 mois",
-		price: "4.99",
-		localizedPrice: "4,99 €",
-		displayPrice: "4,99 €",
+		title: "Premium mensuel",
+		description: "IIllimité • 1 mois d’engagement • Résiliable à tout moment",
+		price: "5.99",
+		localizedPrice: "5,99 €",
+		displayPrice: "5,99 €",
 		currency: "EUR",
 		type: "subs" as const,
+		subscriptionPeriodUnitIOS: "MONTH",
+		subscriptionPeriodNumberIOS: "1",
+		subscriptionPeriodAndroid: "P1M",
 	},
 ];
 

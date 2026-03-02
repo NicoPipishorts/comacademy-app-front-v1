@@ -79,7 +79,7 @@ type DurationInfo = {
 const isoPeriodPattern = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/i;
 
 const isoPeriodToDurationInfo = (
-	period?: string | null
+	period?: string | null,
 ): DurationInfo | null => {
 	if (!period) return null;
 
@@ -175,7 +175,7 @@ const iosDurationInfo = (product: SubscriptionProduct): DurationInfo | null => {
 };
 
 const androidDurationInfo = (
-	product: SubscriptionProduct
+	product: SubscriptionProduct,
 ): DurationInfo | null => {
 	const androidProduct = product as unknown as {
 		subscriptionOfferDetailsAndroid?: {
@@ -193,7 +193,7 @@ const androidDurationInfo = (
 
 			const phaseWithPeriod = phases.find((phase) => !!phase?.billingPeriod);
 			const info = isoPeriodToDurationInfo(
-				phaseWithPeriod?.billingPeriod ?? undefined
+				phaseWithPeriod?.billingPeriod ?? undefined,
 			);
 			if (info) return info;
 		}
@@ -207,13 +207,13 @@ const androidDurationInfo = (
 };
 
 const getDurationInfoForProduct = (
-	product: SubscriptionProduct
+	product: SubscriptionProduct,
 ): DurationInfo | null =>
 	iosDurationInfo(product) ?? androidDurationInfo(product);
 
 const matchesActivePlan = (
 	planId: string,
-	activeProductId: string | undefined
+	activeProductId: string | undefined,
 ): boolean => {
 	if (!activeProductId) return false;
 	if (planId === activeProductId) return true;
@@ -228,9 +228,34 @@ const matchesActivePlan = (
 
 const PLAN_FEATURES = [
 	"Accès illimité à tout le contenu",
-	"Annulation à tout moment",
-	"Mises à jour régulières de la bibliothèque",
+	"2 mois offerts",
+	"12 mois d’engagement",
 ];
+
+const YEARLY_PLAN_COPY = {
+	title: "Premium annuel",
+	features: ["Illimité", "2 mois offerts", "12 mois d’engagement"],
+};
+
+const MONTHLY_PLAN_COPY = {
+	title: "Premium mensuel",
+	features: ["IIllimité", "1 mois d’engagement", "Résiliable à tout moment"],
+};
+
+const resolvePlanCopy = (planId: string, durationDays: number) => {
+	if (planId === "fullAccess1200" || durationDays >= 365) {
+		return YEARLY_PLAN_COPY;
+	}
+
+	if (planId === "fullAccess100" || (durationDays > 0 && durationDays <= 31)) {
+		return MONTHLY_PLAN_COPY;
+	}
+
+	return {
+		title: "Premium",
+		features: PLAN_FEATURES,
+	};
+};
 
 export default function SubscriptionScreen() {
 	const router = useRouter();
@@ -265,12 +290,12 @@ export default function SubscriptionScreen() {
 			console.log("[SubscriptionScreen] appOwnership:", Constants.appOwnership);
 			if (__DEV__ && Platform.OS === "android") {
 				console.log(
-					"[SubscriptionScreen] ⚠️ Installez la build via la piste interne Play pour tester les achats réels."
+					"[SubscriptionScreen] ⚠️ Installez la build via la piste interne Play pour tester les achats réels.",
 				);
 			}
 			console.log(
 				"[SubscriptionScreen] products length:",
-				Array.isArray(products) ? products.length : "n/a"
+				Array.isArray(products) ? products.length : "n/a",
 			);
 
 			const maybeIap = (() => {
@@ -290,11 +315,11 @@ export default function SubscriptionScreen() {
 					"requestPurchase:",
 					typeof maybeIap.requestPurchase,
 					"initConnection:",
-					typeof maybeIap.initConnection
+					typeof maybeIap.initConnection,
 				);
 			} else {
 				console.log(
-					"[SubscriptionScreen] react-native-iap not available (mock/Expo Go?)"
+					"[SubscriptionScreen] react-native-iap not available (mock/Expo Go?)",
 				);
 			}
 
@@ -302,7 +327,7 @@ export default function SubscriptionScreen() {
 			return () => showTabBar();
 			// we only want this on screen focus
 			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, [hideTabBar, showTabBar])
+		}, [hideTabBar, showTabBar]),
 	);
 
 	const returnDestination = useMemo(() => {
@@ -357,15 +382,18 @@ export default function SubscriptionScreen() {
 
 				const durationInfo = getDurationInfoForProduct(product);
 				const forcedPlanDisplay = FORCED_EURO_PLAN_DISPLAY[id];
+				const durationDays =
+					forcedPlanDisplay?.durationDays ?? durationInfo?.days ?? 0;
+				const planCopy = resolvePlanCopy(id, durationDays);
 
 				return {
 					id,
 					product,
-					title: product.title || "Accès Com’Academy",
+					title: planCopy.title,
 					price: forcedPlanDisplay?.price ?? safeFormatPrice(product, "—"),
 					duration: forcedPlanDisplay?.duration ?? durationInfo?.label ?? "",
-					durationDays:
-						forcedPlanDisplay?.durationDays ?? durationInfo?.days ?? 0,
+					durationDays,
+					features: planCopy.features,
 				};
 			})
 			.filter(Boolean) as {
@@ -375,6 +403,7 @@ export default function SubscriptionScreen() {
 			price: string;
 			duration: string;
 			durationDays: number;
+			features: string[];
 		}[];
 
 		if (mapped.length > 1) {
@@ -392,7 +421,7 @@ export default function SubscriptionScreen() {
 		];
 
 		const match = candidates.find(
-			(value) => typeof value === "string" && value.length > 0
+			(value) => typeof value === "string" && value.length > 0,
 		);
 
 		return match ? String(match) : undefined;
@@ -411,7 +440,7 @@ export default function SubscriptionScreen() {
 			setPurchaseFeedback(payload);
 			purchaseFeedbackSheetRef.current?.present();
 		},
-		[]
+		[],
 	);
 
 	const closePurchaseFeedbackSheet = useCallback(() => {
@@ -451,10 +480,12 @@ export default function SubscriptionScreen() {
 					{
 						text: "Ouvrir App Store",
 						onPress: () =>
-							void openExternalLink("https://apps.apple.com/account/subscriptions"),
+							void openExternalLink(
+								"https://apps.apple.com/account/subscriptions",
+							),
 					},
 					{ text: "OK", style: "cancel" },
-				]
+				],
 			);
 			return;
 		}
@@ -488,7 +519,7 @@ export default function SubscriptionScreen() {
 				"Erreur",
 				typeof purchaseError?.message === "string"
 					? purchaseError.message
-					: "Une erreur est survenue lors de l'achat. Veuillez reessayer."
+					: "Une erreur est survenue lors de l'achat. Veuillez reessayer.",
 			);
 		}
 	};
@@ -506,7 +537,7 @@ export default function SubscriptionScreen() {
 			console.warn("[SubscriptionScreen] restore error:", err);
 			Alert.alert(
 				"Erreur",
-				"Impossible de restaurer vos achats. Assurez-vous d'être connecté avec le même compte."
+				"Impossible de restaurer vos achats. Assurez-vous d'être connecté avec le même compte.",
 			);
 		}
 	};
@@ -548,19 +579,19 @@ export default function SubscriptionScreen() {
 								Alert.alert(
 									"Abonnement résilié",
 									"Votre abonnement de test a été annulé. Vous êtes maintenant en version gratuite.",
-									[{ text: "OK" }]
+									[{ text: "OK" }],
 								);
 							}
 						},
 					},
-				]
+				],
 			);
 		} else {
 			if (Platform.OS === "ios") {
 				void openExternalLink("https://apps.apple.com/account/subscriptions");
 			} else if (Platform.OS === "android") {
 				void openExternalLink(
-					"https://play.google.com/store/account/subscriptions"
+					"https://play.google.com/store/account/subscriptions",
 				);
 			}
 		}
@@ -578,11 +609,11 @@ export default function SubscriptionScreen() {
 
 	return (
 		<KeyboardAvoidingView
-				behavior={Platform.OS === "ios" ? "padding" : "height"}
-				style={styles.wrapper}>
-				<View style={[styles.innerWrapper, { paddingTop: 20 }]}>
-					<ReturnButton destination={safeReturnDestination} />
-					<ScreenHeaders content='Abonnement Premium' paddingTop={0} />
+			behavior={Platform.OS === "ios" ? "padding" : "height"}
+			style={styles.wrapper}>
+			<View style={[styles.innerWrapper, { paddingTop: 20 }]}>
+				<ReturnButton destination={safeReturnDestination} />
+				<ScreenHeaders content='Abonnement Premium' paddingTop={0} />
 
 				<ScrollView
 					showsVerticalScrollIndicator={false}
@@ -626,11 +657,11 @@ export default function SubscriptionScreen() {
 						) : (
 							<>
 								<Text style={styles.headerTitle}>
-									Passez à Premium et déverrouillez tout le contenu
+									Passe Premium pour transformer ta curiosité en expertise.
 								</Text>
-								<Text style={styles.headerSubtitle}>
-									Accédez à l'intégralité de Com'Academy sans restrictions
-								</Text>
+								{/* <Text style={styles.headerSubtitle}>
+									Accéde à l'intégralité de Com'Academy sans restrictions
+								</Text> */}
 							</>
 						)}
 					</View>
@@ -646,36 +677,34 @@ export default function SubscriptionScreen() {
 
 					{/* Benefits Section */}
 					<View style={styles.benefitsSection}>
-						<Text style={styles.benefitsTitle}>Ce que vous obtenez:</Text>
+						<Text style={styles.benefitsTitle}>
+							Passe en mode illimité et débloque l’expérience complète !
+						</Text>
 						<View style={styles.benefitsList}>
 							<View style={styles.benefitItem}>
-								<Text style={styles.benefitIcon}>🔓</Text>
-								<Text style={styles.benefitText}>
-									Accès illimité à tous les dicos
-								</Text>
+								<Text style={styles.benefitIcon}>🔥</Text>
+								<Text style={styles.benefitText}>Tous les niveaux du jeu</Text>
 							</View>
 							<View style={styles.benefitItem}>
 								<Text style={styles.benefitIcon}>📚</Text>
 								<Text className='benefit-text' style={styles.benefitText}>
-									Tous les métiers et professions
+									Les 1800 mots du dico
 								</Text>
 							</View>
 							<View style={styles.benefitItem}>
-								<Text style={styles.benefitIcon}>💡</Text>
+								<Text style={styles.benefitIcon}>🧠 </Text>
+								<Text style={styles.benefitText}>Tous les Tips & Tactics</Text>
+							</View>
+							<View style={styles.benefitItem}>
+								<Text style={styles.benefitIcon}>💥 </Text>
 								<Text style={styles.benefitText}>
-									Citations et secrets en illimité
+									100% du contenu en illimité
 								</Text>
 							</View>
 							<View style={styles.benefitItem}>
-								<Text style={styles.benefitIcon}>⚡</Text>
+								<Text style={styles.benefitIcon}>🚀 </Text>
 								<Text style={styles.benefitText}>
-									Nouveau contenu ajouté régulièrement
-								</Text>
-							</View>
-							<View style={styles.benefitItem}>
-								<Text style={styles.benefitIcon}>🎯</Text>
-								<Text style={styles.benefitText}>
-									Tous les commandements débloqués
+									Et toutes les nouveautés à venir…
 								</Text>
 							</View>
 						</View>
@@ -690,7 +719,7 @@ export default function SubscriptionScreen() {
 									title={plan.title}
 									price={plan.price}
 									duration={plan.duration}
-									features={PLAN_FEATURES}
+									features={plan.features}
 									isPopular={plans.length > 1 && index === 0}
 									isCurrentPlan={
 										hasActiveSubscription &&
@@ -744,14 +773,18 @@ export default function SubscriptionScreen() {
 
 					{/* Legal Links */}
 					<View style={styles.legalSection}>
-						<Text style={styles.legalText}>En vous abonnant, vous acceptez nos</Text>
+						<Text style={styles.legalText}>
+							En vous abonnant, vous acceptez nos
+						</Text>
 						<View style={styles.legalLinks}>
 							<TouchableOpacity onPress={handleTermsOfService}>
 								<Text style={styles.legalLink}>Conditions d'utilisation</Text>
 							</TouchableOpacity>
 							<Text style={styles.legalSeparator}> et notre </Text>
 							<TouchableOpacity onPress={handlePrivacyPolicy}>
-								<Text style={styles.legalLink}>Politique de confidentialité</Text>
+								<Text style={styles.legalLink}>
+									Politique de confidentialité
+								</Text>
 							</TouchableOpacity>
 						</View>
 						<Text style={styles.legalNote}>
@@ -760,31 +793,31 @@ export default function SubscriptionScreen() {
 							Google Play.
 						</Text>
 					</View>
-					</ScrollView>
-				</View>
+				</ScrollView>
+			</View>
 
-				<BottomSheetModal
-					ref={purchaseFeedbackSheetRef}
-					index={0}
-					snapPoints={purchaseFeedbackSnapPoints}
-					enablePanDownToClose
-					backgroundStyle={styles.feedbackSheetBackground}>
-					<BottomSheetView style={styles.feedbackSheetContent}>
-						<Text style={styles.feedbackSheetTitle}>
-							{purchaseFeedback?.title ?? ""}
-						</Text>
-						<Text style={styles.feedbackSheetMessage}>
-							{purchaseFeedback?.message ?? ""}
-						</Text>
-						<TouchableOpacity
-							style={styles.feedbackSheetButton}
-							onPress={closePurchaseFeedbackSheet}>
-							<Text style={styles.feedbackSheetButtonText}>OK</Text>
-						</TouchableOpacity>
-					</BottomSheetView>
-				</BottomSheetModal>
-			</KeyboardAvoidingView>
-		);
+			<BottomSheetModal
+				ref={purchaseFeedbackSheetRef}
+				index={0}
+				snapPoints={purchaseFeedbackSnapPoints}
+				enablePanDownToClose
+				backgroundStyle={styles.feedbackSheetBackground}>
+				<BottomSheetView style={styles.feedbackSheetContent}>
+					<Text style={styles.feedbackSheetTitle}>
+						{purchaseFeedback?.title ?? ""}
+					</Text>
+					<Text style={styles.feedbackSheetMessage}>
+						{purchaseFeedback?.message ?? ""}
+					</Text>
+					<TouchableOpacity
+						style={styles.feedbackSheetButton}
+						onPress={closePurchaseFeedbackSheet}>
+						<Text style={styles.feedbackSheetButtonText}>OK</Text>
+					</TouchableOpacity>
+				</BottomSheetView>
+			</BottomSheetModal>
+		</KeyboardAvoidingView>
+	);
 }
 
 const styles = StyleSheet.create({

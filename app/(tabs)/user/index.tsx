@@ -5,6 +5,7 @@ import OnboardingV1 from "@/components/onboarding/OnboardingV1";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import ChangeAvatar from "@/components/user/changeAvatar";
 import ShowNiveaux from "@/components/user/niveaux";
+import SubscriptionStatusCard from "@/components/user/SubscriptionStatusCard";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
@@ -39,25 +40,9 @@ interface CategoryResult {
 
 export type ResultAccumulator = Record<number, CategoryResult>;
 
-const toSubscriptionLabel = (productId?: string | null): string => {
-	if (!productId) return "—";
-
-	const normalized = productId.trim();
-	const lower = normalized.toLowerCase();
-
-	if (normalized === "fullAccess100") return "Abonnement mensuel";
-	if (normalized === "fullAccess1200") return "Abonnement annuel";
-
-	if (lower.includes("month") || lower.includes("mensuel")) {
-		return "Abonnement mensuel";
-	}
-	if (lower.includes("year") || lower.includes("annual") || lower.includes("annuel")) {
-		return "Abonnement annuel";
-	}
-
-	if (normalized === "full.access") return "Abonnement Premium";
-
-	return normalized;
+const PROFILE_PLAN_PRICE_LABELS: Record<string, string> = {
+	fullAccess100: "5,99 € par mois",
+	fullAccess1200: "49,99 € par an",
 };
 
 export default function User() {
@@ -176,15 +161,10 @@ export default function User() {
 		return parsed.toLocaleDateString("fr-FR");
 	};
 
-	const subscriptionStateLabel =
-		subscriptionStatus ??
-		entitlementSubscription?.status ??
-		(hasPremiumAccess ? "active" : "none");
 	const resolvedProductId =
 		auth?.user?.subscription?.productId ??
 		entitlementSubscription?.productId ??
 		null;
-	const currentProductLabel = toSubscriptionLabel(resolvedProductId);
 	const resolvedExpirationDateRaw =
 		auth?.user?.subscription?.expiresAt ?? entitlementSubscription?.expiresAt ?? null;
 	const expirationDate = useMemo(() => {
@@ -200,6 +180,34 @@ export default function User() {
 		return "Non communiquée";
 	}, [
 		auth?.user?.manualPremium,
+		hasPremiumAccess,
+		resolvedExpirationDateRaw,
+	]);
+	const profilePriceLine = useMemo(() => {
+		if (!hasPremiumAccess) return null;
+		if (!resolvedProductId) return "Premium individuel";
+
+		const normalized = String(resolvedProductId).trim();
+		if (PROFILE_PLAN_PRICE_LABELS[normalized]) {
+			return PROFILE_PLAN_PRICE_LABELS[normalized];
+		}
+
+		if (normalized === "full.access") {
+			return "Premium individuel";
+		}
+
+		return "Premium individuel";
+	}, [hasPremiumAccess, resolvedProductId]);
+	const profileRenewalLine = useMemo(() => {
+		if (!hasPremiumAccess) return null;
+		if (auth?.user?.manualPremium) return "Accès manuel";
+		if (resolvedExpirationDateRaw) {
+			return `Renouvellement le ${expirationDate}`;
+		}
+		return "Renouvellement actif";
+	}, [
+		auth?.user?.manualPremium,
+		expirationDate,
 		hasPremiumAccess,
 		resolvedExpirationDateRaw,
 	]);
@@ -227,43 +235,13 @@ export default function User() {
 
 					{scores?.data?.length ? <UserStats categoriesScore={scores} /> : null}
 
-					<View style={styles.subscriptionCard}>
-						<Text style={styles.subscriptionTitle}>Mon abonnement</Text>
-							<Text
-								style={[
-									styles.subscriptionState,
-									{
-										color: hasPremiumAccess ? "#2E7D32" : colorBlack,
-									},
-								]}>
-								{hasPremiumAccess
-									? "Premium actif"
-									: "Vous êtes en version gratuite"}
-							</Text>
-							<Text style={styles.subscriptionMeta}>
-								État: {subscriptionStateLabel}
-							</Text>
-							<Text style={styles.subscriptionMeta}>
-								Produit: {currentProductLabel}
-							</Text>
-							<Text style={styles.subscriptionMeta}>
-								Expiration: {expirationDate}
-							</Text>
-						{subscriptionError ? (
-							<Text style={styles.subscriptionWarning}>
-								Échec de la récupération des infos abonnement.
-							</Text>
-						) : null}
-						<TouchableOpacity
-							style={buttonBlack}
-							onPress={() => router.push("/subscription")}>
-							<Text style={styles.buttonText}>
-								{hasPremiumAccess
-									? "Gérer mon abonnement"
-									: "Voir les offres Premium"}
-							</Text>
-						</TouchableOpacity>
-					</View>
+					<SubscriptionStatusCard
+						hasPremiumAccess={hasPremiumAccess}
+						priceLine={profilePriceLine}
+						renewalLine={profileRenewalLine}
+						subscriptionError={subscriptionError}
+						onPressSubscribe={() => router.push("/subscription")}
+					/>
 
 					<View style={styles.cardWrapper}>
 						<View style={styles.cardTextContainer}>
@@ -413,36 +391,6 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		flexGrow: 1,
 		maxWidth: "50%",
-	},
-	subscriptionCard: {
-		display: "flex",
-		flexDirection: "column",
-		gap: 8,
-		marginBottom: 30,
-		width: "100%",
-		borderRadius: 25,
-		paddingHorizontal: 20,
-		paddingVertical: 24,
-		backgroundColor: colorWhite,
-	},
-	subscriptionTitle: {
-		fontSize: FontSize16,
-		fontWeight: "bold",
-		color: colorBlack,
-	},
-	subscriptionState: {
-		fontSize: FontSize16,
-		fontWeight: "700",
-		marginBottom: 2,
-	},
-	subscriptionMeta: {
-		fontSize: 13,
-		color: colorBlack,
-	},
-	subscriptionWarning: {
-		fontSize: 12,
-		color: "#b45309",
-		marginVertical: 4,
 	},
 	buttonText: {
 		color: colorWhite,
