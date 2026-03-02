@@ -15,11 +15,15 @@ import React, { useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
+	ListRenderItem,
 	StyleSheet,
 	Text,
+	TouchableOpacity,
 	View,
+	ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FeedItem } from "@/types/feed";
 
 const Feed = () => {
 	const insets = useSafeAreaInsets();
@@ -34,10 +38,15 @@ const Feed = () => {
 	};
 
 	// Handle viewable items change
-	const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-		const visibleIds = viewableItems.map((item: any) => item.item.id);
+	const onViewableItemsChanged = useRef(
+		({ viewableItems }: { viewableItems: ViewToken[] }) => {
+			const visibleIds = viewableItems
+				.map((item) => item.item as FeedItem)
+				.filter((item) => typeof item?.id === "number")
+				.map((item) => item.id);
 		setVisibleItems(visibleIds);
-	}).current;
+		}
+	).current;
 
 	// Combine config and callback
 	const viewabilityConfigCallbackPairs = useRef([
@@ -48,6 +57,9 @@ const Feed = () => {
 	const {
 		data,
 		isLoading,
+		isRefetching,
+		isError,
+		error,
 		isFetchingNextPage,
 		fetchNextPage,
 		hasNextPage,
@@ -67,12 +79,31 @@ const Feed = () => {
 	};
 
 	// Render each feed item
-	const renderItem = ({ item }: { item: any }) => {
+	const renderItem: ListRenderItem<FeedItem> = ({ item }) => {
 		return <FeedWrapper feed={item} visibleItems={visibleItems} />;
 	};
 
 	if (isLoading) {
 		return <FeedLoader />;
+	}
+
+	if (isError) {
+		return (
+			<View style={styles.statusWrapper}>
+				<Text style={styles.statusTitle}>Impossible de charger le feed</Text>
+				<Text style={styles.statusText}>
+					{error?.message || "Une erreur est survenue."}
+				</Text>
+				<TouchableOpacity
+					onPress={() => {
+						refetch();
+					}}
+					style={styles.retryButton}
+				>
+					<Text style={styles.retryButtonText}>Réessayer</Text>
+				</TouchableOpacity>
+			</View>
+		);
 	}
 
 	return (
@@ -88,7 +119,7 @@ const Feed = () => {
 				<AvatarInitials size={68} />
 			</View>
 			<FlatList
-				data={data?.pages.flatMap((page) => page.data)}
+				data={data?.pages.flatMap((page) => page.data) ?? []}
 				keyExtractor={(item) => item.id.toString()}
 				renderItem={renderItem}
 				onEndReached={() => {
@@ -100,10 +131,15 @@ const Feed = () => {
 				ListFooterComponent={renderFooter} // Loader at the bottom
 				viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
 				contentContainerStyle={styles.scrollContent}
-				refreshing={isLoading} // Indicate whether the list is currently refreshing
+				refreshing={isRefetching}
 				onRefresh={() => {
 					refetch();
 				}}
+				ListEmptyComponent={
+					<View style={styles.emptyState}>
+						<Text style={styles.emptyText}>Aucun contenu pour le moment.</Text>
+					</View>
+				}
 			/>
 		</View>
 	);
@@ -114,7 +150,7 @@ const FeedWrapper = ({
 	feed,
 	visibleItems,
 }: {
-	feed: any;
+	feed: FeedItem;
 	visibleItems: number[];
 }) => (
 	<View style={styles.feedWrapper}>
@@ -169,6 +205,42 @@ const styles = StyleSheet.create({
 	loader: {
 		paddingVertical: 20,
 		alignItems: "center",
+	},
+	statusWrapper: {
+		flex: 1,
+		backgroundColor: primaryBackground,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 24,
+	},
+	statusTitle: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "700",
+		textAlign: "center",
+		marginBottom: 8,
+	},
+	statusText: {
+		color: colorDarkGrey,
+		textAlign: "center",
+		marginBottom: 20,
+	},
+	retryButton: {
+		backgroundColor: colorDarkGrey,
+		paddingHorizontal: 18,
+		paddingVertical: 10,
+		borderRadius: 20,
+	},
+	retryButtonText: {
+		color: primaryBackground,
+		fontWeight: "700",
+	},
+	emptyState: {
+		paddingTop: 40,
+		alignItems: "center",
+	},
+	emptyText: {
+		color: colorDarkGrey,
+		fontWeight: "600",
 	},
 });
 

@@ -87,14 +87,18 @@ export default function FeedCardHeader({ data }: Props) {
 
 	const title = useMemo(() => {
 		if (data.type === "feed-post") {
-			return TITLES[`${data.type}-${data.payload.Type}`] || null;
+			return TITLES[`${data.type}-${data.payload.Type}`] || TITLES[data.payload.Type] || null;
 		}
 		return TITLES[data.type];
 	}, [data]);
 
 	const subTitle = useMemo(() => {
 		if (data.type === "feed-post") {
-			return SUB_TITLES[`${data.type}-${data.payload.Type}`] || null;
+			return (
+				SUB_TITLES[`${data.type}-${data.payload.Type}`] ||
+				SUB_TITLES[data.payload.Type] ||
+				null
+			);
 		}
 		return SUB_TITLES[data.type];
 	}, [data]);
@@ -106,25 +110,23 @@ export default function FeedCardHeader({ data }: Props) {
 	};
 
 	return (
-		<View>
-			<View style={styles.container}>
-				<Image source={typeIcon} style={styles.icon} resizeMode='contain' />
-				{destination && (
-					<Pressable style={styles.pressable} onPress={handleNavigation}>
-						<Image
-							source={require("@/assets/imgs/icons/plus-circle.png")}
-							style={styles.plusIcon}
-							resizeMode='contain'
-						/>
-					</Pressable>
-				)}
-				<View style={styles.textContainer}>
-					<View style={styles.infoContainer}>
-						<Text style={styles.title}>{title}</Text>
-						<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
-					</View>
-					{subTitle && <Text style={styles.subTitle}>{subTitle}</Text>}
+		<View style={styles.container}>
+			<Image source={typeIcon} style={styles.icon} resizeMode='contain' />
+			{destination && (
+				<Pressable style={styles.pressable} onPress={handleNavigation}>
+					<Image
+						source={require("@/assets/imgs/icons/plus-circle.png")}
+						style={styles.plusIcon}
+						resizeMode='contain'
+					/>
+				</Pressable>
+			)}
+			<View style={styles.textContainer}>
+				<View style={styles.infoContainer}>
+					<Text style={styles.title}>{title}</Text>
+					<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
 				</View>
+				{subTitle && <Text style={styles.subTitle}>{subTitle}</Text>}
 			</View>
 		</View>
 	);

@@ -121,6 +121,34 @@ const setAxiosAuthHeader = (value: string | null) => {
 	}
 };
 
+const hasAuthorizationHeader = (headers?: HeadersInit | null): boolean => {
+	if (!headers) return false;
+
+	if (typeof Headers !== "undefined" && headers instanceof Headers) {
+		const value = headers.get("Authorization") ?? headers.get("authorization");
+		return Boolean(value && value.trim().length > 0);
+	}
+
+	if (Array.isArray(headers)) {
+		return headers.some(([key, value]) => {
+			if (key.toLowerCase() !== "authorization") return false;
+			return typeof value === "string"
+				? value.trim().length > 0
+				: Boolean(value);
+		});
+	}
+
+	return Object.entries(headers).some(([key, value]) => {
+		if (key.toLowerCase() !== "authorization") return false;
+		return typeof value === "string"
+			? value.trim().length > 0
+			: Boolean(value);
+	});
+};
+
+const isRequestInstance = (value: unknown): value is Request =>
+	typeof Request !== "undefined" && value instanceof Request;
+
 const persistToken = async (token: string) => {
 	let storedSecurely = false;
 	try {
@@ -212,6 +240,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		[]
 	);
 	const loginPromiseRef = useRef<Promise<void> | null>(null);
+	const logoutInFlightRef = useRef<boolean>(false);
 
 	const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const interceptorRef = useRef<number | null>(null);
@@ -363,6 +392,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		}
 
 		const isValid = await hydrateFromStorage();
+		logDevice("[AuthContext] checkLoggedIn result", { isValid });
 		return isValid;
 	}, [hydrateFromStorage]);
 
@@ -423,6 +453,19 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		setIsRegistering(false);
 	}, [clearPersistedSession]);
 
+	const handleUnauthorizedLogout = useCallback(
+		async (reason: string) => {
+			if (logoutInFlightRef.current) return;
+			logoutInFlightRef.current = true;
+			try {
+				await clearPersistedSession(reason);
+			} finally {
+				logoutInFlightRef.current = false;
+			}
+		},
+		[clearPersistedSession]
+	);
+
 	useEffect(() => {
 		const initializeAuth = async () => {
 			const seenVersion = await AsyncStorage.getItem(STORAGE_MIGRATION_KEY);
@@ -444,6 +487,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	useEffect(() => {
 		const handleAppStateChange = (nextAppState: AppStateStatus) => {
+			logDevice("[AuthContext] AppState changed", { nextAppState });
 			if (nextAppState === "active") {
 				void checkLoggedIn();
 			}
@@ -491,7 +535,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 						},
 						"warn"
 					);
-					await clearPersistedSession("http 401 response");
+					await handleUnauthorizedLogout("http 401 response");
 				} else if (hadAuthHeader && status === 403) {
 					logDevice(
 						`[AuthContext] Received 403 response, keeping session`,
@@ -516,7 +560,73 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 				axios.interceptors.response.eject(interceptorRef.current);
 			}
 		};
-	}, [clearPersistedSession]);
+	}, [handleUnauthorizedLogout]);
+
+	useEffect(() => {
+		const originalFetch = globalThis.fetch;
+		if (!originalFetch) return;
+
+		const authAwareFetch: typeof fetch = async (input, init) => {
+			const requestHeaders =
+				isRequestInstance(input) ? input.headers : undefined;
+			const inputUrl =
+				typeof input === "string"
+					? input
+					: isRequestInstance(input)
+						? input.url
+						: String(input);
+			const hadAuthHeader =
+				hasAuthorizationHeader(requestHeaders) ||
+				hasAuthorizationHeader(init?.headers);
+			let response: Response;
+			try {
+				response = await originalFetch(input, init);
+			} catch (error) {
+				logDevice(
+					`[AuthContext] fetch request failed`,
+					{
+						url: inputUrl,
+						hadAuthHeader,
+						error: error instanceof Error ? error.message : String(error),
+					},
+					"warn"
+				);
+				throw error;
+			}
+
+			if (hadAuthHeader && response.status >= 400 && response.status !== 401) {
+				logDevice(
+					`[AuthContext] fetch received error response`,
+					{
+						status: response.status,
+						url: inputUrl,
+					},
+					response.status >= 500 ? "error" : "warn"
+				);
+			}
+
+			if (hadAuthHeader && response.status === 401) {
+				logDevice(
+					`[AuthContext] fetch received 401 response, logging out...`,
+					{
+						status: response.status,
+						url: inputUrl,
+						token: describeToken(tokenRef.current),
+					},
+					"warn"
+				);
+				void handleUnauthorizedLogout("http 401 fetch response");
+			}
+			return response;
+		};
+
+		globalThis.fetch = authAwareFetch;
+		return () => {
+			if (globalThis.fetch === authAwareFetch) {
+				globalThis.fetch = originalFetch;
+			}
+		};
+	}, [handleUnauthorizedLogout]);
 
 	const contextValue: AuthContextType = {
 		isAuthenticated: !!token,
