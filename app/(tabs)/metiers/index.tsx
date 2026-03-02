@@ -1,11 +1,10 @@
 import CategoriesCards from "@/components/categories/categories";
+import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import useAuthSession from "@/hooks/useAuthSession";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
-import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 import { clearMetiersCache, useGetMetiers } from "@/hooks/useGetMetiers";
 import React, { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -14,7 +13,6 @@ import MetierList from "./list";
 
 const Metier = () => {
 	const insets = useSafeAreaInsets();
-	const { auth } = useAuthSession();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
 	const [refreshing, setRefreshing] = useState(false);
@@ -28,11 +26,6 @@ const Metier = () => {
 		refetch,
 	} = useGetMetiers(filterByCat);
 	const { data: dataCategory } = useCategoriesFull();
-	const { data: dataFavoritesMetier } = useGetFavoriteMetiers(auth?.user.id);
-
-	const toggleTab = (index: number) => {
-		setActiveTab(index);
-	};
 
 	const handleRefresh = useCallback(() => {
 		setRefreshing(true);
@@ -48,13 +41,12 @@ const Metier = () => {
 		})();
 	}, [filterByCat, refetch]);
 
-	const requiresFavorites = !!auth?.user?.id;
-	const favoritesReady = !requiresFavorites || !!dataFavoritesMetier;
-
-	const listDepsReady = !!dataMetier && !!dataCategory && favoritesReady;
+	const listDepsReady = !!dataMetier && !!dataCategory;
 
 	const canShowList = activeTab === 0 && listDepsReady;
 	const canShowCategories = activeTab === 1 && !!dataCategory;
+	const showListLoader = activeTab === 0 && !listDepsReady;
+	const showCategoriesLoader = activeTab === 1 && !dataCategory;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -78,12 +70,13 @@ const Metier = () => {
 					setActiveTab={setActiveTab}
 				/>
 			)}
+			{(showListLoader || showCategoriesLoader) && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
 					activeTab={activeTab}
 					setActiveTab={setActiveTab}
-					handlePress={() => toggleTab(activeTab === 0 ? 1 : 0)}
+					handlePress={() => setActiveTab(activeTab === 0 ? 1 : 0)}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>

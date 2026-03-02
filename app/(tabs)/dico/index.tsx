@@ -35,10 +35,6 @@ const Dico = () => {
 		}
 	}, [openDetails, navigation]);
 
-	const toggleTab = (index: number) => {
-		setActiveTab(index);
-	};
-
 	const handleRefresh = useCallback(() => {
 		setRefreshing(true);
 		void (async () => {
@@ -53,15 +49,15 @@ const Dico = () => {
 		})();
 	}, [filterByCat, refetch]);
 
-	// Enforce minimum loading time to prevent glitchy skeleton flashes
-
-	const showLoader = activeTab === 1 && (!dataCat || isLoadingCat);
+	const listReady = !!dataDico && !!dataCat;
+	const showListLoader = activeTab === 0 && !listReady;
+	const showCategoriesLoader = activeTab === 1 && (!dataCat || isLoadingCat);
 
 	return (
 		<View style={styles.wrapper}>
 			<ScreenHeaders content='Dico' />
 
-			{dataDico && activeTab === 0 && (
+			{listReady && activeTab === 0 && (
 				<DicoList
 					data={dataDico}
 					categories={dataCat}
@@ -80,13 +76,13 @@ const Dico = () => {
 				/>
 			)}
 
-			{showLoader && <Loader />}
+			{(showListLoader || showCategoriesLoader) && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
 					activeTab={activeTab}
 					setActiveTab={setActiveTab}
-					handlePress={() => toggleTab(activeTab === 0 ? 1 : 0)}
+					handlePress={() => setActiveTab(activeTab === 0 ? 1 : 0)}
 					values={{ btn1: "Voir Tout", btn2: "Catégories" }}
 				/>
 			</View>

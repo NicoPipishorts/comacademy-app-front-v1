@@ -7,59 +7,51 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 const LEGACY_DICO_STORAGE_PREFIXES = ["dicoList", "dicosList"];
 
-const fetchDicoById = async (token: string, id: number): Promise<any> => {
-	try {
-		// First get the list to find the documentId
-		const listUrl = `${process.env.EXPO_PUBLIC_API_URL}/dicos?filters[id][$eq]=${id}`;
-		const listResponse = await fetch(listUrl, {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+type DicoDocumentLookup = { data: { documentId?: string }[] };
 
-		if (!listResponse.ok) {
-			throw new Error(`Failed to find dico with id ${id}`);
-		}
+const fetchDicoById = async (
+	token: string,
+	id: number
+): Promise<DicoPayload> => {
+	const listUrl = `${process.env.EXPO_PUBLIC_API_URL}/dicos?filters[id][$eq]=${id}`;
+	const listResponse = await fetch(listUrl, {
+		headers: { Authorization: `Bearer ${token}` },
+	});
 
-		const listResult = (await listResponse.json()) as { data: any[] };
-
-		if (!listResult.data || listResult.data.length === 0) {
-			throw new Error(`Dico with id ${id} not found`);
-		}
-
-		const documentId = listResult.data[0].documentId;
-
-		// Now fetch the full details using documentId
-		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos/${documentId}`;
-
-		const response = await fetch(url, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
-
-		if (!response.ok) {
-			const text = await response.text();
-			console.error(`Dico by ID HTTP error! status: ${response.status}`, text);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const result = await response.json();
-
-		return result;
-	} catch (error) {
-		console.error("Error fetching Dico by Id:", error);
-		throw error;
+	if (!listResponse.ok) {
+		throw new Error(`Failed to find dico with id ${id}`);
 	}
+
+	const listResult = (await listResponse.json()) as DicoDocumentLookup;
+	const documentId = listResult.data?.[0]?.documentId;
+	if (!documentId) {
+		throw new Error(`Dico with id ${id} not found`);
+	}
+
+	const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos/${documentId}`;
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	return (await response.json()) as DicoPayload;
 };
 
 const useDicoById = (id: number) => {
 	const { token } = useJwtToken();
+	const isValidId = Number.isFinite(id) && id > 0;
 
 	return useQuery<DicoPayload>({
 		queryKey: ["Dico", id],
-		queryFn: () => fetchDicoById(token, id),
+		queryFn: () => fetchDicoById(token as string, id),
 		staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
 		gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
-		enabled: !!token,
+		enabled: !!token && isValidId,
 	});
 };
 
@@ -72,35 +64,27 @@ const fetchDicoIds = async (
 	token: string,
 	filterByCat: number | null
 ): Promise<DicoLists> => {
-	try {
-		const params = new URLSearchParams({
-			"fields[0]": "Word",
-		});
+	const params = new URLSearchParams({
+		"fields[0]": "Word",
+	});
 
-		if (filterByCat !== null) {
-			params.set("filters[MainCat][$eq]", String(filterByCat));
-		}
-
-		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
-
-		const response = await fetch(url, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
-
-		if (!response.ok) {
-			const text = await response.text();
-			console.error(`Dicos HTTP error! status: ${response.status}`, text);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const data = (await response.json()) as DicoLists;
-		return data;
-	} catch (error) {
-		console.error("Error fetching Dicos:", error);
-		throw error;
+	if (filterByCat !== null) {
+		params.set("filters[MainCat][$eq]", String(filterByCat));
 	}
+
+	const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
+
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	return (await response.json()) as DicoLists;
 };
 
 const useDicoIds = (filterByCat: number | null) => {
@@ -144,7 +128,7 @@ const useDicoIds = (filterByCat: number | null) => {
 
 	const query = useQuery<DicoLists>({
 		queryKey: ["DicoIds", filterByCat],
-		queryFn: () => fetchDicoIds(token, filterByCat),
+		queryFn: () => fetchDicoIds(token as string, filterByCat),
 		enabled: !!token && hydrated && shouldSync,
 		staleTime: CACHE_TTL,
 		gcTime: CACHE_TTL,

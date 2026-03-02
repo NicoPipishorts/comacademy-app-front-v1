@@ -24,7 +24,8 @@
 			"bundleIdentifier": "com.nicopipishorts.comacademy",
 			"buildNumber": "9",
 			"infoPlist": {
-				"ITSAppUsesNonExemptEncryption": false
+				"ITSAppUsesNonExemptEncryption": false,
+				"NSFaceIDUsageDescription": "Utiliser Face ID pour vous connecter rapidement à votre compte."
 			},
 			"associatedDomains": [
 				"applinks:comacademy.fr",

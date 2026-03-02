@@ -1,7 +1,7 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import Searchbar from "@/components/Searchbar";
-import { colorBlack, colorGrey } from "@/constants/colors";
+import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { CategoriePayload } from "@/types/categories";
@@ -312,24 +312,6 @@ const styles = StyleSheet.create({
 		marginTop: 20,
 		marginBottom: 80,
 	},
-	filterCWrapper: {
-		flexDirection: "row",
-		alignItems: "center",
-		alignSelf: "flex-start",
-	},
-	filterContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-		alignSelf: "flex-start",
-		paddingVertical: 5,
-		paddingHorizontal: 10,
-		borderRadius: 50,
-		backgroundColor: colorGrey,
-	},
-	filterText: {
-		fontWeight: "bold",
-		paddingRight: 10,
-	},
 	listWrapper: {
 		flex: 1,
 	},
@@ -362,18 +344,6 @@ const styles = StyleSheet.create({
 		padding: 1,
 		fontSize: FontSize12,
 		fontWeight: "bold",
-	},
-	floatingTabbarContainer: {
-		backgroundColor: "transparent",
-		flexDirection: "row",
-		justifyContent: "center",
-		alignItems: "center",
-		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 140,
-		elevation: 5,
-		zIndex: 1,
 	},
 	noDataContainer: {
 		flex: 1,

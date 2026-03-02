@@ -49,6 +49,8 @@
     </dict>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Utiliser Face ID pour vous connecter rapidement à votre compte.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

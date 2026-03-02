@@ -333,18 +333,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize12,
 		fontWeight: "bold",
 	},
-	floatingTabbarContainer: {
-		backgroundColor: "transparent",
-		flexDirection: "row",
-		justifyContent: "center",
-		alignItems: "center",
-		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 140,
-		elevation: 5,
-		zIndex: 1,
-	},
 	noDataContainer: {
 		flex: 1,
 		minHeight: "50%",
