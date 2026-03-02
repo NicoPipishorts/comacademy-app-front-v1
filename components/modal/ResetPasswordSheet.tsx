@@ -26,7 +26,6 @@ import React, {
 import {
 	ActivityIndicator,
 	Keyboard,
-	Platform,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -67,8 +66,7 @@ const ResetPasswordSheet = forwardRef<
 	) => {
 		const [password, setPassword] = useState("");
 		const [showPassword, setShowPassword] = useState(false);
-		const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-		const snapPoints = useMemo(() => ["65%", "90%"], []);
+		const snapPoints = useMemo(() => ["58%", "78%"], []);
 
 		useEffect(() => {
 			if (resetCode) {
@@ -76,22 +74,6 @@ const ResetPasswordSheet = forwardRef<
 				setShowPassword(false);
 			}
 		}, [resetCode]);
-
-		useEffect(() => {
-			const showListener = Keyboard.addListener(
-				Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-				() => setIsKeyboardVisible(true)
-			);
-			const hideListener = Keyboard.addListener(
-				Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-				() => setIsKeyboardVisible(false)
-			);
-
-			return () => {
-				showListener.remove();
-				hideListener.remove();
-			};
-		}, []);
 
 		const renderBackdrop = useCallback(
 			(props: BottomSheetBackdropProps) => (
@@ -104,6 +86,12 @@ const ResetPasswordSheet = forwardRef<
 			),
 			[]
 		);
+
+		const handleAnimate = useCallback((_fromIndex: number, toIndex: number) => {
+			if (toIndex === -1) {
+				Keyboard.dismiss();
+			}
+		}, []);
 
 		const handleSubmit = useCallback(() => {
 			if (!resetCode) return;
@@ -128,14 +116,15 @@ const ResetPasswordSheet = forwardRef<
 		return (
 			<BottomSheetModal
 				ref={ref}
-				index={isKeyboardVisible ? 1 : 0}
+				index={0}
 				snapPoints={snapPoints}
 				backgroundStyle={styles.sheetBackground}
 				handleIndicatorStyle={styles.hiddenIndicator}
-				enablePanDownToClose={!isKeyboardVisible}
+				enablePanDownToClose
 				enableDynamicSizing={false}
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
+				onAnimate={handleAnimate}
 				keyboardBehavior='extend'
 				keyboardBlurBehavior='restore'
 				android_keyboardInputMode='adjustResize'>
@@ -169,7 +158,9 @@ const ResetPasswordSheet = forwardRef<
 							/>
 						</View>
 
-						<PasswordStrengthMeter password={password} />
+						<View style={styles.strengthMeterBlock}>
+							<PasswordStrengthMeter password={password} />
+						</View>
 						<PasswordRequirements password={password} />
 					</View>
 
@@ -237,6 +228,9 @@ const styles = StyleSheet.create({
 	},
 	eyeIcon: {
 		marginLeft: 10,
+	},
+	strengthMeterBlock: {
+		marginTop: 12,
 	},
 	resetButtonDisabled: {
 		opacity: 0.6,

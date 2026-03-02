@@ -168,6 +168,17 @@ const SignIn = () => {
 		});
 	}, [forgotPasswordMutation]);
 
+	const openResetPasswordSheetForDev = useCallback(() => {
+		if (!__DEV__) return;
+		Keyboard.dismiss();
+		setPendingResetCode("dev-reset-code");
+		latestResetPasswordRef.current = "";
+		resetPasswordMutation.reset();
+		requestAnimationFrame(() => {
+			resetPasswordSheetRef.current?.present();
+		});
+	}, [resetPasswordMutation]);
+
 	const resetPasswordMutation = useResetPasswordMutation(
 		resetPasswordUrl,
 		() => {
@@ -420,6 +431,13 @@ const SignIn = () => {
 										Mot de passe oublié ?
 									</Text>
 								</Pressable>
+								{__DEV__ && (
+									<Pressable onPress={openResetPasswordSheetForDev} hitSlop={6}>
+										<Text style={styles.devResetPasswordText}>
+											DEV: Ouvrir reset password sheet
+										</Text>
+									</Pressable>
+								)}
 							</View>
 
 							<Pressable
@@ -556,10 +574,17 @@ const styles = StyleSheet.create({
 		width: "100%",
 		alignItems: "flex-end",
 		marginBottom: 26,
+		gap: 8,
 	},
 	forgotPasswordText: {
 		fontWeight: "bold",
 		color: colorBlack,
+	},
+	devResetPasswordText: {
+		fontWeight: "700",
+		fontSize: 12,
+		color: colorBlack,
+		opacity: 0.7,
 	},
 	buttonContainer: {
 		backgroundColor: colorBlack,
