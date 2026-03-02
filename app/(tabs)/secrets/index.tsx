@@ -6,8 +6,12 @@ import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetAllSecrets from "@/hooks/Secrets/useGetAllSecrets";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
+import { resolveMediaUrl } from "@/src/utils/resolveMediaUrl";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const DEFAULT_SECRET_IMAGE_URL =
+	"https://fearless-comfort-efded67ed1.media.strapiapp.com/3secrets_placeholder_e0a32b6000.png";
 
 export default function Secrets() {
 	const insets = useSafeAreaInsets();
@@ -43,9 +47,19 @@ export default function Secrets() {
 				</View>
 
 				{secrets?.data.map((secret, index) => {
-					const imageUrl =
-						secret.imageUrl ??
-						"https://fearless-comfort-efded67ed1.media.strapiapp.com/3secrets_placeholder_e0a32b6000.png";
+					const mediaCandidate =
+						secret.CardImageUrl ??
+						secret.CardImageURL ??
+						secret.CardImage?.formats?.large?.url ??
+						secret.CardImage?.formats?.medium?.url ??
+						secret.CardImage?.formats?.small?.url ??
+						secret.CardImage?.formats?.thumbnail?.url ??
+						secret.CardImage ??
+						secret.imageUrl;
+					const imageUrl = resolveMediaUrl(
+						mediaCandidate,
+						DEFAULT_SECRET_IMAGE_URL
+					);
 					const locked = isItemLocked(index);
 
 					return (

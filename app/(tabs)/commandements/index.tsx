@@ -16,6 +16,10 @@ import { primaryBackground } from "@/constants/colors";
 import useGetCommandements from "@/hooks/Commandements/useGetAllCommandements";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
+import { resolveMediaUrl } from "@/src/utils/resolveMediaUrl";
+
+const DEFAULT_COMMANDEMENT_IMAGE_URL =
+	"https://fearless-comfort-efded67ed1.media.strapiapp.com/tips_n_tactics_52aeea960b.png";
 
 export default function TipsAndTactics() {
 	const insets = useSafeAreaInsets();
@@ -91,24 +95,26 @@ export default function TipsAndTactics() {
 				contentContainerStyle={{ paddingBottom: 100 }}>
 				{activeTab === 0 &&
 					commandements.data.map((cmd, index) => {
-						const imageUrl =
-							cmd.attributes.imageUrl ??
-							"https://fearless-comfort-efded67ed1.media.strapiapp.com/tips_n_tactics_52aeea960b.png";
+						const imageUrl = resolveMediaUrl(
+							cmd.attributes.imageUrl,
+							DEFAULT_COMMANDEMENT_IMAGE_URL
+						);
 						const locked = isItemLocked(index);
 
 						return (
-							<CardSimpleButtonCommandements
-								key={cmd.id}
-								itemId={cmd.attributes.documentId}
-								content={cmd.attributes.Theme}
-								image={imageUrl}
-								locked={locked}
-								onPress={
-									locked
-										? () => handleCommandementPress(index, cmd.id)
+							<View key={cmd.id}>
+								<CardSimpleButtonCommandements
+									itemId={cmd.attributes.documentId}
+									content={cmd.attributes.Theme}
+									image={imageUrl}
+									locked={locked}
+									onPress={
+										locked
+											? () => handleCommandementPress(index, cmd.id)
 										: undefined
-								}
-							/>
+									}
+								/>
+							</View>
 						);
 					})}
 

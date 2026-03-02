@@ -19,7 +19,19 @@ export interface SecretsData {
 	Cards?: Card[];
 	/** Only present on the list response */
 	imageUrl?: string;
-	CardImage?: any;
+	CardImageUrl?: string;
+	CardImageURL?: string;
+	CardImage?:
+		| {
+				url?: string;
+				formats?: {
+					large?: { url?: string };
+					medium?: { url?: string };
+					small?: { url?: string };
+					thumbnail?: { url?: string };
+				};
+		  }
+		| null;
 }
 
 export interface Pagination {
