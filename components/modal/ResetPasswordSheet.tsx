@@ -4,7 +4,6 @@ import PasswordStrengthMeter from "@/components/experience/passwordStrengthMeter
 import {
 	colorBlack,
 	colorGrey,
-	colorPink,
 	colorWhite,
 } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
@@ -67,18 +66,14 @@ const ResetPasswordSheet = forwardRef<
 		ref
 	) => {
 		const [password, setPassword] = useState("");
-		const [confirmPassword, setConfirmPassword] = useState("");
 		const [showPassword, setShowPassword] = useState(false);
-		const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 		const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 		const snapPoints = useMemo(() => ["65%", "90%"], []);
 
 		useEffect(() => {
 			if (resetCode) {
 				setPassword("");
-				setConfirmPassword("");
 				setShowPassword(false);
-				setShowConfirmPassword(false);
 			}
 		}, [resetCode]);
 
@@ -114,30 +109,21 @@ const ResetPasswordSheet = forwardRef<
 			if (!resetCode) return;
 			onSubmit({
 				password,
-				passwordConfirmation: confirmPassword,
+				passwordConfirmation: password,
 				code: resetCode,
 			});
-		}, [confirmPassword, onSubmit, password, resetCode]);
+		}, [onSubmit, password, resetCode]);
 
 		const handleDismiss = useCallback(() => {
 			setPassword("");
-			setConfirmPassword("");
 			setShowPassword(false);
-			setShowConfirmPassword(false);
 			onDismiss?.();
 		}, [onDismiss]);
-
-		const hasMismatch =
-			confirmPassword.trim().length > 0 &&
-			password.trim().length > 0 &&
-			password !== confirmPassword;
 
 		const isButtonDisabled =
 			isSubmitting ||
 			!resetCode ||
-			password.trim().length === 0 ||
-			confirmPassword.trim().length === 0 ||
-			hasMismatch;
+			password.trim().length === 0;
 
 		return (
 			<BottomSheetModal
@@ -185,34 +171,6 @@ const ResetPasswordSheet = forwardRef<
 
 						<PasswordStrengthMeter password={password} />
 						<PasswordRequirements password={password} />
-					</View>
-
-					<View>
-						<View style={styles.inputWrapper}>
-							<BottomSheetTextInput
-								style={styles.sheetInput}
-								value={confirmPassword}
-								onChangeText={setConfirmPassword}
-								placeholder='Confirmer le mot de passe'
-								placeholderTextColor={colorGrey}
-								autoCapitalize='none'
-								secureTextEntry={!showConfirmPassword}
-								textContentType='password'
-								autoCorrect={false}
-							/>
-							<MaterialCommunityIcons
-								name={showConfirmPassword ? "eye-off" : "eye"}
-								size={22}
-								color={colorBlack}
-								style={styles.eyeIcon}
-								onPress={() => setShowConfirmPassword((prev) => !prev)}
-							/>
-						</View>
-						{hasMismatch ? (
-							<Text style={styles.errorText}>
-								Les mots de passe ne correspondent pas.
-							</Text>
-						) : null}
 					</View>
 
 					<Pressable
@@ -279,11 +237,6 @@ const styles = StyleSheet.create({
 	},
 	eyeIcon: {
 		marginLeft: 10,
-	},
-	errorText: {
-		marginTop: 8,
-		color: colorPink,
-		fontSize: FontSize16,
 	},
 	resetButtonDisabled: {
 		opacity: 0.6,
