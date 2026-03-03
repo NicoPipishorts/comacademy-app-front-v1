@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 export type MediaRoute =
 	| "petites-histoires"
 	| "trentes-secondes"
+	| "TrenteSecondes"
 	| "top-des-flops";
 
 export interface VideoUri {

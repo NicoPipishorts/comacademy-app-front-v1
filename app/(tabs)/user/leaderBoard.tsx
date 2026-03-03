@@ -196,6 +196,13 @@ export default function LeaderBoard() {
 					{filteredUsers.map((user, index) => {
 						const scoreUserId = resolveScoreUserId(user);
 						const isSelected = currentUser === scoreUserId;
+						const firstName = user.attributes.user.firstName?.trim() || "Utilisateur";
+						const lastInitial = user.attributes.user.lastName
+							?.trim()
+							?.slice(0, 1);
+						const displayName = lastInitial
+							? `${firstName} ${lastInitial}.`
+							: firstName;
 
 						return (
 							<View
@@ -229,10 +236,7 @@ export default function LeaderBoard() {
 											<Text style={[styles.ranking, { color: colorBlack }]}>
 												{index + 1}
 											</Text>
-											<Text style={styles.resultsText}>
-												{user.attributes.user.firstName}{" "}
-												{user.attributes.user.lastName.slice(0, 1)}.
-											</Text>
+											<Text style={styles.resultsText}>{displayName}</Text>
 										</View>
 										<View style={{ flexDirection: "row", paddingRight: 5 }}>
 											<Text style={styles.resultsText}>

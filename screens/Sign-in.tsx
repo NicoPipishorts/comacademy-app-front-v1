@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Linking from "expo-linking";
 import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "expo-router";
@@ -66,11 +67,18 @@ const SignIn = () => {
 		Platform.OS === "ios"
 			? "Authentifie-toi avec Face ID"
 			: "Authentifie-toi pour te connecter";
+	const isExpoGo =
+		Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 	const toggleShowPassword = () => setShowPassword((v) => !v);
 
 	const refreshBiometricAvailability = useCallback(async () => {
 		try {
+			if (isExpoGo) {
+				setCanUseBiometricLogin(false);
+				return;
+			}
+
 			const secureStoreAvailable = await SecureStore.isAvailableAsync();
 			if (!secureStoreAvailable) {
 				setCanUseBiometricLogin(false);
@@ -87,11 +95,13 @@ const SignIn = () => {
 		} catch {
 			setCanUseBiometricLogin(false);
 		}
-	}, []);
+	}, [isExpoGo]);
 
 	const persistBiometricSession = useCallback(
 		async (payload: AuthResponse, identifier: string) => {
 			try {
+				if (isExpoGo) return;
+
 				const secureStoreAvailable = await SecureStore.isAvailableAsync();
 				if (!secureStoreAvailable) return;
 				if (Platform.OS === "web" || !SecureStore.canUseBiometricAuthentication()) {
@@ -115,7 +125,7 @@ const SignIn = () => {
 				console.error("Failed to persist biometric login payload", error);
 			}
 		},
-		[biometricPrompt]
+		[biometricPrompt, isExpoGo]
 	);
 
 	const onSuccess = async (data: AuthResponse) => {
@@ -206,6 +216,14 @@ const SignIn = () => {
 	};
 
 	const handleBiometricLogin = useCallback(async () => {
+		if (isExpoGo) {
+			showSnackbar(
+				"Face ID n'est pas pris en charge dans Expo Go. Utilise un build développement ou production.",
+				"error"
+			);
+			return;
+		}
+
 		setIsBiometricLoading(true);
 		Keyboard.dismiss();
 		try {
@@ -235,7 +253,7 @@ const SignIn = () => {
 		} finally {
 			setIsBiometricLoading(false);
 		}
-	}, [biometricLabel, biometricPrompt, login, navigation, showSnackbar]);
+	}, [biometricLabel, biometricPrompt, isExpoGo, login, navigation, showSnackbar]);
 
 	const handleForgotPasswordSubmit = useCallback(
 		(targetEmail: string) => {

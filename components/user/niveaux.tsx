@@ -1,7 +1,7 @@
 import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 
@@ -11,16 +11,15 @@ interface Props {
 
 export default function ShowNiveaux({ totalPoints }: Props) {
 	const { token } = useJwtToken();
-	const { data: niveaux } = useGetNiveaux(token);
-
-	// const [textHeight, setTextHeight] = useState<number | "auto">(40);
-	// const [isExpanded, setIsExpanded] = useState(false); // Track expansion state
-	const [niveauStatut, setNiveauStatut] = useState<string | null>(null);
-	const [niveauNumber, setNiveauNumber] = useState<number | null>(null);
-	const [niveauCitation, setNiveauCitation] = useState<string | null>(null);
-	const [niveauCommentaire, setNiveauCommentaire] = useState<string | null>(
-		null
-	);
+	const {
+		data: niveaux,
+		status: niveauxStatus,
+		fetchStatus: niveauxFetchStatus,
+		isLoading: niveauxIsLoading,
+		isFetching: niveauxIsFetching,
+		isError: niveauxIsError,
+		error: niveauxError,
+	} = useGetNiveaux(token);
 
 	const niveauxLength = niveaux?.data?.length ?? 0;
 
@@ -50,26 +49,57 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		[niveauxLength]
 	);
 
-	const setNiveauDetails = useCallback(
-		(index: number) => {
-			const niveau = niveaux?.data?.[index]?.attributes;
-			if (niveau) {
-				setNiveauStatut(niveau.statut);
-				setNiveauNumber(index);
-				setNiveauCitation(niveau.citation);
-				setNiveauCommentaire(niveau.commentaires);
-			}
-		},
-		[niveaux]
-	);
+	const niveauNumber = niveauxLength ? calculateNiveauIndex(totalPoints) : null;
+	const currentNiveauEntry =
+		niveauNumber !== null ? (niveaux?.data?.[niveauNumber] as any) : null;
+	const currentNiveau =
+		currentNiveauEntry?.attributes ?? currentNiveauEntry ?? null;
+	const niveauStatut =
+		currentNiveau?.statut ?? currentNiveau?.Statut ?? "—";
+	const niveauCitation =
+		currentNiveau?.citation ?? currentNiveau?.Citation ?? "—";
+	const niveauCommentaire =
+		currentNiveau?.commentaires ?? currentNiveau?.Commentaires ?? "—";
 
 	useEffect(() => {
-		if (!niveauxLength) {
-			return;
+		if (!__DEV__) return;
+
+		console.log("[ShowNiveaux] query:", {
+			status: niveauxStatus,
+			fetchStatus: niveauxFetchStatus,
+			isLoading: niveauxIsLoading,
+			isFetching: niveauxIsFetching,
+			isError: niveauxIsError,
+			count: niveauxLength,
+		});
+		if (niveauxError) {
+			console.log("[ShowNiveaux] query error:", niveauxError);
 		}
-		const index = calculateNiveauIndex(totalPoints);
-		setNiveauDetails(index);
-	}, [calculateNiveauIndex, niveauxLength, setNiveauDetails, totalPoints]);
+		console.log("[ShowNiveaux] computed:", {
+			totalPoints,
+			niveauIndex: calculateNiveauIndex(totalPoints),
+			niveauNumber,
+			niveauStatut,
+			round: calculateRoundIndex(niveauNumber, totalPoints),
+			currentNiveauHasAttributes: Boolean(currentNiveauEntry?.attributes),
+			currentNiveauKeys: currentNiveau ? Object.keys(currentNiveau) : [],
+		});
+	}, [
+		calculateNiveauIndex,
+		calculateRoundIndex,
+		niveauNumber,
+		niveauStatut,
+		currentNiveau,
+		currentNiveauEntry,
+		niveauxError,
+		niveauxFetchStatus,
+		niveauxIsError,
+		niveauxIsFetching,
+		niveauxIsLoading,
+		niveauxLength,
+		niveauxStatus,
+		totalPoints,
+	]);
 
 	if (!niveaux) {
 		return <Loader />;

@@ -64,8 +64,8 @@ async function fetchAllUsersScores(
 		);
 	}
 
-		const data = (await response.json()) as AllUsersScoreResponse;
-		return data;
+	const data = (await response.json()) as AllUsersScoreResponse;
+	return data;
 }
 
 // Fetch function for a single user's score

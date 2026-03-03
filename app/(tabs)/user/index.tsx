@@ -74,11 +74,24 @@ export default function User() {
 		}
 	}, [openModal, timestamp, router]); // timestamp will always be different
 
-	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
+	const {
+		data: scores,
+		refetch,
+		status: scoreStatus,
+		fetchStatus: scoreFetchStatus,
+		isLoading: scoreIsLoading,
+		isFetching: scoreIsFetching,
+		isError: scoreIsError,
+		error: scoreError,
+	} = useGetUserScore(token, auth?.user.id);
 
 	// Subscription prompt hook
 	const totalAnsweredQuestions =
 		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
+	const totalScore = scores?.data?.[0]?.attributes?.totalScore ?? 0;
+	const totalPercentageCorrect =
+		scores?.data?.[0]?.attributes?.totalPercentageCorrect ?? 0;
+	const computedLevel = Math.floor(totalAnsweredQuestions / 150);
 	const { shouldShowModal, dismissModal } = useSubscriptionPrompt(
 		totalAnsweredQuestions
 	);
@@ -210,6 +223,61 @@ export default function User() {
 		expirationDate,
 		hasPremiumAccess,
 		resolvedExpirationDateRaw,
+	]);
+
+	useEffect(() => {
+		if (!__DEV__) return;
+
+		console.log("[UserProfile] auth user id:", auth?.user?.id ?? null);
+		console.log("[UserProfile] token present:", Boolean(token), {
+			tokenLoading,
+		});
+		console.log("[UserProfile] score query:", {
+			status: scoreStatus,
+			fetchStatus: scoreFetchStatus,
+			isLoading: scoreIsLoading,
+			isFetching: scoreIsFetching,
+			isError: scoreIsError,
+		});
+		if (scoreError) {
+			console.log("[UserProfile] score query error:", scoreError);
+		}
+		console.log("[UserProfile] score payload present:", Boolean(scores?.data?.[0]));
+		console.log("[UserProfile] score values:", {
+			totalScore,
+			totalAnsweredQuestions,
+			totalPercentageCorrect,
+			computedLevel,
+		});
+		console.log("[UserProfile] subscription status:", {
+			authSubscriptionStatus: auth?.user?.subscription?.status ?? null,
+			backendHasPremiumAccess,
+			hasActiveSubscription,
+			hasPremiumAccess,
+			resolvedProductId,
+			resolvedExpirationDateRaw,
+		});
+	}, [
+		auth?.user?.id,
+		auth?.user?.subscription?.status,
+		backendHasPremiumAccess,
+		computedLevel,
+		hasActiveSubscription,
+		hasPremiumAccess,
+		resolvedExpirationDateRaw,
+		resolvedProductId,
+		scoreError,
+		scoreFetchStatus,
+		scoreIsError,
+		scoreIsFetching,
+		scoreIsLoading,
+		scoreStatus,
+		scores?.data,
+		token,
+		tokenLoading,
+		totalAnsweredQuestions,
+		totalPercentageCorrect,
+		totalScore,
 	]);
 
 	if (!scores) {
