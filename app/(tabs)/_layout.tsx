@@ -79,10 +79,25 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
+					name='parcours'
+					options={{
+						tabBarLabel: "Parcours",
+						headerShown: false,
+					}}
+				/>
+				<Tabs.Screen
+					name='dashboard'
+					options={{
+						tabBarLabel: "Dashboard",
+						headerShown: false,
+					}}
+				/>
+				<Tabs.Screen
 					name='playlists'
 					options={{
 						tabBarLabel: "Playlists",
 						headerShown: false,
+						href: null,
 					}}
 				/>
 				<Tabs.Screen
@@ -111,6 +126,7 @@ const TabsLayout: React.FC = () => {
 					options={{
 						tabBarLabel: "User",
 						headerShown: false,
+						href: null,
 					}}
 				/>
 				<Tabs.Screen

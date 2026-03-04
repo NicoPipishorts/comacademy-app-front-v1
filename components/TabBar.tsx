@@ -1,60 +1,106 @@
-// File: src/components/CustomTabBar.tsx
-import activityIcon from "@/assets/imgs/icons/activity.png";
-import dicoIcon from "@/assets/imgs/icons/dico.png";
-import feedIcon from "@/assets/imgs/icons/feed.png";
-import leJeuIcon from "@/assets/imgs/icons/le_jeu.png";
-import playlistsIcon from "@/assets/imgs/icons/playlists.png";
+import navFeedIcon from "@/assets/imgs/icons/nav_feed.svg";
+import navJeuIcon from "@/assets/imgs/icons/nav_jeu.svg";
+import navParcoursIcon from "@/assets/imgs/icons/nav_parcours.svg";
+import navProfileIcon from "@/assets/imgs/icons/nav_profile.svg";
+import navRubriquesIcon from "@/assets/imgs/icons/nav_rubriques.svg";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Href, useRouter } from "expo-router";
+import { Asset } from "expo-asset";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgUri } from "react-native-svg";
 
-const icons: Record<string, any> = {
-	activity: activityIcon,
-	leJeu: leJeuIcon,
-	feed: feedIcon,
-	playlists: playlistsIcon,
-	dico: dicoIcon,
-};
+const tabItems = [
+	{
+		routeName: "activity",
+		label: "Rubriques",
+		icon: navRubriquesIcon,
+		iconWidth: 32,
+		iconHeight: 26,
+	},
+	{
+		routeName: "leJeu",
+		label: "Jeu",
+		icon: navJeuIcon,
+		iconWidth: 31,
+		iconHeight: 30,
+	},
+	{
+		routeName: "parcours",
+		label: "Parcours",
+		icon: navParcoursIcon,
+		iconWidth: 22,
+		iconHeight: 29,
+	},
+	{
+		routeName: "feed",
+		label: "Feed",
+		icon: navFeedIcon,
+		iconWidth: 23,
+		iconHeight: 24,
+	},
+	{
+		routeName: "dashboard",
+		label: "Dashboard",
+		icon: navProfileIcon,
+		iconWidth: 22,
+		iconHeight: 21,
+	},
+] as const;
 
-const labels: Record<string, string> = {
-	activity: "Rubriques",
-	leJeu: "Le Jeu",
-	feed: "Feed",
-	playlists: "Playlists",
-	dico: "Dico",
-};
-
-const desiredOrder = ["activity", "leJeu", "feed", "playlists", "dico"];
+function NavIcon({
+	source,
+	width,
+	height,
+}: {
+	source: any;
+	width: number;
+	height: number;
+}) {
+	const iconUri = Asset.fromModule(source).uri;
+	return <SvgUri uri={iconUri} width={width} height={height} />;
+}
 
 export default function CustomTabBar({
 	state,
 	descriptors,
 	navigation,
 }: BottomTabBarProps) {
-	const router = useRouter();
+	const insets = useSafeAreaInsets();
 
-	// order and filter
-	const ordered = state.routes
-		.filter((r) => desiredOrder.includes(r.name))
-		.sort(
-			(a, b) => desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name)
+	const routeByName = new Map(state.routes.map((route) => [route.name, route]));
+	const activeRouteName = state.routes[state.index]?.name;
+
+	const findTabRoute = (tabRouteName: string) =>
+		routeByName.get(tabRouteName) ??
+		routeByName.get(`${tabRouteName}/index`) ??
+		state.routes.find(
+			(route) =>
+				route.name === tabRouteName ||
+				route.name.startsWith(`${tabRouteName}/`),
 		);
 
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, { paddingBottom: insets.bottom + 6 }]}>
 			<View style={styles.tabbar}>
-				{ordered.map((route) => {
+				{tabItems.map((tab) => {
+					const route = findTabRoute(tab.routeName);
+					if (!route) return null;
+
 					const descriptor = descriptors[route.key];
 					if (!descriptor) return null;
 
 					const isFocused =
-						state.index ===
-						state.routes.findIndex((r) => r.name === route.name);
-					const icon = icons[route.name]!;
-					const label = labels[route.name] || route.name;
+						activeRouteName === route.name ||
+						(tab.routeName === "parcours" && activeRouteName === "playlists") ||
+						(tab.routeName === "parcours" &&
+							(activeRouteName === "parcours" ||
+								activeRouteName?.startsWith("parcours/"))) ||
+						(tab.routeName === "dashboard" &&
+							(activeRouteName === "dashboard" ||
+								activeRouteName?.startsWith("dashboard/")));
 
 					const onPress = () => {
 						const event = navigation.emit({
@@ -63,36 +109,36 @@ export default function CustomTabBar({
 							canPreventDefault: true,
 						});
 
-						// 1) if the event has been prevented, abort
 						if (event.defaultPrevented) {
 							return;
 						}
 
-						// 2) if already focused, do nothing
 						if (isFocused) {
 							return;
 						}
 
-						// 3) navigate or replace depending on tab
-						if (route.name === "activity") {
-							router.replace("/activity");
-						} else if (route.name === "leJeu") {
-							router.push("/leJeu" as Href<string>);
-						} else {
-							router.push(`/${route.name}` as Href<string>);
-						}
+						navigation.navigate(route.name);
 					};
 
 					return (
 						<TouchableOpacity
-							key={route.name}
+							key={tab.routeName}
 							accessibilityRole='button'
 							accessibilityState={isFocused ? { selected: true } : {}}
 							onPress={onPress}
 							style={styles.tabItem}>
-							<Image source={icon} style={styles.icon} resizeMode='contain' />
-							<Text style={styles.label}>{label}</Text>
-							{isFocused && <View style={styles.indicator} />}
+							<View
+								style={[
+									styles.iconContainer,
+									isFocused && styles.iconContainerFocused,
+								]}>
+								<NavIcon
+									source={tab.icon}
+									width={tab.iconWidth}
+									height={tab.iconHeight}
+								/>
+							</View>
+							<Text style={styles.label}>{tab.label}</Text>
 						</TouchableOpacity>
 					);
 				})}
@@ -107,36 +153,37 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		width: "100%",
 		backgroundColor: primaryBackground,
-		paddingBottom: 6,
 		alignItems: "center",
 	},
 	tabbar: {
 		flexDirection: "row",
-		width: "90%",
-		justifyContent: "space-between",
-		paddingVertical: 5,
+		width: "100%",
+		paddingHorizontal: 12,
+		paddingTop: 3,
+		paddingBottom: 2,
 	},
 	tabItem: {
 		flex: 1,
 		alignItems: "center",
-		paddingTop: 10,
-		paddingBottom: 22,
+		justifyContent: "center",
+		paddingVertical: 8,
+		marginHorizontal: 2,
 	},
-	icon: {
-		width: 28,
-		height: 28,
-		marginBottom: 5,
+	iconContainer: {
+		height: 42,
+		minWidth: 72,
+		paddingHorizontal: 14,
+		borderRadius: 21,
+		justifyContent: "center",
+		alignItems: "center",
+		marginBottom: 6,
+	},
+	iconContainerFocused: {
+		backgroundColor: "#D8D8D8",
 	},
 	label: {
 		fontSize: FontSizeTabbar,
-		fontWeight: "bold",
-	},
-	indicator: {
-		position: "absolute",
-		bottom: 10,
-		width: "50%",
-		height: 4,
-		backgroundColor: colorBlack,
-		borderRadius: 2,
+		fontWeight: "700",
+		color: colorBlack,
 	},
 });
