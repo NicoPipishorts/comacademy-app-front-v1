@@ -61,22 +61,28 @@ const HomeScreen = () => {
 
 	return (
 		<>
-			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-				<View style={styles.screenHeader}>
-					<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
-						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
-					</TouchableOpacity>
-					<View style={{ marginRight: 0 }}>
-						<AvatarInitials size={68} />
-					</View>
-				</View>
-
+			<View style={styles.wrapper}>
 				<ScrollView
 					style={styles.contentContainer}
 					contentContainerStyle={{
 						alignItems: "center",
 					}}
 					showsVerticalScrollIndicator={false}>
+					<View
+						style={[
+							styles.screenHeaderContainer,
+							{ paddingTop: insets.top },
+						]}>
+						<View style={styles.screenHeader}>
+							<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
+								<Text style={styles.headerText}>Hello {userData.firstName}</Text>
+							</TouchableOpacity>
+							<View style={{ marginRight: 0 }}>
+								<AvatarInitials size={68} />
+							</View>
+						</View>
+					</View>
+
 					<View style={styles.header}>
 						<Text style={styles.headerShortcuts}>Rubriques</Text>
 					</View>
@@ -459,14 +465,22 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: primaryBackground,
-		marginTop: 20,
 		paddingBottom: 20,
 	},
+	screenHeaderContainer: {
+		width: "100%",
+		paddingHorizontal: 16,
+		paddingBottom: 12,
+	},
 	screenHeader: {
+		width: "100%",
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		paddingHorizontal: 20,
+		paddingHorizontal: 12,
+		paddingTop: 14,
+		paddingBottom: 14,
+		borderRadius: 18,
 	},
 	header: {
 		minWidth: "100%",
@@ -487,7 +501,6 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		flex: 1,
-		paddingTop: 30,
 		marginBottom: 80,
 	},
 	headerShortcuts: {

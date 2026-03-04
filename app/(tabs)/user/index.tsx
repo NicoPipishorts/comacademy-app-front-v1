@@ -3,8 +3,8 @@ import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
-import ProfileAvatarSheet from "@/components/user/ProfileAvatarSheet";
 import ShowNiveaux from "@/components/user/niveaux";
+import ProfileAvatarSheet from "@/components/user/ProfileAvatarSheet";
 import SubscriptionStatusCard from "@/components/user/SubscriptionStatusCard";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
@@ -75,16 +75,13 @@ export default function User() {
 		}
 	}, [openModal, timestamp, router]); // timestamp will always be different
 
-	const {
-		data: scores,
-		refetch,
-	} = useGetUserScore(token, auth?.user.id);
+	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
 
 	// Subscription prompt hook
 	const totalAnsweredQuestions =
 		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
 	const { shouldShowModal, dismissModal } = useSubscriptionPrompt(
-		totalAnsweredQuestions
+		totalAnsweredQuestions,
 	);
 
 	const lastFetchTimeRef = useRef<number>(Date.now());
@@ -94,13 +91,13 @@ export default function User() {
 			"keyboardDidShow",
 			() => {
 				setKeyboardVisible(true);
-			}
+			},
 		);
 		const keyboardDidHideListener = Keyboard.addListener(
 			"keyboardDidHide",
 			() => {
 				setKeyboardVisible(false);
-			}
+			},
 		);
 
 		return () => {
@@ -170,7 +167,9 @@ export default function User() {
 		entitlementSubscription?.productId ??
 		null;
 	const resolvedExpirationDateRaw =
-		auth?.user?.subscription?.expiresAt ?? entitlementSubscription?.expiresAt ?? null;
+		auth?.user?.subscription?.expiresAt ??
+		entitlementSubscription?.expiresAt ??
+		null;
 	const expirationDate = useMemo(() => {
 		if (resolvedExpirationDateRaw) {
 			return formatDate(resolvedExpirationDateRaw);
@@ -182,11 +181,7 @@ export default function User() {
 			return "Accès manuel";
 		}
 		return "Non communiquée";
-	}, [
-		auth?.user?.manualPremium,
-		hasPremiumAccess,
-		resolvedExpirationDateRaw,
-	]);
+	}, [auth?.user?.manualPremium, hasPremiumAccess, resolvedExpirationDateRaw]);
 	const profilePriceLine = useMemo(() => {
 		if (!hasPremiumAccess) return null;
 		if (!resolvedProductId) return "Premium individuel";
@@ -230,15 +225,15 @@ export default function User() {
 					styles.innerWrapper,
 					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
 				]}>
-					<View style={styles.headerRow}>
-						<Text style={styles.headerTitle}>Mon profil</Text>
-						<AvatarInitials
-							size={86}
-							showBorder
-							showEditBadge
-							onPress={() => setShowAvatarSheet(true)}
-						/>
-					</View>
+				<View style={styles.headerRow}>
+					<Text style={styles.headerTitle}>Compte</Text>
+					<AvatarInitials
+						size={86}
+						showBorder
+						showEditBadge
+						onPress={() => setShowAvatarSheet(true)}
+					/>
+				</View>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={
