@@ -224,6 +224,7 @@ export default function User() {
 		hasPremiumAccess,
 		resolvedExpirationDateRaw,
 	]);
+	const shouldShowUpgradeModal = shouldShowModal && !hasPremiumAccess;
 
 	useEffect(() => {
 		if (!__DEV__) return;
@@ -391,9 +392,9 @@ export default function User() {
 			)}
 
 			<UpgradeSubscriptionModal
-				visible={shouldShowModal}
+				visible={shouldShowUpgradeModal}
 				onClose={dismissModal}
-				message='Félicitations ! Tu as atteint le niveau 1 ! Continue ton aventure avec un abonnement Premium pour débloquer tout le contenu.'
+				message='Tu peux aller encore plus loin avec l’abonnement Premium pour débloquer tout le contenu.'
 			/>
 		</KeyboardAvoidingView>
 	);

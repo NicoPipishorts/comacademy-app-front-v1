@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
 		borderRadius: 15,
 		backgroundColor: "black",
 		alignItems: "flex-end",
-		justifyContent: "flex-end",
+		justifyContent: "space-between",
 	},
 	niveauStatus: {
 		fontSize: 24,
