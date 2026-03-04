@@ -9,6 +9,7 @@ import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useSubscription } from "@/src/hooks/useSubscription";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -162,14 +163,14 @@ export default function User() {
 						<TouchableOpacity
 							onPress={() => logout()}
 							style={styles.logoutButton}>
-							<Text
-								style={{
-									color: colorWhite,
-									fontSize: FontSize16,
-									fontWeight: "bold",
-								}}>
-								Déconnexion
-							</Text>
+							<Text style={styles.logoutText}>Me déconnecter</Text>
+							<View style={styles.logoutArrowCircle}>
+								<MaterialCommunityIcons
+									name='chevron-right'
+									size={34}
+									color={colorWhite}
+								/>
+							</View>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
@@ -206,15 +207,32 @@ const styles = StyleSheet.create({
 	},
 	logoutContainer: {
 		display: "flex",
-		marginBottom: 30,
+		marginVertical: 30,
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	logoutButton: {
-		backgroundColor: colorRed,
+		width: "100%",
 		marginBottom: 20,
-		paddingHorizontal: 30,
-		paddingVertical: 10,
-		borderRadius: 50,
+		paddingHorizontal: 18,
+		paddingVertical: 14,
+		borderRadius: 25,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 12,
+	},
+	logoutText: {
+		color: colorRed,
+		fontSize: FontSize16,
+		fontWeight: "700",
+	},
+	logoutArrowCircle: {
+		width: 36,
+		height: 36,
+		borderRadius: 26,
+		backgroundColor: colorRed,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 });
