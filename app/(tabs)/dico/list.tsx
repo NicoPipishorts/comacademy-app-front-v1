@@ -100,7 +100,7 @@ const DicoList = ({
 
 	function groupDataByFirstLetter(
 		items: DicoSelected[],
-		property: keyof DicoSelected
+		property: keyof DicoSelected,
 	) {
 		const normalizeString = (str: string) =>
 			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -137,7 +137,7 @@ const DicoList = ({
 				},
 				() => {
 					console.error("Failed to find element");
-				}
+				},
 			);
 		}
 	};
@@ -162,7 +162,7 @@ const DicoList = ({
 							item.Word.normalize("NFD")
 								.replace(/[\u0300-\u036f]/g, "")
 								.toLowerCase()
-								.includes(normalizedQuery)
+								.includes(normalizedQuery),
 					)
 					.sort((a, b) => a.Word.localeCompare(b.Word));
 
@@ -174,11 +174,11 @@ const DicoList = ({
 							id: item.id,
 							Word: item.Word,
 						}))
-						.sort((a, b) => a.Word.localeCompare(b.Word))
+						.sort((a, b) => a.Word.localeCompare(b.Word)),
 				);
 			}
 		},
-		[data]
+		[data],
 	);
 
 	const handlePress = (id: number, index: number) => {
@@ -191,7 +191,7 @@ const DicoList = ({
 
 	return (
 		<>
-			<View style={{ paddingTop: 30 }}>
+			<View style={{ paddingTop: 20 }}>
 				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
 
@@ -240,7 +240,7 @@ const DicoList = ({
 											</Text>
 										</TouchableOpacity>
 									);
-							  })
+								})
 							: (() => {
 									let globalIndex = 0;
 									return alphabet.map((letter) => (
@@ -267,7 +267,7 @@ const DicoList = ({
 											})}
 										</View>
 									));
-							  })()}
+								})()}
 						{searchQuery && filteredData.length === 0 && (
 							<View style={styles.noDataContainer}>
 								<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>

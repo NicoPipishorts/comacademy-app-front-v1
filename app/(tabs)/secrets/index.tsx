@@ -1,7 +1,7 @@
 import CardSimpleButtonSecrets from "@/components/cards/CardSimpleButtonSecrets";
 import Loader from "@/components/experience/loader";
-import ScreenHeaders from "@/components/ScreenHeaders";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetAllSecrets from "@/hooks/Secrets/useGetAllSecrets";
@@ -35,15 +35,15 @@ export default function Secrets() {
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
-				message="Les 5 premiers 3 secrets du succès sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus."
+				message='Les 5 premiers 3 secrets du succès sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus.'
 			/>
 
 			<ScrollView showsVerticalScrollIndicator={false}>
-				<View
-					style={{
-						paddingHorizontal: 20,
-					}}>
-					<ScreenHeaders content='3 secrets du succès' />
+				<View style={styles.pageHeaderContainer}>
+					<PageTitleAvatarHeader
+						title='3 secrets du succès'
+						showAvatar={false}
+					/>
 				</View>
 
 				{secrets?.data.map((secret, index) => {
@@ -58,7 +58,7 @@ export default function Secrets() {
 						secret.imageUrl;
 					const imageUrl = resolveMediaUrl(
 						mediaCandidate,
-						DEFAULT_SECRET_IMAGE_URL
+						DEFAULT_SECRET_IMAGE_URL,
 					);
 					const locked = isItemLocked(index);
 
@@ -81,8 +81,10 @@ export default function Secrets() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingTop: 80,
 		paddingBottom: 90,
 		backgroundColor: primaryBackground,
+	},
+	pageHeaderContainer: {
+		paddingHorizontal: 24,
 	},
 });

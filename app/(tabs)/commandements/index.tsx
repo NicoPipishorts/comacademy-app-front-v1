@@ -10,7 +10,7 @@ import Loader from "@/components/experience/loader";
 import FilteredByCat from "@/components/filters/filteredByCat";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 
 import { primaryBackground } from "@/constants/colors";
 import useGetCommandements from "@/hooks/Commandements/useGetAllCommandements";
@@ -62,7 +62,7 @@ export default function TipsAndTactics() {
 	return (
 		<View style={styles.wrapper}>
 			<View style={{ paddingHorizontal: 20, paddingTop: insets.top }}>
-				<ScreenHeaders content='Tips and Tactics' />
+				<PageTitleAvatarHeader title='Tips and Tactics' showAvatar={false} />
 			</View>
 
 			<UpgradeSubscriptionModal

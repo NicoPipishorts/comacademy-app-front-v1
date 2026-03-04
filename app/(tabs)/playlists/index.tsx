@@ -1,11 +1,12 @@
 import { useCreateNewPlaylist } from "@/api/playlist/createNewPlaylist";
 import { useDeletePlaylist } from "@/api/playlist/deletePlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
-import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import CardPlaylist from "@/components/cards/CardPlaylists";
 import Loader from "@/components/experience/loader";
 import NewPlaylistModal from "@/components/modal/NewPlaylistModal";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
+import ScreenHeaders from "@/components/ScreenHeaders";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
@@ -37,7 +38,7 @@ const Playlist = () => {
 	const [playlistId, setPlaylistId] = useState<number | null>(null);
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(
-		auth?.user.id
+		auth?.user.id,
 	);
 	useTrackPageMetrics({ page: "Playlists" });
 
@@ -64,7 +65,7 @@ const Playlist = () => {
 
 	const { mutate: createNewPlaylist } = useCreateNewPlaylist(
 		onSuccess,
-		onError
+		onError,
 	);
 	const handleCreatePlaylist = (name: string, selectedColor: string) => {
 		createNewPlaylist({
@@ -109,6 +110,7 @@ const Playlist = () => {
 	return (
 		<TouchableWithoutFeedback onPress={handleOutsidePress} accessible={false}>
 			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+				<PageTitleAvatarHeader title='Playlists' />
 				<ScreenHeaders content='Playlists' />
 
 				<TouchableOpacity
@@ -177,7 +179,7 @@ const Playlist = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingHorizontal: 30,
+		paddingHorizontal: 24,
 		paddingBottom: 90,
 		backgroundColor: primaryBackground,
 	},

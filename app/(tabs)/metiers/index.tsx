@@ -1,7 +1,7 @@
 import CategoriesCards from "@/components/categories/categories";
 import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
@@ -50,7 +50,7 @@ const Metier = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<ScreenHeaders content='Métiers' />
+			<PageTitleAvatarHeader title='Metier' />
 
 			{canShowList && (
 				<MetierList
@@ -87,7 +87,8 @@ const Metier = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 25,
+		paddingHorizontal: 24,
+		paddingBottom: 25,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {

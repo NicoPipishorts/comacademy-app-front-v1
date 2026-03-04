@@ -12,4 +12,3 @@ export const FontSize16 = 16;
 export const FontSize18 = 18;
 export const FontSize20 = 20;
 export const FontSize22 = 22;
-export const FontSizeAvaterText = 22;

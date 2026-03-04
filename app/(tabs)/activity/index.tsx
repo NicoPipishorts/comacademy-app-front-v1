@@ -26,15 +26,15 @@ import { primaryBackground } from "@/constants/colors";
 import {
 	FontSize10,
 	FontSize12,
-	FontSizeAvaterText,
 	FontSizeH1,
+	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 
 // Components and hooks
 import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
-import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
@@ -68,20 +68,16 @@ const HomeScreen = () => {
 						alignItems: "center",
 					}}
 					showsVerticalScrollIndicator={false}>
-					<View
-						style={[
+					<PageTitleAvatarHeader
+						title={`Hello ${userData.firstName}`}
+						onPressTitle={() => navigation.navigate("newPlaylist")}
+						containerStyle={[
 							styles.screenHeaderContainer,
 							{ paddingTop: insets.top },
-						]}>
-						<View style={styles.screenHeader}>
-							<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
-								<Text style={styles.headerText}>Hello {userData.firstName}</Text>
-							</TouchableOpacity>
-							<View style={{ marginRight: 0 }}>
-								<AvatarInitials size={68} />
-							</View>
-						</View>
-					</View>
+						]}
+						contentStyle={styles.screenHeader}
+						titleStyle={styles.headerText}
+					/>
 
 					<View style={styles.header}>
 						<Text style={styles.headerShortcuts}>Rubriques</Text>
@@ -469,7 +465,7 @@ const styles = StyleSheet.create({
 	},
 	screenHeaderContainer: {
 		width: "100%",
-		paddingHorizontal: 16,
+		paddingHorizontal: 12,
 		paddingBottom: 12,
 	},
 	screenHeader: {
@@ -491,7 +487,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 	},
 	headerText: {
-		fontSize: FontSizeAvaterText,
+		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
 	},
 	profileImage: {

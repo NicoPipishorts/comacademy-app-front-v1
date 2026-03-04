@@ -69,7 +69,7 @@ const MetierList = ({
 			if (!isFreeUser) return false;
 			return indexInGroup > 0; // Lock all items except the first in each group
 		},
-		[isFreeUser]
+		[isFreeUser],
 	);
 
 	useEffect(() => {
@@ -102,7 +102,7 @@ const MetierList = ({
 	const alphabet = Object.keys(groupedData).sort();
 	function groupDataByFirstLetter(
 		items: SelectedMetier[],
-		property: keyof SelectedMetier
+		property: keyof SelectedMetier,
 	) {
 		const normalizeString = (str: string) =>
 			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -148,7 +148,7 @@ const MetierList = ({
 				},
 				() => {
 					console.error("Failed to find element");
-				}
+				},
 			);
 		}
 	};
@@ -173,7 +173,7 @@ const MetierList = ({
 							item.METIER.normalize("NFD")
 								.replace(/[\u0300-\u036f]/g, "")
 								.toLowerCase()
-								.includes(normalizedQuery)
+								.includes(normalizedQuery),
 					);
 
 				setFilteredData(filteredResults as SelectedMetier[]);
@@ -183,11 +183,11 @@ const MetierList = ({
 					data.data.map((item) => ({
 						id: item.id,
 						METIER: item.METIER,
-					}))
+					})),
 				);
 			}
 		},
-		[data]
+		[data],
 	);
 
 	const handlePress = (id: number, indexInGroup: number) => {
@@ -200,7 +200,7 @@ const MetierList = ({
 
 	return (
 		<>
-			<View style={{ paddingTop: 30 }}>
+			<View style={{ paddingTop: 20 }}>
 				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
 			</View>
 

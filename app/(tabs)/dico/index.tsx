@@ -1,6 +1,6 @@
 import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
@@ -9,10 +9,12 @@ import { NavigationType } from "@/types/general";
 import { useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CategoriesCards from "../../../components/categories/categories";
 import DicoList from "./list";
 
 const Dico = () => {
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { openDetails } = useGlobalSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
@@ -54,8 +56,11 @@ const Dico = () => {
 	const showCategoriesLoader = activeTab === 1 && (!dataCat || isLoadingCat);
 
 	return (
-		<View style={styles.wrapper}>
-			<ScreenHeaders content='Dico' />
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+			<PageTitleAvatarHeader
+				title='Dico'
+				onPressTitle={() => navigation.navigate("newPlaylist")}
+			/>
 
 			{listReady && activeTab === 0 && (
 				<DicoList
@@ -93,8 +98,8 @@ const Dico = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 25,
-		paddingTop: 55,
+		paddingHorizontal: 24,
+		paddingBottom: 25,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {
