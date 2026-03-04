@@ -70,7 +70,7 @@ export default function ALaUneDico() {
 const styles = StyleSheet.create({
 	container: {
 		backgroundColor: colorWhite,
-		width: 350,
+		width: "100%",
 		minHeight: 100,
 		padding: 15,
 		borderRadius: 10,

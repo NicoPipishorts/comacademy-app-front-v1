@@ -25,7 +25,8 @@
 			"buildNumber": "9",
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false,
-				"NSFaceIDUsageDescription": "Utiliser Face ID pour vous connecter rapidement à votre compte."
+				"NSFaceIDUsageDescription": "Utiliser Face ID pour vous connecter rapidement à votre compte.",
+				"NSPhotoLibraryUsageDescription": "Autorise Com'Academy à accéder à tes photos pour importer un avatar."
 			},
 			"associatedDomains": [
 				"applinks:comacademy.fr",
@@ -77,6 +78,7 @@
 		"plugins": [
 			"expo-router",
 			"expo-font",
+			"expo-image-picker",
 			"react-native-iap",
 			[
 				"expo-build-properties",

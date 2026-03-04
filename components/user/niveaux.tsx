@@ -1,7 +1,7 @@
 import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 
@@ -11,15 +11,7 @@ interface Props {
 
 export default function ShowNiveaux({ totalPoints }: Props) {
 	const { token } = useJwtToken();
-	const {
-		data: niveaux,
-		status: niveauxStatus,
-		fetchStatus: niveauxFetchStatus,
-		isLoading: niveauxIsLoading,
-		isFetching: niveauxIsFetching,
-		isError: niveauxIsError,
-		error: niveauxError,
-	} = useGetNiveaux(token);
+	const { data: niveaux } = useGetNiveaux(token);
 
 	const niveauxLength = niveaux?.data?.length ?? 0;
 
@@ -60,46 +52,6 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		currentNiveau?.citation ?? currentNiveau?.Citation ?? "—";
 	const niveauCommentaire =
 		currentNiveau?.commentaires ?? currentNiveau?.Commentaires ?? "—";
-
-	useEffect(() => {
-		if (!__DEV__) return;
-
-		console.log("[ShowNiveaux] query:", {
-			status: niveauxStatus,
-			fetchStatus: niveauxFetchStatus,
-			isLoading: niveauxIsLoading,
-			isFetching: niveauxIsFetching,
-			isError: niveauxIsError,
-			count: niveauxLength,
-		});
-		if (niveauxError) {
-			console.log("[ShowNiveaux] query error:", niveauxError);
-		}
-		console.log("[ShowNiveaux] computed:", {
-			totalPoints,
-			niveauIndex: calculateNiveauIndex(totalPoints),
-			niveauNumber,
-			niveauStatut,
-			round: calculateRoundIndex(niveauNumber, totalPoints),
-			currentNiveauHasAttributes: Boolean(currentNiveauEntry?.attributes),
-			currentNiveauKeys: currentNiveau ? Object.keys(currentNiveau) : [],
-		});
-	}, [
-		calculateNiveauIndex,
-		calculateRoundIndex,
-		niveauNumber,
-		niveauStatut,
-		currentNiveau,
-		currentNiveauEntry,
-		niveauxError,
-		niveauxFetchStatus,
-		niveauxIsError,
-		niveauxIsFetching,
-		niveauxIsLoading,
-		niveauxLength,
-		niveauxStatus,
-		totalPoints,
-	]);
 
 	if (!niveaux) {
 		return <Loader />;

@@ -1,16 +1,16 @@
 import { UseAuth } from "@/auth/AuthContext";
+import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
-import ScreenHeaders from "@/components/ScreenHeaders";
-import ChangeAvatar from "@/components/user/changeAvatar";
+import ProfileAvatarSheet from "@/components/user/ProfileAvatarSheet";
 import ShowNiveaux from "@/components/user/niveaux";
 import SubscriptionStatusCard from "@/components/user/SubscriptionStatusCard";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
-import { FontSize16 } from "@/constants/fontsizes";
+import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
@@ -55,6 +55,7 @@ export default function User() {
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const [showOnboarding, setShowOnboarding] = useState(false);
+	const [showAvatarSheet, setShowAvatarSheet] = useState(false);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const {
 		subscription: entitlementSubscription,
@@ -77,21 +78,11 @@ export default function User() {
 	const {
 		data: scores,
 		refetch,
-		status: scoreStatus,
-		fetchStatus: scoreFetchStatus,
-		isLoading: scoreIsLoading,
-		isFetching: scoreIsFetching,
-		isError: scoreIsError,
-		error: scoreError,
 	} = useGetUserScore(token, auth?.user.id);
 
 	// Subscription prompt hook
 	const totalAnsweredQuestions =
 		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
-	const totalScore = scores?.data?.[0]?.attributes?.totalScore ?? 0;
-	const totalPercentageCorrect =
-		scores?.data?.[0]?.attributes?.totalPercentageCorrect ?? 0;
-	const computedLevel = Math.floor(totalAnsweredQuestions / 150);
 	const { shouldShowModal, dismissModal } = useSubscriptionPrompt(
 		totalAnsweredQuestions
 	);
@@ -226,61 +217,6 @@ export default function User() {
 	]);
 	const shouldShowUpgradeModal = shouldShowModal && !hasPremiumAccess;
 
-	useEffect(() => {
-		if (!__DEV__) return;
-
-		console.log("[UserProfile] auth user id:", auth?.user?.id ?? null);
-		console.log("[UserProfile] token present:", Boolean(token), {
-			tokenLoading,
-		});
-		console.log("[UserProfile] score query:", {
-			status: scoreStatus,
-			fetchStatus: scoreFetchStatus,
-			isLoading: scoreIsLoading,
-			isFetching: scoreIsFetching,
-			isError: scoreIsError,
-		});
-		if (scoreError) {
-			console.log("[UserProfile] score query error:", scoreError);
-		}
-		console.log("[UserProfile] score payload present:", Boolean(scores?.data?.[0]));
-		console.log("[UserProfile] score values:", {
-			totalScore,
-			totalAnsweredQuestions,
-			totalPercentageCorrect,
-			computedLevel,
-		});
-		console.log("[UserProfile] subscription status:", {
-			authSubscriptionStatus: auth?.user?.subscription?.status ?? null,
-			backendHasPremiumAccess,
-			hasActiveSubscription,
-			hasPremiumAccess,
-			resolvedProductId,
-			resolvedExpirationDateRaw,
-		});
-	}, [
-		auth?.user?.id,
-		auth?.user?.subscription?.status,
-		backendHasPremiumAccess,
-		computedLevel,
-		hasActiveSubscription,
-		hasPremiumAccess,
-		resolvedExpirationDateRaw,
-		resolvedProductId,
-		scoreError,
-		scoreFetchStatus,
-		scoreIsError,
-		scoreIsFetching,
-		scoreIsLoading,
-		scoreStatus,
-		scores?.data,
-		token,
-		tokenLoading,
-		totalAnsweredQuestions,
-		totalPercentageCorrect,
-		totalScore,
-	]);
-
 	if (!scores) {
 		return <Loader />;
 	}
@@ -294,7 +230,15 @@ export default function User() {
 					styles.innerWrapper,
 					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
 				]}>
-				<ScreenHeaders content='Mon profil' />
+					<View style={styles.headerRow}>
+						<Text style={styles.headerTitle}>Mon profil</Text>
+						<AvatarInitials
+							size={86}
+							showBorder
+							showEditBadge
+							onPress={() => setShowAvatarSheet(true)}
+						/>
+					</View>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={
@@ -327,8 +271,6 @@ export default function User() {
 							</TouchableOpacity>
 						</View>
 					</View>
-
-					<ChangeAvatar />
 
 					<UserAccount />
 
@@ -396,6 +338,10 @@ export default function User() {
 				onClose={dismissModal}
 				message='Tu peux aller encore plus loin avec l’abonnement Premium pour débloquer tout le contenu.'
 			/>
+			<ProfileAvatarSheet
+				visible={showAvatarSheet}
+				onClose={() => setShowAvatarSheet(false)}
+			/>
 		</KeyboardAvoidingView>
 	);
 }
@@ -421,6 +367,17 @@ const styles = StyleSheet.create({
 		paddingTop: 80,
 		paddingBottom: 100,
 		backgroundColor: primaryBackground,
+	},
+	headerRow: {
+		paddingTop: 12,
+		paddingBottom: 28,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+	},
+	headerTitle: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "bold",
 	},
 	logoutContainer: {
 		display: "flex",

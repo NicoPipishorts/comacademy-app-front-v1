@@ -51,6 +51,8 @@
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Utiliser Face ID pour vous connecter rapidement à votre compte.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Autorise Com'Academy à accéder à tes photos pour importer un avatar.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
