@@ -186,7 +186,7 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 					headers: {
 						Authorization: `Bearer ${token}`,
 					},
-					body: formData,
+					body: formData as any,
 				},
 			);
 
