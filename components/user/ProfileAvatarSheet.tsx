@@ -17,6 +17,7 @@ import {
 } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
+import { logDevice } from "@/helpers/logDevice";
 import {
 	resolveUserPreference,
 	resolveUserPreferenceAvatarUrl,
@@ -33,7 +34,9 @@ import {
 	BottomSheetScrollView,
 	BottomSheetView,
 } from "@gorhom/bottom-sheet";
+import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
+import { LogEntry, subscribeLogs } from "@/logging/logStore";
 import React, {
 	useCallback,
 	useEffect,
@@ -69,6 +72,43 @@ const AVATAR_COLORS = [
 	colorBlack,
 ];
 
+const AVATAR_LOG_PREFIX = "[AvatarSheet]";
+const AVATAR_LOG_FILTER = /\[(AvatarSheet|AvatarInitials|UserPreferences|UserScreen)\]/;
+
+const avatarLog = (
+	message: string,
+	payload?: Record<string, unknown>,
+	level: "info" | "warn" | "error" = "info"
+) => {
+	const prefixedMessage = `${AVATAR_LOG_PREFIX} ${message}`;
+	logDevice(prefixedMessage, payload, level);
+
+	if (!__DEV__) return;
+	if (payload) {
+		console.log(prefixedMessage, payload);
+		return;
+	}
+	console.log(prefixedMessage);
+};
+
+const startPendingWatch = (label: string, thresholdMs = 10000) => {
+	const startedAt = Date.now();
+	const timer = setTimeout(() => {
+		avatarLog(`${label} still pending`, {
+			elapsedMs: Date.now() - startedAt,
+		}, "warn");
+	}, thresholdMs);
+
+	return () => clearTimeout(timer);
+};
+
+const formatLogTimestamp = (timestamp: string) =>
+	new Date(timestamp).toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+	});
+
 export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
 	const snapPoints = useMemo(() => ["90%"], []);
@@ -78,18 +118,48 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	const updatePreferences = useUpdateUserPreferences();
 	const [isUploading, setIsUploading] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [isCopyingLogs, setIsCopyingLogs] = useState(false);
+	const [avatarLogs, setAvatarLogs] = useState<LogEntry[]>([]);
 
 	const preference = resolveUserPreference(data);
 	const selectedColor = preference?.avatarBackgroundColor || colorYellow;
 	const avatarUrl = resolveUserPreferenceAvatarUrl(preference);
 
 	useEffect(() => {
+		return subscribeLogs((entries) => {
+			setAvatarLogs(entries.filter((entry) => AVATAR_LOG_FILTER.test(entry.message)));
+		});
+	}, []);
+
+	useEffect(() => {
 		if (visible) {
+			avatarLog("CTA open avatar editor", {
+				userId: auth?.user?.id,
+			});
 			bottomSheetRef.current?.present();
 		} else {
+			avatarLog("request dismiss avatar editor");
 			bottomSheetRef.current?.dismiss();
 		}
-	}, [visible]);
+	}, [auth?.user?.id, visible]);
+
+	useEffect(() => {
+		avatarLog("sheet state updated", {
+			visible,
+			hasAvatarUrl: Boolean(avatarUrl),
+			selectedColor,
+			isUploading,
+			isDeleting,
+			isUpdatePending: updatePreferences.isPending,
+		});
+	}, [
+		avatarUrl,
+		isDeleting,
+		isUploading,
+		selectedColor,
+		updatePreferences.isPending,
+		visible,
+	]);
 
 	const renderBackdrop = useCallback(
 		(props: BottomSheetBackdropProps) => (
@@ -103,15 +173,90 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 		[],
 	);
 
+	const copyAvatarLogs = useCallback(async () => {
+		const payload =
+			avatarLogs.length > 0
+				? avatarLogs
+						.map(
+							(entry) =>
+								`${formatLogTimestamp(entry.timestamp)} [${entry.level.toUpperCase()}] ${entry.message}`,
+						)
+						.join("\n")
+				: "No avatar logs captured yet.";
+
+		setIsCopyingLogs(true);
+		try {
+			await Clipboard.setStringAsync(payload);
+			avatarLog("CTA copy avatar logs", {
+				entryCount: avatarLogs.length,
+				characterCount: payload.length,
+			});
+			Alert.alert(
+				"Logs copiés",
+				"Les logs avatar ont été copiés dans le presse-papiers.",
+			);
+		} catch (error) {
+			avatarLog(
+				"copy avatar logs failed",
+				{
+					error:
+						error instanceof Error
+							? error.message
+							: "Unknown clipboard error",
+				},
+				"error",
+			);
+			Alert.alert("Erreur", "Impossible de copier les logs avatar.");
+		} finally {
+			setIsCopyingLogs(false);
+		}
+	}, [avatarLogs]);
+
 	const updateColor = (color: string) => {
-		updatePreferences.mutate({ avatarBackgroundColor: color });
+		avatarLog("CTA select avatar color", {
+			nextColor: color,
+			previousColor: selectedColor,
+			isUpdatePending: updatePreferences.isPending,
+		});
+		const startedAt = Date.now();
+		updatePreferences.mutate(
+			{ avatarBackgroundColor: color },
+			{
+				onSuccess: () => {
+					avatarLog("update color success", {
+						color,
+						elapsedMs: Date.now() - startedAt,
+					});
+				},
+				onError: (error) => {
+					avatarLog("update color failed", {
+						color,
+						elapsedMs: Date.now() - startedAt,
+						error:
+							error instanceof Error ? error.message : "Unknown mutation error",
+					}, "error");
+				},
+				onSettled: () => {
+					avatarLog("update color settled", {
+						color,
+						elapsedMs: Date.now() - startedAt,
+					});
+				},
+			},
+		);
 	};
 
 	const deleteAvatar = async () => {
-		if (!token) return;
+		if (!token) {
+			avatarLog("delete skipped: missing token");
+			return;
+		}
 
 		try {
 			setIsDeleting(true);
+			const startedAt = Date.now();
+			const stopWatch = startPendingWatch("delete avatar request");
+			avatarLog("CTA delete avatar");
 			const response = await fetch(
 				`${process.env.EXPO_PUBLIC_API_URL}/user-preferences/me/avatar`,
 				{
@@ -121,6 +266,12 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 					},
 				},
 			);
+			stopWatch();
+			avatarLog("delete avatar response received", {
+				status: response.status,
+				ok: response.ok,
+				elapsedMs: Date.now() - startedAt,
+			});
 
 			if (!response.ok) {
 				const body = await response.text();
@@ -130,7 +281,16 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 			}
 
 			await queryClient.invalidateQueries({ queryKey: ["UserPreferences"] });
+			avatarLog("delete avatar success: user preferences invalidated");
 		} catch (error) {
+			avatarLog(
+				"delete avatar error",
+				{
+					error:
+						error instanceof Error ? error.message : "Unknown delete avatar error",
+				},
+				"error",
+			);
 			console.error("[ProfileAvatarSheet] delete avatar error:", error);
 			Alert.alert(
 				"Suppression impossible",
@@ -142,11 +302,20 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	};
 
 	const uploadAvatar = async () => {
-		if (!token) return;
+		if (!token) {
+			avatarLog("upload skipped: missing token");
+			return;
+		}
 
 		try {
+			avatarLog("CTA upload avatar");
+			const permissionStartedAt = Date.now();
 			const permission =
 				await ImagePicker.requestMediaLibraryPermissionsAsync();
+			avatarLog("media permission resolved", {
+				granted: permission.granted,
+				elapsedMs: Date.now() - permissionStartedAt,
+			});
 			if (!permission.granted) {
 				Alert.alert(
 					"Autorisation requise",
@@ -155,11 +324,17 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 				return;
 			}
 
+			const pickerStartedAt = Date.now();
 			const pickResult = await ImagePicker.launchImageLibraryAsync({
 				mediaTypes: ["images"],
 				allowsEditing: true,
 				aspect: [1, 1],
 				quality: 0.8,
+			});
+			avatarLog("image picker resolved", {
+				canceled: pickResult.canceled,
+				assetCount: pickResult.assets?.length ?? 0,
+				elapsedMs: Date.now() - pickerStartedAt,
 			});
 
 			if (pickResult.canceled || !pickResult.assets.length) {
@@ -169,6 +344,13 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 			const asset = pickResult.assets[0];
 			const filename = asset.fileName || `avatar-${Date.now()}.jpg`;
 			const mimeType = asset.mimeType || "image/jpeg";
+			avatarLog("selected avatar asset", {
+				fileName: filename,
+				mimeType,
+				width: asset.width ?? null,
+				height: asset.height ?? null,
+				fileSize: asset.fileSize ?? null,
+			});
 
 			setIsUploading(true);
 
@@ -179,6 +361,9 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 				type: mimeType,
 			} as any);
 
+			const uploadStartedAt = Date.now();
+			const stopUploadWatch = startPendingWatch("upload file request");
+			avatarLog("upload file request start");
 			const uploadResponse = await fetch(
 				`${process.env.EXPO_PUBLIC_API_URL}/upload`,
 				{
@@ -189,6 +374,12 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 					body: formData as any,
 				},
 			);
+			stopUploadWatch();
+			avatarLog("upload file response received", {
+				status: uploadResponse.status,
+				ok: uploadResponse.ok,
+				elapsedMs: Date.now() - uploadStartedAt,
+			});
 
 			if (!uploadResponse.ok) {
 				const body = await uploadResponse.text();
@@ -202,11 +393,18 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 				? uploadPayload[0]
 				: uploadPayload;
 			const avatarFileId = Number(fileData?.id);
+			avatarLog("upload payload parsed", {
+				hasArrayPayload: Array.isArray(uploadPayload),
+				avatarFileId,
+			});
 
 			if (!Number.isFinite(avatarFileId) || avatarFileId <= 0) {
 				throw new Error("Invalid uploaded file id");
 			}
 
+			const attachStartedAt = Date.now();
+			const stopAttachWatch = startPendingWatch("attach avatar request");
+			avatarLog("attach avatar request start", { avatarFileId });
 			const attachResponse = await fetch(
 				`${process.env.EXPO_PUBLIC_API_URL}/user-preferences/me/avatar`,
 				{
@@ -218,6 +416,12 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 					body: JSON.stringify({ avatarFileId }),
 				},
 			);
+			stopAttachWatch();
+			avatarLog("attach avatar response received", {
+				status: attachResponse.status,
+				ok: attachResponse.ok,
+				elapsedMs: Date.now() - attachStartedAt,
+			});
 
 			if (!attachResponse.ok) {
 				const body = await attachResponse.text();
@@ -227,7 +431,16 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 			}
 
 			await queryClient.invalidateQueries({ queryKey: ["UserPreferences"] });
+			avatarLog("upload flow success: user preferences invalidated");
 		} catch (error) {
+			avatarLog(
+				"upload avatar error",
+				{
+					error:
+						error instanceof Error ? error.message : "Unknown upload avatar error",
+				},
+				"error",
+			);
 			console.error("[ProfileAvatarSheet] upload avatar error:", error);
 			Alert.alert(
 				"Upload impossible",
@@ -239,6 +452,7 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	};
 
 	const onDismiss = useCallback(() => {
+		avatarLog("sheet dismissed");
 		onClose();
 	}, [onClose]);
 
@@ -334,6 +548,21 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 							</Text>
 						)}
 					</Pressable>
+					<Pressable
+						onPress={copyAvatarLogs}
+						disabled={isCopyingLogs}
+						style={[
+							styles.copyLogsButton,
+							isCopyingLogs && styles.dimmed,
+						]}>
+						{isCopyingLogs ? (
+							<ActivityIndicator color={colorBlack} />
+						) : (
+							<Text style={styles.copyLogsButtonText}>
+								Copier les logs avatar ({avatarLogs.length})
+							</Text>
+						)}
+					</Pressable>
 					<View style={styles.bottomSpacer} />
 				</BottomSheetView>
 			</BottomSheetScrollView>
@@ -413,6 +642,21 @@ const styles = StyleSheet.create({
 	uploadButtonText: {
 		color: colorWhite,
 		fontWeight: "700",
+	},
+	copyLogsButton: {
+		alignSelf: "center",
+		marginTop: 8,
+		paddingVertical: 10,
+		paddingHorizontal: 14,
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: colorBlack,
+		backgroundColor: "transparent",
+	},
+	copyLogsButtonText: {
+		color: colorBlack,
+		fontWeight: "700",
+		fontSize: 12,
 	},
 	helperText: {
 		color: colorDarkGrey,

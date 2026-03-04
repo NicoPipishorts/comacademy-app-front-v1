@@ -1,4 +1,5 @@
 import { colorWhite, colorYellow } from "@/constants/colors";
+import { logDevice } from "@/helpers/logDevice";
 import {
 	resolveUserPreference,
 	resolveUserPreferenceAvatarUrl,
@@ -8,7 +9,7 @@ import useGetUserPreferences from "@/hooks/useGetUserPreferences";
 import { NavigationType } from "@/types/general";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
 	Image,
 	StyleSheet,
@@ -26,6 +27,18 @@ interface Props {
 	showBorder?: boolean;
 	wrapperAlignSelf?: ViewStyle["alignSelf"];
 }
+
+const avatarLog = (message: string, payload?: Record<string, unknown>) => {
+	const prefixedMessage = `[AvatarInitials] ${message}`;
+	logDevice(prefixedMessage, payload);
+
+	if (!__DEV__) return;
+	if (payload) {
+		console.log(prefixedMessage, payload);
+		return;
+	}
+	console.log(prefixedMessage);
+};
 
 const getInitial = (value?: string | null) => value?.trim().charAt(0) || "";
 
@@ -74,11 +87,25 @@ export default function AvatarInitials({
 	const emailInitials = getHandleInitials(auth?.user?.email?.split("@")[0]);
 	const initialsValue = nameInitials || usernameInitials || emailInitials || "?";
 
+	useEffect(() => {
+		avatarLog("preferences state", {
+			userId: auth?.user?.id,
+			isFetched,
+			hasAvatarUrl: Boolean(avatarUrl),
+			selectedBackgroundColor: backgroundColor,
+		});
+	}, [auth?.user?.id, avatarUrl, backgroundColor, isFetched]);
+
 	if (!isFetched) {
 		return <Loader />;
 	}
 
 	const handlePress = () => {
+		avatarLog("CTA avatar press", {
+			hasCustomOnPress: Boolean(onPress),
+			hasAvatarUrl: Boolean(avatarUrl),
+			navigationTarget: onPress ? "custom-handler" : "user",
+		});
 		if (onPress) {
 			onPress();
 			return;

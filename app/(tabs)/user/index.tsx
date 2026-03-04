@@ -12,6 +12,7 @@ import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { logDevice } from "@/helpers/logDevice";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
@@ -232,12 +233,31 @@ export default function User() {
 				]}>
 					<View style={styles.headerRow}>
 						<Text style={styles.headerTitle}>Mon profil</Text>
-						<AvatarInitials
-							size={86}
-							showBorder
-							showEditBadge
-							onPress={() => setShowAvatarSheet(true)}
-						/>
+						<View style={styles.headerAvatarActions}>
+							<AvatarInitials
+								size={86}
+								showBorder
+								showEditBadge
+								onPress={() => {
+									logDevice("[UserScreen] CTA open avatar sheet", {
+										userId: auth?.user?.id,
+										source: "avatar-press",
+									});
+									setShowAvatarSheet(true);
+								}}
+							/>
+							<TouchableOpacity
+								style={styles.avatarLogsCta}
+								onPress={() => {
+									logDevice("[UserScreen] CTA open avatar sheet", {
+										userId: auth?.user?.id,
+										source: "logs-cta",
+									});
+									setShowAvatarSheet(true);
+								}}>
+								<Text style={styles.avatarLogsCtaText}>Logs avatar</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
@@ -378,6 +398,23 @@ const styles = StyleSheet.create({
 	headerTitle: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
+	},
+	headerAvatarActions: {
+		alignItems: "center",
+		gap: 8,
+	},
+	avatarLogsCta: {
+		borderRadius: 999,
+		borderWidth: 1,
+		borderColor: colorBlack,
+		paddingHorizontal: 10,
+		paddingVertical: 4,
+		backgroundColor: colorWhite,
+	},
+	avatarLogsCtaText: {
+		color: colorBlack,
+		fontSize: 11,
+		fontWeight: "700",
 	},
 	logoutContainer: {
 		display: "flex",
