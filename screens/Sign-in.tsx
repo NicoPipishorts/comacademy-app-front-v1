@@ -1,9 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Linking from "expo-linking";
+import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+	ActivityIndicator,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -12,7 +15,6 @@ import {
 	StyleSheet,
 	Text,
 	TextInput,
-	TouchableWithoutFeedback,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +31,14 @@ import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
+import {
+	parseResetPasswordDeepLink,
+	processInitialDeepLink,
+	subscribeToDeepLinks,
+} from "@/src/utils/resetPasswordDeepLink";
+
+const BIOMETRIC_AUTH_PAYLOAD_KEY = "auth.biometric.payload";
+const BIOMETRIC_AUTH_HINT_KEY = "auth.biometric.hint";
 
 const SignIn = () => {
 	const insets = useSafeAreaInsets();
@@ -41,27 +51,102 @@ const SignIn = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
-	const [forgotPrefillEmail, setForgotPrefillEmail] = useState("");
 	const [pendingResetCode, setPendingResetCode] = useState<string | null>(null);
-	const [keyboardVisible, setKeyboardVisible] = useState(false);
+	const [canUseBiometricLogin, setCanUseBiometricLogin] = useState(false);
+	const [isBiometricLoading, setIsBiometricLoading] = useState(false);
 
 	const forgotPasswordSheetRef = useRef<BottomSheetModal>(null);
 	const resetPasswordSheetRef = useRef<BottomSheetModal>(null);
 	const latestResetPasswordRef = useRef<string>("");
+	const emailInputRef = useRef<TextInput>(null);
+	const passwordInputRef = useRef<TextInput>(null);
 
 	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
+	const biometricLabel = Platform.OS === "ios" ? "Face ID" : "biométrie";
+	const biometricPrompt =
+		Platform.OS === "ios"
+			? "Authentifie-toi avec Face ID"
+			: "Authentifie-toi pour te connecter";
+	const isExpoGo =
+		Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 	const toggleShowPassword = () => setShowPassword((v) => !v);
 
+	const refreshBiometricAvailability = useCallback(async () => {
+		try {
+			if (isExpoGo) {
+				setCanUseBiometricLogin(false);
+				return;
+			}
+
+			const secureStoreAvailable = await SecureStore.isAvailableAsync();
+			if (!secureStoreAvailable) {
+				setCanUseBiometricLogin(false);
+				return;
+			}
+
+			if (Platform.OS === "web" || !SecureStore.canUseBiometricAuthentication()) {
+				setCanUseBiometricLogin(false);
+				return;
+			}
+
+			const hasStoredHint = await SecureStore.getItemAsync(BIOMETRIC_AUTH_HINT_KEY);
+			setCanUseBiometricLogin(Boolean(hasStoredHint));
+		} catch {
+			setCanUseBiometricLogin(false);
+		}
+	}, [isExpoGo]);
+
+	const persistBiometricSession = useCallback(
+		async (payload: AuthResponse, identifier: string) => {
+			try {
+				if (isExpoGo) return;
+
+				const secureStoreAvailable = await SecureStore.isAvailableAsync();
+				if (!secureStoreAvailable) return;
+				if (Platform.OS === "web" || !SecureStore.canUseBiometricAuthentication()) {
+					return;
+				}
+
+				await SecureStore.setItemAsync(
+					BIOMETRIC_AUTH_PAYLOAD_KEY,
+					JSON.stringify(payload),
+					{
+						requireAuthentication: true,
+						authenticationPrompt: biometricPrompt,
+					}
+				);
+				await SecureStore.setItemAsync(
+					BIOMETRIC_AUTH_HINT_KEY,
+					identifier.trim().toLowerCase()
+				);
+				setCanUseBiometricLogin(true);
+			} catch (error) {
+				console.error("Failed to persist biometric login payload", error);
+			}
+		},
+		[biometricPrompt, isExpoGo]
+	);
+
 	const onSuccess = async (data: AuthResponse) => {
+		await persistBiometricSession(data, email);
 		await login(data);
 		navigation.navigate("(tabs)");
 	};
 
-	const onError = () => {
+	const onError = (error: any) => {
 		showSnackbar(
 			"Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.",
-			"error"
+			"error",
+			{
+				debugInfo: {
+					url: authUrl,
+					statusCode: error?.response?.status,
+					statusText: error?.response?.statusText,
+					errorMessage: error?.message,
+					timestamp: new Date().toISOString(),
+				},
+			}
 		);
 	};
 
@@ -73,7 +158,6 @@ const SignIn = () => {
 				"Si un compte est associé à cet email, un lien de réinitialisation a été envoyé.",
 				"success"
 			);
-			setForgotPrefillEmail("");
 			forgotPasswordSheetRef.current?.dismiss();
 		},
 		(error) => {
@@ -86,15 +170,24 @@ const SignIn = () => {
 	);
 
 	const openForgotPasswordSheet = useCallback(() => {
-		const trimmedEmail = email.trim();
-		setForgotPrefillEmail(trimmedEmail);
 		forgotPasswordMutation.reset();
 		// Close keyboard first, then present sheet on next frame to avoid race
 		Keyboard.dismiss();
 		requestAnimationFrame(() => {
 			forgotPasswordSheetRef.current?.present();
 		});
-	}, [email, forgotPasswordMutation]);
+	}, [forgotPasswordMutation]);
+
+	const openResetPasswordSheetForDev = useCallback(() => {
+		if (!__DEV__) return;
+		Keyboard.dismiss();
+		setPendingResetCode("dev-reset-code");
+		latestResetPasswordRef.current = "";
+		resetPasswordMutation.reset();
+		requestAnimationFrame(() => {
+			resetPasswordSheetRef.current?.present();
+		});
+	}, [resetPasswordMutation]);
 
 	const resetPasswordMutation = useResetPasswordMutation(
 		resetPasswordUrl,
@@ -118,13 +211,53 @@ const SignIn = () => {
 	);
 
 	const handleLogin = () => {
+		Keyboard.dismiss();
 		loginMutation.mutate({ identifier: email, password });
 	};
+
+	const handleBiometricLogin = useCallback(async () => {
+		if (isExpoGo) {
+			showSnackbar(
+				"Face ID n'est pas pris en charge dans Expo Go. Utilise un build développement ou production.",
+				"error"
+			);
+			return;
+		}
+
+		setIsBiometricLoading(true);
+		Keyboard.dismiss();
+		try {
+			const payloadRaw = await SecureStore.getItemAsync(BIOMETRIC_AUTH_PAYLOAD_KEY, {
+				requireAuthentication: true,
+				authenticationPrompt: biometricPrompt,
+			});
+			if (!payloadRaw) {
+				await SecureStore.deleteItemAsync(BIOMETRIC_AUTH_HINT_KEY);
+				setCanUseBiometricLogin(false);
+				showSnackbar(
+					"Aucune session biométrique enregistrée sur cet appareil.",
+					"error"
+				);
+				return;
+			}
+
+			const payload = JSON.parse(payloadRaw) as AuthResponse;
+			await login(payload);
+			navigation.navigate("(tabs)");
+		} catch (error) {
+			showSnackbar(
+				`Connexion ${biometricLabel} annulée ou indisponible.`,
+				"error"
+			);
+			console.error("Biometric login failed", error);
+		} finally {
+			setIsBiometricLoading(false);
+		}
+	}, [biometricLabel, biometricPrompt, isExpoGo, login, navigation, showSnackbar]);
 
 	const handleForgotPasswordSubmit = useCallback(
 		(targetEmail: string) => {
 			const trimmedEmail = targetEmail.trim();
-			setForgotPrefillEmail(trimmedEmail);
 
 			if (!trimmedEmail) {
 				showSnackbar(
@@ -167,7 +300,6 @@ const SignIn = () => {
 	);
 
 	const handleForgotSheetDismiss = useCallback(() => {
-		setForgotPrefillEmail("");
 		forgotPasswordMutation.reset();
 	}, [forgotPasswordMutation]);
 
@@ -178,36 +310,14 @@ const SignIn = () => {
 	}, [resetPasswordMutation]);
 
 	const handleDeepLink = useCallback((url: string | null) => {
-		if (!url) return;
+		const payload = parseResetPasswordDeepLink(url);
+		if (!payload) return;
 
-		const parsed = Linking.parse(url);
-		const { path, queryParams } = parsed;
-		const codeParam =
-			typeof queryParams?.code === "string"
-				? queryParams.code
-				: typeof queryParams?.token === "string"
-				? queryParams.token
-				: typeof queryParams?.reset_code === "string"
-				? queryParams.reset_code
-				: null;
-
-		if (!codeParam) return;
-
-		const normalizedPath = path?.toLowerCase() ?? "";
-		if (
-			normalizedPath &&
-			!normalizedPath.includes("reset-password") &&
-			!normalizedPath.includes("password-reset") &&
-			!normalizedPath.includes("auth/reset-password")
-		) {
-			return;
+		if (payload.email) {
+			setEmail(payload.email);
 		}
 
-		if (typeof queryParams?.email === "string") {
-			setEmail(queryParams.email);
-		}
-
-		setPendingResetCode(codeParam);
+		setPendingResetCode(payload.code);
 		latestResetPasswordRef.current = "";
 		// Close keyboard before presenting the reset sheet
 		Keyboard.dismiss();
@@ -217,20 +327,18 @@ const SignIn = () => {
 	}, []);
 
 	useEffect(() => {
-		const fetchInitialUrl = async () => {
-			try {
-				const initialUrl = await Linking.getInitialURL();
-				handleDeepLink(initialUrl);
-			} catch (error) {
+		void processInitialDeepLink({
+			getInitialUrl: Linking.getInitialURL,
+			onUrl: handleDeepLink,
+			onError: (error) => {
 				console.error("Failed to get initial URL", error);
-			}
-		};
+			},
+		});
 
-		void fetchInitialUrl();
-
-		const subscription = Linking.addEventListener("url", ({ url }) =>
-			handleDeepLink(url)
-		);
+		const subscription = subscribeToDeepLinks({
+			addUrlListener: (handler) => Linking.addEventListener("url", handler),
+			onUrl: handleDeepLink,
+		});
 
 		return () => {
 			subscription.remove();
@@ -244,6 +352,10 @@ const SignIn = () => {
 		})();
 	}, [navigation, checkLoggedIn]);
 
+	useEffect(() => {
+		void refreshBiometricAvailability();
+	}, [refreshBiometricAvailability]);
+
 	// Smoother on Android with "height"; iOS "padding" is fine
 	const behavior = Platform.select({ ios: "padding", android: "height" }) as
 		| "padding"
@@ -253,50 +365,38 @@ const SignIn = () => {
 
 	const bottomInset = Math.max(insets.bottom, 20);
 
-	useEffect(() => {
-		const showEvt =
-			Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-		const hideEvt =
-			Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-		const subShow = Keyboard.addListener(showEvt, () =>
-			setKeyboardVisible(true)
-		);
-		const subHide = Keyboard.addListener(hideEvt, () =>
-			setKeyboardVisible(false)
-		);
-		return () => {
-			subShow.remove();
-			subHide.remove();
-		};
-	}, []);
-
 	return (
 		<>
-			<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-				<KeyboardAvoidingView
-					style={styles.container}
-					behavior={behavior}
-					keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
-					<ScrollView
-						contentContainerStyle={[
-							styles.scrollContainer,
+			<KeyboardAvoidingView
+				style={styles.container}
+				behavior={behavior}
+				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
+				<View style={styles.layout}>
+					<View
+						style={[
+							styles.logoWrap,
 							{
-								paddingTop: Math.max(insets.top, 20),
-								// remove extra bottom padding while keyboard is visible to avoid big gap
-								paddingBottom: bottomInset + (keyboardVisible ? 0 : 80),
+								paddingTop: Math.max(insets.top, 20) + 12,
 							},
-						]}
-						keyboardShouldPersistTaps='never'
-						keyboardDismissMode={Platform.OS === "ios" ? "on-drag" : "on-drag"}
+						]}>
+					<LogoPageTop />
+					</View>
+
+					<ScrollView
+						style={styles.formArea}
+						contentContainerStyle={styles.formContent}
+						keyboardShouldPersistTaps='handled'
+						keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
 						showsVerticalScrollIndicator={false}
 						contentInsetAdjustmentBehavior='never'>
-						<LogoPageTop />
-
 						<View style={styles.centerWrap}>
 							<Text style={styles.title}>C'est bon de se revoir !</Text>
 
-							<View style={styles.passwordInputContainer}>
+							<Pressable
+								style={styles.inputField}
+								onPress={() => emailInputRef.current?.focus()}>
 								<TextInput
+									ref={emailInputRef}
 									style={styles.input}
 									onChangeText={setEmail}
 									value={email}
@@ -307,12 +407,15 @@ const SignIn = () => {
 									keyboardType='email-address'
 									textContentType='emailAddress'
 									returnKeyType='next'
-									onSubmitEditing={() => Keyboard.dismiss()}
+									onSubmitEditing={() => passwordInputRef.current?.focus()}
 								/>
-							</View>
+							</Pressable>
 
-							<View style={styles.passwordInputContainer}>
+							<Pressable
+								style={styles.inputField}
+								onPress={() => passwordInputRef.current?.focus()}>
 								<TextInput
+									ref={passwordInputRef}
 									secureTextEntry={!showPassword}
 									value={password}
 									autoCorrect={false}
@@ -323,50 +426,95 @@ const SignIn = () => {
 									keyboardType='default'
 									textContentType='password'
 									returnKeyType='done'
-									onSubmitEditing={() => Keyboard.dismiss()}
+									onSubmitEditing={handleLogin}
 								/>
-								<MaterialCommunityIcons
-									name={showPassword ? "eye-off" : "eye"}
-									size={24}
-									color={colorBlack}
-									style={styles.eyeIcon}
+								<Pressable
+									hitSlop={10}
 									onPress={toggleShowPassword}
-								/>
-							</View>
+									style={styles.eyeButton}>
+									<MaterialCommunityIcons
+										name={showPassword ? "eye-off" : "eye"}
+										size={24}
+										color={colorBlack}
+									/>
+								</Pressable>
+							</Pressable>
 
 							<View style={styles.forgotPasswordContainer}>
 								<Pressable
 									onPress={openForgotPasswordSheet}
-									disabled={forgotPasswordMutation.isPending}>
+									disabled={forgotPasswordMutation.isPending}
+									hitSlop={6}>
 									<Text style={styles.forgotPasswordText}>
 										Mot de passe oublié ?
 									</Text>
 								</Pressable>
+								{__DEV__ && (
+									<Pressable onPress={openResetPasswordSheetForDev} hitSlop={6}>
+										<Text style={styles.devResetPasswordText}>
+											DEV: Ouvrir reset password sheet
+										</Text>
+									</Pressable>
+								)}
 							</View>
 
-							<Pressable style={styles.buttonContainer} onPress={handleLogin}>
-								<Text style={styles.buttonText}>Se connecter</Text>
+							<Pressable
+								style={styles.buttonContainer}
+								onPress={handleLogin}
+								disabled={loginMutation.isPending}>
+								{loginMutation.isPending ? (
+									<ActivityIndicator color={colorWhite} />
+								) : (
+									<Text style={styles.buttonText}>Se connecter</Text>
+								)}
 							</Pressable>
+
+							{canUseBiometricLogin && (
+								<Pressable
+									style={styles.biometricButton}
+									onPress={handleBiometricLogin}
+									disabled={isBiometricLoading}>
+									{isBiometricLoading ? (
+										<ActivityIndicator color={colorBlack} />
+									) : (
+										<>
+											<MaterialCommunityIcons
+												name={
+													Platform.OS === "ios"
+														? "face-recognition"
+														: "fingerprint"
+												}
+												size={22}
+												color={colorBlack}
+											/>
+											<Text style={styles.biometricButtonText}>
+												Se connecter avec {biometricLabel}
+											</Text>
+										</>
+									)}
+								</Pressable>
+							)}
 						</View>
 					</ScrollView>
 
-					<View style={[styles.registerRow, { bottom: bottomInset }]}>
+					<View style={[styles.registerRow, { paddingBottom: bottomInset }]}>
 						<Pressable
+							hitSlop={8}
 							onPress={() => {
 								Keyboard.dismiss();
 								requestAnimationFrame(() => setIsRegistering(true));
 							}}>
-							<Text style={{ fontWeight: "bold" }}>
+							<Text style={styles.registerText}>
 								Je n'ai pas de compte : S'inscrire
 							</Text>
 						</Pressable>
 					</View>
-				</KeyboardAvoidingView>
-			</TouchableWithoutFeedback>
+				</View>
+			</KeyboardAvoidingView>
 
 			<ForgotPasswordSheet
 				ref={forgotPasswordSheetRef}
-				initialEmail={forgotPrefillEmail}
+				initialEmail={email}
 				isSubmitting={forgotPasswordMutation.isPending}
 				onSubmit={handleForgotPasswordSubmit}
 				onDismiss={handleForgotSheetDismiss}
@@ -386,73 +534,116 @@ const SignIn = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		paddingHorizontal: 20,
+		paddingHorizontal: 24,
+		backgroundColor: "#F5F5F5",
 	},
-	scrollContainer: {
+	layout: {
+		flex: 1,
+	},
+	logoWrap: {
+		width: "100%",
+		alignItems: "center",
+	},
+	formArea: {
+		flex: 1,
+		width: "100%",
+	},
+	formContent: {
 		flexGrow: 1,
-		minWidth: "100%",
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	centerWrap: {
 		alignItems: "center",
-		justifyContent: "center",
-		gap: 0,
 		width: "100%",
-		marginTop: 40,
+		maxWidth: 420,
 	},
 	title: {
 		fontSize: FontSizeH1,
 		fontWeight: "bold",
-		marginBottom: 40,
+		marginBottom: 30,
+		textAlign: "center",
 	},
-	passwordInputContainer: {
+	inputField: {
 		flexDirection: "row",
 		alignItems: "center",
-		justifyContent: "center",
-		borderRadius: 8,
-		paddingHorizontal: 10,
-		marginBottom: 20,
-		borderBottomWidth: 2,
-		borderBottomColor: colorGrey,
-		paddingBottom: 16,
+		width: "100%",
+		minHeight: 58,
+		borderRadius: 14,
+		paddingHorizontal: 14,
+		marginBottom: 14,
+		borderWidth: 1,
+		borderColor: colorGrey,
+		backgroundColor: "#F5F5F5",
 	},
 	input: {
 		flex: 1,
 		backgroundColor: "transparent",
 		color: colorBlack,
 		fontSize: FontSize16,
-		fontWeight: "bold",
+		fontWeight: "700",
+		paddingVertical: 14,
 	},
-	eyeIcon: {
-		marginLeft: 10,
+	eyeButton: {
+		paddingHorizontal: 4,
+		paddingVertical: 8,
 	},
 	forgotPasswordContainer: {
 		width: "100%",
 		alignItems: "flex-end",
-		marginBottom: 30,
+		marginBottom: 26,
+		gap: 8,
 	},
 	forgotPasswordText: {
 		fontWeight: "bold",
 		color: colorBlack,
 	},
+	devResetPasswordText: {
+		fontWeight: "700",
+		fontSize: 12,
+		color: colorBlack,
+		opacity: 0.7,
+	},
 	buttonContainer: {
 		backgroundColor: colorBlack,
-		paddingHorizontal: 50,
-		paddingVertical: 15,
-		borderRadius: 50,
+		width: "100%",
+		minHeight: 52,
+		borderRadius: 26,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	buttonText: {
 		color: colorWhite,
 		fontWeight: "bold",
+		fontSize: FontSize16,
+	},
+	biometricButton: {
+		marginTop: 14,
+		width: "100%",
+		minHeight: 52,
+		borderRadius: 26,
+		borderWidth: 1,
+		borderColor: colorGrey,
+		backgroundColor: "#F5F5F5",
+		alignItems: "center",
+		justifyContent: "center",
+		flexDirection: "row",
+		gap: 8,
+	},
+	biometricButtonText: {
+		color: colorBlack,
+		fontWeight: "700",
+		fontSize: FontSize16,
 	},
 	registerRow: {
-		position: "absolute",
-		left: 20,
-		right: 20,
-		flexDirection: "row",
-		justifyContent: "center",
+		width: "100%",
 		alignItems: "center",
+		justifyContent: "center",
+		paddingTop: 12,
+	},
+	registerText: {
+		fontWeight: "bold",
+		color: colorBlack,
 	},
 });
 

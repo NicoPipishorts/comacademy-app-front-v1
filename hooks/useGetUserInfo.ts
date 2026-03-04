@@ -1,6 +1,7 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { LoginUser } from "@/types/login";
 import { useQuery } from "@tanstack/react-query";
+import { normalizeLoginUser } from "@/helpers/strapi";
 
 const fetchUserInfo = async (
 	token: string,
@@ -25,7 +26,7 @@ const fetchUserInfo = async (
 		}
 
 		const data = await response.json();
-		return data;
+		return normalizeLoginUser(data);
 	} catch (error) {
 		console.error("Error fetching userInfo:", error);
 		throw error;

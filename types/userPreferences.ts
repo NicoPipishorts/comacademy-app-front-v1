@@ -1,17 +1,29 @@
-// src/types/userPreferences.ts
+export type UserPreferenceUser = {
+	firstName?: string | null;
+	lastName?: string | null;
+	[key: string]: unknown;
+};
+
+export type UserPreferenceAttributes = {
+	avatarBackgroundColor?: string | null;
+	avatar?: unknown;
+	user?: UserPreferenceUser | null;
+	createdAt?: string;
+	updatedAt?: string;
+	publishedAt?: string | null;
+	[key: string]: unknown;
+};
+
+export type UserPreferenceData = {
+	id?: number;
+	attributes?: UserPreferenceAttributes;
+	avatarBackgroundColor?: string | null;
+	avatar?: unknown;
+	user?: UserPreferenceUser | null;
+	[key: string]: unknown;
+};
+
 export type UserPreferencesResponse = {
-	data: {
-		id: number;
-		attributes: {
-			avatarBackgroundColor: string;
-			createdAt: string;
-			updatedAt: string;
-			publishedAt: string | null;
-			user: {
-				firstName: string;
-				lastName: string;
-			};
-		};
-	} | null;
+	data: UserPreferenceData | null;
 	meta: Record<string, unknown>;
 };

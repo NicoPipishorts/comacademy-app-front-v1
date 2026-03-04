@@ -145,6 +145,9 @@ eas build --profile development --platform ios
 Create `.env` file:
 ```
 EXPO_PUBLIC_API_URL=https://your-api.com
+EXPO_PUBLIC_IAP_ENV=sandbox
+EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://comacademy.fr/conditions-generales-d-utilisation
+EXPO_PUBLIC_PRIVACY_POLICY_URL=https://comacademy.fr/politique-de-confidentialite
 ```
 
 ## Scripts

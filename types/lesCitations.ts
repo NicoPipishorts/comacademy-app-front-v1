@@ -11,10 +11,12 @@ export interface CitationData {
 	attributes: CitationAttributes;
 }
 
+export type CitationsResults = { data: CitationData[] } | CitationData[];
+
 export interface CitationsResponse {
 	data: {
 		cat: string;
-		results: { data: CitationData[] };
+		results: CitationsResults;
 	};
 }
 

@@ -1,8 +1,8 @@
 import {
+	colorGrey,
 	colorGreen,
 	colorOrange,
 	colorRed,
-	primaryBackground,
 } from "@/constants/colors";
 import { getPasswordRequirements } from "@/helpers/passwordRequirement";
 import React, { useEffect, useMemo } from "react";
@@ -18,23 +18,23 @@ interface Props {
 }
 
 export default function PasswordStrengthMeter({ password }: Props) {
-	const sectionWidth = 20; // Each section is 20% of the total width
+	const sectionWidth = 25; // Each section is 25% of the total width
 	const filledSections = useSharedValue(0);
 	const barColor = useSharedValue("red");
 
 	const { score, color } = useMemo(() => {
 		const requirements = getPasswordRequirements(password);
-		const { length, uppercase, lowercase, number, special } = requirements;
-		const requirementChecks = [length, uppercase, lowercase, number, special];
+		const { length, uppercase, lowercase, number } = requirements;
+		const requirementChecks = [length, uppercase, lowercase, number];
 		const calculatedScore = requirementChecks.filter(Boolean).length;
 
-		if (calculatedScore <= 2) {
+		if (calculatedScore <= 1) {
 			return { label: "Faible", score: calculatedScore, color: colorRed };
 		}
-		if (calculatedScore === 3) {
+		if (calculatedScore === 2) {
 			return { label: "Moyen", score: calculatedScore, color: colorOrange };
 		}
-		if (calculatedScore === 4) {
+		if (calculatedScore === 3) {
 			return { label: "Bon", score: calculatedScore, color: colorOrange };
 		}
 		return { label: "Fort", score: calculatedScore, color: colorGreen };
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
 	strengthMeterContainer: {
 		width: "100%",
 		height: 10,
-		backgroundColor: primaryBackground,
+		backgroundColor: colorGrey,
 		borderRadius: 5,
 		overflow: "hidden",
 		marginBottom: 20,

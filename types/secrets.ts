@@ -3,22 +3,35 @@ export interface Card {
 	titre: string;
 	contenus: string;
 	cta: string | null;
-	headerCard: boolean;
-}
-
-export interface SecretAttributes {
-	Title: string;
-	Brand: string;
-	Active: boolean;
-	/** Only present on the single‑item response */
-	Cards?: Card[];
-	/** Only present on the list response */
-	imageUrl?: string;
+	headerCard?: boolean;
 }
 
 export interface SecretsData {
 	id: number;
-	attributes: SecretAttributes;
+	Brand: string;
+	Title: string;
+	Active: boolean;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt: string;
+	documentId: string;
+	/** Only present on the single‑item response */
+	Cards?: Card[];
+	/** Only present on the list response */
+	imageUrl?: string;
+	CardImageUrl?: string;
+	CardImageURL?: string;
+	CardImage?:
+		| {
+				url?: string;
+				formats?: {
+					large?: { url?: string };
+					medium?: { url?: string };
+					small?: { url?: string };
+					thumbnail?: { url?: string };
+				};
+		  }
+		| null;
 }
 
 export interface Pagination {

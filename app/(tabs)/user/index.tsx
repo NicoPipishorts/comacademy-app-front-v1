@@ -1,24 +1,25 @@
 import { UseAuth } from "@/auth/AuthContext";
+import AvatarInitials from "@/components/avatars/initials";
 import Loader from "@/components/experience/loader";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import OnboardingV1 from "@/components/onboarding/OnboardingV1";
-import ScreenHeaders from "@/components/ScreenHeaders";
-import ChangeAvatar from "@/components/user/changeAvatar";
+import ProfileAvatarSheet from "@/components/user/ProfileAvatarSheet";
 import ShowNiveaux from "@/components/user/niveaux";
+import SubscriptionStatusCard from "@/components/user/SubscriptionStatusCard";
 import UserAccount from "@/components/user/userAccount";
 import UserStats from "@/components/user/userStats";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
-import { FontSize16 } from "@/constants/fontsizes";
+import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useSubscriptionPrompt } from "@/hooks/useSubscriptionPrompt";
-import { NavigationType } from "@/types/general";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useSubscription } from "@/src/hooks/useSubscription";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
 	Keyboard,
 	KeyboardAvoidingView,
@@ -39,6 +40,11 @@ interface CategoryResult {
 
 export type ResultAccumulator = Record<number, CategoryResult>;
 
+const PROFILE_PLAN_PRICE_LABELS: Record<string, string> = {
+	fullAccess100: "5,99 € par mois",
+	fullAccess1200: "49,99 € par an",
+};
+
 export default function User() {
 	const router = useRouter();
 	const { openModal, timestamp } = useLocalSearchParams();
@@ -49,8 +55,15 @@ export default function User() {
 	const { token, loading: tokenLoading } = useJwtToken();
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
 	const [showOnboarding, setShowOnboarding] = useState(false);
+	const [showAvatarSheet, setShowAvatarSheet] = useState(false);
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
-	const navigation = useNavigation<NavigationType>();
+	const {
+		subscription: entitlementSubscription,
+		hasPremiumAccess: backendHasPremiumAccess,
+		hasActiveSubscription,
+		refresh: refreshSubscription,
+		error: subscriptionError,
+	} = useSubscription();
 
 	useTrackPageMetrics({ page: "User" });
 
@@ -62,7 +75,10 @@ export default function User() {
 		}
 	}, [openModal, timestamp, router]); // timestamp will always be different
 
-	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
+	const {
+		data: scores,
+		refetch,
+	} = useGetUserScore(token, auth?.user.id);
 
 	// Subscription prompt hook
 	const totalAnsweredQuestions =
@@ -95,7 +111,7 @@ export default function User() {
 
 	const onRefresh = () => {
 		setRefreshing(true);
-		refetch().finally(() => {
+		Promise.allSettled([refetch(), refreshSubscription()]).finally(() => {
 			lastFetchTimeRef.current = Date.now();
 			setTimeout(() => {
 				setRefreshing(false);
@@ -123,6 +139,83 @@ export default function User() {
 	}, [refetch]);
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
+	const subscriptionStatus = auth?.user?.subscription?.status;
+	const hasPremiumAccess = useMemo(() => {
+		if (backendHasPremiumAccess) return true;
+		if (hasActiveSubscription) return true;
+		if (auth?.user?.manualPremium) return true;
+		if (auth?.user?.hasPremiumAccess) return true;
+		return (
+			subscriptionStatus === "active" ||
+			subscriptionStatus === "grace_period" ||
+			subscriptionStatus === "billing_retry"
+		);
+	}, [
+		auth?.user?.hasPremiumAccess,
+		auth?.user?.manualPremium,
+		backendHasPremiumAccess,
+		hasActiveSubscription,
+		subscriptionStatus,
+	]);
+
+	const formatDate = (value?: string | null) => {
+		if (!value) return "—";
+		const parsed = new Date(value);
+		if (Number.isNaN(parsed.getTime())) return value;
+		return parsed.toLocaleDateString("fr-FR");
+	};
+
+	const resolvedProductId =
+		auth?.user?.subscription?.productId ??
+		entitlementSubscription?.productId ??
+		null;
+	const resolvedExpirationDateRaw =
+		auth?.user?.subscription?.expiresAt ?? entitlementSubscription?.expiresAt ?? null;
+	const expirationDate = useMemo(() => {
+		if (resolvedExpirationDateRaw) {
+			return formatDate(resolvedExpirationDateRaw);
+		}
+		if (!hasPremiumAccess) {
+			return "—";
+		}
+		if (auth?.user?.manualPremium) {
+			return "Accès manuel";
+		}
+		return "Non communiquée";
+	}, [
+		auth?.user?.manualPremium,
+		hasPremiumAccess,
+		resolvedExpirationDateRaw,
+	]);
+	const profilePriceLine = useMemo(() => {
+		if (!hasPremiumAccess) return null;
+		if (!resolvedProductId) return "Premium individuel";
+
+		const normalized = String(resolvedProductId).trim();
+		if (PROFILE_PLAN_PRICE_LABELS[normalized]) {
+			return PROFILE_PLAN_PRICE_LABELS[normalized];
+		}
+
+		if (normalized === "full.access") {
+			return "Premium individuel";
+		}
+
+		return "Premium individuel";
+	}, [hasPremiumAccess, resolvedProductId]);
+	const profileRenewalLine = useMemo(() => {
+		if (!hasPremiumAccess) return null;
+		if (auth?.user?.manualPremium) return "Accès manuel";
+		if (resolvedExpirationDateRaw) {
+			return `Renouvellement le ${expirationDate}`;
+		}
+		return "Renouvellement actif";
+	}, [
+		auth?.user?.manualPremium,
+		expirationDate,
+		hasPremiumAccess,
+		resolvedExpirationDateRaw,
+	]);
+	const shouldShowUpgradeModal = shouldShowModal && !hasPremiumAccess;
 
 	if (!scores) {
 		return <Loader />;
@@ -137,17 +230,31 @@ export default function User() {
 					styles.innerWrapper,
 					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
 				]}>
-				<ScreenHeaders content='Mon profil' />
+					<View style={styles.headerRow}>
+						<Text style={styles.headerTitle}>Mon profil</Text>
+						<AvatarInitials
+							size={86}
+							showBorder
+							showEditBadge
+							onPress={() => setShowAvatarSheet(true)}
+						/>
+					</View>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={
 						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
 					}>
-					<ShowNiveaux
-						totalPoints={scores.data[0].attributes.totalAnsweredQuestions}
-					/>
+					<ShowNiveaux totalPoints={totalAnsweredQuestions} />
 
-					{scores && <UserStats categoriesScore={scores} />}
+					{scores?.data?.length ? <UserStats categoriesScore={scores} /> : null}
+
+					<SubscriptionStatusCard
+						hasPremiumAccess={hasPremiumAccess}
+						priceLine={profilePriceLine}
+						renewalLine={profileRenewalLine}
+						subscriptionError={subscriptionError}
+						onPressSubscribe={() => router.push("/subscription")}
+					/>
 
 					<View style={styles.cardWrapper}>
 						<View style={styles.cardTextContainer}>
@@ -165,13 +272,26 @@ export default function User() {
 						</View>
 					</View>
 
-					<ChangeAvatar />
-
 					<UserAccount />
 
 					{/* <View style={styles.logoutContainer}>
 						<TouchableOpacity
 							onPress={() => navigation.navigate("iapBarebone")}
+							style={styles.logoutButton}>
+							<Text
+								style={{
+									color: "#F0F",
+									fontSize: FontSize16,
+									fontWeight: "bold",
+								}}>
+								IAP Barebones
+							</Text>
+						</TouchableOpacity>
+					</View>
+
+					<View style={styles.logoutContainer}>
+						<TouchableOpacity
+							onPress={() => navigation.navigate("iapRawDebug")}
 							style={styles.logoutButton}>
 							<Text
 								style={{
@@ -214,9 +334,13 @@ export default function User() {
 			)}
 
 			<UpgradeSubscriptionModal
-				visible={shouldShowModal}
+				visible={shouldShowUpgradeModal}
 				onClose={dismissModal}
-				message='Félicitations ! Tu as atteint le niveau 1 ! Continue ton aventure avec un abonnement Premium pour débloquer tout le contenu.'
+				message='Tu peux aller encore plus loin avec l’abonnement Premium pour débloquer tout le contenu.'
+			/>
+			<ProfileAvatarSheet
+				visible={showAvatarSheet}
+				onClose={() => setShowAvatarSheet(false)}
 			/>
 		</KeyboardAvoidingView>
 	);
@@ -243,6 +367,17 @@ const styles = StyleSheet.create({
 		paddingTop: 80,
 		paddingBottom: 100,
 		backgroundColor: primaryBackground,
+	},
+	headerRow: {
+		paddingTop: 12,
+		paddingBottom: 28,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+	},
+	headerTitle: {
+		fontSize: FontSizeScreenTitles,
+		fontWeight: "bold",
 	},
 	logoutContainer: {
 		display: "flex",

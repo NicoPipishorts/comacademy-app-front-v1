@@ -31,6 +31,7 @@ export interface ListCommandementAttributes {
 	Active: boolean;
 	imageUrl: string | null;
 	catName: string | null;
+	documentId: string; // Added to support navigation by documentId
 }
 
 export interface ListCommandementData {

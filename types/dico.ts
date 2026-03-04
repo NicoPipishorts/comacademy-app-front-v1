@@ -26,9 +26,8 @@ export interface DicoSelected {
 export interface DicoLists {
 	data: {
 		id: number;
-		attributes: {
-			Word: string;
-		};
+		documentId?: string;
+		Word: string;
 	}[];
 }
 export interface DicoFavoritesWordAttributes extends DicoAttributes {

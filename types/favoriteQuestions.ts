@@ -1,39 +1,27 @@
 import { QuestionAttributes } from "./question";
 
-export interface FavoriteQuestionsPayloadFull {
-	data: {
-		id: number;
-		attributes: {
-			userId: string;
-			createdAt: string;
-			updatedAt: string;
-			publishedAt: string;
-			questions: {
-				data: {
-					id: number;
-					attributes: QuestionAttributes;
-				}[];
-			};
+export interface FavoriteQuestionsItem {
+	id: number;
+	attributes: {
+		userId: string;
+		createdAt: string;
+		updatedAt: string;
+		publishedAt: string;
+		questions: {
+			data: {
+				id: number;
+				attributes: QuestionAttributes;
+			}[];
 		};
 	};
+}
+
+export interface FavoriteQuestionsPayloadFull {
+	data: FavoriteQuestionsItem[];
 	meta: Record<string, unknown>;
 }
 
 export interface FavoriteQuestionsPayloadShort {
-	data: {
-		id: number;
-		attributes: {
-			userId: string;
-			createdAt: string;
-			updatedAt: string;
-			publishedAt: string;
-			questions: {
-				data: {
-					id: number;
-					attributes: Record<string, unknown>;
-				}[];
-			};
-		};
-	};
+	data: FavoriteQuestionsItem[];
 	meta: Record<string, unknown>;
 }

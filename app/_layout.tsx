@@ -2,7 +2,6 @@ import "react-native-reanimated";
 
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
-import { UpdatesProvider } from "@/context/UpdatesContext";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { NetworkProvider } from "@/providers/NetworkProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -12,6 +11,7 @@ import React from "react";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider as PaperProvider } from "react-native-paper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../auth/AuthContext";
 import { queryClient } from "../hooks/reactQueryConfig";
 
@@ -27,14 +27,14 @@ if (Platform.OS === "ios") {
 
 export default function RootLayout() {
 	return (
-		<AuthProvider>
-			<SubscriptionProvider>
-				<QueryClientProvider client={queryClient}>
-					<GestureHandlerRootView style={{ flex: 1 }}>
-						<BottomSheetModalProvider>
-							<PaperProvider>
-								<SnackbarProvider>
-									<UpdatesProvider>
+		<SafeAreaProvider>
+			<AuthProvider>
+				<SubscriptionProvider>
+					<QueryClientProvider client={queryClient}>
+						<GestureHandlerRootView style={{ flex: 1 }}>
+							<BottomSheetModalProvider>
+								<PaperProvider>
+									<SnackbarProvider>
 										<NetworkProvider>
 											<TabProvider>
 												<Stack screenOptions={{ animation: "none" }}>
@@ -45,13 +45,13 @@ export default function RootLayout() {
 												</Stack>
 											</TabProvider>
 										</NetworkProvider>
-									</UpdatesProvider>
-								</SnackbarProvider>
-							</PaperProvider>
-						</BottomSheetModalProvider>
-					</GestureHandlerRootView>
-				</QueryClientProvider>
-			</SubscriptionProvider>
-		</AuthProvider>
+									</SnackbarProvider>
+								</PaperProvider>
+							</BottomSheetModalProvider>
+						</GestureHandlerRootView>
+					</QueryClientProvider>
+				</SubscriptionProvider>
+			</AuthProvider>
+		</SafeAreaProvider>
 	);
 }

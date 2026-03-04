@@ -44,9 +44,9 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 		useGetFavoriteQuestions(auth?.user.id);
 
 	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
-		useState<boolean>(null);
+		useState<boolean>(false);
 	const [idArray, setIdArray] = useState<number[]>([]);
-	const [dataId, setDataId] = useState<number>(null);
+	const [dataId, setDataId] = useState<number | null>(null);
 
 	const { showTabBar, hideTabBar } = useTabBarVisibility();
 
@@ -66,39 +66,39 @@ export default function QuestionDetails({ questionId, postGame }: Props) {
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess);
 
 	useEffect(() => {
-		if (userFavoriteQuestions?.data[0]) {
-			const newArray =
-				userFavoriteQuestions?.data[0].attributes.questions.data.map(
-					(item) => item.id
-				);
-			setIdArray(newArray);
+		const favoriteEntry = userFavoriteQuestions?.data?.[0];
+		if (!favoriteEntry) {
+			setIdArray([]);
+			setDataId(null);
+			return;
 		}
+
+		const nextIds =
+			favoriteEntry.attributes.questions.data?.map((item) => item.id) ?? [];
+		setIdArray(nextIds);
+		setDataId(favoriteEntry.id);
 	}, [userFavoriteQuestions?.data]);
 
 	useEffect(() => {
-		if (idArray) {
-			const doesItExist = idArray.some((id) => id === questionId);
-			if (doesItExist) {
-				setFilterIfFavoriteExists(true);
-			} else {
-				setFilterIfFavoriteExists(false);
-			}
-		}
+		setFilterIfFavoriteExists(idArray.includes(questionId));
 	}, [idArray, questionId]);
 
-	useEffect(() => {
-		if (userFavoriteIsFetched && userFavoriteQuestions.data[0]) {
-			setDataId(userFavoriteQuestions.data[0].id);
-		}
-	}, [userFavoriteIsFetched, userFavoriteQuestions]);
-
 	const handleAddFavorite = useCallback(() => {
+		if (!token || !auth?.user?.id) {
+			return;
+		}
+
 		if (filterIfFavoriteExists) {
+			if (!dataId) {
+				return;
+			}
 			const updatedIdArray = idArray.filter((id) => id !== questionId);
 			const updatedFavoriteQuestions = [...updatedIdArray];
+			setIdArray(updatedIdArray);
 			mutation.mutate({ dataId, updatedFavoriteQuestions, token });
 		} else {
 			const updatedFavoriteQuestions = [...idArray, questionId];
+			setIdArray(updatedFavoriteQuestions);
 			if (!dataId) {
 				mutation.mutate({
 					userId: auth?.user.id,

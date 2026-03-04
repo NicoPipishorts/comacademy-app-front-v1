@@ -16,7 +16,15 @@ import React, {
 	useMemo,
 	useState,
 } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import {
+	ActivityIndicator,
+	Keyboard,
+	Platform,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 
 interface ForgotPasswordSheetProps {
 	initialEmail?: string;
@@ -30,6 +38,7 @@ interface ForgotPasswordSheetProps {
 const DEFAULT_TITLE = "Mot de passe oublié";
 const DEFAULT_DESCRIPTION =
 	"Entrez l'email associé à votre compte pour recevoir un lien de réinitialisation.";
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ForgotPasswordSheet = forwardRef<
 	BottomSheetModal,
@@ -47,7 +56,7 @@ const ForgotPasswordSheet = forwardRef<
 		ref
 	) => {
 		const [email, setEmail] = useState(initialEmail);
-		const snapPoints = useMemo(() => ["38%", "74%"], []);
+		const snapPoints = useMemo(() => ["42%", "68%"], []);
 
 		useEffect(() => {
 			setEmail(initialEmail);
@@ -65,8 +74,16 @@ const ForgotPasswordSheet = forwardRef<
 			[]
 		);
 
+		const handleAnimate = useCallback((_fromIndex: number, toIndex: number) => {
+			if (toIndex === -1) {
+				Keyboard.dismiss();
+			}
+		}, []);
+
 		const handleSubmit = useCallback(() => {
-			onSubmit(email.trim());
+			const normalizedEmail = email.trim().toLowerCase();
+			if (!EMAIL_PATTERN.test(normalizedEmail)) return;
+			onSubmit(normalizedEmail);
 		}, [email, onSubmit]);
 
 		const handleDismiss = useCallback(() => {
@@ -74,7 +91,10 @@ const ForgotPasswordSheet = forwardRef<
 			onDismiss?.();
 		}, [initialEmail, onDismiss]);
 
-		const buttonDisabled = isSubmitting || email.trim().length === 0;
+		const normalizedEmail = email.trim().toLowerCase();
+		const hasTypedEmail = normalizedEmail.length > 0;
+		const isEmailValid = EMAIL_PATTERN.test(normalizedEmail);
+		const buttonDisabled = isSubmitting || !isEmailValid;
 
 		return (
 			<BottomSheetModal
@@ -87,12 +107,15 @@ const ForgotPasswordSheet = forwardRef<
 				enableDynamicSizing={false}
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
-				keyboardBehavior='extend'
+				onAnimate={handleAnimate}
+				keyboardBehavior={Platform.OS === "android" ? "interactive" : "extend"}
 				keyboardBlurBehavior='restore'
-				android_keyboardInputMode='adjustResize'>
+				enableBlurKeyboardOnGesture
+				android_keyboardInputMode='adjustPan'>
 				<BottomSheetScrollView
 					style={styles.sheetContent}
 					contentContainerStyle={styles.scrollContentContainer}
+					nestedScrollEnabled
 					keyboardShouldPersistTaps='handled'>
 					<ModalGestureLine />
 					<Text style={styles.sheetTitle}>{title}</Text>
@@ -107,7 +130,17 @@ const ForgotPasswordSheet = forwardRef<
 						keyboardType='email-address'
 						textContentType='emailAddress'
 						autoCorrect={false}
+						autoComplete='email'
+						returnKeyType='send'
+						onSubmitEditing={handleSubmit}
 					/>
+					{hasTypedEmail && !isEmailValid ? (
+						<Text style={styles.errorText}>
+							Veuillez saisir une adresse email valide.
+						</Text>
+					) : (
+						<View style={styles.helperSpacer} />
+					)}
 					<Pressable
 						onPress={handleSubmit}
 						disabled={buttonDisabled}
@@ -158,10 +191,19 @@ const styles = StyleSheet.create({
 		borderColor: colorGrey,
 		borderRadius: 12,
 		paddingHorizontal: 16,
-		paddingVertical: 14,
+		paddingVertical: 16,
 		fontSize: FontSize16,
 		fontWeight: "bold",
 		color: colorBlack,
+		minHeight: 56,
+	},
+	errorText: {
+		fontSize: 13,
+		color: "#D92D20",
+		marginTop: -10,
+	},
+	helperSpacer: {
+		height: 8,
 	},
 	resetButtonDisabled: {
 		opacity: 0.6,

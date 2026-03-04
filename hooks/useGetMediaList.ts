@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 export type MediaRoute =
 	| "petites-histoires"
 	| "trentes-secondes"
+	| "TrenteSecondes"
 	| "top-des-flops";
 
 export interface VideoUri {
@@ -54,9 +55,15 @@ const fetchMediaList = async (
 	});
 
 	if (!res.ok) {
-		const text = await res.text();
-		console.error(`[fetchMediaList:${route}]`, res.status, text);
-		throw new Error(`Failed to fetch ${route}: ${res.status}`);
+		const message = `Failed to fetch ${route}: ${res.status}`;
+		const error = new Error(message);
+		(error as any).status = res.status;
+		try {
+			(error as any).body = await res.text();
+		} catch {
+			// ignore
+		}
+		throw error;
 	}
 
 	return (await res.json()) as MediaListResponse;

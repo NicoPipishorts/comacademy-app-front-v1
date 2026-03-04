@@ -19,9 +19,8 @@ export interface MetierAttributes {
 export interface MetiersList {
 	data: {
 		id: number;
-		attributes: {
-			METIER: string;
-		};
+		documentId?: string;
+		METIER: string;
 	}[];
 }
 

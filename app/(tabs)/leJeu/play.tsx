@@ -26,17 +26,25 @@ export default function LetsPlay({
 	setFilterByCat,
 }: Props) {
 	const { data: dataCategory } = useCategoriesFull();
-
-	const cat = filterByCat - 1;
+	const selectedCategory =
+		dataCategory?.data?.find(
+			(category) => category.attributes.staticId === filterByCat
+		) ??
+		(filterByCat != null ? dataCategory?.data?.[filterByCat - 1] : undefined);
+	const selectedCategoryIconUrl =
+		selectedCategory?.attributes?.smallIcon?.data?.attributes?.url;
+	const selectedCategoryTitle = selectedCategory?.attributes?.Title;
+	const selectedCategoryBackgroundColor =
+		selectedCategory?.attributes?.backgroundColor;
 
 	return (
 		<View style={styles.wrapperCenter}>
-			{filterByCat && (
+			{filterByCat && selectedCategory && (
 				<View
 					style={[
 						styles.card,
 						{
-							backgroundColor: `#${dataCategory?.data[cat].attributes.backgroundColor}`,
+							backgroundColor: `#${selectedCategoryBackgroundColor}`,
 						},
 					]}>
 					<TouchableOpacity
@@ -48,15 +56,15 @@ export default function LetsPlay({
 							color={colorWhite}
 						/>
 					</TouchableOpacity>
-					<Text style={styles.cardText}>
-						{dataCategory?.data[cat].attributes.Title}
-					</Text>
-					<Image
-						source={{
-							uri: `${dataCategory?.data[cat].attributes.smallIcon.data.attributes.url}`,
-						}}
-						style={styles.icon}
-					/>
+					<Text style={styles.cardText}>{selectedCategoryTitle}</Text>
+					{selectedCategoryIconUrl ? (
+						<Image
+							source={{
+								uri: selectedCategoryIconUrl,
+							}}
+							style={styles.icon}
+						/>
+					) : null}
 				</View>
 			)}
 			<View>

@@ -29,6 +29,14 @@ const UserLayout = () => {
 						presentation: "modal",
 					}}
 				/>
+				<Stack.Screen
+					name='iapRawDebug'
+					options={{
+						headerShown: false,
+						headerTitle: "In-App Purchases Debug",
+						presentation: "modal",
+					}}
+				/>
 			</Stack>
 		</GameProvider>
 	);

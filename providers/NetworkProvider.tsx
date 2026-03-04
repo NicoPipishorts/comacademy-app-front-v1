@@ -1,7 +1,8 @@
 // NetworkProvider.tsx
 import { useSnackbar } from "@/context/snackBar";
+import { logDevice } from "@/helpers/logDevice";
 import NetInfo from "@react-native-community/netinfo";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 
 interface NetworkContextType {
 	isConnected: boolean;
@@ -13,6 +14,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
 	const [isConnected, setIsConnected] = useState<boolean>(true);
+	const lastLoggedConnectivityRef = useRef<boolean | null>(null);
 	const showSnackbar = useSnackbar();
 
 	useEffect(() => {
@@ -21,6 +23,10 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (isConnected !== null && isConnected !== undefined) {
 				setIsConnected(isConnected);
+				if (lastLoggedConnectivityRef.current !== isConnected) {
+					lastLoggedConnectivityRef.current = isConnected;
+					logDevice("[NetworkProvider] connectivity changed", { isConnected });
+				}
 
 				// Show a snackbar message if the connection is lost
 				if (!isConnected) {

@@ -1,7 +1,7 @@
 import useGetNiveaux from "@/hooks/useGetNiveaux";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Loader from "../experience/loader";
 
@@ -12,15 +12,6 @@ interface Props {
 export default function ShowNiveaux({ totalPoints }: Props) {
 	const { token } = useJwtToken();
 	const { data: niveaux } = useGetNiveaux(token);
-
-	// const [textHeight, setTextHeight] = useState<number | "auto">(40);
-	// const [isExpanded, setIsExpanded] = useState(false); // Track expansion state
-	const [niveauStatut, setNiveauStatut] = useState<string | null>(null);
-	const [niveauNumber, setNiveauNumber] = useState<number | null>(null);
-	const [niveauCitation, setNiveauCitation] = useState<string | null>(null);
-	const [niveauCommentaire, setNiveauCommentaire] = useState<string | null>(
-		null
-	);
 
 	const niveauxLength = niveaux?.data?.length ?? 0;
 
@@ -50,26 +41,17 @@ export default function ShowNiveaux({ totalPoints }: Props) {
 		[niveauxLength]
 	);
 
-	const setNiveauDetails = useCallback(
-		(index: number) => {
-			const niveau = niveaux?.data?.[index]?.attributes;
-			if (niveau) {
-				setNiveauStatut(niveau.statut);
-				setNiveauNumber(index);
-				setNiveauCitation(niveau.citation);
-				setNiveauCommentaire(niveau.commentaires);
-			}
-		},
-		[niveaux]
-	);
-
-	useEffect(() => {
-		if (!niveauxLength) {
-			return;
-		}
-		const index = calculateNiveauIndex(totalPoints);
-		setNiveauDetails(index);
-	}, [calculateNiveauIndex, niveauxLength, setNiveauDetails, totalPoints]);
+	const niveauNumber = niveauxLength ? calculateNiveauIndex(totalPoints) : null;
+	const currentNiveauEntry =
+		niveauNumber !== null ? (niveaux?.data?.[niveauNumber] as any) : null;
+	const currentNiveau =
+		currentNiveauEntry?.attributes ?? currentNiveauEntry ?? null;
+	const niveauStatut =
+		currentNiveau?.statut ?? currentNiveau?.Statut ?? "—";
+	const niveauCitation =
+		currentNiveau?.citation ?? currentNiveau?.Citation ?? "—";
+	const niveauCommentaire =
+		currentNiveau?.commentaires ?? currentNiveau?.Commentaires ?? "—";
 
 	if (!niveaux) {
 		return <Loader />;
@@ -174,7 +156,7 @@ const styles = StyleSheet.create({
 		borderRadius: 15,
 		backgroundColor: "black",
 		alignItems: "flex-end",
-		justifyContent: "flex-end",
+		justifyContent: "space-between",
 	},
 	niveauStatus: {
 		fontSize: 24,

@@ -13,9 +13,12 @@ export interface CategoriesAttributes {
 	publishedAt: string;
 	Title: string;
 	backgroundColor: string;
+	background_color?: string;
 	smallIcon: CategoriesIcon;
+	small_icon?: CategoriesIcon;
 	bigIcon: CategoriesIcon;
 	staticId: number;
+	static_id?: number;
 }
 
 export interface CategoriesIcon {
@@ -69,8 +72,11 @@ export interface CategroiesMenu {
 
 export interface CategorieColorsAttributes {
 	backgroundColor: string;
+	background_color?: string;
 	smallIcon: CategoriesIcon;
+	small_icon?: CategoriesIcon;
 	staticId: number;
+	static_id?: number;
 }
 
 export interface CategorieColors {

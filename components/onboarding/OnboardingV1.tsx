@@ -42,7 +42,11 @@ const OnboardingV1 = ({ onComplete }: { onComplete?: () => void }) => {
 	const renderSlide = ({ item }) => (
 		<View
 			style={[styles.slide, { width: SCREEN_WIDTH, height: SCREEN_HEIGHT }]}>
-			<Image source={item.image} style={styles.image} />
+			<Image
+				source={item.image}
+				style={styles.slideImage}
+				resizeMode='cover'
+			/>
 		</View>
 	);
 
@@ -109,10 +113,9 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 	},
-	image: {
+	slideImage: {
 		width: SCREEN_WIDTH,
 		height: SCREEN_HEIGHT,
-		resizeMode: "cover",
 	},
 	finishedButton: {
 		position: "absolute",

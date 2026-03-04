@@ -17,19 +17,16 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 export default function CitationsFavoritesList() {
 	const { auth } = useAuthSession();
 
-	const { data: favoriteResponse, isFetched } = useGetFavoriteCitationsFull(
-		auth?.user.id
-	);
+	const { data: favoriteResponse, isFetched } =
+		useGetFavoriteCitationsFull(auth?.user.id);
 	const { data: categories } = useCategories();
 
-	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
+	const favorites = favoriteResponse?.data?.results?.data ?? [];
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(false);
 	useEffect(() => {
 		if (isFetched) {
-			if (favoriteResponse.data.count <= 0) {
-				setIsEmptyArray(true);
-			} else {
-				setIsEmptyArray(false);
-			}
+			const count = favoriteResponse?.data?.count ?? 0;
+			setIsEmptyArray(count === 0);
 		}
 	}, [favoriteResponse, isFetched]);
 
@@ -52,7 +49,7 @@ export default function CitationsFavoritesList() {
 
 				<View>
 					{!isEmptyArray &&
-						favoriteResponse.data.results.data.map((word) => (
+						favorites.map((word) => (
 							<CardFavoriteCitation key={word.id} data={word} />
 						))}
 					{isEmptyArray && (

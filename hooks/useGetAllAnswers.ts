@@ -23,6 +23,12 @@ export interface FetchAllAnswersParams {
 	userId?: number;
 }
 
+const EMPTY_RESPONSE: AllAnswersResponse = {
+	data: [],
+	allQuestions: 0,
+	allUserQuestions: 0,
+};
+
 const fetchPayload = async (
 	token: string,
 	userId?: number
@@ -40,7 +46,7 @@ const fetchPayload = async (
 
 		if (!response.ok) {
 			if (response.status === 404) {
-				return null;
+				return EMPTY_RESPONSE;
 			}
 
 			console.error(

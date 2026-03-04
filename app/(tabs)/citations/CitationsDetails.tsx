@@ -22,7 +22,9 @@ const SNAP_INTERVAL = CARD_WIDTH + CARD_SPACING;
 
 const LesCitations = () => {
 	const { citationCategory } = useLocalSearchParams();
-	const { data, isLoading } = useLesCitations(citationCategory as string);
+	const category = (citationCategory as string) ?? "";
+	const requestUrl = `${process.env.EXPO_PUBLIC_API_URL}/citations/by-category/${category}`;
+	const { data, isLoading } = useLesCitations(category);
 	const insets = useSafeAreaInsets();
 	const listRef = useRef<FlatList>(null);
 
@@ -49,15 +51,20 @@ const LesCitations = () => {
 
 	if (isLoading) return <Loader />;
 
-	if (!data) {
+	const rawResults = data?.data?.results;
+	const citationsData = Array.isArray(rawResults)
+		? rawResults
+		: rawResults?.data ?? [];
+
+	if (!data || citationsData.length === 0) {
 		return (
 			<View style={styles.noDataContainer}>
 				<Text>No data available</Text>
+				<Text style={styles.debugUrlLabel}>Last request:</Text>
+				<Text style={styles.debugUrl}>{requestUrl}</Text>
 			</View>
 		);
 	}
-
-	const citationsData = [...data.data.results.data];
 
 	// OPTIONAL: hook this up to your modal or navigation
 	const handleAddToPlaylist = (citationId: number) => {
@@ -104,6 +111,17 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
+	},
+	debugUrlLabel: {
+		marginTop: 16,
+		fontSize: FontSize16,
+		fontWeight: "600",
+	},
+	debugUrl: {
+		textAlign: "center",
+		marginTop: 4,
+		paddingHorizontal: 20,
+		fontSize: FontSize16,
 	},
 	categoryTitle: {
 		marginTop: -10,

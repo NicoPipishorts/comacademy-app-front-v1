@@ -12,6 +12,7 @@ import {
 	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
+import { resolveUserPreference } from "@/helpers/userPreferences";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserPreferences from "@/hooks/useGetUserPreferences";
 import React from "react";
@@ -45,16 +46,16 @@ export default function ChangeAvatar() {
 	const onPress = (color: string) => {
 		updatePreferences.mutate({
 			avatarBackgroundColor: color,
-			userId: data?.data.id,
 		});
 	};
 
+	const preference = resolveUserPreference(data);
 	let userSelectedBgColor: string;
 
-	if (!data?.data) {
+	if (!preference?.avatarBackgroundColor) {
 		userSelectedBgColor = colorYellow;
 	} else {
-		userSelectedBgColor = data?.data.attributes.avatarBackgroundColor;
+		userSelectedBgColor = preference.avatarBackgroundColor;
 	}
 
 	return (

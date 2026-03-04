@@ -4,20 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 
 const fetchCategories = async (token: string): Promise<CategoriePayload> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/categories?populate=*&sort=staticId:asc`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/categories/categoriesFullCustom`;
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
+			const text = await response.text();
+			console.error(`Categories HTTP error! status: ${response.status}`, text);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 

@@ -1,6 +1,8 @@
 import { colorWhite } from "@/constants/colors";
 import { FontSize12, FontSize20 } from "@/constants/fontsizes";
+import { resolveEntityAttributes } from "@/helpers/strapi";
 import useGetOneDico from "@/hooks/useGetOneDico";
+import { DicoAttributes } from "@/types/dico";
 import { NavigationType } from "@/types/general";
 import { useNavigation } from "expo-router";
 import { format } from "date-fns";
@@ -13,20 +15,35 @@ export default function ALaUneDico() {
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetOneDico();
 
-	if (!isFetched) {
-		return null;
-	}
+	if (!isFetched) return null;
 
-	const dico = data.data[0].attributes;
-	const id = data.data[0].id;
+	const firstEntry = data?.data?.[0];
+	if (!firstEntry) return null;
+
+	const attributes =
+		resolveEntityAttributes<DicoAttributes>(firstEntry) ??
+		firstEntry.attributes;
+	if (!attributes) return null;
+
+	const updatedAtValue =
+		attributes.updatedAt ??
+		(attributes as { updated_at?: string }).updated_at ??
+		"";
+
+	const parsedDate = updatedAtValue ? new Date(updatedAtValue) : null;
+	const formattedDate =
+		parsedDate && !Number.isNaN(parsedDate.getTime())
+			? format(parsedDate, "dd/MM/yyyy")
+			: "N/A";
+
 	const handlePress = () => {
-		navigation.navigate("dico", { openDetails: id });
+		navigation.navigate("dico", { openDetails: firstEntry.id });
 	};
 
 	return (
 		<TouchableOpacity style={styles.container}>
 			<Text style={styles.smallText}>
-				La définition du jour : {format(new Date(dico.updatedAt), "dd/MM/yyyy")}
+				La définition du jour : {formattedDate}
 			</Text>
 			<View style={styles.containerBis}>
 				{!isFetched && <Loader />}
@@ -36,7 +53,7 @@ export default function ALaUneDico() {
 							style={styles.mainText}
 							numberOfLines={2}
 							ellipsizeMode='tail'>
-							{dico.Word}
+							{attributes.Word ?? (attributes as { Word?: string }).Word ?? ""}
 						</Text>
 						<StyledButton
 							title='Découvrir'
@@ -53,7 +70,7 @@ export default function ALaUneDico() {
 const styles = StyleSheet.create({
 	container: {
 		backgroundColor: colorWhite,
-		width: 350,
+		width: "100%",
 		minHeight: 100,
 		padding: 15,
 		borderRadius: 10,

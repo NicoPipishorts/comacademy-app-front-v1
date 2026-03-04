@@ -13,7 +13,7 @@ import {
 
 interface Props {
 	image: string;
-	itemId: number;
+	itemId: string;
 	content: string;
 	onPress?: () => void;
 	locked?: boolean;

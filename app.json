@@ -2,14 +2,14 @@
 	"expo": {
 		"name": "Com'Academy",
 		"slug": "comacademy",
-		"version": "1.2.5",
+		"version": "2.1.1",
 		"orientation": "portrait",
 		"icon": "./assets/imgs/icons/favicon.png",
 		"scheme": "comacademy",
 		"userInterfaceStyle": "automatic",
 
 		"splash": {
-			"image": "./assets/imgs/splashScreen.png",
+			"image": "./assets/imgs/splash/splashscreen_logo.png",
 			"resizeMode": "contain",
 			"backgroundColor": "#EDBE00"
 		},
@@ -22,23 +22,29 @@
 		"ios": {
 			"supportsTablet": false,
 			"bundleIdentifier": "com.nicopipishorts.comacademy",
-			"buildNumber": "1.2.5",
+			"buildNumber": "9",
 			"infoPlist": {
-				"ITSAppUsesNonExemptEncryption": false
+				"ITSAppUsesNonExemptEncryption": false,
+				"NSFaceIDUsageDescription": "Utiliser Face ID pour vous connecter rapidement à votre compte.",
+				"NSPhotoLibraryUsageDescription": "Autorise Com'Academy à accéder à tes photos pour importer un avatar."
 			},
-			"associatedDomains": ["applinks:YOUR_DOMAIN.com"]
+			"associatedDomains": [
+				"applinks:comacademy.fr",
+				"applinks:www.comacademy.fr"
+			]
 		},
 
 		"android": {
+			"icon": "./assets/imgs/AppIconAndroid.png",
 			"adaptiveIcon": {
 				"backgroundColor": "#EDBE00",
-				"foregroundImage": "./assets/imgs/splashScreen.png"
+				"foregroundImage": "./assets/imgs/AppIconAndroid.png"
 			},
 
 			"softwareKeyboardLayoutMode": "resize",
 			"package": "com.nicopipishorts.comacademy",
 			"splash": {
-				"image": "./assets/imgs/splashScreen.png",
+				"image": "./assets/imgs/splash/splashscreen_logo.png",
 				"resizeMode": "contain",
 				"backgroundColor": "#EDBE00"
 			},
@@ -49,7 +55,12 @@
 					"data": [
 						{
 							"scheme": "https",
-							"host": "YOUR_DOMAIN.com",
+							"host": "comacademy.fr",
+							"pathPrefix": "/auth/reset-password"
+						},
+						{
+							"scheme": "https",
+							"host": "www.comacademy.fr",
 							"pathPrefix": "/auth/reset-password"
 						}
 					],
@@ -67,8 +78,20 @@
 		"plugins": [
 			"expo-router",
 			"expo-font",
-			["react-native-iap", { "ios": { "with-folly-no-coroutines": true } }],
-			["expo-build-properties", { "android": { "kotlinVersion": "2.1.20" } }]
+			"expo-image-picker",
+			"react-native-iap",
+			[
+				"expo-build-properties",
+				{
+					"android": {
+						"kotlinVersion": "2.1.20",
+						"minifyEnabled": true,
+						"enableProguardInReleaseBuilds": true,
+						"enableShrinkResourcesInReleaseBuilds": true
+					}
+				}
+			],
+			"./config-plugins/withMinifyInReleaseBuilds"
 		],
 		"experiments": { "typedRoutes": true },
 		"extra": {
@@ -76,7 +99,7 @@
 			"eas": { "projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e" }
 		},
 		"owner": "nicopipishorts",
-		"runtimeVersion": "1.2.3",
+		"runtimeVersion": "2.1.1",
 		"updates": {
 			"url": "https://u.expo.dev/0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
 		}

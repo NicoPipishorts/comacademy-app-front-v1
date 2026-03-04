@@ -2,13 +2,16 @@
 
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
-import { UserPreferencesResponse } from "@/types/userPreferences";
+import {
+	UserPreferenceData,
+	UserPreferencesResponse,
+} from "@/types/userPreferences";
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 
 export interface UpdateUserPreferencesPayload {
-	userId: number;
-	avatarBackgroundColor: string;
+	avatarBackgroundColor?: string;
+	avatarFileId?: number | null;
 }
 
 export const useUpdateUserPreferences = () => {
@@ -20,22 +23,47 @@ export const useUpdateUserPreferences = () => {
 		UpdateUserPreferencesPayload
 	>({
 		// 1) mutation function embedded in options
-		mutationFn: async ({ userId, avatarBackgroundColor }) => {
+		mutationFn: async ({ avatarBackgroundColor, avatarFileId }) => {
 			if (!token) {
 				throw new Error("Missing authentication token");
 			}
 
-			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences/${userId}`;
-			const payload = { data: { avatarBackgroundColor } };
+			const payloadData: UpdateUserPreferencesPayload = {};
+			if (typeof avatarBackgroundColor === "string") {
+				payloadData.avatarBackgroundColor = avatarBackgroundColor;
+			}
+			if (
+				typeof avatarFileId === "number" ||
+				avatarFileId === null
+			) {
+				payloadData.avatarFileId = avatarFileId;
+			}
+			if (Object.keys(payloadData).length === 0) {
+				throw new Error("No user preferences field to update");
+			}
 
-			const response = await axios.put<UserPreferencesResponse>(url, payload, {
+			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-preferences/me`;
+
+			const response = await axios.put(url, payloadData, {
 				headers: {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
 			});
 
-			return response.data;
+			const responseData = response.data as UserPreferencesResponse;
+			if (
+				responseData &&
+				typeof responseData === "object" &&
+				"data" in responseData
+			) {
+				return responseData;
+			}
+
+			return {
+				data: response.data as UserPreferenceData,
+				meta: {},
+			};
 		},
 
 		// 2) onSuccess handler

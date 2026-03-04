@@ -37,8 +37,12 @@ import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
 const TrenteSecondes: React.FC = () => {
 	const { token } = useJwtToken();
-	const routeKey = "trentes-secondes";
-	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);
+	const routeKey = "TrenteSecondes";
+	const {
+		data,
+		isLoading,
+		isFetching,
+	} = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 	const isScreenFocused = useIsFocused();
 	const navigation = useNavigation();
@@ -51,6 +55,14 @@ const TrenteSecondes: React.FC = () => {
 		closeUpgradeModal,
 		isFreeUser,
 	} = useSubscriptionLimit({ freeLimit: 5 });
+
+	const resolveVideoUri = useCallback((item: any): string | undefined => {
+		const directUrl = item?.videoUri?.url;
+		const nestedUrl = item?.attributes?.videoUri?.data?.attributes?.url;
+		const directLink = item?.videoLink;
+		const nestedLink = item?.attributes?.videoLink;
+		return directUrl ?? nestedUrl ?? directLink ?? nestedLink ?? undefined;
+	}, []);
 
 	// Compute dimensions for videos
 	const { width } = Dimensions.get("window");
@@ -153,7 +165,7 @@ const TrenteSecondes: React.FC = () => {
 				// Note: Don't auto-fade out - user needs to press play button
 			}
 		},
-		[fadeAnim, isFreeUser]
+		[fadeAnim]
 	);
 
 	const viewabilityConfig = useMemo(
@@ -230,7 +242,7 @@ const TrenteSecondes: React.FC = () => {
 	// Render each item
 	const renderItem = useCallback(
 		({ item, index }: { item: any; index: number }) => {
-			const videoUri = item.attributes.videoUri;
+			const videoUri = resolveVideoUri(item);
 			const isFocused = focusedIndex === index;
 			const isLocked = isFreeUser && index >= 5;
 
@@ -300,12 +312,13 @@ const TrenteSecondes: React.FC = () => {
 			focusedIndex,
 			videoHeight,
 			videoWidth,
-			isFreeUser,
-			handleLockedItemPress,
-			isScreenFocused,
-			handleFocusPress,
-		]
-	);
+				isFreeUser,
+				handleLockedItemPress,
+				isScreenFocused,
+				handleFocusPress,
+				resolveVideoUri,
+			]
+		);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -315,7 +328,15 @@ const TrenteSecondes: React.FC = () => {
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
-			{!showSkeleton && data && (
+			{!showSkeleton && data && reversedStories.length === 0 && (
+				<View style={styles.noDataContainer}>
+					<Text style={styles.noDataText}>
+						Aucune vidéo disponible pour le moment
+					</Text>
+				</View>
+			)}
+
+			{!showSkeleton && data && reversedStories.length > 0 && (
 				<>
 					<UpgradeSubscriptionModal
 						visible={showUpgradeModal}
@@ -355,7 +376,13 @@ const styles = StyleSheet.create({
 	list: { marginTop: 30, paddingHorizontal: 30 },
 	contentPadding: { paddingRight: 25 },
 	loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+	noDataContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 40,
+	},
+	noDataText: { fontSize: 16, color: "#666", textAlign: "center" },
 	cardWrapper: {
 		marginLeft: 10,
 		marginRight: 24,

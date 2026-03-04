@@ -1,39 +1,72 @@
-import { UseAuth } from "@/auth/AuthContext";
 import { localNotifications } from "@/data/localNotifications";
+import { UseAuth } from "@/auth/AuthContext";
+import { useSubscription } from "@/src/hooks/useSubscription";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { JSX, useEffect } from "react";
 import { Platform } from "react-native";
 
-const LAST_NOTIFICATION_SCHEDULE_KEY = "lastNotificationSchedule";
+const NOTIFICATION_CONFIG_VERSION = "daily-invite-v2-freemium-monthly";
+const NOTIFICATION_CONFIG_KEY = "notificationScheduleConfig";
+const PREMIUM_ROUTE = "/subscription";
+const ACTIVE_PREMIUM_STATUSES = new Set([
+	"active",
+	"grace_period",
+	"billing_retry",
+	"paused",
+]);
 
-const getRandomNotification = (day: "lundi" | "vendredi" | "freemium") => {
-	const messages = localNotifications[day] || [];
+type NotificationMode = "free" | "standard";
+type StoredScheduleConfig = {
+	version: string;
+	mode: NotificationMode;
+	count: number;
+};
+
+const getRandomNotification = () => {
+	const messages = localNotifications.daily || [];
 	if (messages.length === 0) return "Default notification message.";
 	const randomIndex = Math.floor(Math.random() * messages.length);
 	return messages[randomIndex];
 };
 
-const shouldRescheduleNotifications = async (): Promise<boolean> => {
+const getFreemiumSeries = () => localNotifications.freemiumMonthlySeries || [];
+
+const expectedCountForMode = (mode: NotificationMode): number =>
+	mode === "free" ? getFreemiumSeries().length : 1;
+
+const shouldRescheduleNotifications = async (
+	mode: NotificationMode
+): Promise<boolean> => {
 	try {
-		const lastSchedule = await AsyncStorage.getItem(
-			LAST_NOTIFICATION_SCHEDULE_KEY
-		);
-		if (!lastSchedule) return true;
+		const expectedCount = expectedCountForMode(mode);
+		if (expectedCount === 0) return false;
 
+		const rawConfig = await AsyncStorage.getItem(NOTIFICATION_CONFIG_KEY);
+		const parsedConfig = rawConfig
+			? (JSON.parse(rawConfig) as StoredScheduleConfig)
+			: null;
 		const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-		if (scheduled.length === 0) return true;
+		if (!parsedConfig) return true;
 
-		const lastScheduleDate = new Date(lastSchedule);
-		const now = new Date();
-		const daysSinceLast =
-			(now.getTime() - lastScheduleDate.getTime()) / (1000 * 60 * 60 * 24);
+		if (parsedConfig.version !== NOTIFICATION_CONFIG_VERSION) return true;
+		if (parsedConfig.mode !== mode) return true;
+		if (parsedConfig.count !== expectedCount) return true;
 
-		return daysSinceLast > 7;
+		return scheduled.length !== expectedCount;
 	} catch (error) {
 		console.error("Error checking notification schedule:", error);
 		return true;
 	}
+};
+
+const persistScheduleConfig = async (mode: NotificationMode) => {
+	const config: StoredScheduleConfig = {
+		version: NOTIFICATION_CONFIG_VERSION,
+		mode,
+		count: expectedCountForMode(mode),
+	};
+	await AsyncStorage.setItem(NOTIFICATION_CONFIG_KEY, JSON.stringify(config));
 };
 
 const ensureAndroidChannel = async () => {
@@ -44,8 +77,47 @@ const ensureAndroidChannel = async () => {
 	});
 };
 
-const scheduleWeeklyNotifications = async (isFreemiumUser: boolean) => {
-	const needsReschedule = await shouldRescheduleNotifications();
+const scheduleStandardNotification = async () => {
+	await Notifications.scheduleNotificationAsync({
+		content: {
+			title: "Com Academy",
+			body: getRandomNotification(),
+			data: { path: "/activity", notificationType: "standard-daily" },
+		},
+		trigger: {
+			type: Notifications.SchedulableTriggerInputTypes.DAILY,
+			hour: 9,
+			minute: 0,
+		},
+	});
+};
+
+const scheduleFreemiumSeries = async () => {
+	const messages = getFreemiumSeries();
+	await Promise.all(
+		messages.map((message, index) =>
+			Notifications.scheduleNotificationAsync({
+				content: {
+					title: message.title,
+					body: message.body,
+					data: {
+						path: PREMIUM_ROUTE,
+						notificationType: "freemium-monthly-series",
+						sequenceIndex: index + 1,
+					},
+				},
+				trigger: {
+					type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+					seconds: (index + 1) * 24 * 60 * 60,
+					repeats: false,
+				},
+			})
+		)
+	);
+};
+
+const scheduleNotifications = async (mode: NotificationMode) => {
+	const needsReschedule = await shouldRescheduleNotifications(mode);
 	if (!needsReschedule) {
 		return;
 	}
@@ -53,62 +125,13 @@ const scheduleWeeklyNotifications = async (isFreemiumUser: boolean) => {
 	await ensureAndroidChannel();
 	await Notifications.cancelAllScheduledNotificationsAsync();
 
-	// Monday 09:00 (weekly repeats implicitly)
-	await Notifications.scheduleNotificationAsync({
-		content: {
-			title: "Inspiration du Lundi 🌟",
-			body: getRandomNotification("lundi"),
-			data: { path: "/lesCitations" },
-		},
-		trigger: {
-			type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-			weekday: 2, // 1=Sun..7=Sat
-			hour: 9,
-			minute: 0,
-		},
-	});
-
-	// Friday 12:00
-	await Notifications.scheduleNotificationAsync({
-		content: {
-			title: "Définition du Vendredi 📚",
-			body: getRandomNotification("vendredi"),
-			data: { path: "/activity" },
-		},
-		trigger: {
-			type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-			weekday: 6,
-			hour: 12,
-			minute: 0,
-		},
-	});
-
-	// Random weekday (Mon–Fri) notification - only for freemium users
-	if (isFreemiumUser) {
-		for (let weekday = 2; weekday <= 6; weekday++) {
-			const randomHour = Math.floor(Math.random() * (17 - 9)) + 9; // 9..16
-			const randomMinute = Math.floor(Math.random() * 60);
-
-			await Notifications.scheduleNotificationAsync({
-				content: {
-					title: "La version gratuite, c'est bien pour tester. Mais toi t'es pas là pour tester, t'es là pour briller non ? Abonnes-toi",
-					body: getRandomNotification("freemium"),
-					data: { path: "/subscription" },
-				},
-				trigger: {
-					type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-					weekday,
-					hour: randomHour,
-					minute: randomMinute,
-				},
-			});
-		}
+	if (mode === "free") {
+		await scheduleFreemiumSeries();
+	} else {
+		await scheduleStandardNotification();
 	}
 
-	await AsyncStorage.setItem(
-		LAST_NOTIFICATION_SCHEDULE_KEY,
-		new Date().toISOString()
-	);
+	await persistScheduleConfig(mode);
 };
 
 // Foreground behavior
@@ -124,6 +147,7 @@ Notifications.setNotificationHandler({
 // ✅ Component that returns JSX (not void)
 const NotificationScheduler = (): JSX.Element | null => {
 	const { session } = UseAuth();
+	const { hasPremiumAccess } = useSubscription();
 
 	useEffect(() => {
 		const setupNotifications = async () => {
@@ -133,26 +157,24 @@ const NotificationScheduler = (): JSX.Element | null => {
 				return;
 			}
 
-			// Check if user is freemium (not premium)
-			const hasManualPremium = session?.user?.manualPremium ?? false;
-			const hasPremiumAccess = session?.user?.hasPremiumAccess ?? false;
-			const subscriptionStatus = session?.user?.subscription?.status;
-			const isPremium =
-				hasManualPremium ||
+			const subscriptionStatus = session?.user?.subscription?.status?.toLowerCase();
+			const userHasPremiumAccess =
 				hasPremiumAccess ||
-				subscriptionStatus === "active" ||
-				subscriptionStatus === "grace_period" ||
-				subscriptionStatus === "billing_retry";
-			const isFreemiumUser = !isPremium;
+				Boolean(session?.user?.manualPremium) ||
+				Boolean(session?.user?.hasPremiumAccess) ||
+				(subscriptionStatus
+					? ACTIVE_PREMIUM_STATUSES.has(subscriptionStatus)
+					: false);
+			const mode: NotificationMode = userHasPremiumAccess ? "standard" : "free";
 
-			await scheduleWeeklyNotifications(isFreemiumUser);
+			await scheduleNotifications(mode);
 		};
 
 		// ✅ fixed extra parenthesis
 		if (Platform.OS === "ios" || Platform.OS === "android") {
-			setupNotifications();
+			void setupNotifications();
 		}
-	}, [session]);
+	}, [hasPremiumAccess, session?.user?.hasPremiumAccess, session?.user?.manualPremium, session?.user?.subscription?.status]);
 
 	return null; // headless side-effect component
 };

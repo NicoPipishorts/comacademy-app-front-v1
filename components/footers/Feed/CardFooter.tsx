@@ -7,15 +7,13 @@ interface Props {
 
 export default function FeedCardFooter({ data }: Props) {
 	return (
-		<View>
-			<View style={styles.container}>
-				<Image
-					source={require("@/assets/imgs/logos/square-eyes.png")}
-					style={styles.icon}
-					resizeMode='contain'
-				/>
-				<Text style={{ fontWeight: "bold" }}>{data.likes}</Text>
-			</View>
+		<View style={styles.container}>
+			<Image
+				source={require("@/assets/imgs/logos/square-eyes.png")}
+				style={styles.icon}
+				resizeMode='contain'
+			/>
+			<Text style={{ fontWeight: "bold" }}>{data.likes}</Text>
 		</View>
 	);
 }

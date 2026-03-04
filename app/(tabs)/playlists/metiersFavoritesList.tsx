@@ -19,25 +19,19 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 export default function QuestionsFavoritesList() {
 	const { auth } = useAuthSession();
 
-	const { data: favoriteResponse, isFetched } = useGetFavoriteMetiers(
-		auth?.user.id
-	);
+	const { data: favoriteResponse, isFetched } =
+		useGetFavoriteMetiers(auth?.user.id);
 	const { data: categories } = useCategories();
 	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 
-	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(null);
+	const favoriteEntry = favoriteResponse?.data?.[0];
+const favoriteMetiers = favoriteEntry?.attributes?.metiers?.data ?? [];
+	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(false);
 	useEffect(() => {
 		if (isFetched) {
-			if (
-				favoriteResponse.data[0]?.attributes.metiers.data.length <= 0 ||
-				!favoriteResponse.data[0]?.attributes.metiers.data
-			) {
-				setIsEmptyArray(true);
-			} else {
-				setIsEmptyArray(false);
-			}
+			setIsEmptyArray(favoriteMetiers.length === 0);
 		}
-	}, [favoriteResponse, isFetched]);
+	}, [favoriteMetiers, isFetched]);
 
 	if (!categories || !isFetched) {
 		return <Loader />;
@@ -58,23 +52,21 @@ export default function QuestionsFavoritesList() {
 
 				<View>
 					{!isEmptyArray &&
-						favoriteResponse.data[0]?.attributes.metiers.data.map(
-							(metier: FavoriteMetier) => {
-								const categoriesColors =
-									colorByStaticId[metier.attributes.CATEGORIE];
-								const categoriesIcons =
-									iconByStaticId[metier.attributes.CATEGORIE];
+						favoriteMetiers.map((metier: FavoriteMetier) => {
+							const categoriesColors =
+								colorByStaticId[metier.attributes.CATEGORIE];
+							const categoriesIcons =
+								iconByStaticId[metier.attributes.CATEGORIE];
 
-								return (
-									<CardFavoriteMetier
-										key={metier.id}
-										data={metier}
-										categoriesColors={categoriesColors}
-										categoriesIcons={categoriesIcons}
-									/>
-								);
-							}
-						)}
+							return (
+								<CardFavoriteMetier
+									key={metier.id}
+									data={metier}
+									categoriesColors={categoriesColors}
+									categoriesIcons={categoriesIcons}
+								/>
+							);
+						})}
 					{isEmptyArray && (
 						<View
 							style={{

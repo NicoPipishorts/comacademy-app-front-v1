@@ -6,7 +6,8 @@
     <string>development</string>
     <key>com.apple.developer.associated-domains</key>
     <array>
-      <string>applinks:YOUR_DOMAIN.com</string>
+      <string>applinks:comacademy.fr</string>
+      <string>applinks:www.comacademy.fr</string>
     </array>
   </dict>
 </plist>

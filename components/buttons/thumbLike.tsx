@@ -2,6 +2,7 @@ import { useLikePost } from "@/api/feed/likePost";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
+import * as Haptics from "expo-haptics";
 import { Image, Pressable, StyleSheet } from "react-native";
 
 interface Props {
@@ -21,6 +22,15 @@ export default function ThumbLikeButton({ elementId, userLiked }: Props) {
 	const { mutate: likePost } = useLikePost(onSuccess);
 
 	const handleLikePost = () => {
+		// Trigger haptic feedback
+		if (userLiked) {
+			// Light haptic for unlike
+			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+		} else {
+			// Medium haptic for like
+			Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+		}
+
 		likePost({ elementId, userId: auth?.user.id, authToken });
 	};
 

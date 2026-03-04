@@ -3,17 +3,16 @@
 import useJwtToken from "@/hooks/useJwtToken";
 import { SecretsResponse } from "@/types/secrets";
 import { useQuery } from "@tanstack/react-query";
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 
 const fetchData = async (token: string): Promise<SecretsResponse> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/secrets?sort=Brand:asc&populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const url = buildApiUrl("secrets?sort=Brand:asc&populate=*");
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
 			console.error(

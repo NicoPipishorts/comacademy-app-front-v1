@@ -4,7 +4,6 @@ import PasswordStrengthMeter from "@/components/experience/passwordStrengthMeter
 import {
 	colorBlack,
 	colorGrey,
-	colorPink,
 	colorWhite,
 } from "@/constants/colors";
 import { buttonBlack } from "@/constants/commonStyles";
@@ -27,7 +26,6 @@ import React, {
 import {
 	ActivityIndicator,
 	Keyboard,
-	Platform,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -67,32 +65,15 @@ const ResetPasswordSheet = forwardRef<
 		ref
 	) => {
 		const [password, setPassword] = useState("");
-		const [confirmPassword, setConfirmPassword] = useState("");
 		const [showPassword, setShowPassword] = useState(false);
-		const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-		const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-		const snapPoints = useMemo(() => ["65%", "90%"], []);
+		const snapPoints = useMemo(() => ["58%", "78%"], []);
 
 		useEffect(() => {
-			setPassword("");
-			setConfirmPassword("");
+			if (resetCode) {
+				setPassword("");
+				setShowPassword(false);
+			}
 		}, [resetCode]);
-
-		useEffect(() => {
-			const showListener = Keyboard.addListener(
-				Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-				() => setIsKeyboardVisible(true)
-			);
-			const hideListener = Keyboard.addListener(
-				Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-				() => setIsKeyboardVisible(false)
-			);
-
-			return () => {
-				showListener.remove();
-				hideListener.remove();
-			};
-		}, []);
 
 		const renderBackdrop = useCallback(
 			(props: BottomSheetBackdropProps) => (
@@ -106,46 +87,44 @@ const ResetPasswordSheet = forwardRef<
 			[]
 		);
 
+		const handleAnimate = useCallback((_fromIndex: number, toIndex: number) => {
+			if (toIndex === -1) {
+				Keyboard.dismiss();
+			}
+		}, []);
+
 		const handleSubmit = useCallback(() => {
 			if (!resetCode) return;
 			onSubmit({
 				password,
-				passwordConfirmation: confirmPassword,
+				passwordConfirmation: password,
 				code: resetCode,
 			});
-		}, [confirmPassword, onSubmit, password, resetCode]);
+		}, [onSubmit, password, resetCode]);
 
 		const handleDismiss = useCallback(() => {
 			setPassword("");
-			setConfirmPassword("");
 			setShowPassword(false);
-			setShowConfirmPassword(false);
 			onDismiss?.();
 		}, [onDismiss]);
-
-		const hasMismatch =
-			confirmPassword.trim().length > 0 &&
-			password.trim().length > 0 &&
-			password !== confirmPassword;
 
 		const isButtonDisabled =
 			isSubmitting ||
 			!resetCode ||
-			password.trim().length === 0 ||
-			confirmPassword.trim().length === 0 ||
-			hasMismatch;
+			password.trim().length === 0;
 
 		return (
 			<BottomSheetModal
 				ref={ref}
-				index={isKeyboardVisible ? 1 : 0}
+				index={0}
 				snapPoints={snapPoints}
 				backgroundStyle={styles.sheetBackground}
 				handleIndicatorStyle={styles.hiddenIndicator}
-				enablePanDownToClose={!isKeyboardVisible}
+				enablePanDownToClose
 				enableDynamicSizing={false}
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
+				onAnimate={handleAnimate}
 				keyboardBehavior='extend'
 				keyboardBlurBehavior='restore'
 				android_keyboardInputMode='adjustResize'>
@@ -168,6 +147,8 @@ const ResetPasswordSheet = forwardRef<
 								autoCapitalize='none'
 								secureTextEntry={!showPassword}
 								textContentType='newPassword'
+								autoComplete='new-password'
+								passwordRules='minlength: 8; required: upper; required: lower; required: digit;'
 								autoCorrect={false}
 							/>
 							<MaterialCommunityIcons
@@ -179,36 +160,10 @@ const ResetPasswordSheet = forwardRef<
 							/>
 						</View>
 
-						<PasswordStrengthMeter password={password} />
-						<PasswordRequirements password={password} />
-					</View>
-
-					<View>
-						<View style={styles.inputWrapper}>
-							<BottomSheetTextInput
-								style={styles.sheetInput}
-								value={confirmPassword}
-								onChangeText={setConfirmPassword}
-								placeholder='Confirmer le mot de passe'
-								placeholderTextColor={colorGrey}
-								autoCapitalize='none'
-								secureTextEntry={!showConfirmPassword}
-								textContentType='password'
-								autoCorrect={false}
-							/>
-							<MaterialCommunityIcons
-								name={showConfirmPassword ? "eye-off" : "eye"}
-								size={22}
-								color={colorBlack}
-								style={styles.eyeIcon}
-								onPress={() => setShowConfirmPassword((prev) => !prev)}
-							/>
+						<View style={styles.strengthMeterBlock}>
+							<PasswordStrengthMeter password={password} />
 						</View>
-						{hasMismatch ? (
-							<Text style={styles.errorText}>
-								Les mots de passe ne correspondent pas.
-							</Text>
-						) : null}
+						<PasswordRequirements password={password} />
 					</View>
 
 					<Pressable
@@ -276,10 +231,8 @@ const styles = StyleSheet.create({
 	eyeIcon: {
 		marginLeft: 10,
 	},
-	errorText: {
-		marginTop: 8,
-		color: colorPink,
-		fontSize: FontSize16,
+	strengthMeterBlock: {
+		marginTop: 12,
 	},
 	resetButtonDisabled: {
 		opacity: 0.6,

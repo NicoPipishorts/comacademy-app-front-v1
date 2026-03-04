@@ -1,22 +1,21 @@
 // src/hooks/useCategories.ts
 
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 import useJwtToken from "@/hooks/useJwtToken";
 import { SecretResponse } from "@/types/secrets";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchData = async (
 	token: string,
-	itemId: number
+	itemId: string
 ): Promise<SecretResponse> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/secret/${itemId}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+		const url = buildApiUrl(`secrets/${itemId}`);
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
 		if (!response.ok) {
 			console.error(
@@ -34,7 +33,7 @@ const fetchData = async (
 	}
 };
 
-const useGetSecretById = (itemId: number) => {
+const useGetSecretById = (itemId: string) => {
 	const { token } = useJwtToken();
 
 	return useQuery<SecretResponse>({

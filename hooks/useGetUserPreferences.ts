@@ -1,6 +1,9 @@
 // src/hooks/useGetUserPreferences.ts
 import useJwtToken from "@/hooks/useJwtToken";
-import { UserPreferencesResponse } from "@/types/userPreferences";
+import {
+	UserPreferenceData,
+	UserPreferencesResponse,
+} from "@/types/userPreferences";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchUserPreferences = async (
@@ -8,7 +11,7 @@ const fetchUserPreferences = async (
 	userId: number
 ): Promise<UserPreferencesResponse> => {
 	const res = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/user-preferences/by-user/${userId}`,
+		`${process.env.EXPO_PUBLIC_API_URL}/user-preferences/me`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -28,14 +31,22 @@ const fetchUserPreferences = async (
 	}
 
 	const json = await res.json();
-	return json;
+	const maybeWrapped = json as UserPreferencesResponse;
+	if (maybeWrapped && typeof maybeWrapped === "object" && "data" in maybeWrapped) {
+		return maybeWrapped;
+	}
+
+	return {
+		data: json as UserPreferenceData,
+		meta: {},
+	};
 };
 
 export const useGetUserPreferences = (userId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<UserPreferencesResponse>({
-		queryKey: ["UserPreferences"],
+		queryKey: ["UserPreferences", "me", userId],
 		queryFn: () => fetchUserPreferences(token, userId),
 		enabled: !!token && !!userId,
 	});

@@ -15,25 +15,21 @@ const fetchData = async ({
 	pageParam?: number;
 	limit: number;
 }): Promise<FeedPayload> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/feeds/byUserId/${userId}?start=${pageParam}&limit=${limit}&sort[0]=createdAt:desc`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
-
-		if (!response.ok) {
-			throw new Error(`Error fetching the feed! Status: ${response.status}`);
+	const response = await fetch(
+		`${process.env.EXPO_PUBLIC_API_URL}/feeds/byUserId/${userId}?start=${pageParam}&limit=${limit}&sort[0]=createdAt:desc`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
 		}
+	);
 
-		const data: FeedPayload = await response.json();
-		return data;
-	} catch (error) {
-		throw error;
+	if (!response.ok) {
+		throw new Error(`Error fetching the feed! Status: ${response.status}`);
 	}
+
+	const data: FeedPayload = await response.json();
+	return data;
 };
 
 // Custom hook for infinite scrolling

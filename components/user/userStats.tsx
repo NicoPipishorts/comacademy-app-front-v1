@@ -14,11 +14,13 @@ interface Props {
 export default function UserStats({ categoriesScore }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
-	if (!categoriesScore) {
+	const primaryScore = categoriesScore?.data?.[0];
+
+	if (!primaryScore) {
 		return null;
 	}
 
-	const scores = categoriesScore.data[0].attributes;
+	const scores = primaryScore.attributes;
 
 	return (
 		<View style={{ marginTop: 20 }}>

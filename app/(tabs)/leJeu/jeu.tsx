@@ -34,7 +34,7 @@ import { QuestionData } from "@/types/userGameSessionStatus";
 
 import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
-import { FontSize20 } from "@/constants/fontsizes";
+import { FontSize16, FontSize20 } from "@/constants/fontsizes";
 import { QK } from "@/helpers/api/queryKeys";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
@@ -228,11 +228,13 @@ export default function Jeu() {
 	useEffect(() => {
 		if (dataGame?.length) {
 			setCurrentIndex(dataGame.length - 1);
+		} else {
+			setCurrentIndex(0);
 		}
 	}, [dataGame]);
 
 	const cardsToRender = useMemo(() => {
-		if (!dataGame || !dataGame.length) {
+		if (!dataGame || dataGame.length === 0) {
 			return [] as QuestionData[];
 		}
 		const endIndex = Math.max(0, currentIndex + 1);
@@ -240,19 +242,14 @@ export default function Jeu() {
 		return dataGame.slice(startIndex, endIndex);
 	}, [dataGame, currentIndex]);
 
-	if (!dataGame || !catData || !fqIsFetched) {
+	if (dataGame === null || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
 
-	const showFeedback = (answer: Answer) => {
-		setFeedbackAnswer(answer);
-		setFeedbackVisible(true);
-	};
-
-	const hideFeedback = () => {
-		setFeedbackVisible(false);
-		setFeedbackAnswer(null);
-	};
+	const cardsTotal = dataGame.length;
+	const cardsSeen = cardsTotal > 0
+		? Math.min(cardsTotal, Math.max(1, cardsTotal - currentIndex))
+		: 0;
 
 	const handlePress = () => {
 		if (sessionId && auth?.user.id)
@@ -265,7 +262,40 @@ export default function Jeu() {
 		setTimeout(() => navigation.navigate("index"), 100);
 	};
 
+	if (dataGame.length === 0) {
+		const swiperTopMargin = isHomeButtonModel ? -40 : 0;
+
+		return (
+			<View style={[styles.wrapper, { marginTop: swiperTopMargin }]}>
+				<View style={styles.emptyStateContainer}>
+					<Text style={styles.emptyStateTitle}>
+						Aucune question disponible pour le moment.
+					</Text>
+					<Text style={styles.emptyStateSubtitle}>
+						Essaie de relancer une session ou reviens plus tard pour une
+						nouvelle série.
+					</Text>
+					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+						<Text style={styles.textBackButton}>Retour</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
+
+	const showFeedback = (answer: Answer) => {
+		setFeedbackAnswer(answer);
+		setFeedbackVisible(true);
+	};
+
+	const hideFeedback = () => {
+		setFeedbackVisible(false);
+		setFeedbackAnswer(null);
+	};
+
 	const onSwipe = (isRight: boolean) => {
+		const userId = auth?.user.id;
+		if (!dataGame || !sessionId || !userId) return;
 		const currentCard = dataGame[currentIndex];
 		if (!currentCard) return;
 
@@ -273,8 +303,8 @@ export default function Jeu() {
 		showFeedback(correct === isRight ? Answer.true : Answer.false);
 
 		insertAnswer.mutate({
-			gameId: sessionId!,
-			userId: auth?.user.id,
+			gameId: sessionId,
+			userId,
 			questionId: currentCard.id,
 			categorie: currentCard.attributes.CATEGORIE,
 			answer: isRight,
@@ -330,12 +360,14 @@ export default function Jeu() {
 				/>
 			)}
 
-			<View style={styles.containerBackButton}>
-				<Text style={styles.cardsLeftText}>{currentIndex + 1} / 15</Text>
-				<TouchableOpacity onPress={handlePress} style={styles.backButton}>
-					<Text style={styles.textBackButton}>Quitter</Text>
-				</TouchableOpacity>
-			</View>
+		<View style={styles.containerBackButton}>
+			<Text style={styles.cardsLeftText}>
+				{cardsSeen} / {cardsTotal}
+			</Text>
+			<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+				<Text style={styles.textBackButton}>Quitter</Text>
+			</TouchableOpacity>
+		</View>
 		</View>
 	);
 }
@@ -434,5 +466,24 @@ const styles = StyleSheet.create({
 		color: colorWhite,
 		fontSize: FontSize20,
 		fontWeight: "bold",
+	},
+	emptyStateContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 24,
+	},
+	emptyStateTitle: {
+		fontSize: FontSize20,
+		fontWeight: "bold",
+		textAlign: "center",
+		marginBottom: 12,
+		color: colorBlack,
+	},
+	emptyStateSubtitle: {
+		textAlign: "center",
+		fontSize: FontSize16,
+		color: colorBlack,
+		marginBottom: 24,
 	},
 });

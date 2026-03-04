@@ -36,7 +36,7 @@ const HomeScreen: React.FC = () => {
 
 	useEffect(() => {
 		if (isOnboardingComplete === true) {
-			router.replace("/feed");
+			router.replace("/activity");
 		} else if (isOnboardingComplete === false) {
 			hideTabBar();
 		}

@@ -507,12 +507,13 @@ const styles = StyleSheet.create({
 	alLaUneContainer: {
 		flexDirection: "column",
 		flexGrow: 0,
+		width: "100%",
 		paddingHorizontal: 20,
 	},
 	alLaUne: {
 		flexDirection: "column",
 		justifyContent: "flex-start",
-		minWidth: "100%",
+		width: "100%",
 		marginBottom: 40,
 	},
 	cardsButton: {

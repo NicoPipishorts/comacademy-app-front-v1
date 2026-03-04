@@ -18,8 +18,8 @@
     <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.2.4</string>
+		<key>CFBundleShortVersionString</key>
+		<string>2.1.1</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -32,8 +32,8 @@
         </array>
       </dict>
     </array>
-    <key>CFBundleVersion</key>
-    <string>1.2.4</string>
+		<key>CFBundleVersion</key>
+		<string>9</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSMinimumSystemVersion</key>
@@ -49,6 +49,10 @@
     </dict>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Utiliser Face ID pour vous connecter rapidement à votre compte.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Autorise Com'Academy à accéder à tes photos pour importer un avatar.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

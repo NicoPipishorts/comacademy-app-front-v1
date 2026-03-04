@@ -28,6 +28,8 @@ export default function Answers() {
 		return <Loader />;
 	}
 
+	const hasAnswers = all.data.length > 0;
+
 	const progressBarProgressions = () => {
 		// Handle case where answered.count is 0 to avoid division by zero
 		if (all.allUserQuestions === 0) {
@@ -69,17 +71,24 @@ export default function Answers() {
 				</Text>
 			</View>
 
-			<View style={{ paddingTop: 40 }}>
-				{all.data.map((answer) => {
-					return (
-						<AnswersCard
-							key={answer.id}
-							id={answer.attributes.questionId}
-							data={answer.attributes}
-						/>
-					);
-				})}
-			</View>
+		<View style={{ paddingTop: 40, width: "100%" }}>
+			{hasAnswers ? (
+				all.data.map((answer) => (
+					<AnswersCard
+						key={answer.id}
+						id={answer.attributes.questionId}
+						data={answer.attributes}
+					/>
+				))
+			) : (
+				<View style={styles.emptyStateContainer}>
+					<Text style={styles.emptyStateText}>
+						Tu n'as pas encore de réponses enregistrées. Lance une partie
+						pour commencer à remplir ton historique.
+					</Text>
+				</View>
+			)}
+		</View>
 		</ScrollView>
 	);
 }
@@ -133,5 +142,15 @@ const styles = StyleSheet.create({
 		fontSize: FontSize14,
 		color: colorWhite,
 		fontWeight: "bold",
+	},
+	emptyStateContainer: {
+		padding: 24,
+		borderRadius: 18,
+		backgroundColor: colorWhite,
+		alignItems: "center",
+	},
+	emptyStateText: {
+		fontSize: FontSize16,
+		textAlign: "center",
 	},
 });

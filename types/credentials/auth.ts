@@ -7,7 +7,7 @@ type SubscriptionStatus =
 	| "paused"
 	| string;
 
-interface SubscriptionPayload {
+export interface SubscriptionPayload {
 	id?: number;
 	productId: string | null;
 	status: SubscriptionStatus | null;
@@ -17,23 +17,33 @@ interface SubscriptionPayload {
 	environment?: "sandbox" | "production";
 }
 
+export interface ClientInfo {
+	id?: number;
+	name?: string | null;
+	nom?: string | null;
+}
+
+export interface UserPreference {
+	avatarBackgroundColor: string;
+}
+
+export interface AuthUser {
+	id: number;
+	username: string;
+	firstName: string | null;
+	lastName: string | null;
+	email: string;
+	confirmed: boolean;
+	blocked: boolean;
+	clients: ClientInfo[];
+	user_preference: UserPreference | null;
+	profile: string | null;
+	subscription: SubscriptionPayload | null;
+	manualPremium: boolean;
+	hasPremiumAccess: boolean;
+}
+
 export interface AuthResponse {
 	jwt: string;
-	user: {
-		id: number;
-		username: string;
-		firstName: string | null;
-		lastName: string | null;
-		email: string;
-		confirmed: boolean;
-		blocked: boolean;
-		clients: { nom: string }[];
-		user_preference: {
-			avatarBackgroundColor: string;
-		} | null;
-		profile: string | null;
-		subscription: SubscriptionPayload | null;
-		manualPremium: boolean;
-		hasPremiumAccess: boolean;
-	};
+	user: AuthUser;
 }

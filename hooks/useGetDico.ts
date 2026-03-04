@@ -1,48 +1,57 @@
 import useJwtToken from "@/hooks/useJwtToken";
-import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 import { clearCollectionCache } from "@/src/utils/cacheHelpers";
+import { loadCacheEntry, saveCacheEntry } from "@/storage/contentCache";
 import { DicoLists, DicoPayload } from "@/types/dico";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const LEGACY_DICO_STORAGE_PREFIXES = ["dicoList", "dicosList"];
 
-const fetchDicoById = async (token: string, id: number): Promise<any> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos/${id}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+type DicoDocumentLookup = { data: { documentId?: string }[] };
 
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
+const fetchDicoById = async (
+	token: string,
+	id: number
+): Promise<DicoPayload> => {
+	const listUrl = `${process.env.EXPO_PUBLIC_API_URL}/dicos?filters[id][$eq]=${id}`;
+	const listResponse = await fetch(listUrl, {
+		headers: { Authorization: `Bearer ${token}` },
+	});
 
-		const data = await response.json();
-		return data;
-	} catch (error) {
-		console.error("Error fetching Dico by Id:", error);
-		throw error;
+	if (!listResponse.ok) {
+		throw new Error(`Failed to find dico with id ${id}`);
 	}
+
+	const listResult = (await listResponse.json()) as DicoDocumentLookup;
+	const documentId = listResult.data?.[0]?.documentId;
+	if (!documentId) {
+		throw new Error(`Dico with id ${id} not found`);
+	}
+
+	const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos/${documentId}`;
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	return (await response.json()) as DicoPayload;
 };
 
 const useDicoById = (id: number) => {
 	const { token } = useJwtToken();
+	const isValidId = Number.isFinite(id) && id > 0;
 
 	return useQuery<DicoPayload>({
 		queryKey: ["Dico", id],
-		queryFn: () => fetchDicoById(token, id),
+		queryFn: () => fetchDicoById(token as string, id),
 		staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
 		gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
-		enabled: !!token,
+		enabled: !!token && isValidId,
 	});
 };
 
@@ -55,34 +64,27 @@ const fetchDicoIds = async (
 	token: string,
 	filterByCat: number | null
 ): Promise<DicoLists> => {
-	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos?${
-				filterByCat === null
-					? "fields[0]=Word&_fields=id,Word&pagination[limit]=2500"
-					: `fields[0]=Word&_fields=id,Word&pagination[limit]=2500&filters[MainCat]=${filterByCat}`
-			}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
+	const params = new URLSearchParams({
+		"fields[0]": "Word",
+	});
 
-		if (!response.ok) {
-			console.error(
-				`HTTP error! status: ${response.status}`,
-				await response.text()
-			);
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const data = (await response.json()) as DicoLists;
-		return data;
-	} catch (error) {
-		console.error("Error fetching Dicos:", error);
-		throw error;
+	if (filterByCat !== null) {
+		params.set("filters[MainCat][$eq]", String(filterByCat));
 	}
+
+	const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
+
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	return (await response.json()) as DicoLists;
 };
 
 const useDicoIds = (filterByCat: number | null) => {
@@ -126,7 +128,7 @@ const useDicoIds = (filterByCat: number | null) => {
 
 	const query = useQuery<DicoLists>({
 		queryKey: ["DicoIds", filterByCat],
-		queryFn: () => fetchDicoIds(token, filterByCat),
+		queryFn: () => fetchDicoIds(token as string, filterByCat),
 		enabled: !!token && hydrated && shouldSync,
 		staleTime: CACHE_TTL,
 		gcTime: CACHE_TTL,
