@@ -8,7 +8,6 @@ import {
 	View,
 } from "react-native";
 import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
-import { SvgUri } from "react-native-svg";
 import Animated, {
 	useAnimatedStyle,
 	withTiming,
@@ -18,10 +17,10 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const OnboardingV1 = ({ onComplete }: { onComplete?: () => void }) => {
 	const slides = [
-		{ id: "1", image: require("@/assets/imgs/onboarding/v1/Screen1.svg") },
-		{ id: "2", image: require("@/assets/imgs/onboarding/v1/Screen2.svg") },
-		{ id: "3", image: require("@/assets/imgs/onboarding/v1/Screen3.svg") },
-		{ id: "4", image: require("@/assets/imgs/onboarding/v1/Screen4.svg") },
+		{ id: "1", image: require("@/assets/imgs/onboarding/v1/Screen1.png") },
+		{ id: "2", image: require("@/assets/imgs/onboarding/v1/Screen2.png") },
+		{ id: "3", image: require("@/assets/imgs/onboarding/v1/Screen3.png") },
+		{ id: "4", image: require("@/assets/imgs/onboarding/v1/Screen4.png") },
 	];
 
 	const [currentSlide, setCurrentSlide] = useState(0);
@@ -43,10 +42,10 @@ const OnboardingV1 = ({ onComplete }: { onComplete?: () => void }) => {
 	const renderSlide = ({ item }) => (
 		<View
 			style={[styles.slide, { width: SCREEN_WIDTH, height: SCREEN_HEIGHT }]}>
-			<SvgUri
-				uri={Image.resolveAssetSource(item.image).uri}
-				width={SCREEN_WIDTH}
-				height={SCREEN_HEIGHT}
+			<Image
+				source={item.image}
+				style={styles.slideImage}
+				resizeMode='cover'
 			/>
 		</View>
 	);
@@ -113,6 +112,10 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
+	},
+	slideImage: {
+		width: SCREEN_WIDTH,
+		height: SCREEN_HEIGHT,
 	},
 	finishedButton: {
 		position: "absolute",
