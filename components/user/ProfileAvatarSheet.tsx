@@ -156,7 +156,7 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 			}
 
 			const pickResult = await ImagePicker.launchImageLibraryAsync({
-				mediaTypes: ImagePicker.MediaTypeOptions.Images,
+				mediaTypes: ["images"],
 				allowsEditing: true,
 				aspect: [1, 1],
 				quality: 0.8,
