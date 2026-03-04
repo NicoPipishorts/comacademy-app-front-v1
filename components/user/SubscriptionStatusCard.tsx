@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
 		marginTop: 4,
 	},
 	subscriptionActivePrice: {
-		fontSize: FontSize16,
+		fontSize: FontSize14,
 		fontWeight: "700",
 		color: "#2B2E34",
 	},
 	subscriptionActiveRenewal: {
-		fontSize: FontSize16,
+		fontSize: FontSize14,
 		fontWeight: "600",
 		color: "#2B2E34",
 	},
