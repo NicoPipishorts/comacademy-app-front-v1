@@ -55,10 +55,15 @@ export const resolveUserPreferenceAvatarUrl = (
 ): string | null => {
 	if (!preference) return null;
 
-	const avatar = asRecord(preference.avatar);
+	const avatar =
+		asRecord(preference.avatar) ??
+		asRecord(preference.avatarImage) ??
+		asRecord(preference.avatar_image);
 	const avatarData = asRecord(avatar?.data);
 	const avatarAttributes = asRecord(avatarData?.attributes);
-	const formats = asRecord(avatarAttributes?.formats ?? avatar?.formats);
+	const formats = asRecord(
+		avatarAttributes?.formats ?? avatarData?.formats ?? avatar?.formats
+	);
 	const thumbnail = asRecord(formats?.thumbnail);
 
 	const candidateUrl =
