@@ -19,6 +19,7 @@ import React, {
 import {
 	ActivityIndicator,
 	Keyboard,
+	Platform,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -107,12 +108,14 @@ const ForgotPasswordSheet = forwardRef<
 				backdropComponent={renderBackdrop}
 				onDismiss={handleDismiss}
 				onAnimate={handleAnimate}
-				keyboardBehavior='extend'
+				keyboardBehavior={Platform.OS === "android" ? "interactive" : "extend"}
 				keyboardBlurBehavior='restore'
-				android_keyboardInputMode='adjustResize'>
+				enableBlurKeyboardOnGesture
+				android_keyboardInputMode='adjustPan'>
 				<BottomSheetScrollView
 					style={styles.sheetContent}
 					contentContainerStyle={styles.scrollContentContainer}
+					nestedScrollEnabled
 					keyboardShouldPersistTaps='handled'>
 					<ModalGestureLine />
 					<Text style={styles.sheetTitle}>{title}</Text>
