@@ -1,30 +1,20 @@
 import { UseAuth } from "@/auth/AuthContext";
 import AvatarInitials from "@/components/avatars/initials";
-import Loader from "@/components/experience/loader";
-import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
-import OnboardingV1 from "@/components/onboarding/OnboardingV1";
-import ShowNiveaux from "@/components/user/niveaux";
 import ProfileAvatarSheet from "@/components/user/ProfileAvatarSheet";
+import ResetPasswordCard from "@/components/user/ResetPasswordCard";
 import SubscriptionStatusCard from "@/components/user/SubscriptionStatusCard";
 import UserAccount from "@/components/user/userAccount";
-import UserStats from "@/components/user/userStats";
-import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
-import { buttonBlack } from "@/constants/commonStyles";
+import { colorRed, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSizeScreenTitles } from "@/constants/fontsizes";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
-import { useGetUserScore } from "@/hooks/useGetUsersScore";
-import useJwtToken from "@/hooks/useJwtToken";
-import { useSubscriptionPrompt } from "@/hooks/useSubscriptionPrompt";
 import { useSubscription } from "@/src/hooks/useSubscription";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
-	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -33,58 +23,21 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-interface CategoryResult {
-	total: number;
-	trueCount: number;
-}
-
-export type ResultAccumulator = Record<number, CategoryResult>;
-
-const PROFILE_PLAN_PRICE_LABELS: Record<string, string> = {
-	fullAccess100: "5,99 € par mois",
-	fullAccess1200: "49,99 € par an",
-};
-
 export default function User() {
 	const router = useRouter();
-	const { openModal, timestamp } = useLocalSearchParams();
 	const { logout } = UseAuth();
 	const { auth } = useAuthSession();
 	const insets = useSafeAreaInsets();
-	const [refreshing, setRefreshing] = useState(false);
-	const { token, loading: tokenLoading } = useJwtToken();
 	const [keyboardVisible, setKeyboardVisible] = useState(false);
-	const [showOnboarding, setShowOnboarding] = useState(false);
 	const [showAvatarSheet, setShowAvatarSheet] = useState(false);
-	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const {
 		subscription: entitlementSubscription,
 		hasPremiumAccess: backendHasPremiumAccess,
 		hasActiveSubscription,
-		refresh: refreshSubscription,
 		error: subscriptionError,
 	} = useSubscription();
 
 	useTrackPageMetrics({ page: "User" });
-
-	useEffect(() => {
-		if (openModal === "leaderBoard" && timestamp) {
-			setTimeout(() => {
-				router.push("/user/leaderBoard");
-			}, 100);
-		}
-	}, [openModal, timestamp, router]); // timestamp will always be different
-
-	const { data: scores, refetch } = useGetUserScore(token, auth?.user.id);
-
-	// Subscription prompt hook
-	const totalAnsweredQuestions =
-		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
-	const { shouldShowModal, dismissModal } = useSubscriptionPrompt(
-		totalAnsweredQuestions,
-	);
-
-	const lastFetchTimeRef = useRef<number>(Date.now());
 
 	useEffect(() => {
 		const keyboardDidShowListener = Keyboard.addListener(
@@ -105,35 +58,6 @@ export default function User() {
 			keyboardDidShowListener.remove();
 		};
 	}, []);
-
-	const onRefresh = () => {
-		setRefreshing(true);
-		Promise.allSettled([refetch(), refreshSubscription()]).finally(() => {
-			lastFetchTimeRef.current = Date.now();
-			setTimeout(() => {
-				setRefreshing(false);
-			}, 2000);
-		});
-	};
-
-	useEffect(() => {
-		if (token && !tokenLoading) {
-			refetch();
-			lastFetchTimeRef.current = Date.now();
-		}
-	}, [refetch, token, tokenLoading]);
-
-	useEffect(() => {
-		const intervalId = setInterval(() => {
-			const currentTime = Date.now();
-			if (currentTime - lastFetchTimeRef.current > 30000) {
-				refetch();
-				lastFetchTimeRef.current = currentTime;
-			}
-		}, 1000);
-
-		return () => clearInterval(intervalId);
-	}, [refetch]);
 
 	const dynamicPadding = keyboardVisible ? 30 : 100;
 	const subscriptionStatus = auth?.user?.subscription?.status;
@@ -162,59 +86,17 @@ export default function User() {
 		return parsed.toLocaleDateString("fr-FR");
 	};
 
-	const resolvedProductId =
-		auth?.user?.subscription?.productId ??
-		entitlementSubscription?.productId ??
-		null;
 	const resolvedExpirationDateRaw =
 		auth?.user?.subscription?.expiresAt ??
 		entitlementSubscription?.expiresAt ??
 		null;
-	const expirationDate = useMemo(() => {
-		if (resolvedExpirationDateRaw) {
-			return formatDate(resolvedExpirationDateRaw);
-		}
-		if (!hasPremiumAccess) {
-			return "—";
-		}
-		if (auth?.user?.manualPremium) {
-			return "Accès manuel";
-		}
-		return "Non communiquée";
-	}, [auth?.user?.manualPremium, hasPremiumAccess, resolvedExpirationDateRaw]);
-	const profilePriceLine = useMemo(() => {
+	const renewalLine = useMemo(() => {
 		if (!hasPremiumAccess) return null;
-		if (!resolvedProductId) return "Premium individuel";
-
-		const normalized = String(resolvedProductId).trim();
-		if (PROFILE_PLAN_PRICE_LABELS[normalized]) {
-			return PROFILE_PLAN_PRICE_LABELS[normalized];
-		}
-
-		if (normalized === "full.access") {
-			return "Premium individuel";
-		}
-
-		return "Premium individuel";
-	}, [hasPremiumAccess, resolvedProductId]);
-	const profileRenewalLine = useMemo(() => {
-		if (!hasPremiumAccess) return null;
-		if (auth?.user?.manualPremium) return "Accès manuel";
 		if (resolvedExpirationDateRaw) {
-			return `Renouvellement le ${expirationDate}`;
+			return `Renouvellement le ${formatDate(resolvedExpirationDateRaw)}`;
 		}
 		return "Renouvellement actif";
-	}, [
-		auth?.user?.manualPremium,
-		expirationDate,
-		hasPremiumAccess,
-		resolvedExpirationDateRaw,
-	]);
-	const shouldShowUpgradeModal = shouldShowModal && !hasPremiumAccess;
-
-	if (!scores) {
-		return <Loader />;
-	}
+	}, [hasPremiumAccess, resolvedExpirationDateRaw]);
 
 	return (
 		<KeyboardAvoidingView
@@ -225,48 +107,16 @@ export default function User() {
 					styles.innerWrapper,
 					{ paddingTop: insets.top, paddingBottom: dynamicPadding },
 				]}>
-				<View style={styles.headerRow}>
-					<Text style={styles.headerTitle}>Compte</Text>
-					<AvatarInitials
-						size={86}
-						showBorder
-						showEditBadge
-						onPress={() => setShowAvatarSheet(true)}
-					/>
-				</View>
-				<ScrollView
-					showsVerticalScrollIndicator={false}
-					refreshControl={
-						<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-					}>
-					<ShowNiveaux totalPoints={totalAnsweredQuestions} />
-
-					{scores?.data?.length ? <UserStats categoriesScore={scores} /> : null}
-
-					<SubscriptionStatusCard
-						hasPremiumAccess={hasPremiumAccess}
-						priceLine={profilePriceLine}
-						renewalLine={profileRenewalLine}
-						subscriptionError={subscriptionError}
-						onPressSubscribe={() => router.push("/subscription")}
-					/>
-
-					<View style={styles.cardWrapper}>
-						<View style={styles.cardTextContainer}>
-							<Text style={styles.cardText}>
-								Revoir la visite guidée de l’appli
-							</Text>
-							<TouchableOpacity
-								style={buttonBlack}
-								onPress={() => {
-									setShowOnboarding(true);
-									hideTabBar();
-								}}>
-								<Text style={styles.buttonText}>Voir</Text>
-							</TouchableOpacity>
-						</View>
+				<ScrollView showsVerticalScrollIndicator={false}>
+					<View style={styles.headerRow}>
+						<Text style={styles.headerTitle}>Compte</Text>
+						<AvatarInitials
+							size={86}
+							showBorder
+							showEditBadge
+							onPress={() => setShowAvatarSheet(true)}
+						/>
 					</View>
-
 					<UserAccount />
 
 					{/* <View style={styles.logoutContainer}>
@@ -299,6 +149,15 @@ export default function User() {
 						</TouchableOpacity>
 					</View> */}
 
+					<SubscriptionStatusCard
+						hasPremiumAccess={hasPremiumAccess}
+						priceLine={hasPremiumAccess ? "Premium individuel" : null}
+						renewalLine={renewalLine}
+						subscriptionError={subscriptionError}
+						onPressSubscribe={() => router.push("/subscription")}
+					/>
+					<ResetPasswordCard />
+
 					<View style={styles.logoutContainer}>
 						<TouchableOpacity
 							onPress={() => logout()}
@@ -315,24 +174,6 @@ export default function User() {
 					</View>
 				</ScrollView>
 			</View>
-
-			{showOnboarding && (
-				<View style={{ flex: 1, position: "absolute", top: 0, left: 0 }}>
-					{/* Conditionally render onboarding or your main content */}
-					<OnboardingV1
-						onComplete={() => {
-							setShowOnboarding(false);
-							showTabBar();
-						}}
-					/>
-				</View>
-			)}
-
-			<UpgradeSubscriptionModal
-				visible={shouldShowUpgradeModal}
-				onClose={dismissModal}
-				message='Tu peux aller encore plus loin avec l’abonnement Premium pour débloquer tout le contenu.'
-			/>
 			<ProfileAvatarSheet
 				visible={showAvatarSheet}
 				onClose={() => setShowAvatarSheet(false)}
@@ -344,17 +185,6 @@ export default function User() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-	},
-	filterWrapper: {
-		width: "100%",
-		borderRadius: 20,
-		backgroundColor: colorWhite,
-		paddingBottom: 20,
-		marginBottom: 30,
-		shadowColor: colorBlack,
-		shadowOffset: { width: 0, height: 2 },
-		shadowRadius: 20,
-		minHeight: "60%",
 	},
 	innerWrapper: {
 		flex: 1,
@@ -376,45 +206,15 @@ const styles = StyleSheet.create({
 	},
 	logoutContainer: {
 		display: "flex",
-		marginTop: 100,
 		marginBottom: 30,
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	logoutButton: {
-		backgroundColor: colorBlack,
+		backgroundColor: colorRed,
 		marginBottom: 20,
 		paddingHorizontal: 30,
 		paddingVertical: 10,
 		borderRadius: 50,
-	},
-	cardWrapper: {
-		display: "flex",
-		flexDirection: "column",
-		marginBottom: 40,
-		width: "100%",
-		borderRadius: 25,
-		paddingHorizontal: 20,
-		paddingVertical: 30,
-		backgroundColor: colorWhite,
-	},
-	cardTextContainer: {
-		display: "flex",
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		width: "100%",
-	},
-	cardText: {
-		flexShrink: 1,
-		marginRight: 20,
-		fontSize: FontSize16,
-		fontWeight: "bold",
-		flexGrow: 1,
-		maxWidth: "50%",
-	},
-	buttonText: {
-		color: colorWhite,
-		fontWeight: "bold",
 	},
 });

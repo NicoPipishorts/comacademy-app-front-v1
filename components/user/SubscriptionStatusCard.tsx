@@ -31,7 +31,9 @@ export default function SubscriptionStatusCard({
 				</View>
 				<View style={styles.subscriptionHeaderTextWrap}>
 					<Text style={styles.subscriptionBrandTitle}>Com Academy</Text>
-					<Text style={styles.subscriptionBrandSubtitle}>Premium individuel</Text>
+					<Text style={styles.subscriptionBrandSubtitle}>
+						Premium individuel
+					</Text>
 				</View>
 			</View>
 
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
 	subscriptionCard: {
 		display: "flex",
 		flexDirection: "column",
-		marginBottom: 30,
+		marginVertical: 40,
 		width: "100%",
 		borderRadius: 25,
 		paddingHorizontal: 16,

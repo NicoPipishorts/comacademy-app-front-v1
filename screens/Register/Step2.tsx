@@ -9,6 +9,7 @@ import {
 	colorYellow,
 } from "@/constants/colors";
 import { FontSize12, FontSize16 } from "@/constants/fontsizes";
+import { PROFILE_OPTIONS } from "@/constants/profileOptions";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import {
@@ -35,13 +36,6 @@ interface Props {
 	formPayload: FormPayload;
 	handleLogin: (formPayload: FormPayload) => void;
 }
-
-const OPTIONS = [
-	{ label: "Étudiant", value: 5 },
-	{ label: "Enseignant", value: 6 },
-	{ label: "Professionnel", value: 2 },
-	{ label: "Passionné", value: 1 },
-];
 
 export default function RegisterStep2({
 	formPayload,
@@ -214,7 +208,7 @@ export default function RegisterStep2({
 						<View style={styles.formContainer}>
 							{/* Options */}
 							<View style={styles.optionsContainer}>
-								{OPTIONS.map((option) => (
+								{PROFILE_OPTIONS.map((option) => (
 									<TouchableOpacity
 										key={`${option.label}-${option.value}`}
 										style={[
