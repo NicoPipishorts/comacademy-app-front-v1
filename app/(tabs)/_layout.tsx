@@ -1,6 +1,7 @@
 // app/(tabs)/_layout.tsx
 import { UseAuth } from "@/auth/AuthContext";
 import TabBar from "@/components/TabBar";
+import AvatarLogsFab from "@/components/debug/AvatarLogsFab";
 import {
 	TabBarVisibilityProvider,
 	useTabBarVisibility,
@@ -169,6 +170,7 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 			</Tabs>
+			<AvatarLogsFab />
 		</TabBarVisibilityProvider>
 	);
 };

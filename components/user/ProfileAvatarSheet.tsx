@@ -34,9 +34,7 @@ import {
 	BottomSheetScrollView,
 	BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
-import { LogEntry, subscribeLogs } from "@/logging/logStore";
 import React, {
 	useCallback,
 	useEffect,
@@ -73,7 +71,6 @@ const AVATAR_COLORS = [
 ];
 
 const AVATAR_LOG_PREFIX = "[AvatarSheet]";
-const AVATAR_LOG_FILTER = /\[(AvatarSheet|AvatarInitials|UserPreferences|UserScreen)\]/;
 
 const avatarLog = (
 	message: string,
@@ -102,13 +99,6 @@ const startPendingWatch = (label: string, thresholdMs = 10000) => {
 	return () => clearTimeout(timer);
 };
 
-const formatLogTimestamp = (timestamp: string) =>
-	new Date(timestamp).toLocaleTimeString([], {
-		hour: "2-digit",
-		minute: "2-digit",
-		second: "2-digit",
-	});
-
 export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
 	const snapPoints = useMemo(() => ["90%"], []);
@@ -118,18 +108,10 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	const updatePreferences = useUpdateUserPreferences();
 	const [isUploading, setIsUploading] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [isCopyingLogs, setIsCopyingLogs] = useState(false);
-	const [avatarLogs, setAvatarLogs] = useState<LogEntry[]>([]);
 
 	const preference = resolveUserPreference(data);
 	const selectedColor = preference?.avatarBackgroundColor || colorYellow;
 	const avatarUrl = resolveUserPreferenceAvatarUrl(preference);
-
-	useEffect(() => {
-		return subscribeLogs((entries) => {
-			setAvatarLogs(entries.filter((entry) => AVATAR_LOG_FILTER.test(entry.message)));
-		});
-	}, []);
 
 	useEffect(() => {
 		if (visible) {
@@ -172,45 +154,6 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 		),
 		[],
 	);
-
-	const copyAvatarLogs = useCallback(async () => {
-		const payload =
-			avatarLogs.length > 0
-				? avatarLogs
-						.map(
-							(entry) =>
-								`${formatLogTimestamp(entry.timestamp)} [${entry.level.toUpperCase()}] ${entry.message}`,
-						)
-						.join("\n")
-				: "No avatar logs captured yet.";
-
-		setIsCopyingLogs(true);
-		try {
-			await Clipboard.setStringAsync(payload);
-			avatarLog("CTA copy avatar logs", {
-				entryCount: avatarLogs.length,
-				characterCount: payload.length,
-			});
-			Alert.alert(
-				"Logs copiés",
-				"Les logs avatar ont été copiés dans le presse-papiers.",
-			);
-		} catch (error) {
-			avatarLog(
-				"copy avatar logs failed",
-				{
-					error:
-						error instanceof Error
-							? error.message
-							: "Unknown clipboard error",
-				},
-				"error",
-			);
-			Alert.alert("Erreur", "Impossible de copier les logs avatar.");
-		} finally {
-			setIsCopyingLogs(false);
-		}
-	}, [avatarLogs]);
 
 	const updateColor = (color: string) => {
 		avatarLog("CTA select avatar color", {
@@ -548,21 +491,6 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 							</Text>
 						)}
 					</Pressable>
-					<Pressable
-						onPress={copyAvatarLogs}
-						disabled={isCopyingLogs}
-						style={[
-							styles.copyLogsButton,
-							isCopyingLogs && styles.dimmed,
-						]}>
-						{isCopyingLogs ? (
-							<ActivityIndicator color={colorBlack} />
-						) : (
-							<Text style={styles.copyLogsButtonText}>
-								Copier les logs avatar ({avatarLogs.length})
-							</Text>
-						)}
-					</Pressable>
 					<View style={styles.bottomSpacer} />
 				</BottomSheetView>
 			</BottomSheetScrollView>
@@ -642,21 +570,6 @@ const styles = StyleSheet.create({
 	uploadButtonText: {
 		color: colorWhite,
 		fontWeight: "700",
-	},
-	copyLogsButton: {
-		alignSelf: "center",
-		marginTop: 8,
-		paddingVertical: 10,
-		paddingHorizontal: 14,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: colorBlack,
-		backgroundColor: "transparent",
-	},
-	copyLogsButtonText: {
-		color: colorBlack,
-		fontWeight: "700",
-		fontSize: 12,
 	},
 	helperText: {
 		color: colorDarkGrey,
