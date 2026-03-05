@@ -68,7 +68,7 @@ export default function FinishedSession() {
 				router.replace("/leJeu");
 			} else if (action === "leaderBoard") {
 				showTabBar();
-				router.replace(`/user?openModal=leaderBoard&timestamp=${Date.now()}`);
+				router.replace("/user/leaderBoard");
 			} else {
 				router.replace("/leJeu/jeu");
 			}
@@ -139,7 +139,14 @@ export default function FinishedSession() {
 			<View style={[styles.containerBackButton, { bottom: 190, width: "80%" }]}>
 				<TouchableOpacity
 					style={styles.buttonTouchable}
-					onPress={() => router.push("/leJeu/answersPostGame")}>
+					onPress={() =>
+						router.push({
+							pathname: "/leJeu/answersPostGame",
+							params: {
+								sessionId: String(originalSessionIdRef.current),
+							},
+						})
+					}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
 				</TouchableOpacity>
 

@@ -30,7 +30,8 @@ export interface SessionResultsAllquestions {
 const fetchData = async <T>(
 	url: string,
 	token: string,
-	fallback: T
+	fallback: T,
+	fallbackStatuses: number[] = [404],
 ): Promise<T> => {
 	try {
 		const response = await fetch(url, {
@@ -40,7 +41,7 @@ const fetchData = async <T>(
 		});
 
 		if (!response.ok) {
-			if (response.status === 404) {
+			if (fallbackStatuses.includes(response.status)) {
 				return fallback;
 			}
 			const errorText = await response.text();
@@ -96,7 +97,8 @@ const fetchEndOfSessionResults = (token: string, gameId: number) =>
 	fetchData<SessionResultsPayload>(
 		`${process.env.EXPO_PUBLIC_API_URL}/end-of-game-session/results/${gameId}`,
 		token,
-		EMPTY_SESSION_RESULTS
+		EMPTY_SESSION_RESULTS,
+		[404, 400],
 	);
 
 // Hook to get the session results

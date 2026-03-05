@@ -14,11 +14,20 @@ import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
 import { useGameContext } from "@/providers/gameDataContext";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useCallback } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useFocusEffect } from "expo-router";
 
 export default function AnswersPostGame() {
-	const { sessionId: gameId } = useGameContext();
+	const { sessionId: contextGameId } = useGameContext();
+	const { sessionId: sessionIdParam } = useLocalSearchParams<{
+		sessionId?: string | string[];
+	}>();
+	const parsedParamId = Number(
+		Array.isArray(sessionIdParam) ? sessionIdParam[0] : sessionIdParam,
+	);
+	const gameId = Number.isFinite(parsedParamId) && parsedParamId > 0
+		? parsedParamId
+		: contextGameId;
 
 	const { data: allAnswerData } = useGetEndOfSessionResults(gameId);
 
@@ -45,11 +54,13 @@ export default function AnswersPostGame() {
 					contentContainerStyle={[styles.scrollWrapper, { paddingBottom: 100 }]}
 					style={{ flex: 1 }}>
 					<View>
-						{allAnswerData.data.allQuestions.map((answer) => {
+						{allAnswerData.data.allQuestions.map((answer, index) => {
+							const detailQuestionId = answer.questionId ?? answer.id;
+							const stableKey = `${answer.id}-${detailQuestionId}-${index}`;
 							return (
 								<AnswersCard
-									key={answer.id}
-									id={answer.id}
+									key={stableKey}
+									id={detailQuestionId}
 									data={answer}
 									postGame={true}
 								/>
