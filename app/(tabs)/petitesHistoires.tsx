@@ -35,6 +35,26 @@ import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
+type StoryItem = {
+	id: number | string;
+	videoUri?: {
+		url?: string;
+	};
+};
+
+const getVideoIndices = (refs: Record<number, ManagedVideoHandle | null>) =>
+	Object.keys(refs).map((key) => Number(key));
+
+const ensureFadeValue = (
+	fadeMap: Record<number, Animated.Value>,
+	index: number,
+) => {
+	if (!fadeMap[index]) {
+		fadeMap[index] = new Animated.Value(1);
+	}
+	return fadeMap[index];
+};
+
 const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
 	const routeKey = "petites-histoires";
@@ -159,7 +179,7 @@ const LesPetitesHistoires: React.FC = () => {
 	);
 
 	const pauseAllVideos = useCallback(async () => {
-		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		const indices = getVideoIndices(videoRefs.current);
 		await Promise.all(
 			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false })),
 		);
@@ -187,8 +207,7 @@ const LesPetitesHistoires: React.FC = () => {
 
 	useEffect(() => {
 		const pauseUnfocused = async () => {
-			const promises = Object.keys(videoRefs.current).map((k) => {
-				const i = Number(k);
+			const promises = getVideoIndices(videoRefs.current).map((i) => {
 				if (i === focusedIndex) return Promise.resolve();
 				return pauseVideoAtIndex(i, { markAutoPaused: false });
 			});
@@ -237,11 +256,7 @@ const LesPetitesHistoires: React.FC = () => {
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
 
-				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(1);
-				} else {
-					fadeAnim[newIndex].setValue(1);
-				}
+				ensureFadeValue(fadeAnim, newIndex).setValue(1);
 			}
 		},
 		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim],
@@ -256,11 +271,12 @@ const LesPetitesHistoires: React.FC = () => {
 	);
 
 	const handleScrollBegin = useCallback(() => {
-		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		const indices = getVideoIndices(videoRefs.current);
 		indices.forEach((i) => void pauseVideoAtIndex(i, { markAutoPaused: true }));
 	}, [pauseVideoAtIndex]);
 
-	const stories = useMemo(() => data?.data ?? [], [data]);
+	const stories = useMemo<StoryItem[]>(() => data?.data ?? [], [data]);
+	const hasStories = stories.length > 0;
 
 	const handleFocusPress = useCallback(
 		(index: number) => {
@@ -274,7 +290,7 @@ const LesPetitesHistoires: React.FC = () => {
 	);
 
 	const isActuallyLoading =
-		(!data || stories.length === 0) && (isLoading || isFetching);
+		(!data || !hasStories) && (isLoading || isFetching);
 
 	const showSkeleton = useMinimumLoadingTime({
 		isLoading: isActuallyLoading,
@@ -289,11 +305,7 @@ const LesPetitesHistoires: React.FC = () => {
 		focusedIndexRef.current = initialIndex;
 		setFocusedIndex(initialIndex);
 
-		if (!fadeAnim[initialIndex]) {
-			fadeAnim[initialIndex] = new Animated.Value(1);
-		} else {
-			fadeAnim[initialIndex].setValue(1);
-		}
+		ensureFadeValue(fadeAnim, initialIndex).setValue(1);
 
 		return () => {
 			pauseAllVideos();
@@ -302,14 +314,11 @@ const LesPetitesHistoires: React.FC = () => {
 	}, [isLoading, stories.length, pauseAllVideos]);
 
 	const renderItem = useCallback(
-		({ item, index }: { item: any; index: number }) => {
+		({ item, index }: { item: StoryItem; index: number }) => {
 			const videoUri = item.videoUri?.url;
 			const isFocused = focusedIndex === index;
 			const isLocked = isFreeUser && index >= 5;
-
-			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(1);
-			}
+			const overlayOpacity = ensureFadeValue(fadeAnim, index);
 
 			return (
 				<Animated.View
@@ -340,7 +349,7 @@ const LesPetitesHistoires: React.FC = () => {
 								style={[
 									StyleSheet.absoluteFillObject,
 									styles.overlayContainer,
-									{ opacity: fadeAnim[index] },
+									{ opacity: overlayOpacity },
 								]}>
 								<Image
 									source={SplashScreen}
@@ -374,8 +383,12 @@ const LesPetitesHistoires: React.FC = () => {
 			isFreeUser,
 			handleLockedItemPress,
 			handleFocusPress,
+			isScreenFocused,
 		],
 	);
+
+	const showEmptyState = !showSkeleton && data && !hasStories;
+	const showStories = !showSkeleton && data && hasStories;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -387,7 +400,7 @@ const LesPetitesHistoires: React.FC = () => {
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
-			{!showSkeleton && data && stories.length === 0 && (
+			{showEmptyState && (
 				<View style={styles.noDataContainer}>
 					<Text style={styles.noDataText}>
 						Aucune vidéo disponible pour le moment
@@ -395,7 +408,7 @@ const LesPetitesHistoires: React.FC = () => {
 				</View>
 			)}
 
-			{!showSkeleton && data && stories.length > 0 && (
+			{showStories && (
 				<>
 					<UpgradeSubscriptionModal
 						visible={showUpgradeModal}

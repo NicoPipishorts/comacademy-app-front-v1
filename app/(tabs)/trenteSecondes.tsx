@@ -35,14 +35,38 @@ import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
 
+type StoryItem = {
+	id: number | string;
+	videoUri?: {
+		url?: string;
+	};
+	videoLink?: string;
+	attributes?: {
+		videoUri?: {
+			data?: {
+				attributes?: {
+					url?: string;
+				};
+			};
+		};
+		videoLink?: string;
+	};
+};
+
+const ensureFadeValue = (
+	fadeMap: Record<number, Animated.Value>,
+	index: number,
+) => {
+	if (!fadeMap[index]) {
+		fadeMap[index] = new Animated.Value(1);
+	}
+	return fadeMap[index];
+};
+
 const TrenteSecondes: React.FC = () => {
 	const { token } = useJwtToken();
 	const routeKey = "TrenteSecondes";
-	const {
-		data,
-		isLoading,
-		isFetching,
-	} = useGetMediaList(routeKey, token);
+	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);
 	const insets = useSafeAreaInsets();
 	const isScreenFocused = useIsFocused();
 	const navigation = useNavigation();
@@ -56,7 +80,7 @@ const TrenteSecondes: React.FC = () => {
 		isFreeUser,
 	} = useSubscriptionLimit({ freeLimit: 5 });
 
-	const resolveVideoUri = useCallback((item: any): string | undefined => {
+	const resolveVideoUri = useCallback((item: StoryItem): string | undefined => {
 		const directUrl = item?.videoUri?.url;
 		const nestedUrl = item?.attributes?.videoUri?.data?.attributes?.url;
 		const directLink = item?.videoLink;
@@ -81,7 +105,7 @@ const TrenteSecondes: React.FC = () => {
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
 		videoPositions,
-		setFocusedIndex
+		setFocusedIndex,
 	);
 
 	// Helper: pause all videos when screen blurs or unmounts
@@ -109,7 +133,7 @@ const TrenteSecondes: React.FC = () => {
 			return () => {
 				pauseAllVideos();
 			};
-		}, [pauseAllVideos])
+		}, [pauseAllVideos]),
 	);
 
 	// EXTRA: also pause on tab blur explicitly (belt & suspenders)
@@ -159,13 +183,11 @@ const TrenteSecondes: React.FC = () => {
 				setFocusedIndex(newIndex);
 
 				// 4) Init fadeAnim for new index if needed
-				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(1);
-				}
+				ensureFadeValue(fadeAnim, newIndex).setValue(1);
 				// Note: Don't auto-fade out - user needs to press play button
 			}
 		},
-		[fadeAnim]
+		[fadeAnim],
 	);
 
 	const viewabilityConfig = useMemo(
@@ -176,13 +198,14 @@ const TrenteSecondes: React.FC = () => {
 	);
 
 	// Reverse the list so the newest appears first
-	const reversedStories = useMemo(
+	const reversedStories = useMemo<StoryItem[]>(
 		() => (data?.data ? [...data.data].reverse() : []),
-		[data]
+		[data],
 	);
+	const hasStories = reversedStories.length > 0;
 
 	const isActuallyLoading =
-		(!data || reversedStories.length === 0) && (isLoading || isFetching);
+		(!data || !hasStories) && (isLoading || isFetching);
 
 	const showSkeleton = useMinimumLoadingTime({
 		isLoading: isActuallyLoading,
@@ -192,7 +215,7 @@ const TrenteSecondes: React.FC = () => {
 	// Initialize first video without autoplay; pause all on unmount
 	useEffect(() => {
 		if (isLoading) return;
-		if (!reversedStories.length) return;
+		if (!hasStories) return;
 
 		const initialIndex = 0;
 
@@ -201,18 +224,13 @@ const TrenteSecondes: React.FC = () => {
 		setFocusedIndex(initialIndex);
 
 		// Ensure overlay for first item starts visible (opacity 1)
-		if (!fadeAnim[initialIndex]) {
-			fadeAnim[initialIndex] = new Animated.Value(1);
-		} else {
-			fadeAnim[initialIndex].setValue(1);
-		}
+		ensureFadeValue(fadeAnim, initialIndex).setValue(1);
 
 		// Pause all on unmount
 		return () => {
 			pauseAllVideos();
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isLoading, reversedStories.length, pauseAllVideos]);
+	}, [isLoading, hasStories, pauseAllVideos, fadeAnim]);
 
 	// Handler for when user presses play button
 	const handleFocusPress = useCallback(
@@ -221,10 +239,8 @@ const TrenteSecondes: React.FC = () => {
 			setFocusedIndex(index);
 
 			// Fade out overlay
-			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(1);
-			}
-			Animated.timing(fadeAnim[index], {
+			const overlayOpacity = ensureFadeValue(fadeAnim, index);
+			Animated.timing(overlayOpacity, {
 				toValue: 0,
 				duration: 400,
 				useNativeDriver: true,
@@ -241,14 +257,11 @@ const TrenteSecondes: React.FC = () => {
 
 	// Render each item
 	const renderItem = useCallback(
-		({ item, index }: { item: any; index: number }) => {
+		({ item, index }: { item: StoryItem; index: number }) => {
 			const videoUri = resolveVideoUri(item);
 			const isFocused = focusedIndex === index;
 			const isLocked = isFreeUser && index >= 5;
-
-			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(1);
-			}
+			const overlayOpacity = ensureFadeValue(fadeAnim, index);
 
 			return (
 				<Animated.View
@@ -281,7 +294,7 @@ const TrenteSecondes: React.FC = () => {
 								style={[
 									StyleSheet.absoluteFillObject,
 									styles.overlayContainer,
-									{ opacity: fadeAnim[index] },
+									{ opacity: overlayOpacity },
 								]}>
 								<Image
 									source={SplashScreen}
@@ -312,13 +325,16 @@ const TrenteSecondes: React.FC = () => {
 			focusedIndex,
 			videoHeight,
 			videoWidth,
-				isFreeUser,
-				handleLockedItemPress,
-				isScreenFocused,
-				handleFocusPress,
-				resolveVideoUri,
-			]
-		);
+			isFreeUser,
+			handleLockedItemPress,
+			isScreenFocused,
+			handleFocusPress,
+			resolveVideoUri,
+		],
+	);
+
+	const showEmptyState = !showSkeleton && data && !hasStories;
+	const showStories = !showSkeleton && data && hasStories;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
@@ -328,7 +344,7 @@ const TrenteSecondes: React.FC = () => {
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
-			{!showSkeleton && data && reversedStories.length === 0 && (
+			{showEmptyState && (
 				<View style={styles.noDataContainer}>
 					<Text style={styles.noDataText}>
 						Aucune vidéo disponible pour le moment
@@ -336,7 +352,7 @@ const TrenteSecondes: React.FC = () => {
 				</View>
 			)}
 
-			{!showSkeleton && data && reversedStories.length > 0 && (
+			{showStories && (
 				<>
 					<UpgradeSubscriptionModal
 						visible={showUpgradeModal}
