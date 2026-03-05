@@ -40,7 +40,7 @@ import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
 import { NavigationType } from "@/types/general";
 import { Asset } from "expo-asset";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
 
@@ -61,28 +61,28 @@ const SHORTCUT_CARD_ASPECT_RATIO = 255 / 200;
 
 const rubriquesCards: RubriqueCard[] = [
 	{ id: "jouer", source: jouerCard, route: "leJeu" },
-	{ id: "feed", source: feedCard, route: "feed" },
-	{ id: "metiers", source: metiersCard, route: "metiers" },
-	{ id: "dico", source: dicoCard, route: "dico" },
+	{ id: "tips", source: tipsCard, route: "commandements" },
+	{ id: "histoire", source: histoireCard, route: "petitesHistoires" },
+	{ id: "top-des-flops", source: topDesFlopsCard, route: "topDesFlops" },
 	{ id: "citations", source: citationsCard, route: "citations" },
-	{ id: "secrets", source: secretsCard, route: "secrets" },
+	{ id: "briefs", source: briefsCard, route: "feed" },
+	{ id: "metiers", source: metiersCard, route: "metiers" },
 	{
 		id: "trente-secondes",
 		source: trenteSecondesCard,
 		route: "trenteSecondes",
 	},
-	{ id: "top-des-flops", source: topDesFlopsCard, route: "topDesFlops" },
-	{ id: "tips", source: tipsCard, route: "commandements" },
-	{ id: "histoire", source: histoireCard, route: "petitesHistoires" },
-	{ id: "briefs", source: briefsCard, route: "feed" },
+	{ id: "secrets", source: secretsCard, route: "secrets" },
+	{ id: "dico", source: dicoCard, route: "dico" },
+	{ id: "feed", source: feedCard, route: "feed" },
 ];
 
 const shortcutCards: ShortcutCard[] = [
-	{ id: "mes-stats", source: mesStatsShortcutCard, route: "user" },
-	{ id: "playlists", source: playlistsShortcutCard, route: "playlists" },
-	{ id: "parcours", source: parcoursShortcutCard, route: "parcours" },
-	{ id: "bonus", source: bonduShortcutCard, route: "bonus" },
-	{ id: "feedback", source: feedbackShortcutCard, route: "feedback" },
+	{ id: "mes-stats", source: mesStatsShortcutCard, route: "/user/myStats" },
+	{ id: "playlists", source: playlistsShortcutCard, route: "/playlists" },
+	{ id: "parcours", source: parcoursShortcutCard, route: "/parcours" },
+	{ id: "bonus", source: bonduShortcutCard, route: "/bonus" },
+	{ id: "feedback", source: feedbackShortcutCard, route: "/feedback" },
 ];
 
 const SvgCard = ({ source }: { source: any }) => {
@@ -93,6 +93,7 @@ const SvgCard = ({ source }: { source: any }) => {
 const HomeScreen = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
+	const router = useRouter();
 	const { auth } = useAuthSession();
 	const { data: userData } = useGetUserInfo(auth?.user.id);
 
@@ -169,7 +170,7 @@ const HomeScreen = () => {
 									key={card.id}
 									style={styles.shortcutCardButton}
 									activeOpacity={0.9}
-									onPress={() => navigation.navigate(card.route)}>
+									onPress={() => router.push(card.route as any)}>
 									<Image
 										source={card.source}
 										style={styles.shortcutCardImage}

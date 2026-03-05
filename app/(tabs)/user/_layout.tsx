@@ -18,7 +18,15 @@ const UserLayout = () => {
 					options={{
 						headerShown: false,
 						headerTitle: "Les Leaders",
-						presentation: "modal",
+						animation: "fade",
+					}}
+				/>
+				<Stack.Screen
+					name='myStats'
+					options={{
+						headerShown: false,
+						headerTitle: "Mes Stats",
+						animation: "fade",
 					}}
 				/>
 				<Stack.Screen

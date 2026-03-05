@@ -107,7 +107,7 @@ export default function LeJeu() {
 			}
 			return true;
 		},
-		[sessionInProgress, handleSessionBlockedAction]
+		[sessionInProgress, handleSessionBlockedAction],
 	);
 
 	// session‑restart mutation
@@ -119,7 +119,7 @@ export default function LeJeu() {
 			setAnsweredCount(payload.answeredCount);
 			setDataGame(payload.questionsPool);
 		},
-		(err) => console.error("newSession failed:", err)
+		(err) => console.error("newSession failed:", err),
 	);
 
 	// ref to skip the very first render
@@ -177,7 +177,7 @@ export default function LeJeu() {
 			if (!loadingToken && token && auth?.user.id) {
 				refetch();
 			}
-		}, [loadingToken, token, auth?.user.id, refetch])
+		}, [loadingToken, token, auth?.user.id, refetch]),
 	);
 
 	// when the network fetch returns, update context
@@ -286,10 +286,15 @@ export default function LeJeu() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 30,
+		paddingHorizontal: 24,
 		backgroundColor: primaryBackground,
 	},
 	containerHeader: {
+		width: "100%",
+		marginTop: 0,
+		paddingTop: 4,
+		paddingBottom: 14,
+		marginBottom: 12,
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -320,7 +325,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 110,
+		bottom: 145,
 		alignItems: "center",
 	},
 	tooltipContainer: {

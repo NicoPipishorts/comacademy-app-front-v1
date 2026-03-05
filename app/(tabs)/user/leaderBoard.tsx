@@ -1,8 +1,8 @@
+import FloatingTabBar from "@/components/FloatingTabBar";
 import Loader from "@/components/experience/loader";
-import ScreenHeaders from "@/components/ScreenHeaders";
-import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
+import { colorBlack, colorGrey, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
@@ -13,16 +13,17 @@ import {
 } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LeaderBoard() {
+	const router = useRouter();
 	const { token } = useJwtToken();
 	const { auth, loading: authLoading } = useAuthSession();
 	const currentUser = auth?.user.id;
 	const insets = useSafeAreaInsets();
-	const { isAndroid } = useDeviceTypeCheckers();
 
 	useTrackPageMetrics({ page: "LeaderBoard" });
 
@@ -168,24 +169,29 @@ export default function LeaderBoard() {
 		normalizedClients
 	);
 
+	const handleLeaderBoardTabPress = (tabIndex: number) => {
+		if (tabIndex === 1) {
+			router.replace("/user/myStats");
+			return false;
+		}
+		return 0;
+	};
+
 	return (
 		<>
 			<View
 				style={[
 					styles.wrapper,
 					{
-						paddingTop: isAndroid ? insets.top : 20,
-						paddingBottom: isAndroid ? insets.bottom : 50,
+						paddingTop: insets.top,
+						paddingBottom: insets.bottom + 24,
 					},
 				]}>
-				<ScreenHeaders content='Classement' />
 				<ScrollView
 					showsVerticalScrollIndicator={false}
-					style={{
-						backgroundColor: colorWhite,
-						borderRadius: 20,
-						flex: 1,
-					}}>
+					style={styles.scrollView}
+					contentContainerStyle={styles.content}>
+					<PageTitleAvatarHeader title='Classement' />
 					{filteredUsers.length === 0 && (
 						<View style={styles.emptyState}>
 							<Text style={styles.emptyStateText}>
@@ -249,6 +255,15 @@ export default function LeaderBoard() {
 						);
 					})}
 				</ScrollView>
+
+				<View style={styles.floatingTabbarContainer}>
+					<FloatingTabBar
+						activeTab={0}
+						setActiveTab={() => {}}
+						handlePress={handleLeaderBoardTabPress}
+						values={{ btn1: "Classement", btn2: "Stats" }}
+					/>
+				</View>
 			</View>
 		</>
 	);
@@ -256,8 +271,15 @@ export default function LeaderBoard() {
 
 const styles = StyleSheet.create({
 	wrapper: {
-		flexGrow: 1,
-		paddingHorizontal: 20,
+		flex: 1,
+		paddingHorizontal: 24,
+		backgroundColor: primaryBackground,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	content: {
+		paddingBottom: 190,
 	},
 	resultRow: {
 		flexDirection: "row",
@@ -285,6 +307,14 @@ const styles = StyleSheet.create({
 		color: colorGrey,
 		textAlign: "center",
 		paddingHorizontal: 20,
+	},
+	floatingTabbarContainer: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 145,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	resultsText: {
 		fontSize: FontSize16,

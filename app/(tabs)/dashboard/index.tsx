@@ -56,8 +56,16 @@ export default function DashboardScreen() {
 			source: playlistsCard,
 			onPress: () => router.push("/playlists"),
 		},
-		{ id: "stats", source: statsCard },
-		{ id: "feedback", source: feedbackCard },
+		{
+			id: "stats",
+			source: statsCard,
+			onPress: () => router.push("/user/leaderBoard"),
+		},
+		{
+			id: "feedback",
+			source: feedbackCard,
+			onPress: () => router.push("/feedback"),
+		},
 		{
 			id: "tutos",
 			source: tutosCard,
@@ -67,7 +75,10 @@ export default function DashboardScreen() {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<PageTitleAvatarHeader title='Board' />
+			<PageTitleAvatarHeader
+				title='Board'
+				containerStyle={styles.headerContainer}
+			/>
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}>
@@ -99,10 +110,13 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: primaryBackground,
 		paddingHorizontal: 10,
-		marginTop: 20,
 	},
 	scrollContent: {
+		paddingTop: 20,
 		paddingBottom: 120,
+	},
+	headerContainer: {
+		paddingHorizontal: 14,
 	},
 	grid: {
 		flexDirection: "row",

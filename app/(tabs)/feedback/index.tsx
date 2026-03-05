@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import {
 	colorBlack,
 	colorDarkGrey,
@@ -27,6 +27,7 @@ import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 // Import your feedback mutation hook
 import { useSendFeedback } from "@/api/feedback/sendFeedback";
 import useAuthSession from "@/hooks/useAuthSession";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const feedbackOptions = [
 	{ label: "Une idée/envie", value: "improvement" },
@@ -36,6 +37,7 @@ const feedbackOptions = [
 ];
 
 export default function Feedback() {
+	const insets = useSafeAreaInsets();
 	const [feedbackType, setFeedbackType] = useState<string | null>(null);
 	const [message, setMessage] = useState("");
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -52,13 +54,13 @@ export default function Feedback() {
 		},
 		(errorMsg) => {
 			Alert.alert("Erreur", errorMsg);
-		}
+		},
 	);
 
 	useEffect(() => {
 		if (feedbackType === "bug") {
 			setMessage(
-				"Description du problème :\n\n\n Résultat attendu :\n\n\n Comment le reproduire :"
+				"Description du problème :\n\n\n Résultat attendu :\n\n\n Comment le reproduire :",
 			);
 		}
 	}, [feedbackType]);
@@ -82,15 +84,16 @@ export default function Feedback() {
 			<KeyboardAvoidingView
 				behavior={Platform.OS === "ios" ? "padding" : "height"}
 				keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 10}
-				style={styles.container}>
-				<ScreenHeaders content='Feedback' />
-
-				{successMessage ? (
-					<View style={styles.successContainer}>
-						<Text style={styles.successText}>{successMessage}</Text>
-					</View>
-				) : (
-					<ScrollView keyboardShouldPersistTaps='handled'>
+				style={[styles.container, { paddingTop: insets.top }]}>
+				<ScrollView
+					keyboardShouldPersistTaps='handled'
+					contentContainerStyle={styles.scrollContent}>
+					<PageTitleAvatarHeader title='Feedback' />
+					{successMessage ? (
+						<View style={styles.successContainer}>
+							<Text style={styles.successText}>{successMessage}</Text>
+						</View>
+					) : (
 						<View style={styles.textContainer}>
 							{[
 								"Vous avez une idée, une envie?",
@@ -143,8 +146,8 @@ export default function Feedback() {
 								</TouchableOpacity>
 							</View>
 						</View>
-					</ScrollView>
-				)}
+					)}
+				</ScrollView>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
@@ -154,11 +157,13 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: primaryBackground,
-		paddingTop: 60,
-		paddingHorizontal: 25,
+		paddingHorizontal: 24,
+	},
+	scrollContent: {
+		paddingBottom: 120,
 	},
 	textContainer: {
-		marginVertical: 10,
+		marginBottom: 10,
 	},
 	presentationText: {
 		fontSize: FontSize14,

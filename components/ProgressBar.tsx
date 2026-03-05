@@ -1,8 +1,8 @@
 import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
 import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
+import { resolveEntityAttributes } from "@/helpers/strapi";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { ScoreByCategory } from "@/hooks/useGetUsersScore";
-import { resolveEntityAttributes } from "@/helpers/strapi";
 import { CategoriesAttributes } from "@/types/categories";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -89,23 +89,10 @@ export default function StatsBar({
 					shadowOpacity,
 				},
 			]}>
-			<View
-				style={{
-					flexDirection: "row",
-					justifyContent: "space-between",
-					alignItems: "flex-end",
-					padding: 20,
-					paddingBottom: 40,
-				}}>
-				<Text style={styles.headerText}>{title}</Text>
-				<Text style={styles.scoreText}>Ton score: {totalPoints}</Text>
-			</View>
 			<View style={styles.containerProgressBars}>
 				{categories.data.map((cat) => {
 					const categoryScore = categoriesScore?.[cat.id];
-					const progression = Math.round(
-						categoryScore?.percentageCorrect ?? 0
-					);
+					const progression = Math.round(categoryScore?.percentageCorrect ?? 0);
 					const attrs = getCategoryAttributes(cat);
 
 					return (
@@ -137,9 +124,7 @@ export default function StatsBar({
 			<View style={styles.cardsWrapper}>
 				{categories.data.map((cat) => {
 					const categoryScore = categoriesScore?.[cat.id];
-					const progression = Math.round(
-						categoryScore?.percentageCorrect ?? 0
-					);
+					const progression = Math.round(categoryScore?.percentageCorrect ?? 0);
 					const attrs = getCategoryAttributes(cat);
 
 					return (
@@ -149,7 +134,7 @@ export default function StatsBar({
 								styles.cardContainer,
 								{
 									backgroundColor: `#${sanitizeHexColor(
-										attrs?.backgroundColor
+										attrs?.backgroundColor,
 									)}`,
 								},
 							]}>
@@ -159,9 +144,7 @@ export default function StatsBar({
 								</Text>
 							</View>
 							<View style={styles.containerScore}>
-								<Text style={styles.textScore}>
-									{Math.round(progression)}
-								</Text>
+								<Text style={styles.textScore}>{Math.round(progression)}</Text>
 								<Text style={styles.textPercentage}>%</Text>
 							</View>
 						</View>
@@ -177,7 +160,7 @@ const styles = StyleSheet.create({
 		width: "100%",
 		borderRadius: 20,
 		backgroundColor: colorWhite,
-		paddingBottom: 20,
+		paddingVertical: 20,
 		marginBottom: 30,
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 2 },
