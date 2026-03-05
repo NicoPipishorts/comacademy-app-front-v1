@@ -52,23 +52,28 @@ const Dico = () => {
 	}, [filterByCat, refetch]);
 
 	const listReady = !!dataDico && !!dataCat;
-	const showListLoader = activeTab === 0 && !listReady;
+	const canShowList = activeTab === 0;
 	const showCategoriesLoader = activeTab === 1 && (!dataCat || isLoadingCat);
+	const showStaticHeader = activeTab !== 0;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<PageTitleAvatarHeader
-				title='Dico'
-				onPressTitle={() => navigation.navigate("newPlaylist")}
-			/>
+			{showStaticHeader && (
+				<PageTitleAvatarHeader
+					title='Dico'
+					onPressTitle={() => navigation.navigate("newPlaylist")}
+				/>
+			)}
 
-			{listReady && activeTab === 0 && (
+			{canShowList && (
 				<DicoList
-					data={dataDico}
-					categories={dataCat}
+					data={dataDico ?? null}
+					categories={dataCat ?? null}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
-					isLoading={isLoadingData || isFetchingData}
+					headerTitle='Dico'
+					onPressTitle={() => navigation.navigate("newPlaylist")}
+					isLoading={isLoadingData || isFetchingData || !listReady}
 					refreshing={refreshing}
 					onRefresh={handleRefresh}
 				/>
@@ -81,7 +86,7 @@ const Dico = () => {
 				/>
 			)}
 
-			{(showListLoader || showCategoriesLoader) && <Loader />}
+			{showCategoriesLoader && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 110,
+		bottom: 145,
 		elevation: 5,
 		zIndex: 1,
 	},

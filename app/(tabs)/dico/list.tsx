@@ -1,5 +1,6 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack } from "@/constants/colors";
 import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
@@ -24,13 +25,16 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import DicoListSkeleton from "./DicoListSkeleton";
+
+const SIDEBAR_HIT_SLOP = { top: 4, bottom: 4, left: 12, right: 12 } as const;
 
 type Props = {
-	data: DicoLists;
-	categories: CategoriePayload;
+	data: DicoLists | null;
+	categories: CategoriePayload | null;
 	filterByCat: number | null;
 	setFilterByCat: Dispatch<SetStateAction<number | null>>;
+	headerTitle: string;
+	onPressTitle?: () => void;
 	isLoading: boolean;
 	refreshing?: boolean;
 	onRefresh?: () => void;
@@ -41,6 +45,8 @@ const DicoList = ({
 	categories,
 	filterByCat,
 	setFilterByCat,
+	headerTitle,
+	onPressTitle,
 	isLoading,
 	refreshing = false,
 	onRefresh,
@@ -64,7 +70,7 @@ const DicoList = ({
 	} = useSubscriptionLimit({ freeLimit: 10 });
 
 	useEffect(() => {
-		if (!isLoading && data) {
+		if (!isLoading && data && categories) {
 			const MINIMUM_LOADING_TIME = 1500; // ms
 			const elapsedTime = Date.now() - loadingStartTimeRef.current;
 			const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
@@ -76,7 +82,7 @@ const DicoList = ({
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [isLoading, data]);
+	}, [isLoading, data, categories]);
 
 	useEffect(() => {
 		if (data && data.data) {
@@ -90,6 +96,9 @@ const DicoList = ({
 			const grouped = groupDataByFirstLetter(mappedData, "Word");
 			setGroupedData(grouped);
 			setFilteredData(mappedData);
+		} else {
+			setGroupedData({});
+			setFilteredData([]);
 		}
 	}, [data]);
 
@@ -145,6 +154,10 @@ const DicoList = ({
 	const handleSearch = useCallback(
 		(query: string) => {
 			setSearchQuery(query);
+			if (!data?.data) {
+				setFilteredData([]);
+				return;
+			}
 			if (query) {
 				const normalizedQuery = query
 					.normalize("NFD")
@@ -189,122 +202,177 @@ const DicoList = ({
 		navigation.navigate("dicoDetails", { id });
 	};
 
+	const isListLoading = showSkeleton || isLoading || !data || !categories;
+
 	return (
 		<>
-			<View style={{ paddingTop: 20 }}>
-				<Searchbar placeholder='Rechercher' onChangeText={handleSearch} />
-			</View>
-
-			{(showSkeleton || isLoading || !data) && <DicoListSkeleton lines={15} />}
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
 				message="Les 10 premiers mots du dictionnaire sont gratuits. Passez à un abonnement premium pour accéder à l'intégralité du dictionnaire."
 			/>
 
-			{!showSkeleton && !isLoading && data && (
-				<View style={styles.contentContainer}>
-					<ScrollView
-						refreshControl={
-							onRefresh ? (
-								<RefreshControl
-									refreshing={refreshing}
-									onRefresh={onRefresh}
-									tintColor={colorBlack}
-								/>
-							) : undefined
-						}
-						ref={scrollViewRef}
-						style={styles.listWrapper}
-						contentContainerStyle={styles.listContainer}
-						showsVerticalScrollIndicator={false}>
-						{filterByCat && (
-							<FilteredByCat
-								count={data.data.length}
-								categories={categories}
-								filterByCat={filterByCat}
-								setFilterByCat={setFilterByCat}
+			<View style={styles.contentContainer}>
+				<ScrollView
+					refreshControl={
+						onRefresh ? (
+							<RefreshControl
+								refreshing={refreshing}
+								onRefresh={onRefresh}
+								tintColor={colorBlack}
 							/>
-						)}
-						{/* If search query is active, render filtered data, else render grouped data */}
-						{searchQuery
-							? filteredData.map((item, index) => {
-									const locked = isItemLocked(index);
-									return (
-										<TouchableOpacity
-											key={index}
-											onPress={() => handlePress(item.id, index)}>
-											<Text
-												style={[styles.listItem, locked && styles.lockedItem]}>
-												{item.Word}
-											</Text>
-										</TouchableOpacity>
-									);
-								})
-							: (() => {
-									let globalIndex = 0;
-									return alphabet.map((letter) => (
-										<View
-											key={letter}
-											ref={(el) => {
-												sectionRefs.current[letter] = el;
-											}}>
-											<Text style={styles.listHeader}>{letter}</Text>
-											{groupedData[letter]?.map((item, localIndex) => {
-												const currentIndex = globalIndex++;
-												const locked = isItemLocked(currentIndex);
-												return (
+						) : undefined
+					}
+					ref={scrollViewRef}
+					style={styles.listWrapper}
+					contentContainerStyle={styles.listContainer}
+					stickyHeaderIndices={[1]}
+					showsVerticalScrollIndicator={false}>
+					<PageTitleAvatarHeader
+						title={headerTitle}
+						onPressTitle={onPressTitle}
+						containerStyle={styles.listPageHeader}
+					/>
+					<View style={styles.stickySearchContainer}>
+						<Searchbar
+							placeholder='Rechercher'
+							onChangeText={handleSearch}
+							containerStyle={styles.searchBar}
+						/>
+					</View>
+					<View style={styles.listBodyContent}>
+						{isListLoading ? (
+							Array.from({ length: 15 }).map((_, index) => (
+								<View
+									key={index}
+									style={[
+										styles.loadingLine,
+										index % 4 === 0 && styles.loadingLineShort,
+									]}
+								/>
+							))
+						) : (
+							<>
+								{filterByCat && (
+									<FilteredByCat
+										count={data!.data.length}
+										categories={categories!}
+										filterByCat={filterByCat}
+										setFilterByCat={setFilterByCat}
+									/>
+								)}
+								{searchQuery
+									? filteredData.map((item, index) => {
+											const locked = isItemLocked(index);
+											return (
+												<TouchableOpacity
+													key={index}
+													onPress={() => handlePress(item.id, index)}>
 													<Text
-														key={localIndex}
-														style={[
-															styles.listItem,
-															locked && styles.lockedItem,
-														]}
-														onPress={() => handlePress(item.id, currentIndex)}>
+														style={[styles.listItem, locked && styles.lockedItem]}>
 														{item.Word}
 													</Text>
-												);
-											})}
-										</View>
-									));
-								})()}
-						{searchQuery && filteredData.length === 0 && (
-							<View style={styles.noDataContainer}>
-								<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>
-							</View>
+												</TouchableOpacity>
+											);
+										})
+									: (() => {
+											let globalIndex = 0;
+											return alphabet.map((letter) => (
+												<View
+													key={letter}
+													ref={(el) => {
+														sectionRefs.current[letter] = el;
+													}}>
+													<Text style={styles.listHeader}>{letter}</Text>
+													{groupedData[letter]?.map((item, localIndex) => {
+														const currentIndex = globalIndex++;
+														const locked = isItemLocked(currentIndex);
+														return (
+															<Text
+																key={localIndex}
+																style={[
+																	styles.listItem,
+																	locked && styles.lockedItem,
+																]}
+																onPress={() =>
+																	handlePress(item.id, currentIndex)
+																}>
+																{item.Word}
+															</Text>
+														);
+													})}
+												</View>
+											));
+										})()}
+								{searchQuery && filteredData.length === 0 && (
+									<View style={styles.noDataContainer}>
+										<Text style={styles.noDataText}>Aucun résultat trouvé.</Text>
+									</View>
+								)}
+							</>
 						)}
-					</ScrollView>
+					</View>
+				</ScrollView>
 
-					{!showSkeleton && !searchQuery && filteredData.length > 0 && (
-						<View style={styles.sidebar}>
-							{alphabet.map((letter) => (
-								<TouchableOpacity
-									key={letter}
-									onPress={() => scrollToSection(letter)}>
-									<Text style={styles.sidebarText}>{letter}</Text>
-								</TouchableOpacity>
-							))}
-						</View>
-					)}
-				</View>
-			)}
+				{!isListLoading && !searchQuery && filteredData.length > 0 && (
+					<View style={styles.sidebar}>
+						{alphabet.map((letter) => (
+							<TouchableOpacity
+								key={letter}
+								hitSlop={SIDEBAR_HIT_SLOP}
+								onPress={() => scrollToSection(letter)}>
+								<Text style={styles.sidebarText}>{letter}</Text>
+							</TouchableOpacity>
+						))}
+					</View>
+				)}
+			</View>
 		</>
 	);
 };
 
 const styles = StyleSheet.create({
 	contentContainer: {
-		flexDirection: "row",
 		flex: 1,
-		marginTop: 20,
 		marginBottom: 80,
+		position: "relative",
 	},
 	listWrapper: {
 		flex: 1,
 	},
 	listContainer: {
-		paddingHorizontal: 5,
 		paddingBottom: 70,
+	},
+	listBodyContent: {
+		paddingHorizontal: 5,
+		paddingRight: 44,
+	},
+	listPageHeader: {
+		paddingBottom: 8,
+	},
+	stickySearchContainer: {
+		width: "100%",
+		paddingTop: 8,
+		paddingBottom: 6,
+		backgroundColor: "transparent",
+	},
+	searchBar: {
+		width: "100%",
+		borderWidth: 2,
+		borderColor: "#F5F5F5",
+		backgroundColor: "#FFFFFF",
+		shadowOpacity: 0,
+		elevation: 0,
+	},
+	loadingLine: {
+		height: 20,
+		borderRadius: 10,
+		backgroundColor: "#E4E4E4",
+		marginBottom: 16,
+		width: "100%",
+	},
+	loadingLineShort: {
+		width: "70%",
 	},
 
 	listHeader: {
@@ -324,7 +392,12 @@ const styles = StyleSheet.create({
 		opacity: 0.4,
 	},
 	sidebar: {
-		width: 30,
+		position: "absolute",
+		right: 0,
+		top: 0,
+		bottom: 0,
+		width: 40,
+		paddingTop: 36,
 		justifyContent: "center",
 		alignItems: "center",
 	},

@@ -43,22 +43,23 @@ const Metier = () => {
 
 	const listDepsReady = !!dataMetier && !!dataCategory;
 
-	const canShowList = activeTab === 0 && listDepsReady;
+	const canShowList = activeTab === 0;
 	const canShowCategories = activeTab === 1 && !!dataCategory;
-	const showListLoader = activeTab === 0 && !listDepsReady;
 	const showCategoriesLoader = activeTab === 1 && !dataCategory;
+	const showStaticHeader = activeTab !== 0;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<PageTitleAvatarHeader title='Metier' />
+			{showStaticHeader && <PageTitleAvatarHeader title='Metier' />}
 
 			{canShowList && (
 				<MetierList
-					data={dataMetier}
-					categories={dataCategory}
+					data={dataMetier ?? null}
+					categories={dataCategory ?? null}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
-					isLoading={isLoadingMetier || isFetchingMetier}
+					headerTitle='Metier'
+					isLoading={isLoadingMetier || isFetchingMetier || !listDepsReady}
 					refreshing={refreshing}
 					onRefresh={handleRefresh}
 				/>
@@ -70,7 +71,7 @@ const Metier = () => {
 					setActiveTab={setActiveTab}
 				/>
 			)}
-			{(showListLoader || showCategoriesLoader) && <Loader />}
+			{showCategoriesLoader && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 120, // Adjust this value based on your design
+		bottom: 145,
 		justifyContent: "center",
 		alignItems: "center",
 	},

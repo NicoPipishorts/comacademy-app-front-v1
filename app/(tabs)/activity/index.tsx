@@ -10,8 +10,10 @@ import {
 } from "react-native";
 
 // Custom images and constants
-import mesStatsShortcutCard from "@/assets/imgs/cards/shortcutCards/Mes stats.png";
-import parcoursShortcutCard from "@/assets/imgs/cards/shortcutCards/Parcours.png";
+import bonduShortcutCard from "@/assets/imgs/cards/shortcutCards/Bonus.png";
+import feedbackShortcutCard from "@/assets/imgs/cards/shortcutCards/Feedbacks.png";
+import mesStatsShortcutCard from "@/assets/imgs/cards/shortcutCards/Mes Stats.png";
+import parcoursShortcutCard from "@/assets/imgs/cards/shortcutCards/parcours.png";
 import playlistsShortcutCard from "@/assets/imgs/cards/shortcutCards/Playlists.png";
 import secretsCard from "@/assets/imgs/cards/v2/3 secrets card.svg";
 import trenteSecondesCard from "@/assets/imgs/cards/v2/30s card.svg";
@@ -54,9 +56,8 @@ type ShortcutCard = {
 	route: string;
 };
 
-const SHORTCUT_CARD_WIDTH = 320;
-const SHORTCUT_CARD_ASPECT_RATIO = 537 / 483;
-const SHORTCUT_CARD_OVERLAP = Math.round(SHORTCUT_CARD_WIDTH * 0.47);
+const SHORTCUT_CARD_WIDTH = 140;
+const SHORTCUT_CARD_ASPECT_RATIO = 255 / 200;
 
 const rubriquesCards: RubriqueCard[] = [
 	{ id: "jouer", source: jouerCard, route: "leJeu" },
@@ -78,8 +79,10 @@ const rubriquesCards: RubriqueCard[] = [
 
 const shortcutCards: ShortcutCard[] = [
 	{ id: "mes-stats", source: mesStatsShortcutCard, route: "user" },
-	{ id: "parcours", source: parcoursShortcutCard, route: "parcours" },
 	{ id: "playlists", source: playlistsShortcutCard, route: "playlists" },
+	{ id: "parcours", source: parcoursShortcutCard, route: "parcours" },
+	{ id: "bonus", source: bonduShortcutCard, route: "bonus" },
+	{ id: "feedback", source: feedbackShortcutCard, route: "feedback" },
 ];
 
 const SvgCard = ({ source }: { source: any }) => {
@@ -223,7 +226,7 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		flex: 1,
-		marginBottom: 80,
+		marginBottom: 60,
 	},
 	headerShortcuts: {
 		fontSize: FontSizeH1,
@@ -236,14 +239,16 @@ const styles = StyleSheet.create({
 	shortcutCardsContainer: {
 		flexGrow: 0,
 		width: "100%",
-		marginTop: -80,
-		marginBottom: 24,
-		paddingLeft: 84,
+		marginBottom: 64,
+		paddingVertical: 40,
+		paddingHorizontal: 20,
+		marginTop: -40,
 	},
 	shortcutCardsRow: {
 		flexDirection: "row",
 		justifyContent: "flex-start",
-		paddingRight: 20 + SHORTCUT_CARD_OVERLAP,
+		paddingRight: 20,
+		gap: 18,
 	},
 	rubriquesContainer: {
 		flexGrow: 0,
@@ -279,11 +284,18 @@ const styles = StyleSheet.create({
 	shortcutCardButton: {
 		width: SHORTCUT_CARD_WIDTH,
 		aspectRatio: SHORTCUT_CARD_ASPECT_RATIO,
-		marginLeft: -SHORTCUT_CARD_OVERLAP,
+		borderRadius: 18,
+		backgroundColor: "#FFFFFF",
+		shadowColor: "#000000",
+		shadowOffset: { width: 0, height: 10 },
+		shadowOpacity: 0.18,
+		shadowRadius: 15,
+		elevation: 12,
 	},
 	shortcutCardImage: {
 		width: "100%",
 		height: "100%",
+		borderRadius: 18,
 	},
 });
 
