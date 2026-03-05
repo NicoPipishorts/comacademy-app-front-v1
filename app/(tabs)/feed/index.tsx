@@ -108,15 +108,6 @@ const Feed = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			<PageTitleAvatarHeader
-				title='Feed'
-				containerStyle={[
-					styles.headerWrapper,
-					{
-						paddingTop: insets.top,
-					},
-				]}
-			/>
 			<FlatList
 				data={data?.pages.flatMap((page) => page.data) ?? []}
 				keyExtractor={(item) => item.id.toString()}
@@ -130,6 +121,17 @@ const Feed = () => {
 				ListFooterComponent={renderFooter} // Loader at the bottom
 				viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
 				contentContainerStyle={styles.scrollContent}
+				ListHeaderComponent={
+					<PageTitleAvatarHeader
+						title='Feed'
+						containerStyle={[
+							styles.headerWrapper,
+							{
+								paddingTop: insets.top,
+							},
+						]}
+					/>
+				}
 				refreshing={isRefetching}
 				onRefresh={() => {
 					refetch();
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 24,
 	},
 	headerWrapper: {
-		paddingHorizontal: 24,
+		paddingHorizontal: 0,
 	},
 	feedWrapper: {
 		width: "100%",

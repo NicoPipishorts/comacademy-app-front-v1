@@ -61,43 +61,44 @@ export default function TipsAndTactics() {
 
 	return (
 		<View style={styles.wrapper}>
-			<View style={{ paddingHorizontal: 20, paddingTop: insets.top }}>
-				<PageTitleAvatarHeader title='Tips and Tactics' showAvatar={false} />
-			</View>
-
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
 				message='Les 5 premiers Tips and Tactics sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus.'
 			/>
 
-			{/* only render when we have both a filter and at least one item */}
-			{filterByCat !== null && commandements.data.length > 0 && (
-				<View style={{ paddingHorizontal: 20, marginVertical: 10 }}>
-					<FilteredByCat
-						count={commandements.data.length}
-						categories={currentCategoryName}
-						filterByCat={filterByCat}
-						setFilterByCat={setFilterByCat}
-					/>
-				</View>
-			)}
-
-			{commandements.data.length === 0 && (
-				<View
-					style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-					<Text>Aucun Tip and Tactics trouvé</Text>
-				</View>
-			)}
 			<ScrollView
 				showsVerticalScrollIndicator={false}
-				style={{ paddingHorizontal: 20 }}
-				contentContainerStyle={{ paddingBottom: 100 }}>
+				contentContainerStyle={{
+					paddingTop: insets.top,
+					paddingHorizontal: 20,
+					paddingBottom: 100,
+				}}>
+				<PageTitleAvatarHeader title='Tips and Tactics' showAvatar={false} />
+
+				{/* only render when we have both a filter and at least one item */}
+				{filterByCat !== null && commandements.data.length > 0 && (
+					<View style={{ marginVertical: 10 }}>
+						<FilteredByCat
+							count={commandements.data.length}
+							categories={currentCategoryName}
+							filterByCat={filterByCat}
+							setFilterByCat={setFilterByCat}
+						/>
+					</View>
+				)}
+
+				{commandements.data.length === 0 && (
+					<View style={styles.emptyStateContainer}>
+						<Text>Aucun Tip and Tactics trouvé</Text>
+					</View>
+				)}
+
 				{activeTab === 0 &&
 					commandements.data.map((cmd, index) => {
 						const imageUrl = resolveMediaUrl(
 							cmd.attributes.imageUrl,
-							DEFAULT_COMMANDEMENT_IMAGE_URL
+							DEFAULT_COMMANDEMENT_IMAGE_URL,
 						);
 						const locked = isItemLocked(index);
 
@@ -154,5 +155,10 @@ const styles = StyleSheet.create({
 		bottom: 110,
 		elevation: 5,
 		zIndex: 1,
+	},
+	emptyStateContainer: {
+		minHeight: 220,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });

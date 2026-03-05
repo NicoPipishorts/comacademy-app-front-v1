@@ -79,7 +79,7 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
-					name='parcours/index'
+					name='parcours'
 					options={{
 						tabBarLabel: "Parcours",
 						headerShown: false,

@@ -31,14 +31,19 @@ export default function Secrets() {
 	}
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+		<View style={styles.wrapper}>
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
 				message='Les 5 premiers 3 secrets du succès sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus.'
 			/>
 
-			<ScrollView showsVerticalScrollIndicator={false}>
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				contentContainerStyle={[
+					styles.scrollContent,
+					{ paddingTop: insets.top },
+				]}>
 				<PageTitleAvatarHeader
 					title='3 secrets du succès'
 					showAvatar={false}
@@ -80,8 +85,10 @@ export default function Secrets() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingBottom: 90,
 		backgroundColor: primaryBackground,
+	},
+	scrollContent: {
+		paddingBottom: 90,
 	},
 	pageHeaderContainer: {
 		paddingHorizontal: 30,
