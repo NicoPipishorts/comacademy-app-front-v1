@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
 import {
+	Image,
+	ImageSourcePropType,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -8,6 +10,9 @@ import {
 } from "react-native";
 
 // Custom images and constants
+import mesStatsShortcutCard from "@/assets/imgs/cards/shortcutCards/Mes stats.png";
+import parcoursShortcutCard from "@/assets/imgs/cards/shortcutCards/Parcours.png";
+import playlistsShortcutCard from "@/assets/imgs/cards/shortcutCards/Playlists.png";
 import secretsCard from "@/assets/imgs/cards/v2/3 secrets card.svg";
 import trenteSecondesCard from "@/assets/imgs/cards/v2/30s card.svg";
 import briefsCard from "@/assets/imgs/cards/v2/Briefs card.svg";
@@ -43,6 +48,16 @@ type RubriqueCard = {
 	route: string;
 };
 
+type ShortcutCard = {
+	id: string;
+	source: ImageSourcePropType;
+	route: string;
+};
+
+const SHORTCUT_CARD_WIDTH = 320;
+const SHORTCUT_CARD_ASPECT_RATIO = 537 / 483;
+const SHORTCUT_CARD_OVERLAP = Math.round(SHORTCUT_CARD_WIDTH * 0.47);
+
 const rubriquesCards: RubriqueCard[] = [
 	{ id: "jouer", source: jouerCard, route: "leJeu" },
 	{ id: "feed", source: feedCard, route: "feed" },
@@ -61,7 +76,13 @@ const rubriquesCards: RubriqueCard[] = [
 	{ id: "briefs", source: briefsCard, route: "feed" },
 ];
 
-const RubriqueSvgCard = ({ source }: { source: any }) => {
+const shortcutCards: ShortcutCard[] = [
+	{ id: "mes-stats", source: mesStatsShortcutCard, route: "user" },
+	{ id: "parcours", source: parcoursShortcutCard, route: "parcours" },
+	{ id: "playlists", source: playlistsShortcutCard, route: "playlists" },
+];
+
+const SvgCard = ({ source }: { source: any }) => {
 	const cardUri = Asset.fromModule(source).uri;
 	return <SvgUri uri={cardUri} width='100%' height='100%' />;
 };
@@ -116,7 +137,7 @@ const HomeScreen = () => {
 									style={styles.rubriqueCardButton}
 									activeOpacity={0.9}
 									onPress={() => navigation.navigate(card.route)}>
-									<RubriqueSvgCard source={card.source} />
+									<SvgCard source={card.source} />
 								</TouchableOpacity>
 							))}
 						</View>
@@ -131,6 +152,30 @@ const HomeScreen = () => {
 							<ALaUneDico />
 						</View>
 					</View>
+
+					<View style={styles.header}>
+						<Text style={styles.headerShortcuts}>Raccourcis</Text>
+					</View>
+					<ScrollView
+						style={styles.shortcutCardsContainer}
+						horizontal
+						showsHorizontalScrollIndicator={false}>
+						<View style={styles.shortcutCardsRow}>
+							{shortcutCards.map((card) => (
+								<TouchableOpacity
+									key={card.id}
+									style={styles.shortcutCardButton}
+									activeOpacity={0.9}
+									onPress={() => navigation.navigate(card.route)}>
+									<Image
+										source={card.source}
+										style={styles.shortcutCardImage}
+										resizeMode='contain'
+									/>
+								</TouchableOpacity>
+							))}
+						</View>
+					</ScrollView>
 				</ScrollView>
 			</View>
 		</>
@@ -188,6 +233,18 @@ const styles = StyleSheet.create({
 		flexGrow: 0,
 		paddingHorizontal: 20,
 	},
+	shortcutCardsContainer: {
+		flexGrow: 0,
+		width: "100%",
+		marginTop: -80,
+		marginBottom: 24,
+		paddingLeft: 84,
+	},
+	shortcutCardsRow: {
+		flexDirection: "row",
+		justifyContent: "flex-start",
+		paddingRight: 20 + SHORTCUT_CARD_OVERLAP,
+	},
 	rubriquesContainer: {
 		flexGrow: 0,
 		width: "100%",
@@ -218,6 +275,15 @@ const styles = StyleSheet.create({
 		borderRadius: 11,
 		overflow: "hidden",
 		marginRight: 12,
+	},
+	shortcutCardButton: {
+		width: SHORTCUT_CARD_WIDTH,
+		aspectRatio: SHORTCUT_CARD_ASPECT_RATIO,
+		marginLeft: -SHORTCUT_CARD_OVERLAP,
+	},
+	shortcutCardImage: {
+		width: "100%",
+		height: "100%",
 	},
 });
 
