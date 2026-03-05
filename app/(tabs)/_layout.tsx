@@ -79,10 +79,18 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
-					name='parcours'
+					name='parcours/index'
 					options={{
 						tabBarLabel: "Parcours",
 						headerShown: false,
+					}}
+				/>
+				<Tabs.Screen
+					name='bonus/index'
+					options={{
+						tabBarLabel: "Bonus",
+						headerShown: false,
+						href: null,
 					}}
 				/>
 				<Tabs.Screen

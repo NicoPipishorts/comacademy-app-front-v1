@@ -10,15 +10,15 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function ParcoursScreen() {
+export default function BonusScreen() {
 	const insets = useSafeAreaInsets();
 
-	useTrackPageMetrics({ page: "Parcours" });
+	useTrackPageMetrics({ page: "Bonus" });
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<PageTitleAvatarHeader
-				title='Parcours'
+				title='Bonus'
 				containerStyle={styles.headerContainer}
 			/>
 			<View
@@ -32,10 +32,10 @@ export default function ParcoursScreen() {
 					<View style={[styles.cornerStroke, styles.cornerBottomLeft]} />
 					<View style={[styles.cornerStroke, styles.cornerBottomRight]} />
 
-					<Text style={styles.kicker}>NOUVELLE EXPERIENCE</Text>
+					<Text style={styles.kicker}>NOUVEAU CONTENU</Text>
 					<Text style={styles.comingSoonTitle}>Coming soon</Text>
 					<Text style={styles.description}>
-						Un nouvel espace parcours arrive tres bientot.
+						La section bonus est en preparation et arrive tres bientot.
 					</Text>
 				</View>
 			</View>
@@ -123,6 +123,6 @@ const styles = StyleSheet.create({
 		color: colorDarkGrey,
 		textAlign: "center",
 		lineHeight: 23,
-		maxWidth: 250,
+		maxWidth: 260,
 	},
 });
