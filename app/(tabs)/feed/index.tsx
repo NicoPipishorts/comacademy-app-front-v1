@@ -1,8 +1,8 @@
-import AvatarInitials from "@/components/avatars/initials";
 import CardRenderer from "@/components/cards/feed/CardRenderer";
 import FeedLoader from "@/components/experience/loader";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import {
 	colorDarkGrey,
 	colorGrey,
@@ -44,7 +44,7 @@ const Feed = () => {
 				.map((item) => item.item as FeedItem)
 				.filter((item) => typeof item?.id === "number")
 				.map((item) => item.id);
-		setVisibleItems(visibleIds);
+			setVisibleItems(visibleIds);
 		}
 	).current;
 
@@ -108,16 +108,15 @@ const Feed = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			<View
-				style={[
+			<PageTitleAvatarHeader
+				title='Feed'
+				containerStyle={[
 					styles.headerWrapper,
 					{
-						paddingTop: insets.top + 10,
+						paddingTop: insets.top,
 					},
-				]}>
-				<Text style={styles.title}>Feed</Text>
-				<AvatarInitials size={68} />
-			</View>
+				]}
+			/>
 			<FlatList
 				data={data?.pages.flatMap((page) => page.data) ?? []}
 				keyExtractor={(item) => item.id.toString()}
@@ -174,19 +173,10 @@ const styles = StyleSheet.create({
 	},
 	scrollContent: {
 		paddingBottom: 120,
-		paddingHorizontal: 25,
+		paddingHorizontal: 24,
 	},
 	headerWrapper: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		minWidth: "100%",
-		alignItems: "center",
-		paddingBottom: 20,
-		paddingHorizontal: 20,
-	},
-	title: {
-		fontSize: FontSizeScreenTitles,
-		fontWeight: "bold",
+		paddingHorizontal: 24,
 	},
 	feedWrapper: {
 		width: "100%",

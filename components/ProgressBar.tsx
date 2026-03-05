@@ -1,4 +1,4 @@
-import { colorBlack, colorLightGrey, colorWhite } from "@/constants/colors";
+import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSizeH1, FontSizeH3 } from "@/constants/fontsizes";
 import { resolveEntityAttributes } from "@/helpers/strapi";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
@@ -159,7 +159,6 @@ const styles = StyleSheet.create({
 	wrapper: {
 		width: "100%",
 		borderRadius: 20,
-		backgroundColor: colorWhite,
 		paddingVertical: 20,
 		marginBottom: 30,
 		shadowColor: colorBlack,
@@ -185,18 +184,19 @@ const styles = StyleSheet.create({
 		justifyContent: "flex-end",
 		alignItems: "flex-end",
 		overflow: "hidden",
-		width: 15,
+		width: 23,
 		height: 160,
-		borderRadius: 5,
-		backgroundColor: colorLightGrey,
+		borderRadius: 14,
+		padding: 4,
+		backgroundColor: colorWhite,
 	},
 	contentProgressBar: {
 		width: "100%",
-		borderRadius: 5,
+		borderRadius: 10,
 	},
 
 	cardsWrapper: {
-		marginTop: 50,
+		marginTop: 35,
 		flexDirection: "row",
 		justifyContent: "space-evenly",
 		flexWrap: "wrap",

@@ -41,7 +41,11 @@ const PageTitleAvatarHeader = ({
 					<Text style={[styles.title, titleStyle]}>{title}</Text>
 				)}
 				{showAvatar ? (
-					<AvatarInitials size={avatarSize} />
+					<AvatarInitials
+						size={avatarSize}
+						showBorder
+						showSoftShell
+					/>
 				) : (
 					<View
 						style={[

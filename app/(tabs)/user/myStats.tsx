@@ -3,8 +3,8 @@ import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import UserStats from "@/components/user/userStats";
 import { primaryBackground } from "@/constants/colors";
 import useAuthSession from "@/hooks/useAuthSession";
-import useJwtToken from "@/hooks/useJwtToken";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
+import useJwtToken from "@/hooks/useJwtToken";
 import { useRouter } from "expo-router";
 import React from "react";
 import {

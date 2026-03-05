@@ -5,9 +5,8 @@ import {
 } from "@/helpers/userPreferences";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserPreferences from "@/hooks/useGetUserPreferences";
-import { NavigationType } from "@/types/general";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
 	Image,
@@ -24,6 +23,7 @@ interface Props {
 	onPress?: () => void;
 	showEditBadge?: boolean;
 	showBorder?: boolean;
+	showSoftShell?: boolean;
 	wrapperAlignSelf?: ViewStyle["alignSelf"];
 }
 
@@ -48,15 +48,16 @@ export default function AvatarInitials({
 	onPress,
 	showEditBadge = false,
 	showBorder = false,
+	showSoftShell = false,
 	wrapperAlignSelf = "flex-start",
 }: Props) {
 	const { auth } = useAuthSession();
-	const navigation = useNavigation<NavigationType>();
+	const router = useRouter();
 	const { data, isFetched } = useGetUserPreferences(auth?.user.id);
 	const preference = resolveUserPreference(data);
 
 	const resolvedSize = size || 78;
-	const useSoftShell = showEditBadge && showBorder;
+	const useSoftShell = showBorder && (showEditBadge || showSoftShell);
 	const avatarSize = useSoftShell ? resolvedSize - 4 : resolvedSize;
 	const avatarBorderWidth = showBorder && !useSoftShell ? 2 : 0;
 	const badgeSize = Math.max(20, Math.floor(resolvedSize * 0.33));
@@ -87,7 +88,7 @@ export default function AvatarInitials({
 			onPress();
 			return;
 		}
-		navigation.navigate("user");
+		router.push("/user");
 	};
 
 	return (
@@ -146,7 +147,7 @@ export default function AvatarInitials({
 							height: badgeSize,
 							width: badgeSize,
 							borderRadius: badgeSize,
-							right: -2,
+							right: 4,
 							bottom: -2,
 						},
 					]}>

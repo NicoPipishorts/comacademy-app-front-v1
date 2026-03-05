@@ -22,7 +22,7 @@ import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
 import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
@@ -289,9 +289,11 @@ const TopDesFlops: React.FC = () => {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={styles.headerPadding}>
-				<ScreenHeaders content='Le top des flops' />
-			</View>
+			<PageTitleAvatarHeader
+				title='Le top des flops'
+				showAvatar={false}
+				containerStyle={styles.headerPadding}
+			/>
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
@@ -338,13 +340,12 @@ const TopDesFlops: React.FC = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		backgroundColor: "#f0f0f0",
+		backgroundColor: "#F5F5F5",
 	},
 	headerPadding: {
 		paddingHorizontal: 30,
 	},
 	list: {
-		marginTop: 30,
 		paddingHorizontal: 30,
 	},
 	contentPadding: {

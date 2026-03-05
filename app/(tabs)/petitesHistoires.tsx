@@ -26,7 +26,7 @@ import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
 import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
@@ -54,7 +54,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const navigation = useNavigation();
 
 	const { width } = Dimensions.get("window");
-	const videoWidth = Math.floor(width * 0.8);
+	const videoWidth = Math.floor(width * 0.78);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
 	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
@@ -69,7 +69,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const pauseVideoAtIndex = useCallback(
 		async (
 			index: number,
-			{ markAutoPaused = false }: { markAutoPaused?: boolean } = {}
+			{ markAutoPaused = false }: { markAutoPaused?: boolean } = {},
 		) => {
 			const ref = videoRefs.current[index];
 			if (!ref) return;
@@ -80,7 +80,7 @@ const LesPetitesHistoires: React.FC = () => {
 				const position =
 					typeof status.positionMillis === "number"
 						? status.positionMillis
-						: videoPositions.current[index] ?? 0;
+						: (videoPositions.current[index] ?? 0);
 				videoPositions.current[index] = position;
 
 				if (status.isPlaying) {
@@ -96,7 +96,7 @@ const LesPetitesHistoires: React.FC = () => {
 				// ignore
 			}
 		},
-		[]
+		[],
 	);
 
 	const resumeVideoAtIndex = useCallback(async (index: number) => {
@@ -139,7 +139,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
 		videoPositions,
-		setFocusedIndex
+		setFocusedIndex,
 	);
 
 	const onStatusUpdate = useCallback(
@@ -155,13 +155,13 @@ const LesPetitesHistoires: React.FC = () => {
 				handlePlaybackStatus(status, index);
 			}
 		},
-		[handlePlaybackStatus]
+		[handlePlaybackStatus],
 	);
 
 	const pauseAllVideos = useCallback(async () => {
 		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
 		await Promise.all(
-			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false }))
+			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false })),
 		);
 		playingIndicesRef.current.clear();
 	}, [pauseVideoAtIndex]);
@@ -171,7 +171,7 @@ const LesPetitesHistoires: React.FC = () => {
 			return () => {
 				pauseAllVideos();
 			};
-		}, [pauseAllVideos])
+		}, [pauseAllVideos]),
 	);
 
 	useEffect(() => {
@@ -244,7 +244,7 @@ const LesPetitesHistoires: React.FC = () => {
 				}
 			}
 		},
-		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim]
+		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim],
 	);
 
 	const viewabilityConfig = useMemo(
@@ -252,7 +252,7 @@ const LesPetitesHistoires: React.FC = () => {
 			itemVisiblePercentThreshold: 90,
 			minimumViewTime: 100,
 		}),
-		[]
+		[],
 	);
 
 	const handleScrollBegin = useCallback(() => {
@@ -270,7 +270,7 @@ const LesPetitesHistoires: React.FC = () => {
 
 			void resumeVideoAtIndex(index);
 		},
-		[resumeVideoAtIndex]
+		[resumeVideoAtIndex],
 	);
 
 	const isActuallyLoading =
@@ -374,20 +374,24 @@ const LesPetitesHistoires: React.FC = () => {
 			isFreeUser,
 			handleLockedItemPress,
 			handleFocusPress,
-		]
+		],
 	);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={styles.headerPadding}>
-				<ScreenHeaders content='La petite histoire' />
-			</View>
+			<PageTitleAvatarHeader
+				title='La petite histoire'
+				showAvatar={false}
+				containerStyle={styles.headerPadding}
+			/>
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
 			{!showSkeleton && data && stories.length === 0 && (
 				<View style={styles.noDataContainer}>
-					<Text style={styles.noDataText}>Aucune vidéo disponible pour le moment</Text>
+					<Text style={styles.noDataText}>
+						Aucune vidéo disponible pour le moment
+					</Text>
 				</View>
 			)}
 
@@ -429,9 +433,14 @@ const LesPetitesHistoires: React.FC = () => {
 const styles = StyleSheet.create({
 	wrapper: { flex: 1, backgroundColor: "#F5F5F5" },
 	headerPadding: { paddingHorizontal: 30 },
-	list: { marginTop: 30, paddingHorizontal: 30 },
+	list: { paddingHorizontal: 30 },
 	contentPadding: { paddingRight: 25 },
-	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40 },
+	noDataContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 40,
+	},
 	noDataText: { fontSize: 16, color: "#666", textAlign: "center" },
 	cardWrapper: {
 		marginLeft: 10,

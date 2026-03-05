@@ -16,7 +16,7 @@ export default function UserStats({ categoriesScore }: Props) {
 	const scores = primaryScore.attributes;
 
 	return (
-		<View style={{ marginTop: 20 }}>
+		<View>
 			<StatsBar
 				categoriesScore={scores.scoreByCategories}
 				title='Mes Stats'

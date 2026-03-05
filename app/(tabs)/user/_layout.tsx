@@ -11,6 +11,7 @@ const UserLayout = () => {
 					options={{
 						headerShown: false,
 						headerTitle: "User",
+						animation: "fade",
 					}}
 				/>
 				<Stack.Screen

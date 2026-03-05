@@ -39,12 +39,11 @@ export default function Secrets() {
 			/>
 
 			<ScrollView showsVerticalScrollIndicator={false}>
-				<View style={styles.pageHeaderContainer}>
-					<PageTitleAvatarHeader
-						title='3 secrets du succès'
-						showAvatar={false}
-					/>
-				</View>
+				<PageTitleAvatarHeader
+					title='3 secrets du succès'
+					showAvatar={false}
+					containerStyle={styles.pageHeaderContainer}
+				/>
 
 				{secrets?.data.map((secret, index) => {
 					const mediaCandidate =
@@ -85,6 +84,6 @@ const styles = StyleSheet.create({
 		backgroundColor: primaryBackground,
 	},
 	pageHeaderContainer: {
-		paddingHorizontal: 24,
+		paddingHorizontal: 30,
 	},
 });
