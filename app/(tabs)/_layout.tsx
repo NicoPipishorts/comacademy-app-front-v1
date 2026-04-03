@@ -58,7 +58,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='activity'
 					options={{
-						tabBarLabel: "Accueil",
+						tabBarLabel: "Acceuil",
 						headerShown: false,
 						lazy: true,
 					}}
@@ -96,7 +96,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='dashboard'
 					options={{
-						tabBarLabel: "Dashboard",
+						tabBarLabel: "My Academy",
 						headerShown: false,
 					}}
 				/>

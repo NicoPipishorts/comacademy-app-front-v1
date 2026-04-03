@@ -15,7 +15,7 @@ import { SvgUri } from "react-native-svg";
 const tabItems = [
 	{
 		routeName: "activity",
-		label: "Rubriques",
+		label: "Acceuil",
 		icon: navRubriquesIcon,
 		iconWidth: 32,
 		iconHeight: 26,
@@ -43,7 +43,7 @@ const tabItems = [
 	},
 	{
 		routeName: "dashboard",
-		label: "Dashboard",
+		label: "My Academy",
 		icon: navProfileIcon,
 		iconWidth: 22,
 		iconHeight: 21,

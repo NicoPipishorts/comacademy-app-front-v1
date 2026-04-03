@@ -17,11 +17,9 @@ import parcoursShortcutCard from "@/assets/imgs/cards/shortcutCards/parcours.png
 import playlistsShortcutCard from "@/assets/imgs/cards/shortcutCards/Playlists.png";
 import secretsCard from "@/assets/imgs/cards/v2/3 secrets card.svg";
 import trenteSecondesCard from "@/assets/imgs/cards/v2/30s card.svg";
-import briefsCard from "@/assets/imgs/cards/v2/Briefs card.svg";
 import citationsCard from "@/assets/imgs/cards/v2/Citations card.svg";
 import dicoCard from "@/assets/imgs/cards/v2/Dico card.svg";
 import feedCard from "@/assets/imgs/cards/v2/Feed card.svg";
-import histoireCard from "@/assets/imgs/cards/v2/Histoire card.svg";
 import jouerCard from "@/assets/imgs/cards/v2/Jouer card.svg";
 import metiersCard from "@/assets/imgs/cards/v2/Metiers card.svg";
 import tipsCard from "@/assets/imgs/cards/v2/Tips card.svg";
@@ -62,18 +60,16 @@ const SHORTCUT_CARD_ASPECT_RATIO = 255 / 200;
 const rubriquesCards: RubriqueCard[] = [
 	{ id: "jouer", source: jouerCard, route: "leJeu" },
 	{ id: "tips", source: tipsCard, route: "commandements" },
-	{ id: "histoire", source: histoireCard, route: "petitesHistoires" },
-	{ id: "top-des-flops", source: topDesFlopsCard, route: "topDesFlops" },
-	{ id: "citations", source: citationsCard, route: "citations" },
-	{ id: "briefs", source: briefsCard, route: "feed" },
-	{ id: "metiers", source: metiersCard, route: "metiers" },
+	{ id: "dico", source: dicoCard, route: "dico" },
 	{
 		id: "trente-secondes",
 		source: trenteSecondesCard,
 		route: "trenteSecondes",
 	},
 	{ id: "secrets", source: secretsCard, route: "secrets" },
-	{ id: "dico", source: dicoCard, route: "dico" },
+	{ id: "top-des-flops", source: topDesFlopsCard, route: "topDesFlops" },
+	{ id: "citations", source: citationsCard, route: "citations" },
+	{ id: "metiers", source: metiersCard, route: "metiers" },
 	{ id: "feed", source: feedCard, route: "feed" },
 ];
 

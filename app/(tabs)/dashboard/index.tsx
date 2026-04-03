@@ -80,7 +80,7 @@ export default function DashboardScreen() {
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<PageTitleAvatarHeader
-				title='Board'
+				title='My Academy'
 				containerStyle={styles.headerContainer}
 			/>
 			<ScrollView

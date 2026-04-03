@@ -90,7 +90,7 @@ const Feed = () => {
 	if (isError) {
 		return (
 			<View style={styles.statusWrapper}>
-				<Text style={styles.statusTitle}>Impossible de charger le feed</Text>
+				<Text style={styles.statusTitle}>errorTitle de charger le feed</Text>
 				<Text style={styles.statusText}>
 					{error?.message || "Une erreur est survenue."}
 				</Text>

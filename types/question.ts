@@ -5,6 +5,7 @@ export interface QuestionById {
 
 export interface QuestionSolo {
 	id: number;
+	documentId?: string;
 	attributes: QuestionAttributes;
 }
 
