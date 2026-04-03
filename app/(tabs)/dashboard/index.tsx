@@ -2,7 +2,7 @@ import bonusCard from "@/assets/imgs/cards/dashboardCards/Bonus.png";
 import feedbackCard from "@/assets/imgs/cards/dashboardCards/Feedback.png";
 import playlistsCard from "@/assets/imgs/cards/dashboardCards/Playlists.png";
 import statsCard from "@/assets/imgs/cards/dashboardCards/Stats.png";
-import tropheesCard from "@/assets/imgs/cards/dashboardCards/Trophées.png";
+import tropheesCard from "@/assets/imgs/cards/dashboardCards/Trophées.png";
 import tutosCard from "@/assets/imgs/cards/dashboardCards/Tutos.png";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";

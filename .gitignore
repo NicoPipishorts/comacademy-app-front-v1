@@ -77,3 +77,4 @@ doc/
 # @end expo-cliapp.zip
 app.zip
 UPDATED_HTACCESS.txt  
+*.env

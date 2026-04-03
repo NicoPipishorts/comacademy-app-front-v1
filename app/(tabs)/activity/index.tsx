@@ -12,7 +12,7 @@ import {
 // Custom images and constants
 import bonduShortcutCard from "@/assets/imgs/cards/shortcutCards/Bonus.png";
 import feedbackShortcutCard from "@/assets/imgs/cards/shortcutCards/Feedbacks.png";
-import mesStatsShortcutCard from "@/assets/imgs/cards/shortcutCards/Mes Stats.png";
+import mesStatsShortcutCard from "@/assets/imgs/cards/shortcutCards/Mes stats.png";
 import parcoursShortcutCard from "@/assets/imgs/cards/shortcutCards/parcours.png";
 import playlistsShortcutCard from "@/assets/imgs/cards/shortcutCards/Playlists.png";
 import secretsCard from "@/assets/imgs/cards/v2/3 secrets card.svg";
