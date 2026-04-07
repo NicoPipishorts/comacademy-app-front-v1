@@ -33,10 +33,12 @@ import ALaUneDico from "@/components/ALaUneDico";
 import Loader from "@/components/experience/loader";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useGetRubricNotifications } from "@/hooks/Rubrics/useRubricNotifications";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
 import { NavigationType } from "@/types/general";
+import { RubricKey } from "@/types/rubricNotifications";
 import { Asset } from "expo-asset";
 import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +48,7 @@ type RubriqueCard = {
 	id: string;
 	source: any;
 	route: string;
+	badgeKey?: RubricKey;
 };
 
 type ShortcutCard = {
@@ -59,18 +62,34 @@ const SHORTCUT_CARD_ASPECT_RATIO = 255 / 200;
 
 const rubriquesCards: RubriqueCard[] = [
 	{ id: "jouer", source: jouerCard, route: "leJeu" },
-	{ id: "tips", source: tipsCard, route: "commandements" },
-	{ id: "dico", source: dicoCard, route: "dico" },
+	{
+		id: "tips",
+		source: tipsCard,
+		route: "commandements",
+		badgeKey: "commandements",
+	},
+	{ id: "dico", source: dicoCard, route: "dico", badgeKey: "dico" },
 	{
 		id: "trente-secondes",
 		source: trenteSecondesCard,
 		route: "trenteSecondes",
+		badgeKey: "trente-secondes",
 	},
-	{ id: "secrets", source: secretsCard, route: "secrets" },
-	{ id: "top-des-flops", source: topDesFlopsCard, route: "topDesFlops" },
-	{ id: "citations", source: citationsCard, route: "citations" },
-	{ id: "metiers", source: metiersCard, route: "metiers" },
-	{ id: "feed", source: feedCard, route: "feed" },
+	{ id: "secrets", source: secretsCard, route: "secrets", badgeKey: "secrets" },
+	{
+		id: "top-des-flops",
+		source: topDesFlopsCard,
+		route: "topDesFlops",
+		badgeKey: "top-des-flops",
+	},
+	{
+		id: "citations",
+		source: citationsCard,
+		route: "citations",
+		badgeKey: "citations",
+	},
+	{ id: "metiers", source: metiersCard, route: "metiers", badgeKey: "metiers" },
+	{ id: "feed", source: feedCard, route: "feed", badgeKey: "feed" },
 ];
 
 const shortcutCards: ShortcutCard[] = [
@@ -92,6 +111,7 @@ const HomeScreen = () => {
 	const router = useRouter();
 	const { auth } = useAuthSession();
 	const { data: userData } = useGetUserInfo(auth?.user.id);
+	const { data: rubricNotifications } = useGetRubricNotifications();
 
 	useTrackPageMetrics({ page: "Dashboard" });
 
@@ -131,17 +151,22 @@ const HomeScreen = () => {
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}>
 						<View style={styles.rubriquesRow}>
-							{rubriquesCards.map((card) => (
-								<TouchableOpacity
-									key={card.id}
-									style={styles.rubriqueCardButton}
-									activeOpacity={0.9}
-									onPress={() => navigation.navigate(card.route)}>
-									<SvgCard source={card.source} />
-								</TouchableOpacity>
-							))}
-						</View>
-					</ScrollView>
+								{rubriquesCards.map((card) => (
+									<TouchableOpacity
+										key={card.id}
+										style={styles.rubriqueCardButton}
+										activeOpacity={0.9}
+										onPress={() => navigation.navigate(card.route)}>
+										<View style={styles.rubriqueCardMedia}>
+											<SvgCard source={card.source} />
+										</View>
+										{card.badgeKey &&
+											rubricNotifications?.data?.rubrics?.[card.badgeKey]
+												?.hasUnread && <View style={styles.rubricBadge} />}
+									</TouchableOpacity>
+								))}
+							</View>
+						</ScrollView>
 
 					<View style={styles.header}>
 						<Text style={styles.headerShortcuts}>Aujourd'hui</Text>
@@ -252,12 +277,14 @@ const styles = StyleSheet.create({
 		width: "100%",
 		paddingLeft: 20,
 		marginBottom: 30,
+		overflow: "visible",
 	},
 	rubriquesRow: {
 		flexDirection: "row",
 		justifyContent: "flex-start",
 		paddingRight: 20,
 		marginBottom: 24,
+		overflow: "visible",
 	},
 	alLaUneContainer: {
 		flexDirection: "column",
@@ -274,9 +301,26 @@ const styles = StyleSheet.create({
 	rubriqueCardButton: {
 		width: 120,
 		height: 230,
+		marginRight: 17,
+		position: "relative",
+		overflow: "visible",
+	},
+	rubriqueCardMedia: {
+		width: "100%",
+		height: "100%",
 		borderRadius: 11,
 		overflow: "hidden",
-		marginRight: 12,
+	},
+	rubricBadge: {
+		position: "absolute",
+		top: -6,
+		right: -6,
+		width: 19,
+		height: 19,
+		borderRadius: 999,
+		backgroundColor: "#FF0000",
+		zIndex: 10,
+		elevation: 10,
 	},
 	shortcutCardButton: {
 		width: SHORTCUT_CARD_WIDTH,

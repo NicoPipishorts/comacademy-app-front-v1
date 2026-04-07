@@ -4,6 +4,7 @@ import FloatingTabBar from "@/components/FloatingTabBar";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { clearMetiersCache, useGetMetiers } from "@/hooks/useGetMetiers";
 import React, { useCallback, useState } from "react";
@@ -12,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
 
 const Metier = () => {
+	useTrackRubricOpened("metiers");
 	const insets = useSafeAreaInsets();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);

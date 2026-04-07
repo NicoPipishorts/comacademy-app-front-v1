@@ -25,6 +25,7 @@ import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModa
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
@@ -49,6 +50,7 @@ const ensureFadeValue = (
 };
 
 const TopDesFlops: React.FC = () => {
+	useTrackRubricOpened("top-des-flops");
 	const { token } = useJwtToken();
 	const routeKey = "top-des-flops";
 	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);

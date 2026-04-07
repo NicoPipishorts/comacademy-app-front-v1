@@ -15,6 +15,7 @@ import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import useGetCommandements from "@/hooks/Commandements/useGetAllCommandements";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { resolveMediaUrl } from "@/src/utils/resolveMediaUrl";
 
@@ -22,6 +23,7 @@ const DEFAULT_COMMANDEMENT_IMAGE_URL =
 	"https://fearless-comfort-efded67ed1.media.strapiapp.com/tips_n_tactics_52aeea960b.png";
 
 export default function TipsAndTactics() {
+	useTrackRubricOpened("commandements");
 	const insets = useSafeAreaInsets();
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);

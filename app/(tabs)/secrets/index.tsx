@@ -4,6 +4,7 @@ import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModa
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useGetAllSecrets from "@/hooks/Secrets/useGetAllSecrets";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { resolveMediaUrl } from "@/src/utils/resolveMediaUrl";
@@ -14,6 +15,7 @@ const DEFAULT_SECRET_IMAGE_URL =
 	"https://fearless-comfort-efded67ed1.media.strapiapp.com/3secrets_placeholder_e0a32b6000.png";
 
 export default function Secrets() {
+	useTrackRubricOpened("secrets");
 	const insets = useSafeAreaInsets();
 	const { data: secrets, isFetched } = useGetAllSecrets();
 

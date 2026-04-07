@@ -3,6 +3,7 @@ import FloatingTabBar from "@/components/FloatingTabBar";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { clearDicoCache, useDicoIds } from "@/hooks/useGetDico";
 import { NavigationType } from "@/types/general";
@@ -14,6 +15,7 @@ import CategoriesCards from "../../../components/categories/categories";
 import DicoList from "./list";
 
 const Dico = () => {
+	useTrackRubricOpened("dico");
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { openDetails } = useGlobalSearchParams();

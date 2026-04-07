@@ -4,6 +4,7 @@ import ScreenHeaders from "@/components/ScreenHeaders";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { primaryBackground } from "@/constants/colors";
 import useGetCitationsMenu from "@/hooks/Citations/useGetCitationsMenu";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect } from "react";
@@ -11,6 +12,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Citations = () => {
+	useTrackRubricOpened("citations");
 	const { data, isLoading } = useGetCitationsMenu();
 	const insets = useSafeAreaInsets();
 	const { fromDaily, citationCategory } = useLocalSearchParams<{

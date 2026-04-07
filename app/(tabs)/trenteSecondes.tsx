@@ -29,6 +29,7 @@ import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModa
 import ScreenHeaders from "@/components/ScreenHeaders";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useGetMediaList from "@/hooks/useGetMediaList";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
@@ -64,6 +65,7 @@ const ensureFadeValue = (
 };
 
 const TrenteSecondes: React.FC = () => {
+	useTrackRubricOpened("trente-secondes");
 	const { token } = useJwtToken();
 	const routeKey = "TrenteSecondes";
 	const { data, isLoading, isFetching } = useGetMediaList(routeKey, token);

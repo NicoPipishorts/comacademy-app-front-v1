@@ -11,6 +11,7 @@ import {
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import React, { useRef, useState } from "react";
 import {
 	ActivityIndicator,
@@ -26,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedItem } from "@/types/feed";
 
 const Feed = () => {
+	useTrackRubricOpened("feed");
 	const insets = useSafeAreaInsets();
 	const [visibleItems, setVisibleItems] = useState<number[]>([]);
 
