@@ -6,7 +6,7 @@ import navRubriquesIcon from "@/assets/imgs/icons/nav_rubriques.svg";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Asset } from "expo-asset";
+import { useAssets } from "expo-asset";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -59,7 +59,13 @@ function NavIcon({
 	width: number;
 	height: number;
 }) {
-	const iconUri = Asset.fromModule(source).uri;
+	const [assets] = useAssets([source]);
+	const iconUri = assets?.[0]?.localUri ?? assets?.[0]?.uri;
+
+	if (!iconUri) {
+		return null;
+	}
+
 	return <SvgUri uri={iconUri} width={width} height={height} />;
 }
 

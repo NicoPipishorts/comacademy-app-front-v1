@@ -38,8 +38,9 @@ import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
 import { NavigationType } from "@/types/general";
+import { EMPTY_RUBRIC_NOTIFICATIONS } from "@/types/rubricNotifications";
 import { RubricKey } from "@/types/rubricNotifications";
-import { Asset } from "expo-asset";
+import { useAssets } from "expo-asset";
 import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
@@ -101,7 +102,13 @@ const shortcutCards: ShortcutCard[] = [
 ];
 
 const SvgCard = ({ source }: { source: any }) => {
-	const cardUri = Asset.fromModule(source).uri;
+	const [assets] = useAssets([source]);
+	const cardUri = assets?.[0]?.localUri ?? assets?.[0]?.uri;
+
+	if (!cardUri) {
+		return null;
+	}
+
 	return <SvgUri uri={cardUri} width='100%' height='100%' />;
 };
 
@@ -112,6 +119,8 @@ const HomeScreen = () => {
 	const { auth } = useAuthSession();
 	const { data: userData } = useGetUserInfo(auth?.user.id);
 	const { data: rubricNotifications } = useGetRubricNotifications();
+	const rubricsNotificationMap =
+		rubricNotifications?.data?.rubrics ?? EMPTY_RUBRIC_NOTIFICATIONS.data.rubrics;
 
 	useTrackPageMetrics({ page: "Dashboard" });
 
@@ -161,8 +170,9 @@ const HomeScreen = () => {
 											<SvgCard source={card.source} />
 										</View>
 										{card.badgeKey &&
-											rubricNotifications?.data?.rubrics?.[card.badgeKey]
-												?.hasUnread && <View style={styles.rubricBadge} />}
+											rubricsNotificationMap[card.badgeKey]?.hasUnread && (
+												<View style={styles.rubricBadge} />
+											)}
 									</TouchableOpacity>
 								))}
 							</View>

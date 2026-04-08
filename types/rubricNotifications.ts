@@ -24,3 +24,30 @@ export type RubricNotificationsResponse = {
 		rubrics: RubricNotificationsMap;
 	};
 };
+
+export const EMPTY_RUBRIC_NOTIFICATIONS: RubricNotificationsResponse = {
+	data: {
+		rubrics: {
+			citations: { hasUnread: false, lastOpenedAt: null, latestContentAt: null },
+			metiers: { hasUnread: false, lastOpenedAt: null, latestContentAt: null },
+			dico: { hasUnread: false, lastOpenedAt: null, latestContentAt: null },
+			commandements: {
+				hasUnread: false,
+				lastOpenedAt: null,
+				latestContentAt: null,
+			},
+			secrets: { hasUnread: false, lastOpenedAt: null, latestContentAt: null },
+			"top-des-flops": {
+				hasUnread: false,
+				lastOpenedAt: null,
+				latestContentAt: null,
+			},
+			"trente-secondes": {
+				hasUnread: false,
+				lastOpenedAt: null,
+				latestContentAt: null,
+			},
+			feed: { hasUnread: false, lastOpenedAt: null, latestContentAt: null },
+		},
+	},
+};

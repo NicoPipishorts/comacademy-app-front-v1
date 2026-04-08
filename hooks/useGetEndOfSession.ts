@@ -21,6 +21,7 @@ export interface SessionResultsAllquestions {
 	id: number;
 	question: string;
 	questionId?: number;
+	questionDocumentId?: string | null;
 	coef: number;
 	questionAnswer: boolean;
 	userAnswer: boolean;

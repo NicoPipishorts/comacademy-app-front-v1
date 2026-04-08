@@ -16,6 +16,7 @@ export interface AnswerAttributes {
 	userAnswer: boolean;
 	questionAnswer: boolean;
 	questionId: number;
+	questionDocumentId?: string | null;
 	question: string;
 }
 

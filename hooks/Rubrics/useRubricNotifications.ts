@@ -1,6 +1,7 @@
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
 import {
+	EMPTY_RUBRIC_NOTIFICATIONS,
 	RubricKey,
 	RubricNotificationsResponse,
 } from "@/types/rubricNotifications";
@@ -14,19 +15,28 @@ const RUBRIC_NOTIFICATIONS_QUERY_KEY = ["RubricNotifications", "me"];
 const fetchRubricNotifications = async (
 	token: string
 ): Promise<RubricNotificationsResponse> => {
-	const response = await fetch(buildApiUrl("/rubric-notifications/me"), {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+	try {
+		const response = await fetch(buildApiUrl("/rubric-notifications/me"), {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
-	if (!response.ok) {
-		throw new Error(
-			`Failed to fetch rubric notifications: ${response.status}`
+		if (!response.ok) {
+			console.warn(
+				`Failed to fetch rubric notifications: ${response.status}. Falling back to empty badges.`
+			);
+			return EMPTY_RUBRIC_NOTIFICATIONS;
+		}
+
+		return (await response.json()) as RubricNotificationsResponse;
+	} catch (error) {
+		console.warn(
+			"Rubric notifications unavailable. Falling back to empty badges.",
+			error
 		);
+		return EMPTY_RUBRIC_NOTIFICATIONS;
 	}
-
-	return (await response.json()) as RubricNotificationsResponse;
 };
 
 const postRubricOpened = async ({
@@ -60,6 +70,8 @@ export const useGetRubricNotifications = () => {
 		queryFn: () => fetchRubricNotifications(token as string),
 		enabled: !!token,
 		staleTime: 60 * 1000,
+		retry: false,
+		placeholderData: EMPTY_RUBRIC_NOTIFICATIONS,
 	});
 };
 
