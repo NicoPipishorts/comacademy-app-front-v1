@@ -1,4 +1,5 @@
 import AvatarInitials from "@/components/avatars/initials";
+import SkeletonBlock from "@/components/experience/SkeletonBlock";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import React from "react";
 import {
@@ -19,6 +20,8 @@ type PageTitleAvatarHeaderProps = {
 	containerStyle?: StyleProp<ViewStyle>;
 	contentStyle?: StyleProp<ViewStyle>;
 	titleStyle?: StyleProp<TextStyle>;
+	titleLoading?: boolean;
+	avatarLoading?: boolean;
 };
 
 const PageTitleAvatarHeader = ({
@@ -29,20 +32,29 @@ const PageTitleAvatarHeader = ({
 	containerStyle,
 	contentStyle,
 	titleStyle,
+	titleLoading = false,
+	avatarLoading = false,
 }: PageTitleAvatarHeaderProps) => {
 	return (
 		<View style={[styles.container, containerStyle]}>
 			<View style={[styles.content, contentStyle]}>
-				{onPressTitle ? (
-					<TouchableOpacity onPress={onPressTitle} activeOpacity={0.8}>
-						<Text style={[styles.title, titleStyle]}>{title}</Text>
-					</TouchableOpacity>
+				{titleLoading ? (
+					<SkeletonBlock style={styles.titleSkeleton} />
 				) : (
-					<Text style={[styles.title, titleStyle]}>{title}</Text>
+					<>
+						{onPressTitle ? (
+							<TouchableOpacity onPress={onPressTitle} activeOpacity={0.8}>
+								<Text style={[styles.title, titleStyle]}>{title}</Text>
+							</TouchableOpacity>
+						) : (
+							<Text style={[styles.title, titleStyle]}>{title}</Text>
+						)}
+					</>
 				)}
 				{showAvatar ? (
 					<AvatarInitials
 						size={avatarSize}
+						loading={avatarLoading}
 						showBorder
 						showSoftShell
 					/>
@@ -76,6 +88,11 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
+	},
+	titleSkeleton: {
+		width: 150,
+		height: 28,
+		borderRadius: 10,
 	},
 	avatarPlaceholder: {
 		opacity: 0,

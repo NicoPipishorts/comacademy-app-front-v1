@@ -2,6 +2,7 @@ import "react-native-reanimated";
 
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
+import OtaUpdateModal from "@/components/updates/OtaUpdateModal";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { NetworkProvider } from "@/providers/NetworkProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -43,6 +44,7 @@ export default function RootLayout() {
 														options={{ headerShown: false }}
 													/>
 												</Stack>
+												<OtaUpdateModal />
 											</TabProvider>
 										</NetworkProvider>
 									</SnackbarProvider>

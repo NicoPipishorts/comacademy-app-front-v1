@@ -1,5 +1,5 @@
 import CardRenderer from "@/components/cards/feed/CardRenderer";
-import FeedLoader from "@/components/experience/loader";
+import FeedSkeleton from "@/components/experience/FeedSkeleton";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
@@ -86,7 +86,7 @@ const Feed = () => {
 	};
 
 	if (isLoading) {
-		return <FeedLoader />;
+		return <FeedSkeleton />;
 	}
 
 	if (isError) {

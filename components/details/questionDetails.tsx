@@ -23,8 +23,8 @@ import {
 	View,
 } from "react-native";
 import ReturnButton from "../buttons/returnButton";
-import Loader from "../experience/loader";
 import ModalGestureLine from "../experience/modalGestureLine";
+import SkeletonBlock from "../experience/SkeletonBlock";
 import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 import AddToPlaylistModal from "../modal/AddToPlaylistModal";
 
@@ -102,6 +102,8 @@ export default function QuestionDetails({
 			: questionEntity
 	) as QuestionViewModel | undefined;
 	const resolvedQuestionId = questionEntity?.id;
+	const showCategoryIcons = Boolean(category && questionAttributes?.CATEGORIE);
+	const showFavoriteActions = userFavoriteIsFetched;
 
 	useEffect(() => {
 		const favoriteEntry = userFavoriteQuestions?.data?.[0];
@@ -167,11 +169,51 @@ export default function QuestionDetails({
 		resolvedQuestionId,
 	]);
 
-	if (isLoading || !category || !userFavoriteIsFetched) {
-		return <Loader />;
-	}
-
 	if (isError || !data || !questionAttributes || !questionAttributes.QUESTION) {
+		if (isLoading) {
+			return (
+				<>
+					<View style={styles.topHandleWrapper}>
+						<ModalGestureLine />
+					</View>
+					<View style={styles.backButtonWrapper}>
+						<ReturnButton />
+					</View>
+					<ScrollView contentContainerStyle={styles.wrapper}>
+						<View style={styles.contentContainer}>
+							<SkeletonBlock style={styles.questionTitleSkeleton} />
+							<SkeletonBlock style={styles.questionTitleSkeletonShort} />
+						</View>
+
+						<View style={styles.headerContainer}>
+							<SkeletonBlock style={styles.answerLabelSkeleton} />
+						</View>
+
+						<View style={styles.wrapperIcons}>
+							<View style={styles.containerIcons}>
+								<SkeletonBlock style={styles.iconSkeleton} />
+								<SkeletonBlock style={styles.iconSkeleton} />
+							</View>
+							<View style={styles.containerIcons}>
+								<SkeletonBlock style={styles.iconSkeleton} />
+								<SkeletonBlock style={styles.iconSkeleton} />
+							</View>
+						</View>
+
+						<View style={styles.answerContainer}>
+							<View style={{ paddingBottom: 20 }}>
+								<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
+							</View>
+							<SkeletonBlock style={styles.answerLineSkeleton} />
+							<SkeletonBlock style={styles.answerLineSkeleton} />
+							<SkeletonBlock style={styles.answerLineSkeletonShort} />
+							<SkeletonBlock style={styles.answerLineSkeletonMedium} />
+						</View>
+					</ScrollView>
+				</>
+			);
+		}
+
 		const httpError = error as HttpError | null;
 		const isNotFound = httpError?.status === 404;
 
@@ -201,19 +243,11 @@ export default function QuestionDetails({
 
 	return (
 		<>
-			<View
-				style={{
-					display: "flex",
-					flexDirection: "row",
-					justifyContent: "center",
-					width: "100%",
-					paddingHorizontal: 20,
-					marginTop: 20,
-				}}>
+			<View style={styles.topHandleWrapper}>
 				<ModalGestureLine />
 			</View>
 
-			<View style={{ paddingLeft: 20 }}>
+			<View style={styles.backButtonWrapper}>
 				<ReturnButton />
 			</View>
 			<ScrollView contentContainerStyle={styles.wrapper}>
@@ -231,8 +265,7 @@ export default function QuestionDetails({
 
 				<View style={styles.wrapperIcons}>
 					<View style={styles.containerIcons}>
-						{questionAttributes.CATEGORIE !== undefined &&
-						questionAttributes.CATEGORIE !== null
+						{showCategoryIcons
 							? questionAttributes.CATEGORIE.split(",").map((cat, index) => {
 									const categoryNumber = parseInt(cat, 10);
 									return (
@@ -244,25 +277,32 @@ export default function QuestionDetails({
 										</View>
 									);
 							  })
-							: ""}
+							: <SkeletonBlock style={styles.iconSkeleton} />}
 					</View>
 					<View style={styles.containerIcons}>
-						<>
-							<Pressable onPress={() => setModalVisible(true)}>
-								<Image
-									source={Plus}
-									style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-									resizeMode='contain'
-								/>
-							</Pressable>
-							<Pressable onPress={() => handleAddFavorite()}>
-								<Image
-									source={filterIfFavoriteExists ? HeartFull : Heart}
-									style={styles.catIcons as ImageStyle}
-									resizeMode='contain'
-								/>
-							</Pressable>
-						</>
+						{showFavoriteActions ? (
+							<>
+								<Pressable onPress={() => setModalVisible(true)}>
+									<Image
+										source={Plus}
+										style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+										resizeMode='contain'
+									/>
+								</Pressable>
+								<Pressable onPress={() => handleAddFavorite()}>
+									<Image
+										source={filterIfFavoriteExists ? HeartFull : Heart}
+										style={styles.catIcons as ImageStyle}
+										resizeMode='contain'
+									/>
+								</Pressable>
+							</>
+						) : (
+							<>
+								<SkeletonBlock style={[styles.iconSkeleton, { marginRight: 20 }]} />
+								<SkeletonBlock style={styles.iconSkeleton} />
+							</>
+						)}
 					</View>
 				</View>
 
@@ -276,12 +316,14 @@ export default function QuestionDetails({
 				</View>
 			</ScrollView>
 
-				<AddToPlaylistModal
-					visible={modalVisible}
-					onClose={() => setModalVisible(false)}
-					elementId={resolvedQuestionId ?? 0}
-					type={"question"}
-				/>
+				{modalVisible && resolvedQuestionId ? (
+					<AddToPlaylistModal
+						visible={modalVisible}
+						onClose={() => setModalVisible(false)}
+						elementId={resolvedQuestionId}
+						type={"question"}
+					/>
+				) : null}
 		</>
 	);
 }
@@ -289,6 +331,17 @@ export default function QuestionDetails({
 const styles = StyleSheet.create({
 	wrapper: {
 		alignItems: "center",
+	},
+	topHandleWrapper: {
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "center",
+		width: "100%",
+		paddingHorizontal: 20,
+		marginTop: 20,
+	},
+	backButtonWrapper: {
+		paddingLeft: 20,
 	},
 	errorWrapper: {
 		flex: 1,
@@ -366,6 +419,41 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		paddingHorizontal: 30,
+	},
+	questionTitleSkeleton: {
+		height: 24,
+		width: "100%",
+		marginBottom: 12,
+	},
+	questionTitleSkeletonShort: {
+		height: 24,
+		width: "78%",
+	},
+	answerLabelSkeleton: {
+		width: 120,
+		height: 40,
+		borderRadius: 12,
+		backgroundColor: "rgba(255,255,255,0.2)",
+	},
+	iconSkeleton: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		marginRight: 12,
+	},
+	answerLineSkeleton: {
+		height: 18,
+		width: "100%",
+		marginBottom: 12,
+	},
+	answerLineSkeletonShort: {
+		height: 18,
+		width: "62%",
+		marginBottom: 12,
+	},
+	answerLineSkeletonMedium: {
+		height: 18,
+		width: "84%",
 	},
 	answerContainer: {
 		margin: 30,

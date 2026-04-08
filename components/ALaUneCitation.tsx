@@ -5,17 +5,13 @@ import { router } from "expo-router";
 import { format } from "date-fns";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Loader from "./experience/loader";
+import SkeletonBlock from "./experience/SkeletonBlock";
 import StyledButton from "./StyledButton";
 
 export default function ALaUneCitation() {
 	const { data, isFetched } = useDailyCitations();
-
-	if (!data || !isFetched) {
-		return null;
-	}
-
-	const citation = data.data;
+	const citation = data?.data;
+	const isLoading = !isFetched || !citation;
 
 	const handlePress = () => {
 		router.push({
@@ -25,13 +21,25 @@ export default function ALaUneCitation() {
 	};
 
 	return (
-		<TouchableOpacity style={styles.container}>
+		<TouchableOpacity
+			style={styles.container}
+			disabled={isLoading}
+			activeOpacity={isLoading ? 1 : 0.2}>
 			<Text style={styles.smallText}>
-				La citation du jour : {format(new Date(citation.updatedAt), "dd/MM/yyyy")}
+				{isLoading
+					? "La citation du jour"
+					: `La citation du jour : ${format(new Date(citation.updatedAt), "dd/MM/yyyy")}`}
 			</Text>
 			<View style={styles.containerBis}>
-				{!isFetched && <Loader />}
-				{isFetched && (
+				{isLoading ? (
+					<>
+						<View style={styles.textSkeletonContainer}>
+							<SkeletonBlock style={styles.lineLarge} />
+							<SkeletonBlock style={styles.lineMedium} />
+						</View>
+						<SkeletonBlock style={styles.buttonSkeleton} />
+					</>
+				) : (
 					<>
 						<Text
 							style={styles.mainText}
@@ -76,5 +84,23 @@ const styles = StyleSheet.create({
 		maxWidth: "65%",
 		fontSize: FontSize20,
 		fontWeight: "bold",
+	},
+	textSkeletonContainer: {
+		flex: 1,
+		maxWidth: "65%",
+	},
+	lineLarge: {
+		height: 22,
+		width: "95%",
+		marginBottom: 10,
+	},
+	lineMedium: {
+		height: 22,
+		width: "72%",
+	},
+	buttonSkeleton: {
+		width: 92,
+		height: 40,
+		borderRadius: 50,
 	},
 });

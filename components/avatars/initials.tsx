@@ -16,7 +16,7 @@ import {
 	View,
 	ViewStyle,
 } from "react-native";
-import Loader from "../experience/loader";
+import SkeletonBlock from "../experience/SkeletonBlock";
 
 interface Props {
 	size?: number;
@@ -25,6 +25,7 @@ interface Props {
 	showBorder?: boolean;
 	showSoftShell?: boolean;
 	wrapperAlignSelf?: ViewStyle["alignSelf"];
+	loading?: boolean;
 }
 
 const getInitial = (value?: string | null) => value?.trim().charAt(0) || "";
@@ -50,10 +51,11 @@ export default function AvatarInitials({
 	showBorder = false,
 	showSoftShell = false,
 	wrapperAlignSelf = "flex-start",
+	loading = false,
 }: Props) {
 	const { auth } = useAuthSession();
 	const router = useRouter();
-	const { data, isFetched } = useGetUserPreferences(auth?.user.id);
+	const { data } = useGetUserPreferences(auth?.user.id);
 	const preference = resolveUserPreference(data);
 
 	const resolvedSize = size || 78;
@@ -79,8 +81,33 @@ export default function AvatarInitials({
 	const emailInitials = getHandleInitials(auth?.user?.email?.split("@")[0]);
 	const initialsValue = nameInitials || usernameInitials || emailInitials || "?";
 
-	if (!isFetched) {
-		return <Loader />;
+	if (loading) {
+		return (
+			<View
+				style={[
+					styles.wrapper,
+					{ alignSelf: wrapperAlignSelf },
+					useSoftShell
+						? [
+								styles.softShell,
+								{
+									width: resolvedSize,
+									height: resolvedSize,
+									borderRadius: resolvedSize / 2,
+									padding: 2,
+								},
+						  ]
+						: null,
+				]}>
+				<SkeletonBlock
+					style={{
+						width: avatarSize,
+						height: avatarSize,
+						borderRadius: avatarSize / 2,
+					}}
+				/>
+			</View>
+		);
 	}
 
 	const handlePress = () => {

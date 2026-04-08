@@ -40,6 +40,8 @@ const useGetUserInfo = (userId: number) => {
 		queryKey: ["UserInfo"],
 		queryFn: () => fetchUserInfo(token, userId),
 		enabled: !!token && !!userId,
+		staleTime: 1000 * 60 * 10,
+		gcTime: 1000 * 60 * 60 * 24,
 	});
 };
 

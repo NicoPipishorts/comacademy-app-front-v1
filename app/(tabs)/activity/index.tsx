@@ -30,7 +30,6 @@ import { FontSizeH1, FontSizeScreenTitles } from "@/constants/fontsizes";
 // Components and hooks
 import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
-import Loader from "@/components/experience/loader";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useGetRubricNotifications } from "@/hooks/Rubrics/useRubricNotifications";
@@ -118,6 +117,7 @@ const HomeScreen = () => {
 	const router = useRouter();
 	const { auth } = useAuthSession();
 	const { data: userData } = useGetUserInfo(auth?.user.id);
+	const isHeaderLoading = !userData;
 	const { data: rubricNotifications } = useGetRubricNotifications();
 	const rubricsNotificationMap =
 		rubricNotifications?.data?.rubrics ?? EMPTY_RUBRIC_NOTIFICATIONS.data.rubrics;
@@ -127,10 +127,6 @@ const HomeScreen = () => {
 	useEffect(() => {
 		queryClient.invalidateQueries({ queryKey: ["Citations"] });
 	}, []);
-
-	if (!userData) {
-		return <Loader />;
-	}
 
 	return (
 		<>
@@ -142,7 +138,9 @@ const HomeScreen = () => {
 					}}
 					showsVerticalScrollIndicator={false}>
 					<PageTitleAvatarHeader
-						title={`Hello ${userData.firstName}`}
+						title={`Hello ${userData?.firstName ?? ""}`.trim() || "Hello"}
+						titleLoading={isHeaderLoading}
+						avatarLoading={isHeaderLoading}
 						onPressTitle={() => navigation.navigate("newPlaylist")}
 						containerStyle={[
 							styles.screenHeaderContainer,
