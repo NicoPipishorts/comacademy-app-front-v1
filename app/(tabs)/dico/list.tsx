@@ -288,17 +288,19 @@ const DicoList = ({
 														const currentIndex = globalIndex++;
 														const locked = isItemLocked(currentIndex);
 														return (
-															<Text
+															<TouchableOpacity
 																key={localIndex}
-																style={[
-																	styles.listItem,
-																	locked && styles.lockedItem,
-																]}
 																onPress={() =>
 																	handlePress(item.id, currentIndex)
 																}>
-																{item.Word}
-															</Text>
+																<Text
+																	style={[
+																		styles.listItem,
+																		locked && styles.lockedItem,
+																	]}>
+																	{item.Word}
+																</Text>
+															</TouchableOpacity>
 														);
 													})}
 												</View>
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	listContainer: {
-		paddingBottom: 70,
+		paddingBottom: 60,
 	},
 	listBodyContent: {
 		paddingHorizontal: 5,
@@ -394,11 +396,10 @@ const styles = StyleSheet.create({
 	sidebar: {
 		position: "absolute",
 		right: 0,
-		top: 0,
+		top: 202,
 		bottom: 0,
 		width: 40,
-		paddingTop: 36,
-		justifyContent: "center",
+		justifyContent: "flex-start",
 		alignItems: "center",
 	},
 	sidebarText: {

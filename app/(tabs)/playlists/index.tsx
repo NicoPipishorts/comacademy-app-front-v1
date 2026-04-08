@@ -3,7 +3,7 @@ import { useDeletePlaylist } from "@/api/playlist/deletePlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import CardPlaylist from "@/components/cards/CardPlaylists";
-import Loader from "@/components/experience/loader";
+import PlaylistsSkeleton from "@/components/experience/PlaylistsSkeleton";
 import NewPlaylistModal from "@/components/modal/NewPlaylistModal";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
@@ -91,7 +91,7 @@ const Playlist = () => {
 	};
 
 	if (!playlistsData && !isFetched) {
-		return <Loader />;
+		return <PlaylistsSkeleton />;
 	}
 
 	const closeSwipeable = () => {

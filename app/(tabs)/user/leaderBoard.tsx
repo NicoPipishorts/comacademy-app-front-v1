@@ -1,5 +1,5 @@
 import FloatingTabBar from "@/components/FloatingTabBar";
-import Loader from "@/components/experience/loader";
+import LeaderBoardSkeleton from "@/components/experience/LeaderBoardSkeleton";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { colorBlack, colorGrey, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
@@ -31,7 +31,7 @@ export default function LeaderBoard() {
 	const { data: allScores } = useGetUsersScore(token);
 
 	if (authLoading || !currentUser || !userData || !allScores) {
-		return <Loader />;
+		return <LeaderBoardSkeleton />;
 	}
 
 	const resolveScoreUserId = (user: UserScoreData): number | null => {

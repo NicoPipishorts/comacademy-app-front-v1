@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CardSimpleButtonCommandements from "@/components/cards/CardSimpleButtonCommandements";
 import CategoriesCards from "@/components/categories/categories";
-import Loader from "@/components/experience/loader";
+import LargeImageCardListSkeleton from "@/components/experience/LargeImageCardListSkeleton";
 import FilteredByCat from "@/components/filters/filteredByCat";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
@@ -38,13 +38,9 @@ export default function TipsAndTactics() {
 		closeUpgradeModal,
 	} = useSubscriptionLimit({ freeLimit: 5 });
 
-	if (!isFetched || !commandements) {
-		return <Loader />;
-	}
-
 	// Find the current category’s name, or fallback to an empty string
 	const currentCategoryName =
-		commandements.data.length > 0
+		commandements && commandements.data.length > 0
 			? commandements.data[0].attributes.catName ?? ""
 			: "";
 
@@ -79,7 +75,9 @@ export default function TipsAndTactics() {
 				<PageTitleAvatarHeader title='Tips and Tactics' showAvatar={false} />
 
 				{/* only render when we have both a filter and at least one item */}
-				{filterByCat !== null && commandements.data.length > 0 && (
+				{filterByCat !== null &&
+					commandements &&
+					commandements.data.length > 0 && (
 					<View style={{ marginVertical: 10 }}>
 						<FilteredByCat
 							count={commandements.data.length}
@@ -90,13 +88,24 @@ export default function TipsAndTactics() {
 					</View>
 				)}
 
-				{commandements.data.length === 0 && (
+				{isFetched && commandements && commandements.data.length === 0 && (
 					<View style={styles.emptyStateContainer}>
 						<Text>Aucun Tip and Tactics trouvé</Text>
 					</View>
 				)}
 
 				{activeTab === 0 &&
+					!isFetched && (
+						<LargeImageCardListSkeleton
+							cardCount={3}
+							horizontalPadding={0}
+							includeTopSpacing={true}
+						/>
+					)}
+
+				{activeTab === 0 &&
+					isFetched &&
+					commandements &&
 					commandements.data.map((cmd, index) => {
 						const imageUrl = resolveMediaUrl(
 							cmd.attributes.imageUrl,
@@ -121,7 +130,7 @@ export default function TipsAndTactics() {
 						);
 					})}
 
-				{activeTab === 1 && (
+				{activeTab === 1 && isFetched && commandements && (
 					<CategoriesCards
 						setFilterByCat={chooseCategory}
 						setActiveTab={setActiveTab}

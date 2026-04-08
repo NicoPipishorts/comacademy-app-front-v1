@@ -1,6 +1,6 @@
 import { useRemoveFromPlaylist } from "@/api/playlist/removeFromPlaylist";
 import ReturnButton from "@/components/buttons/returnButton";
-import Loader from "@/components/experience/loader";
+import PlaylistDetailsSkeleton from "@/components/experience/PlaylistDetailsSkeleton";
 import { colorRed } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
@@ -58,11 +58,7 @@ const PlaylistList = () => {
 	);
 
 	if (!playlistData && !isFetched) {
-		return (
-			<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-				<Loader />
-			</View>
-		);
+		return <PlaylistDetailsSkeleton />;
 	}
 
 	const playlistContents = playlistData.data.attributes.playlist_contents;

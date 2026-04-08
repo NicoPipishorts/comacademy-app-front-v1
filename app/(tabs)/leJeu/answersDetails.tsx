@@ -1,4 +1,3 @@
-import LogOverlay from "@/components/LogOverlay";
 import QuestionDetails from "@/components/details/questionDetails";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useFocusEffect } from "@react-navigation/native";
@@ -43,7 +42,6 @@ export default function AnswersDetails() {
 				refetch='FavoriteQuestions'
 				postGame={postGame}
 			/>
-			<LogOverlay />
 		</View>
 	);
 }

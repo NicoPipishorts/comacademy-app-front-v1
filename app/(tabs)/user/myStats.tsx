@@ -1,4 +1,5 @@
 import FloatingTabBar from "@/components/FloatingTabBar";
+import UserStatsSkeleton from "@/components/experience/UserStatsSkeleton";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import UserStats from "@/components/user/userStats";
 import { primaryBackground } from "@/constants/colors";
@@ -7,13 +8,7 @@ import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useRouter } from "expo-router";
 import React from "react";
-import {
-	ActivityIndicator,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MyStatsScreen() {
@@ -48,11 +43,7 @@ export default function MyStatsScreen() {
 				contentContainerStyle={styles.content}>
 				<PageTitleAvatarHeader title='Mes Stats' />
 
-				{(isLoading || isFetching) && (
-					<View style={styles.loadingContainer}>
-						<ActivityIndicator size='large' />
-					</View>
-				)}
+				{(isLoading || isFetching) && <UserStatsSkeleton />}
 
 				{!isLoading && !isFetching && userScore && (
 					<UserStats categoriesScore={userScore} />
@@ -83,9 +74,6 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		paddingBottom: 190,
-	},
-	loadingContainer: {
-		paddingTop: 20,
 	},
 	emptyText: {
 		paddingTop: 20,

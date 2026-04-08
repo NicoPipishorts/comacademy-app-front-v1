@@ -1,5 +1,5 @@
 import CardSimpleButtonCitrationsMenu from "@/components/cards/CardSimpleButtonCitrationsMenu";
-import Loader from "@/components/experience/loader";
+import LargeImageCardListSkeleton from "@/components/experience/LargeImageCardListSkeleton";
 import ScreenHeaders from "@/components/ScreenHeaders";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { primaryBackground } from "@/constants/colors";
@@ -42,10 +42,6 @@ const Citations = () => {
 		}
 	}, [citationCategory, fromDaily]);
 
-	if (isLoading) {
-		return <Loader />;
-	}
-
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={{ paddingHorizontal: 30 }}>
@@ -62,20 +58,29 @@ const Citations = () => {
 				showsVerticalScrollIndicator={false}
 				style={{ paddingHorizontal: 20 }}
 				contentContainerStyle={{ paddingBottom: 100 }}>
-				{(Array.isArray(data?.data?.cards) ? data.data.cards : []).map(
-					(citation) => {
-						const locked = isFreeUser;
-						return (
-							<CardSimpleButtonCitrationsMenu
-							key={citation.title}
-							image={citation.url}
-							content={citation.title}
-							category={citation.category}
-							locked={locked}
-							onPress={locked ? handleLockedItemPress : undefined}
-						/>
-					);
-				})}
+				{isLoading ? (
+					<LargeImageCardListSkeleton
+						cardCount={3}
+						horizontalPadding={0}
+						includeTopSpacing={true}
+					/>
+				) : (
+					(Array.isArray(data?.data?.cards) ? data.data.cards : []).map(
+						(citation) => {
+							const locked = isFreeUser;
+							return (
+								<CardSimpleButtonCitrationsMenu
+									key={citation.title}
+									image={citation.url}
+									content={citation.title}
+									category={citation.category}
+									locked={locked}
+									onPress={locked ? handleLockedItemPress : undefined}
+								/>
+							);
+						},
+					)
+				)}
 			</ScrollView>
 		</View>
 	);

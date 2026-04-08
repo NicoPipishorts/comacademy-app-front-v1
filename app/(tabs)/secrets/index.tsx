@@ -1,5 +1,5 @@
 import CardSimpleButtonSecrets from "@/components/cards/CardSimpleButtonSecrets";
-import Loader from "@/components/experience/loader";
+import LargeImageCardListSkeleton from "@/components/experience/LargeImageCardListSkeleton";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
@@ -28,10 +28,6 @@ export default function Secrets() {
 		closeUpgradeModal,
 	} = useSubscriptionLimit({ freeLimit: 5 });
 
-	if (!secrets || !isFetched) {
-		return <Loader />;
-	}
-
 	return (
 		<View style={styles.wrapper}>
 			<UpgradeSubscriptionModal
@@ -52,33 +48,41 @@ export default function Secrets() {
 					containerStyle={styles.pageHeaderContainer}
 				/>
 
-				{secrets?.data.map((secret, index) => {
-					const mediaCandidate =
-						secret.CardImageUrl ??
-						secret.CardImageURL ??
-						secret.CardImage?.formats?.large?.url ??
-						secret.CardImage?.formats?.medium?.url ??
-						secret.CardImage?.formats?.small?.url ??
-						secret.CardImage?.formats?.thumbnail?.url ??
-						secret.CardImage ??
-						secret.imageUrl;
-					const imageUrl = resolveMediaUrl(
-						mediaCandidate,
-						DEFAULT_SECRET_IMAGE_URL,
-					);
-					const locked = isItemLocked(index);
+				{!isFetched || !secrets ? (
+					<LargeImageCardListSkeleton
+						cardCount={3}
+						horizontalPadding={0}
+						includeTopSpacing={true}
+					/>
+				) : (
+					secrets.data.map((secret, index) => {
+						const mediaCandidate =
+							secret.CardImageUrl ??
+							secret.CardImageURL ??
+							secret.CardImage?.formats?.large?.url ??
+							secret.CardImage?.formats?.medium?.url ??
+							secret.CardImage?.formats?.small?.url ??
+							secret.CardImage?.formats?.thumbnail?.url ??
+							secret.CardImage ??
+							secret.imageUrl;
+						const imageUrl = resolveMediaUrl(
+							mediaCandidate,
+							DEFAULT_SECRET_IMAGE_URL,
+						);
+						const locked = isItemLocked(index);
 
-					return (
-						<CardSimpleButtonSecrets
-							key={secret.id}
-							itemId={secret.documentId}
-							image={imageUrl}
-							content={secret.Brand}
-							locked={locked}
-							onPress={locked ? handleLockedItemPress : undefined}
-						/>
-					);
-				})}
+						return (
+							<CardSimpleButtonSecrets
+								key={secret.id}
+								itemId={secret.documentId}
+								image={imageUrl}
+								content={secret.Brand}
+								locked={locked}
+								onPress={locked ? handleLockedItemPress : undefined}
+							/>
+						);
+					})
+				)}
 			</ScrollView>
 		</View>
 	);

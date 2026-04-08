@@ -19,6 +19,11 @@ import { queryClient } from "../hooks/reactQueryConfig";
 // ✅ NEW import from expo-audio
 import { setAudioModeAsync } from "expo-audio";
 
+const shouldShowDeviceLogs =
+	__DEV__ ||
+	process.env.EXPO_PUBLIC_SHOW_DEVICE_LOGS === "1" ||
+	process.env.EXPO_PUBLIC_SHOW_DEVICE_LOGS === "true";
+
 if (Platform.OS === "ios") {
 	// ✅ API/prop renamed in expo-audio
 	void setAudioModeAsync({
@@ -44,7 +49,7 @@ export default function RootLayout() {
 														options={{ headerShown: false }}
 													/>
 												</Stack>
-												<LogOverlay />
+												{shouldShowDeviceLogs ? <LogOverlay /> : null}
 											</TabProvider>
 										</NetworkProvider>
 									</SnackbarProvider>
