@@ -1,5 +1,6 @@
 import "react-native-reanimated";
 
+import LogOverlay from "@/components/LogOverlay";
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import OtaUpdateModal from "@/components/updates/OtaUpdateModal";
@@ -45,6 +46,7 @@ export default function RootLayout() {
 													/>
 												</Stack>
 												<OtaUpdateModal />
+												<LogOverlay />
 											</TabProvider>
 										</NetworkProvider>
 									</SnackbarProvider>
