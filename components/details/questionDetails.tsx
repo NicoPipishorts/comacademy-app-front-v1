@@ -10,6 +10,7 @@ import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
+import { logDevice } from "@/helpers/logDevice";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -27,6 +28,7 @@ import ModalGestureLine from "../experience/modalGestureLine";
 import SkeletonBlock from "../experience/SkeletonBlock";
 import SmallCategroieIcons from "../icons/SmallCategroieIcons";
 import AddToPlaylistModal from "../modal/AddToPlaylistModal";
+import QuestionDetailsErrorBoundary from "./QuestionDetailsErrorBoundary";
 
 interface Props {
 	questionDocumentId?: string;
@@ -38,10 +40,59 @@ interface Props {
 type HttpError = Error & { status?: number };
 type QuestionViewModel = {
 	id?: number;
-	QUESTION?: string;
+	QUESTION?: unknown;
 	ANSWER?: boolean;
-	CATEGORIE?: string | null;
-	REPONSE?: string;
+	CATEGORIE?: unknown;
+	REPONSE?: unknown;
+};
+
+const ENABLE_RESPONSE_PLAYLIST_ACTIONS =
+	process.env.EXPO_PUBLIC_ENABLE_RESPONSE_PLAYLIST_ACTIONS === "1";
+const ENABLE_RESPONSE_CATEGORY_ICONS =
+	process.env.EXPO_PUBLIC_ENABLE_RESPONSE_CATEGORY_ICONS !== "0";
+
+const normalizeTextValue = (value: unknown): string => {
+	if (typeof value === "string") {
+		return value;
+	}
+	if (typeof value === "number" || typeof value === "boolean") {
+		return String(value);
+	}
+	if (Array.isArray(value)) {
+		return value
+			.map((item) => normalizeTextValue(item))
+			.filter((item) => item.trim().length > 0)
+			.join(" ");
+	}
+	if (value && typeof value === "object") {
+		try {
+			return JSON.stringify(value);
+		} catch {
+			return "";
+		}
+	}
+	return "";
+};
+
+const normalizeCategoryValues = (value: unknown): number[] => {
+	if (Array.isArray(value)) {
+		return value
+			.map((item) => Number(item))
+			.filter((item) => Number.isFinite(item) && item > 0);
+	}
+
+	if (typeof value === "number") {
+		return Number.isFinite(value) && value > 0 ? [value] : [];
+	}
+
+	if (typeof value !== "string") {
+		return [];
+	}
+
+	return value
+		.split(",")
+		.map((item) => Number(item.trim()))
+		.filter((item) => Number.isFinite(item) && item > 0);
 };
 
 export default function QuestionDetails({
@@ -102,8 +153,41 @@ export default function QuestionDetails({
 			: questionEntity
 	) as QuestionViewModel | undefined;
 	const resolvedQuestionId = questionEntity?.id;
-	const showCategoryIcons = Boolean(category && questionAttributes?.CATEGORIE);
+	const questionTitle = normalizeTextValue(questionAttributes?.QUESTION);
+	const questionAnswerText = normalizeTextValue(questionAttributes?.REPONSE);
+	const categoryValues = normalizeCategoryValues(questionAttributes?.CATEGORIE);
+	const showCategoryIcons = Boolean(
+		ENABLE_RESPONSE_CATEGORY_ICONS && category && categoryValues.length > 0
+	);
 	const showFavoriteActions = userFavoriteIsFetched;
+
+	useEffect(() => {
+		logDevice("[QuestionDetails] route payload", {
+			questionDocumentId: questionDocumentId ?? null,
+			questionId: questionId ?? null,
+			postGame: Boolean(postGame),
+		});
+	}, [postGame, questionDocumentId, questionId]);
+
+	useEffect(() => {
+		logDevice("[QuestionDetails] query state", {
+			isLoading,
+			isError,
+			hasData: Boolean(data),
+			resolvedQuestionId: resolvedQuestionId ?? null,
+			titleLength: questionTitle.length,
+			answerLength: questionAnswerText.length,
+			categoryValues,
+		});
+	}, [
+		categoryValues,
+		data,
+		isError,
+		isLoading,
+		questionAnswerText.length,
+		questionTitle.length,
+		resolvedQuestionId,
+	]);
 
 	useEffect(() => {
 		const favoriteEntry = userFavoriteQuestions?.data?.[0];
@@ -169,7 +253,7 @@ export default function QuestionDetails({
 		resolvedQuestionId,
 	]);
 
-	if (isError || !data || !questionAttributes || !questionAttributes.QUESTION) {
+	if (isError || !data || !questionAttributes || !questionTitle.trim()) {
 		if (isLoading) {
 			return (
 				<>
@@ -242,6 +326,7 @@ export default function QuestionDetails({
 	}
 
 	return (
+		<QuestionDetailsErrorBoundary onBack={handleBackPress}>
 		<>
 			<View style={styles.topHandleWrapper}>
 				<ModalGestureLine />
@@ -253,7 +338,7 @@ export default function QuestionDetails({
 			<ScrollView contentContainerStyle={styles.wrapper}>
 				<View style={[styles.contentContainer]}>
 					<Text style={{ fontSize: 22, fontWeight: "bold" }}>
-						{questionAttributes.QUESTION}
+						{questionTitle}
 					</Text>
 				</View>
 
@@ -266,8 +351,7 @@ export default function QuestionDetails({
 				<View style={styles.wrapperIcons}>
 					<View style={styles.containerIcons}>
 						{showCategoryIcons
-							? questionAttributes.CATEGORIE.split(",").map((cat, index) => {
-									const categoryNumber = parseInt(cat, 10);
+							? categoryValues.map((categoryNumber, index) => {
 									return (
 										<View style={{ marginRight: 8 }} key={index}>
 											<SmallCategroieIcons
@@ -282,13 +366,15 @@ export default function QuestionDetails({
 					<View style={styles.containerIcons}>
 						{showFavoriteActions ? (
 							<>
-								<Pressable onPress={() => setModalVisible(true)}>
-									<Image
-										source={Plus}
-										style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-										resizeMode='contain'
-									/>
-								</Pressable>
+								{ENABLE_RESPONSE_PLAYLIST_ACTIONS ? (
+									<Pressable onPress={() => setModalVisible(true)}>
+										<Image
+											source={Plus}
+											style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+											resizeMode='contain'
+										/>
+									</Pressable>
+								) : null}
 								<Pressable onPress={() => handleAddFavorite()}>
 									<Image
 										source={filterIfFavoriteExists ? HeartFull : Heart}
@@ -311,12 +397,12 @@ export default function QuestionDetails({
 						<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
 					</View>
 					<Text style={{ fontSize: 16, fontWeight: "bold", lineHeight: 22 }}>
-						{questionAttributes.REPONSE}
+						{questionAnswerText}
 					</Text>
 				</View>
 			</ScrollView>
 
-				{modalVisible && resolvedQuestionId ? (
+				{ENABLE_RESPONSE_PLAYLIST_ACTIONS && modalVisible && resolvedQuestionId ? (
 					<AddToPlaylistModal
 						visible={modalVisible}
 						onClose={() => setModalVisible(false)}
@@ -325,6 +411,7 @@ export default function QuestionDetails({
 					/>
 				) : null}
 		</>
+		</QuestionDetailsErrorBoundary>
 	);
 }
 
