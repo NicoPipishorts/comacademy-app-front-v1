@@ -8,12 +8,14 @@ import { NetworkProvider } from "@/providers/NetworkProvider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Platform } from "react-native";
+import * as Updates from "expo-updates";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider as PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../auth/AuthContext";
+import { logDevice } from "../helpers/logDevice";
 import { queryClient } from "../hooks/reactQueryConfig";
 
 // ✅ NEW import from expo-audio
@@ -32,6 +34,22 @@ if (Platform.OS === "ios") {
 }
 
 export default function RootLayout() {
+	useEffect(() => {
+		logDevice("[App] runtime info", {
+			channel: typeof Updates.channel === "string" ? Updates.channel : null,
+			updateId:
+				typeof Updates.updateId === "string" ? Updates.updateId : null,
+			isEmbeddedLaunch:
+				typeof Updates.isEmbeddedLaunch === "boolean"
+					? Updates.isEmbeddedLaunch
+					: null,
+			runtimeVersion:
+				typeof Updates.runtimeVersion === "string"
+					? Updates.runtimeVersion
+					: null,
+		});
+	}, []);
+
 	return (
 		<SafeAreaProvider>
 			<AuthProvider>

@@ -47,10 +47,26 @@ type QuestionViewModel = {
 	REPONSE?: unknown;
 };
 
+type FavoriteQuestionRelationItem = {
+	id?: number;
+};
+
+type FavoriteQuestionEntry = {
+	id?: number;
+	attributes?: {
+		questions?: {
+			data?: FavoriteQuestionRelationItem[];
+		};
+	};
+	questions?: FavoriteQuestionRelationItem[] | { data?: FavoriteQuestionRelationItem[] };
+};
+
 const ENABLE_RESPONSE_PLAYLIST_ACTIONS =
 	process.env.EXPO_PUBLIC_ENABLE_RESPONSE_PLAYLIST_ACTIONS === "1";
 const ENABLE_RESPONSE_CATEGORY_ICONS =
 	process.env.EXPO_PUBLIC_ENABLE_RESPONSE_CATEGORY_ICONS !== "0";
+const ENABLE_RESPONSE_SAFE_MODE = false;
+const ENABLE_RESPONSE_ULTRA_MINIMAL_MODE = false;
 
 const normalizeTextValue = (value: unknown): string => {
 	if (typeof value === "string") {
@@ -94,6 +110,35 @@ const normalizeCategoryValues = (value: unknown): number[] => {
 		.split(",")
 		.map((item) => Number(item.trim()))
 		.filter((item) => Number.isFinite(item) && item > 0);
+};
+
+const extractFavoriteQuestionIds = (entry?: FavoriteQuestionEntry | null): number[] => {
+	if (!entry) {
+		return [];
+	}
+
+	const nestedItems = entry.attributes?.questions?.data;
+	if (Array.isArray(nestedItems)) {
+		return nestedItems
+			.map((item) => item?.id)
+			.filter((id): id is number => Number.isFinite(id));
+	}
+
+	const flatQuestions = entry.questions;
+	if (Array.isArray(flatQuestions)) {
+		return flatQuestions
+			.map((item) => item?.id)
+			.filter((id): id is number => Number.isFinite(id));
+	}
+
+	const flatNestedItems = flatQuestions?.data;
+	if (Array.isArray(flatNestedItems)) {
+		return flatNestedItems
+			.map((item) => item?.id)
+			.filter((id): id is number => Number.isFinite(id));
+	}
+
+	return [];
 };
 
 export default function QuestionDetails({
@@ -183,9 +228,12 @@ export default function QuestionDetails({
 		? Boolean(responseDetailsData?.data?.question)
 		: Boolean(data);
 	const showCategoryIcons = Boolean(
-		ENABLE_RESPONSE_CATEGORY_ICONS && categoryValues.length > 0
+		!ENABLE_RESPONSE_SAFE_MODE &&
+			ENABLE_RESPONSE_CATEGORY_ICONS &&
+			categoryValues.length > 0
 	);
-	const showFavoriteActions = userFavoriteIsFetched;
+	const showFavoriteActions =
+		!ENABLE_RESPONSE_SAFE_MODE && userFavoriteIsFetched;
 
 	useEffect(() => {
 		logDevice("[QuestionDetails] route payload", {
@@ -219,17 +267,18 @@ export default function QuestionDetails({
 	]);
 
 	useEffect(() => {
-		const favoriteEntry = userFavoriteQuestions?.data?.[0];
+		const favoriteEntry = userFavoriteQuestions?.data?.[0] as
+			| FavoriteQuestionEntry
+			| undefined;
 		if (!favoriteEntry) {
 			setIdArray([]);
 			setDataId(null);
 			return;
 		}
 
-		const nextIds =
-			favoriteEntry.attributes.questions.data?.map((item) => item.id) ?? [];
+		const nextIds = extractFavoriteQuestionIds(favoriteEntry);
 		setIdArray(nextIds);
-		setDataId(favoriteEntry.id);
+		setDataId(typeof favoriteEntry.id === "number" ? favoriteEntry.id : null);
 	}, [userFavoriteQuestions?.data]);
 
 	useEffect(() => {
@@ -356,90 +405,110 @@ export default function QuestionDetails({
 
 	return (
 		<QuestionDetailsErrorBoundary onBack={handleBackPress}>
-		<>
-			<View style={styles.topHandleWrapper}>
-				<ModalGestureLine />
-			</View>
-
-			<View style={styles.backButtonWrapper}>
-				<ReturnButton />
-			</View>
-			<ScrollView contentContainerStyle={styles.wrapper}>
-				<View style={[styles.contentContainer]}>
-					<Text style={{ fontSize: 22, fontWeight: "bold" }}>
-						{questionTitle}
+			{ENABLE_RESPONSE_ULTRA_MINIMAL_MODE ? (
+				<View style={styles.ultraMinimalWrapper}>
+					<Text style={styles.ultraMinimalText}>
+						Response loaded
+					</Text>
+					<Text style={styles.ultraMinimalMeta}>
+						Question #{resolvedQuestionId ?? "unknown"}
+					</Text>
+					<Text style={styles.ultraMinimalMeta}>
+						Title chars: {questionTitle.length}
+					</Text>
+					<Text style={styles.ultraMinimalMeta}>
+						Answer chars: {questionAnswerText.length}
+					</Text>
+					<Text style={styles.ultraMinimalMeta}>
+						Categories: {categoryValues.join(", ") || "none"}
 					</Text>
 				</View>
+			) : (
+				<>
+					<View style={styles.topHandleWrapper}>
+						<ModalGestureLine />
+					</View>
 
-				<View style={[styles.headerContainer]}>
-					<Text style={[styles.headerContainerText]}>
-						{correctAnswerValue ? "Vrai" : "Faux"}
-					</Text>
-				</View>
+					<View style={styles.backButtonWrapper}>
+						<ReturnButton />
+					</View>
+					<ScrollView contentContainerStyle={styles.wrapper}>
+						<View style={[styles.contentContainer]}>
+							<Text style={{ fontSize: 22, fontWeight: "bold" }}>
+								{questionTitle}
+							</Text>
+						</View>
 
-				<View style={styles.wrapperIcons}>
-					<View style={styles.containerIcons}>
-						{showCategoryIcons
-							? categoryValues.map((categoryNumber, index) => {
-									return (
-										<View style={{ marginRight: 8 }} key={index}>
-											<SmallCategroieIcons
-												key={categoryNumber}
-												cats={categoryNumber}
+						<View style={[styles.headerContainer]}>
+							<Text style={[styles.headerContainerText]}>
+								{correctAnswerValue ? "Vrai" : "Faux"}
+							</Text>
+						</View>
+
+						<View style={styles.wrapperIcons}>
+							<View style={styles.containerIcons}>
+								{showCategoryIcons
+									? categoryValues.map((categoryNumber, index) => {
+											return (
+												<View style={{ marginRight: 8 }} key={index}>
+													<SmallCategroieIcons
+														key={categoryNumber}
+														cats={categoryNumber}
+													/>
+												</View>
+											);
+									  })
+									: <SkeletonBlock style={styles.iconSkeleton} />}
+							</View>
+							<View style={styles.containerIcons}>
+								{showFavoriteActions ? (
+									<>
+										{ENABLE_RESPONSE_PLAYLIST_ACTIONS ? (
+											<Pressable onPress={() => setModalVisible(true)}>
+												<Image
+													source={Plus}
+													style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
+													resizeMode='contain'
+												/>
+											</Pressable>
+										) : null}
+										<Pressable onPress={() => handleAddFavorite()}>
+											<Image
+												source={filterIfFavoriteExists ? HeartFull : Heart}
+												style={styles.catIcons as ImageStyle}
+												resizeMode='contain'
 											/>
-										</View>
-									);
-							  })
-							: <SkeletonBlock style={styles.iconSkeleton} />}
-					</View>
-					<View style={styles.containerIcons}>
-						{showFavoriteActions ? (
-							<>
-								{ENABLE_RESPONSE_PLAYLIST_ACTIONS ? (
-									<Pressable onPress={() => setModalVisible(true)}>
-										<Image
-											source={Plus}
-											style={[styles.catIcons, { marginRight: 20 }] as ImageStyle}
-											resizeMode='contain'
-										/>
-									</Pressable>
-								) : null}
-								<Pressable onPress={() => handleAddFavorite()}>
-									<Image
-										source={filterIfFavoriteExists ? HeartFull : Heart}
-										style={styles.catIcons as ImageStyle}
-										resizeMode='contain'
-									/>
-								</Pressable>
-							</>
-						) : (
-							<>
-								<SkeletonBlock style={[styles.iconSkeleton, { marginRight: 20 }]} />
-								<SkeletonBlock style={styles.iconSkeleton} />
-							</>
-						)}
-					</View>
-				</View>
+										</Pressable>
+									</>
+								) : (
+									<>
+										<SkeletonBlock style={[styles.iconSkeleton, { marginRight: 20 }]} />
+										<SkeletonBlock style={styles.iconSkeleton} />
+									</>
+								)}
+							</View>
+						</View>
 
-				<View style={styles.answerContainer}>
-					<View style={{ paddingBottom: 20 }}>
-						<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
-					</View>
-					<Text style={{ fontSize: 16, fontWeight: "bold", lineHeight: 22 }}>
-						{questionAnswerText}
-					</Text>
-				</View>
-			</ScrollView>
+					<View style={styles.answerContainer}>
+						<View style={{ paddingBottom: 20 }}>
+							<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
+						</View>
+						<Text style={{ fontSize: 16, fontWeight: "bold", lineHeight: 22 }}>
+							{questionAnswerText}
+						</Text>
+						</View>
+					</ScrollView>
 
-				{ENABLE_RESPONSE_PLAYLIST_ACTIONS && modalVisible && resolvedQuestionId ? (
-					<AddToPlaylistModal
-						visible={modalVisible}
-						onClose={() => setModalVisible(false)}
-						elementId={resolvedQuestionId}
-						type={"question"}
-					/>
-				) : null}
-		</>
+					{ENABLE_RESPONSE_PLAYLIST_ACTIONS && modalVisible && resolvedQuestionId ? (
+						<AddToPlaylistModal
+							visible={modalVisible}
+							onClose={() => setModalVisible(false)}
+							elementId={resolvedQuestionId}
+							type={"question"}
+						/>
+					) : null}
+				</>
+			)}
 		</QuestionDetailsErrorBoundary>
 	);
 }
@@ -535,6 +604,24 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		paddingHorizontal: 30,
+	},
+	ultraMinimalWrapper: {
+		flex: 1,
+		paddingHorizontal: 24,
+		paddingVertical: 48,
+		backgroundColor: colorWhite,
+	},
+	ultraMinimalText: {
+		fontSize: 24,
+		fontWeight: "700",
+		color: colorBlack,
+		marginBottom: 18,
+	},
+	ultraMinimalMeta: {
+		fontSize: 16,
+		lineHeight: 24,
+		color: colorBlack,
+		marginBottom: 10,
 	},
 	questionTitleSkeleton: {
 		height: 24,
