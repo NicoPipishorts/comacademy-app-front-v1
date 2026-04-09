@@ -2,11 +2,10 @@
 import {
 	colorBlack,
 	colorWhite,
-	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useSessionAction } from "@/api/game/useNewSession";
@@ -40,6 +39,8 @@ export default function LeJeu() {
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+	const segmentTranslateX = useRef(new Animated.Value(0)).current;
+	const segmentWidth = 92;
 
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
@@ -205,6 +206,15 @@ export default function LeJeu() {
 		setIsEnabled((p) => !p);
 	}, []);
 
+	useEffect(() => {
+		Animated.spring(segmentTranslateX, {
+			toValue: isEnabled ? 1 : 0,
+			useNativeDriver: true,
+			bounciness: 6,
+			speed: 18,
+		}).start();
+	}, [isEnabled, segmentTranslateX]);
+
 	const handlePressPlay = useCallback(() => {
 		// Check if user has reached level 1 (150+ questions)
 		const currentLevel = Math.floor(totalAnsweredQuestions / 150);
@@ -223,16 +233,55 @@ export default function LeJeu() {
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.containerHeader}>
 				<Text style={styles.headerMainText}>Le jeu</Text>
-				<View style={styles.containerSwitch}>
-					<Text style={styles.textJouer}>Jouer</Text>
-					<Switch
-						trackColor={{ false: colorBlack, true: colorYellow }}
-						ios_backgroundColor={colorBlack}
-						thumbColor={colorWhite}
-						onValueChange={toggleSwitch}
-						value={isEnabled}
+				<View style={styles.segmentedControl}>
+					<Animated.View
+						pointerEvents='none'
+						style={[
+							styles.segmentIndicator,
+							{
+								transform: [
+									{
+										translateX: segmentTranslateX.interpolate({
+											inputRange: [0, 1],
+											outputRange: [0, segmentWidth],
+										}),
+									},
+								],
+							},
+						]}
 					/>
-					<Text style={styles.textReponses}>Réponses</Text>
+					<Pressable
+						onPress={() => {
+							if (isEnabled) {
+								toggleSwitch();
+							}
+						}}
+						style={[
+							styles.segmentButton,
+						]}>
+						<Text
+							style={[
+								styles.segmentText,
+								!isEnabled && styles.segmentTextActive,
+							]}>
+							Jouer
+						</Text>
+					</Pressable>
+					<Pressable
+						onPress={() => {
+							if (!isEnabled) {
+								toggleSwitch();
+							}
+						}}
+						style={styles.segmentButton}>
+						<Text
+							style={[
+								styles.segmentText,
+								isEnabled && styles.segmentTextActive,
+							]}>
+							Réponses
+						</Text>
+					</Pressable>
 				</View>
 			</View>
 
@@ -303,17 +352,39 @@ const styles = StyleSheet.create({
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
 	},
-	containerSwitch: {
+	segmentedControl: {
+		position: "relative",
 		flexDirection: "row",
 		alignItems: "center",
+		padding: 3,
+		borderRadius: 999,
+		backgroundColor: "#E9E9E9",
 	},
-	textJouer: {
-		paddingRight: 8,
-		fontWeight: "bold",
+	segmentIndicator: {
+		position: "absolute",
+		left: 3,
+		top: 3,
+		bottom: 3,
+		width: 92,
+		borderRadius: 999,
+		backgroundColor: colorBlack,
 	},
-	textReponses: {
-		paddingLeft: 8,
+	segmentButton: {
+		minWidth: 92,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 999,
+		alignItems: "center",
+		justifyContent: "center",
+		zIndex: 1,
+	},
+	segmentText: {
 		fontWeight: "bold",
+		fontSize: 13,
+		color: "rgba(0,0,0,0.65)",
+	},
+	segmentTextActive: {
+		color: colorWhite,
 	},
 	categoryWrapper: {
 		flex: 1,
