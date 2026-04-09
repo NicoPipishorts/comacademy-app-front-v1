@@ -6,10 +6,10 @@ import { colorBlack, colorWhite } from "@/constants/colors";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
-import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
+import useResponseDetailsByDocumentId from "@/hooks/useResponseDetailsByDocumentId";
 import { logDevice } from "@/helpers/logDevice";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -31,6 +31,7 @@ import AddToPlaylistModal from "../modal/AddToPlaylistModal";
 import QuestionDetailsErrorBoundary from "./QuestionDetailsErrorBoundary";
 
 interface Props {
+	answerDocumentId?: string;
 	questionDocumentId?: string;
 	questionId?: number | null;
 	refetch: string;
@@ -96,6 +97,7 @@ const normalizeCategoryValues = (value: unknown): number[] => {
 };
 
 export default function QuestionDetails({
+	answerDocumentId,
 	questionDocumentId,
 	questionId,
 	postGame,
@@ -105,11 +107,18 @@ export default function QuestionDetails({
 	const router = useRouter();
 	const [modalVisible, setModalVisible] = useState(false);
 
+	const useResponseDetails =
+		typeof answerDocumentId === "string" && answerDocumentId.length > 0;
+	const {
+		data: responseDetailsData,
+		error: responseDetailsError,
+		isError: isResponseDetailsError,
+		isLoading: isResponseDetailsLoading,
+	} = useResponseDetailsByDocumentId(answerDocumentId);
 	const { data, error, isError, isLoading } = useQuestionById(
-		questionDocumentId,
-		questionId
+		useResponseDetails ? undefined : questionDocumentId,
+		useResponseDetails ? null : questionId
 	);
-	const { data: category } = useCategories();
 	const { data: userFavoriteQuestions, isFetched: userFavoriteIsFetched } =
 		useGetFavoriteQuestions(auth?.user.id);
 
@@ -143,6 +152,7 @@ export default function QuestionDetails({
 	};
 
 	const mutation = useAddFavoriteQuestionMutation(handleSuccess);
+	const responseQuestion = responseDetailsData?.data?.question;
 	const questionEntity = data?.data as
 		| { id?: number; attributes?: QuestionViewModel }
 		| QuestionViewModel
@@ -152,41 +162,60 @@ export default function QuestionDetails({
 			? questionEntity.attributes
 			: questionEntity
 	) as QuestionViewModel | undefined;
-	const resolvedQuestionId = questionEntity?.id;
-	const questionTitle = normalizeTextValue(questionAttributes?.QUESTION);
-	const questionAnswerText = normalizeTextValue(questionAttributes?.REPONSE);
-	const categoryValues = normalizeCategoryValues(questionAttributes?.CATEGORIE);
+	const resolvedQuestionId = responseQuestion?.id ?? questionEntity?.id;
+	const questionTitle = normalizeTextValue(
+		responseQuestion?.title ?? questionAttributes?.QUESTION
+	);
+	const questionAnswerText = normalizeTextValue(
+		responseQuestion?.answerText ?? questionAttributes?.REPONSE
+	);
+	const categoryValues = normalizeCategoryValues(
+		responseQuestion?.categories ?? questionAttributes?.CATEGORIE
+	);
+	const correctAnswerValue =
+		typeof responseQuestion?.correctAnswer === "boolean"
+			? responseQuestion.correctAnswer
+			: Boolean(questionAttributes?.ANSWER);
+	const activeError = useResponseDetails ? responseDetailsError : error;
+	const activeIsError = useResponseDetails ? isResponseDetailsError : isError;
+	const activeIsLoading = useResponseDetails ? isResponseDetailsLoading : isLoading;
+	const activeHasData = useResponseDetails
+		? Boolean(responseDetailsData?.data?.question)
+		: Boolean(data);
 	const showCategoryIcons = Boolean(
-		ENABLE_RESPONSE_CATEGORY_ICONS && category && categoryValues.length > 0
+		ENABLE_RESPONSE_CATEGORY_ICONS && categoryValues.length > 0
 	);
 	const showFavoriteActions = userFavoriteIsFetched;
 
 	useEffect(() => {
 		logDevice("[QuestionDetails] route payload", {
+			answerDocumentId: answerDocumentId ?? null,
 			questionDocumentId: questionDocumentId ?? null,
 			questionId: questionId ?? null,
 			postGame: Boolean(postGame),
 		});
-	}, [postGame, questionDocumentId, questionId]);
+	}, [answerDocumentId, postGame, questionDocumentId, questionId]);
 
 	useEffect(() => {
 		logDevice("[QuestionDetails] query state", {
-			isLoading,
-			isError,
-			hasData: Boolean(data),
+			isLoading: activeIsLoading,
+			isError: activeIsError,
+			hasData: activeHasData,
+			source: useResponseDetails ? "response-details" : "question",
 			resolvedQuestionId: resolvedQuestionId ?? null,
 			titleLength: questionTitle.length,
 			answerLength: questionAnswerText.length,
 			categoryValues,
 		});
 	}, [
+		activeHasData,
+		activeIsError,
+		activeIsLoading,
 		categoryValues,
-		data,
-		isError,
-		isLoading,
 		questionAnswerText.length,
 		questionTitle.length,
 		resolvedQuestionId,
+		useResponseDetails,
 	]);
 
 	useEffect(() => {
@@ -253,8 +282,8 @@ export default function QuestionDetails({
 		resolvedQuestionId,
 	]);
 
-	if (isError || !data || !questionAttributes || !questionTitle.trim()) {
-		if (isLoading) {
+	if (activeIsError || !activeHasData || !questionTitle.trim()) {
+		if (activeIsLoading) {
 			return (
 				<>
 					<View style={styles.topHandleWrapper}>
@@ -298,7 +327,7 @@ export default function QuestionDetails({
 			);
 		}
 
-		const httpError = error as HttpError | null;
+		const httpError = activeError as HttpError | null;
 		const isNotFound = httpError?.status === 404;
 
 		return (
@@ -344,7 +373,7 @@ export default function QuestionDetails({
 
 				<View style={[styles.headerContainer]}>
 					<Text style={[styles.headerContainerText]}>
-						{questionAttributes.ANSWER ? "Vrai" : "Faux"}
+						{correctAnswerValue ? "Vrai" : "Faux"}
 					</Text>
 				</View>
 

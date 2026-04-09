@@ -43,7 +43,7 @@ const tabItems = [
 	},
 	{
 		routeName: "dashboard",
-		label: "My Academy",
+		label: "Moi",
 		icon: navProfileIcon,
 		iconWidth: 22,
 		iconHeight: 21,

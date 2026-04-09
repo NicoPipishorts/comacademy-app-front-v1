@@ -19,6 +19,7 @@ export interface SessionResultsPayload {
 
 export interface SessionResultsAllquestions {
 	id: number;
+	answerDocumentId?: string | null;
 	question: string;
 	questionId?: number;
 	questionDocumentId?: string | null;

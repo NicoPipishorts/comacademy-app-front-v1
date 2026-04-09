@@ -13,6 +13,7 @@ export interface AnswerData {
 }
 
 export interface AnswerAttributes {
+	answerDocumentId?: string | null;
 	userAnswer: boolean;
 	questionAnswer: boolean;
 	questionId: number;

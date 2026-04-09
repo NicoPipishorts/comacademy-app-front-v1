@@ -61,6 +61,7 @@ export default function AnswersPostGame() {
 								<AnswersCard
 									key={stableKey}
 									id={detailQuestionId}
+									answerDocumentId={answer.answerDocumentId}
 									questionDocumentId={answer.questionDocumentId}
 									data={answer}
 									postGame={true}

@@ -8,7 +8,7 @@ const DashboardLayout = () => {
 				name='index'
 				options={{
 					headerShown: false,
-					headerTitle: "My Academy",
+					headerTitle: "Moi",
 				}}
 			/>
 		</Stack>

@@ -96,7 +96,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='dashboard'
 					options={{
-						tabBarLabel: "My Academy",
+						tabBarLabel: "Moi",
 						headerShown: false,
 					}}
 				/>

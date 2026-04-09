@@ -100,6 +100,7 @@ export default function Answers() {
 					<AnswersCard
 						key={answer.id}
 						id={answer.attributes.questionId}
+						answerDocumentId={answer.attributes.answerDocumentId}
 						questionDocumentId={answer.attributes.questionDocumentId}
 						data={answer.attributes}
 					/>
