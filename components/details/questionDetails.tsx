@@ -67,6 +67,7 @@ const ENABLE_RESPONSE_CATEGORY_ICONS =
 	process.env.EXPO_PUBLIC_ENABLE_RESPONSE_CATEGORY_ICONS !== "0";
 const ENABLE_RESPONSE_SAFE_MODE = false;
 const ENABLE_RESPONSE_ULTRA_MINIMAL_MODE = false;
+const LOCAL_RESPONSE_DEBUG_DELAY_MS = __DEV__ ? 3000 : 0;
 
 const normalizeTextValue = (value: unknown): string => {
 	if (typeof value === "string") {
@@ -171,6 +172,9 @@ export default function QuestionDetails({
 		useState<boolean>(false);
 	const [idArray, setIdArray] = useState<number[]>([]);
 	const [dataId, setDataId] = useState<number | null>(null);
+	const [localDelayComplete, setLocalDelayComplete] = useState(
+		LOCAL_RESPONSE_DEBUG_DELAY_MS === 0,
+	);
 
 	const { showTabBar, hideTabBar } = useTabBarVisibility();
 
@@ -234,6 +238,21 @@ export default function QuestionDetails({
 	);
 	const showFavoriteActions =
 		!ENABLE_RESPONSE_SAFE_MODE && userFavoriteIsFetched;
+	const shouldShowLoadingState = activeIsLoading || !localDelayComplete;
+
+	useEffect(() => {
+		if (LOCAL_RESPONSE_DEBUG_DELAY_MS === 0) {
+			setLocalDelayComplete(true);
+			return;
+		}
+
+		setLocalDelayComplete(false);
+		const timer = setTimeout(() => {
+			setLocalDelayComplete(true);
+		}, LOCAL_RESPONSE_DEBUG_DELAY_MS);
+
+		return () => clearTimeout(timer);
+	}, [answerDocumentId, questionDocumentId, questionId]);
 
 	useEffect(() => {
 		logDevice("[QuestionDetails] route payload", {
@@ -331,50 +350,56 @@ export default function QuestionDetails({
 		resolvedQuestionId,
 	]);
 
-	if (activeIsError || !activeHasData || !questionTitle.trim()) {
-		if (activeIsLoading) {
+	if (shouldShowLoadingState) {
 			return (
 				<>
 					<View style={styles.topHandleWrapper}>
 						<ModalGestureLine />
-					</View>
-					<View style={styles.backButtonWrapper}>
-						<ReturnButton />
+				</View>
+				<View style={styles.backButtonWrapper}>
+					<ReturnButton />
 					</View>
 					<ScrollView contentContainerStyle={styles.wrapper}>
 						<View style={styles.contentContainer}>
-							<SkeletonBlock style={styles.questionTitleSkeleton} />
+							<SkeletonBlock style={styles.questionTitleSkeletonWide} />
+							<SkeletonBlock style={styles.questionTitleSkeletonWide} />
+							<SkeletonBlock style={styles.questionTitleSkeletonMedium} />
 							<SkeletonBlock style={styles.questionTitleSkeletonShort} />
 						</View>
 
-						<View style={styles.headerContainer}>
+						<View style={styles.headerContainerSkeleton}>
 							<SkeletonBlock style={styles.answerLabelSkeleton} />
 						</View>
 
-						<View style={styles.wrapperIcons}>
-							<View style={styles.containerIcons}>
-								<SkeletonBlock style={styles.iconSkeleton} />
-								<SkeletonBlock style={styles.iconSkeleton} />
-							</View>
-							<View style={styles.containerIcons}>
-								<SkeletonBlock style={styles.iconSkeleton} />
-								<SkeletonBlock style={styles.iconSkeleton} />
-							</View>
+					<View style={styles.wrapperIcons}>
+						<View style={styles.containerIcons}>
+							<SkeletonBlock style={styles.iconSkeletonWarm} />
+							<SkeletonBlock style={styles.iconSkeletonCool} />
+							<SkeletonBlock style={styles.iconSkeletonPink} />
 						</View>
+						<View style={styles.containerIcons}>
+							<SkeletonBlock style={styles.iconSkeletonGhost} />
+						</View>
+					</View>
 
-						<View style={styles.answerContainer}>
-							<View style={{ paddingBottom: 20 }}>
-								<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
-							</View>
-							<SkeletonBlock style={styles.answerLineSkeleton} />
-							<SkeletonBlock style={styles.answerLineSkeleton} />
-							<SkeletonBlock style={styles.answerLineSkeletonShort} />
-							<SkeletonBlock style={styles.answerLineSkeletonMedium} />
+					<View style={styles.answerContainer}>
+						<View style={styles.answerTitleRow}>
+							<Text style={{ fontSize: 24, fontWeight: "bold" }}>Réponse</Text>
 						</View>
-					</ScrollView>
-				</>
-			);
-		}
+						<SkeletonBlock style={styles.answerLineSkeletonWide} />
+						<SkeletonBlock style={styles.answerLineSkeletonWide} />
+						<SkeletonBlock style={styles.answerLineSkeletonWide} />
+						<SkeletonBlock style={styles.answerLineSkeletonWide} />
+						<SkeletonBlock style={styles.answerLineSkeletonWide} />
+						<SkeletonBlock style={styles.answerLineSkeletonMedium} />
+						<SkeletonBlock style={styles.answerLineSkeletonShort} />
+					</View>
+				</ScrollView>
+			</>
+		);
+	}
+
+	if (activeIsError || !activeHasData || !questionTitle.trim()) {
 
 		const httpError = activeError as HttpError | null;
 		const isNotFound = httpError?.status === 404;
@@ -516,6 +541,7 @@ export default function QuestionDetails({
 const styles = StyleSheet.create({
 	wrapper: {
 		alignItems: "center",
+		paddingBottom: 40,
 	},
 	topHandleWrapper: {
 		display: "flex",
@@ -580,6 +606,14 @@ const styles = StyleSheet.create({
 		backgroundColor: colorBlack,
 		borderRadius: 20,
 	},
+	headerContainerSkeleton: {
+		marginVertical: 30,
+		alignItems: "center",
+		paddingVertical: 10,
+		paddingHorizontal: 40,
+		backgroundColor: colorBlack,
+		borderRadius: 20,
+	},
 	headerContainerText: {
 		fontSize: 50,
 		fontWeight: "bold",
@@ -603,7 +637,9 @@ const styles = StyleSheet.create({
 		marginRight: 5,
 	},
 	contentContainer: {
-		paddingHorizontal: 30,
+		width: "100%",
+		paddingHorizontal: 24,
+		paddingTop: 12,
 	},
 	ultraMinimalWrapper: {
 		flex: 1,
@@ -628,14 +664,24 @@ const styles = StyleSheet.create({
 		width: "100%",
 		marginBottom: 12,
 	},
+	questionTitleSkeletonWide: {
+		height: 24,
+		width: "96%",
+		marginBottom: 12,
+	},
 	questionTitleSkeletonShort: {
 		height: 24,
+		width: "64%",
+	},
+	questionTitleSkeletonMedium: {
+		height: 24,
 		width: "78%",
+		marginBottom: 12,
 	},
 	answerLabelSkeleton: {
-		width: 120,
-		height: 40,
-		borderRadius: 12,
+		width: 114,
+		height: 30,
+		borderRadius: 9,
 		backgroundColor: "rgba(255,255,255,0.2)",
 	},
 	iconSkeleton: {
@@ -644,25 +690,62 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		marginRight: 12,
 	},
+	iconSkeletonWarm: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		marginRight: 12,
+		backgroundColor: "rgba(230,129,53,0.35)",
+	},
+	iconSkeletonCool: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		marginRight: 12,
+		backgroundColor: "rgba(66,123,201,0.35)",
+	},
+	iconSkeletonPink: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: "rgba(204,57,140,0.35)",
+	},
+	iconSkeletonGhost: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: "#E7E7E7",
+	},
 	answerLineSkeleton: {
+		height: 18,
+		width: "96%",
+		marginBottom: 12,
+	},
+	answerLineSkeletonWide: {
 		height: 18,
 		width: "100%",
 		marginBottom: 12,
 	},
 	answerLineSkeletonShort: {
 		height: 18,
-		width: "62%",
+		width: "58%",
 		marginBottom: 12,
 	},
 	answerLineSkeletonMedium: {
 		height: 18,
-		width: "84%",
+		width: "82%",
+		marginBottom: 12,
 	},
 	answerContainer: {
-		margin: 30,
+		width: "88%",
 		marginTop: 0,
-		padding: 20,
+		paddingHorizontal: 16,
+		paddingTop: 14,
+		paddingBottom: 18,
 		borderRadius: 15,
 		backgroundColor: colorWhite,
+	},
+	answerTitleRow: {
+		paddingBottom: 18,
 	},
 });
