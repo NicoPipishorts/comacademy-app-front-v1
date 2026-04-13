@@ -1,4 +1,9 @@
 // src/api/game/useInsertAnswer.ts
+import {
+	invalidateGameQuestions,
+	invalidateGameResults,
+} from "@/api/game/invalidateGameQueries";
+import { QK } from "@/helpers/api/queryKeys";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +15,7 @@ type Vars = {
 	questionId: number;
 	categorie: number;
 	answer: boolean;
+	categoryFilter?: number | null;
 };
 
 export function useInsertAnswer() {
@@ -52,10 +58,13 @@ export function useInsertAnswer() {
 		},
 
 		onSettled: (_res, _err, vars) => {
-			// Reconcile with server; safe because we didn't mutate dataGame mid-swipe
-			queryClient.invalidateQueries({
-				queryKey: ["game-session", vars.gameId],
-			});
+			void invalidateGameQuestions(queryClient, vars.userId);
+			if (typeof vars.categoryFilter === "number") {
+				void queryClient.invalidateQueries({
+					queryKey: QK.gameQuestions(vars.userId, vars.categoryFilter),
+				});
+			}
+			void invalidateGameResults(queryClient, vars.userId, vars.gameId);
 		},
 	});
 }

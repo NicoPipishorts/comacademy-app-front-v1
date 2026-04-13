@@ -8,13 +8,14 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useSessionAction } from "@/api/game/useNewSession";
+import { useNewSession } from "@/api/game/useNewSession";
 import { UseAuth } from "@/auth/AuthContext";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { getGameLevel } from "@/helpers/gameProgress";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
@@ -112,7 +113,7 @@ export default function LeJeu() {
 	);
 
 	// session‑restart mutation
-	const { mutate: newSession } = useSessionAction(
+	const { mutate: newSession } = useNewSession(
 		(payload) => {
 			setGameStatus(payload.status);
 			setSessionsId(payload.sessionId);
@@ -138,7 +139,7 @@ export default function LeJeu() {
 		}
 
 		if (filterByCat === null && token && auth?.user.id) {
-			newSession({ userId: auth?.user.id, token, action: "new" });
+			newSession({ userId: auth?.user.id, token });
 		}
 	}, [filterByCat, token, loadingToken, newSession, auth?.user.id]);
 
@@ -216,8 +217,7 @@ export default function LeJeu() {
 	}, [isEnabled, segmentTranslateX]);
 
 	const handlePressPlay = useCallback(() => {
-		// Check if user has reached level 1 (150+ questions)
-		const currentLevel = Math.floor(totalAnsweredQuestions / 150);
+		const currentLevel = getGameLevel(totalAnsweredQuestions);
 
 		// Only block if user is FREE AND has reached level 1
 		if (isFreeUser && currentLevel >= 1) {

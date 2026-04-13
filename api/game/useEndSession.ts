@@ -1,3 +1,7 @@
+import {
+	invalidateGameQuestions,
+	invalidateGameResults,
+} from "@/api/game/invalidateGameQueries";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import { useGameContext } from "@/providers/gameDataContext";
 import { useMutation } from "@tanstack/react-query";
@@ -19,7 +23,7 @@ interface EndResponse {
 
 export const useEndSession = (
 	onSuccess: (status: string | null) => void,
-	onError: (err: AxiosError) => void
+	onError: (err: AxiosError) => void,
 ) => {
 	const {
 		setDataGame,
@@ -38,7 +42,7 @@ export const useEndSession = (
 			);
 			return response.data;
 		},
-		onSuccess: (resp) => {
+		onSuccess: (resp, vars) => {
 			onSuccess(resp.data.status);
 			if (resp.data.status === "finished") {
 				setDataGame([]);
@@ -47,7 +51,8 @@ export const useEndSession = (
 				setAnsweredCount(0);
 				setGameStatus("finished");
 			}
-			queryClient.refetchQueries({ queryKey: ["GameQuestions"] });
+			void invalidateGameQuestions(queryClient, vars.userId);
+			void invalidateGameResults(queryClient, vars.userId, resp.data.sessionId);
 		},
 		onError,
 	});

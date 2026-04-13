@@ -1,18 +1,15 @@
-// File: src/hooks/useSessionAction.ts
+import { invalidateGameQuestions } from "@/api/game/invalidateGameQueries";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import { QuestionData } from "@/types/userGameSessionStatus";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-export type SessionAction = "new" | "end" | "leaderBoard";
-
-export interface SessionActionPayload {
+export interface NewSessionPayload {
 	userId: number;
 	token: string;
-	action: SessionAction;
 }
 
-export interface SessionActionResponse {
+export interface NewSessionResponse {
 	data: {
 		sessionId: number;
 		isNewSession: boolean;
@@ -23,26 +20,23 @@ export interface SessionActionResponse {
 	};
 }
 
-export const useSessionAction = (
-	onSuccess: (
-		payload: SessionActionResponse["data"],
-		action: SessionAction
-	) => void,
-	onError: (err: AxiosError) => void
+export const useNewSession = (
+	onSuccess: (payload: NewSessionResponse["data"]) => void,
+	onError: (err: AxiosError) => void,
 ) => {
-	return useMutation<SessionActionResponse, AxiosError, SessionActionPayload>({
-		mutationFn: async ({ userId, token, action }) => {
+	return useMutation<NewSessionResponse, AxiosError, NewSessionPayload>({
+		mutationFn: async ({ userId, token }) => {
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/new`;
-			const response: AxiosResponse<SessionActionResponse> = await axios.post(
+			const response: AxiosResponse<NewSessionResponse> = await axios.post(
 				url,
 				{},
-				{ headers: { Authorization: `Bearer ${token}` } }
+				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 			return response.data;
 		},
-		onSuccess: (resp, vars) => {
-			queryClient.refetchQueries({ queryKey: ["GameQuestions"] });
-			onSuccess(resp.data, vars.action);
+		onSuccess: async (resp, vars) => {
+			await invalidateGameQuestions(queryClient, vars.userId);
+			onSuccess(resp.data);
 		},
 		onError,
 	});

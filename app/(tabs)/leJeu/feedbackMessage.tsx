@@ -44,7 +44,7 @@ export default function FeedbackMessage({
 				timerRef.current = null;
 			}
 		};
-	}, [answer, slideAnim, onHide]); // Added 'answer' to dependencies
+	}, [answer, slideAnim, onHide]);
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		transform: [{ translateY: slideAnim.value }],

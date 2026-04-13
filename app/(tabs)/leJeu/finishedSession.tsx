@@ -8,14 +8,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import Loader from "@/components/experience/loader";
+import { useEndSession } from "@/api/game/useEndSession";
+import { useNewSession } from "@/api/game/useNewSession";
 import {
 	useGetEndOfSession,
 	useGetEndOfSessionResults,
 } from "@/hooks/useGetEndOfSession";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useGameContext } from "@/providers/gameDataContext";
-
-import { useSessionAction } from "@/api/game/useNewSession";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import {
 	FontSize14,
@@ -24,6 +24,7 @@ import {
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { getRoundProgress } from "@/helpers/gameProgress";
 import useAuthSession from "@/hooks/useAuthSession";
 
 export default function FinishedSession() {
@@ -55,25 +56,23 @@ export default function FinishedSession() {
 		originalSessionIdRef.current
 	);
 
-	const { mutate: sessionAction } = useSessionAction(
-		(payload, action) => {
+	const { mutate: newSession } = useNewSession(
+		(payload) => {
 			setDataGame(payload.questionsPool);
 			setSessionsId(payload.sessionId);
 			setQuestionsLeft(payload.questionsLeft);
 			setAnsweredCount(payload.answeredCount);
 			setGameStatus(payload.status);
-
-			if (action === "end") {
-				showTabBar();
-				router.replace("/leJeu");
-			} else if (action === "leaderBoard") {
-				showTabBar();
-				router.replace("/user/leaderBoard");
-			} else {
-				router.replace("/leJeu/jeu");
-			}
+			router.replace("/leJeu/jeu");
 		},
-		(err) => console.error("Session action failed:", err)
+		(err) => console.error("New session failed:", err),
+	);
+	const { mutate: endSession } = useEndSession(
+		() => {
+			showTabBar();
+			router.replace("/leJeu");
+		},
+		(err) => console.error("End session failed:", err),
 	);
 
 	if (!gameComments || !sessionResults || !sessionId) {
@@ -81,10 +80,8 @@ export default function FinishedSession() {
 	}
 
 	const roundedScore = Math.round(sessionResults.data.percentageCorrect);
-	const roundsPlayed =
-		Math.round(gameComments.data.totalAnsweredQuestions / 15) % 10;
-	const currentNiveau = Math.floor(
-		gameComments.data.totalAnsweredQuestions / 15 / 10
+	const { roundsPlayedInLevel, level } = getRoundProgress(
+		gameComments.data.totalAnsweredQuestions,
 	);
 
 	return (
@@ -97,8 +94,8 @@ export default function FinishedSession() {
 
 			<View style={{ paddingTop: 10, flexDirection: "row" }}>
 				<View style={styles.levelRoundContainer}>
-					<Text style={styles.levelText}>Niveau: {currentNiveau}</Text>
-					<Text style={styles.levelText}>Round: {roundsPlayed}/10</Text>
+					<Text style={styles.levelText}>Niveau: {level}</Text>
+					<Text style={styles.levelText}>Round: {roundsPlayedInLevel}/10</Text>
 				</View>
 			</View>
 
@@ -152,13 +149,10 @@ export default function FinishedSession() {
 
 				<TouchableOpacity
 					style={styles.buttonResults}
-					onPress={() =>
-						sessionAction({
-							userId: auth?.user.id,
-							token,
-							action: "leaderBoard",
-						})
-					}>
+					onPress={() => {
+						showTabBar();
+						router.replace("/user/leaderBoard");
+					}}>
 					<Foundation
 						name='results-demographics'
 						size={24}
@@ -169,17 +163,13 @@ export default function FinishedSession() {
 
 			<View style={[styles.containerBackButton, { bottom: 60 }]}>
 				<TouchableOpacity
-					onPress={() =>
-						sessionAction({ userId: auth?.user.id, token, action: "end" })
-					}
+					onPress={() => endSession({ userId: auth?.user.id, token })}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity
-					onPress={() =>
-						sessionAction({ userId: auth?.user.id, token, action: "new" })
-					}
+					onPress={() => newSession({ userId: auth?.user.id, token })}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Suivant</Text>
 					<Ionicons name='arrow-forward' size={24} color={colorBlack} />

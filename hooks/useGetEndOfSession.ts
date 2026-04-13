@@ -1,3 +1,4 @@
+import { QK } from "@/helpers/api/queryKeys";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useQuery } from "@tanstack/react-query";
 
@@ -88,7 +89,7 @@ const useGetEndOfSession = (userId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<EndOfGameSessionPayload>({
-		queryKey: ["EndOfSessionsScore", userId],
+		queryKey: QK.endOfSession(userId),
 		queryFn: () => fetchEndOfSessionPayload(token!, userId),
 		enabled: !!token && !!userId,
 	});
@@ -108,7 +109,7 @@ const useGetEndOfSessionResults = (gameId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<SessionResultsPayload>({
-		queryKey: ["EndOfSessionsScore", gameId],
+		queryKey: QK.endOfSessionResults(gameId),
 		queryFn: () => fetchEndOfSessionResults(token!, gameId),
 		enabled: !!token && !!gameId,
 	});

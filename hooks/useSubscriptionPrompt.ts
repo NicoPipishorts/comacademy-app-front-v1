@@ -1,3 +1,4 @@
+import { getGameLevel } from "@/helpers/gameProgress";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 
@@ -23,8 +24,7 @@ export const useSubscriptionPrompt = (
 			// Don't check if we already have
 			if (hasChecked) return;
 
-			// Calculate current level (same logic as in niveaux.tsx)
-			const currentLevel = Math.floor(totalAnsweredQuestions / 150);
+			const currentLevel = getGameLevel(totalAnsweredQuestions);
 
 			// Only show if user is at level 1 or higher
 			if (currentLevel >= 1) {

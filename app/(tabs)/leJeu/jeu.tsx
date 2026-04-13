@@ -1,4 +1,5 @@
 // File: src/components/leJeu/Jeu.tsx
+import { invalidateGameQuestions } from "@/api/game/invalidateGameQueries";
 import { useNavigation } from "expo-router";
 import React, {
 	useCallback,
@@ -35,7 +36,6 @@ import { QuestionData } from "@/types/userGameSessionStatus";
 import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize20 } from "@/constants/fontsizes";
-import { QK } from "@/helpers/api/queryKeys";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 
@@ -58,6 +58,7 @@ const SwipeableCard = ({
 	onSwipe,
 }: SwipeableCardProps) => {
 	const translateX = useRef(new Animated.Value(0)).current;
+	const isSwipingRef = useRef(false);
 	const rotate = useMemo(
 		() =>
 			translateX.interpolate({
@@ -89,6 +90,8 @@ const SwipeableCard = ({
 
 	const triggerSwipe = useCallback(
 		(direction: "left" | "right") => {
+			if (!isTopCard || isSwipingRef.current) return;
+			isSwipingRef.current = true;
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,
@@ -98,7 +101,7 @@ const SwipeableCard = ({
 				onSwipe(direction === "right");
 			});
 		},
-		[onSwipe, translateX]
+		[isTopCard, onSwipe, translateX]
 	);
 
 	const panResponder = useMemo(
@@ -136,6 +139,7 @@ const SwipeableCard = ({
 	const translateY = useMemo(() => effectivePosition * 22, [effectivePosition]);
 
 	useEffect(() => {
+		isSwipingRef.current = false;
 		if (!isTopCard) {
 			translateX.setValue(0);
 		}
@@ -213,6 +217,8 @@ export default function Jeu() {
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [currentIndex, setCurrentIndex] = useState(0);
+	const [isCompletingSession, setIsCompletingSession] = useState(false);
+	const submittedAnswerKeysRef = useRef<Set<string>>(new Set());
 
 	const { dataGame, sessionId, gameStatus } = useGameContext();
 	const { data: catData } = useCategories();
@@ -231,6 +237,8 @@ export default function Jeu() {
 		} else {
 			setCurrentIndex(0);
 		}
+		setIsCompletingSession(false);
+		submittedAnswerKeysRef.current.clear();
 	}, [dataGame]);
 
 	const cardsToRender = useMemo(() => {
@@ -242,6 +250,16 @@ export default function Jeu() {
 		return dataGame.slice(startIndex, endIndex);
 	}, [dataGame, currentIndex]);
 
+	const showFeedback = useCallback((answer: Answer) => {
+		setFeedbackAnswer(answer);
+		setFeedbackVisible(true);
+	}, []);
+
+	const hideFeedback = useCallback(() => {
+		setFeedbackVisible(false);
+		setFeedbackAnswer(null);
+	}, []);
+
 	if (dataGame === null || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
@@ -252,11 +270,7 @@ export default function Jeu() {
 		: 0;
 
 	const handlePress = () => {
-		if (sessionId && auth?.user.id)
-			queryClient.invalidateQueries({ queryKey: QK.gameSession(sessionId) });
-		queryClient.invalidateQueries({
-			queryKey: QK.gameQuestions(auth?.user.id, null),
-		});
+		void invalidateGameQuestions(queryClient, auth?.user.id);
 
 		showTabBar();
 		setTimeout(() => navigation.navigate("index"), 100);
@@ -283,39 +297,51 @@ export default function Jeu() {
 		);
 	}
 
-	const showFeedback = (answer: Answer) => {
-		setFeedbackAnswer(answer);
-		setFeedbackVisible(true);
-	};
-
-	const hideFeedback = () => {
-		setFeedbackVisible(false);
-		setFeedbackAnswer(null);
-	};
-
 	const onSwipe = (isRight: boolean) => {
 		const userId = auth?.user.id;
 		if (!dataGame || !sessionId || !userId) return;
 		const currentCard = dataGame[currentIndex];
 		if (!currentCard) return;
+		const isLastCard = currentIndex === 0;
+
+		const answerKey = `${sessionId}:${userId}:${currentCard.id}`;
+		if (submittedAnswerKeysRef.current.has(answerKey)) {
+			return;
+		}
+		submittedAnswerKeysRef.current.add(answerKey);
 
 		const correct = currentCard.attributes.ANSWER;
 		showFeedback(correct === isRight ? Answer.true : Answer.false);
 
-		insertAnswer.mutate({
-			gameId: sessionId,
-			userId,
-			questionId: currentCard.id,
-			categorie: currentCard.attributes.CATEGORIE,
-			answer: isRight,
-		});
+		insertAnswer.mutate(
+			{
+				gameId: sessionId,
+				userId,
+				questionId: currentCard.id,
+				categorie: currentCard.attributes.CATEGORIE,
+				answer: isRight,
+			},
+			{
+				onSuccess: () => {
+					if (isLastCard) {
+						navigation.navigate("finishedSession");
+					}
+				},
+				onError: () => {
+					if (isLastCard) {
+						setIsCompletingSession(false);
+					}
+					submittedAnswerKeysRef.current.delete(answerKey);
+				},
+			}
+		);
 
-		const nextIndex = currentIndex - 1;
-		setCurrentIndex(nextIndex);
-
-		if (nextIndex < 0) {
-			setTimeout(() => navigation.navigate("finishedSession"), 500);
+		if (isLastCard) {
+			setIsCompletingSession(true);
+			return;
 		}
+
+		setCurrentIndex(currentIndex - 1);
 	};
 
 	const swiperTopMargin = isHomeButtonModel ? -40 : 0;
@@ -330,6 +356,12 @@ export default function Jeu() {
 					<Text style={styles.overlayTextNetwork}>
 						Ton jeu reprendra dès que tu la retrouveras.
 					</Text>
+				</View>
+			)}
+
+			{isCompletingSession && (
+				<View style={styles.overlay}>
+					<Loader />
 				</View>
 			)}
 
