@@ -7,4 +7,7 @@ export const QK = {
 	endOfSession: (userId: number) => ["end-of-session", userId] as const,
 	endOfSessionResults: (gameId: number) =>
 		["end-of-session-results", gameId] as const,
+	parcoursTimeline: () => ["parcours", "timeline"] as const,
+	parcoursWeek: (weekId: number) => ["parcours", "week", weekId] as const,
+	parcoursDay: (dayId: number) => ["parcours", "day", dayId] as const,
 };
