@@ -13,6 +13,7 @@ import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { getGameLevel } from "@/helpers/gameProgress";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
@@ -30,6 +31,7 @@ export default function LeJeu() {
 	const insets = useSafeAreaInsets();
 	const { isConnected } = useNetwork();
 	const { selectedTab, setSelectedTab } = useTab();
+	const { showTabBar } = useTabBarVisibility();
 
 	const [isEnabled, setIsEnabled] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
@@ -130,10 +132,11 @@ export default function LeJeu() {
 	// ⬇️ ONLY refetch on focus if the token is ready
 	useFocusEffect(
 		useCallback(() => {
+			showTabBar();
 			if (!loadingToken && token && auth?.user.id) {
 				refetch();
 			}
-		}, [loadingToken, token, auth?.user.id, refetch]),
+		}, [showTabBar, loadingToken, token, auth?.user.id, refetch]),
 	);
 
 	useTrackPageMetrics({ page: "Jeu" });

@@ -37,6 +37,12 @@ import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize20 } from "@/constants/fontsizes";
 import { QUESTIONS_PER_ROUND } from "@/helpers/gameProgress";
+import {
+	getDisplayedCardCounter,
+	getNextCardNumber,
+	getSessionCurrentCardNumber,
+	getSessionCurrentIndex,
+} from "@/helpers/gameSessionProgress";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -269,14 +275,8 @@ export default function Jeu() {
 		setActiveQuestions(gameSession.questionsPool);
 		setActiveSessionId(gameSession.sessionId);
 		setActiveGameStatus(gameSession.status);
-		setCurrentCardNumber(
-			gameSession.questionsPool.length > 0
-				? Math.min(QUESTIONS_PER_ROUND, gameSession.answeredCount + 1)
-				: QUESTIONS_PER_ROUND,
-		);
-		setCurrentIndex(
-			gameSession.questionsPool.length > 0 ? gameSession.questionsPool.length - 1 : 0,
-		);
+		setCurrentCardNumber(getSessionCurrentCardNumber(gameSession));
+		setCurrentIndex(getSessionCurrentIndex(gameSession.questionsPool));
 		setIsCompletingSession(false);
 		submittedAnswerKeysRef.current.clear();
 	}, [gameSession, categoryFilter]);
@@ -305,7 +305,7 @@ export default function Jeu() {
 	}
 
 	const cardsTotal = QUESTIONS_PER_ROUND;
-	const cardsSeen = dataGame.length > 0 ? currentCardNumber : cardsTotal;
+	const cardsSeen = getDisplayedCardCounter(currentCardNumber, dataGame.length);
 
 	const handlePress = () => {
 		void invalidateGameQuestions(queryClient, auth?.user.id);
@@ -386,7 +386,7 @@ export default function Jeu() {
 		}
 
 		setCurrentCardNumber((count) =>
-			Math.min(QUESTIONS_PER_ROUND, count + 1),
+			getNextCardNumber(count),
 		);
 		setActiveQuestions((prev) =>
 			prev ? prev.filter((question) => question.id !== currentCard.id) : prev,

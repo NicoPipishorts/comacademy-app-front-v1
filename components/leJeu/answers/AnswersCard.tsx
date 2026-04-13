@@ -49,7 +49,12 @@ export default function AnswersCard({
 				},
 			]}
 			onPress={handlePress}>
-			<Text>{data.question}</Text>
+			<Text
+				style={styles.questionText}
+				numberOfLines={1}
+				ellipsizeMode='tail'>
+				{data.question}
+			</Text>
 			<View style={styles.contentWrapper}>
 				<Text style={styles.answerText}>
 					{data.questionAnswer ? "Vrai" : "Faux"}
@@ -64,7 +69,7 @@ const styles = StyleSheet.create({
 		display: "flex",
 		justifyContent: "flex-start",
 		minWidth: "100%",
-		marginBottom: 30,
+		marginBottom: 18,
 		borderRadius: 15,
 		padding: 15,
 		paddingBottom: 10,
@@ -73,6 +78,12 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
 		shadowRadius: 8,
+	},
+	questionText: {
+		fontSize: FontSize16,
+		lineHeight: 22,
+		minHeight: 24,
+		color: colorBlack,
 	},
 	contentWrapper: {
 		display: "flex",

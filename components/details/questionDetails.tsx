@@ -67,7 +67,7 @@ const ENABLE_RESPONSE_CATEGORY_ICONS =
 	process.env.EXPO_PUBLIC_ENABLE_RESPONSE_CATEGORY_ICONS !== "0";
 const ENABLE_RESPONSE_SAFE_MODE = false;
 const ENABLE_RESPONSE_ULTRA_MINIMAL_MODE = false;
-const LOCAL_RESPONSE_DEBUG_DELAY_MS = __DEV__ ? 3000 : 0;
+const LOCAL_RESPONSE_DEBUG_DELAY_MS = __DEV__ ? 1000 : 0;
 
 const normalizeTextValue = (value: unknown): string => {
 	if (typeof value === "string") {
