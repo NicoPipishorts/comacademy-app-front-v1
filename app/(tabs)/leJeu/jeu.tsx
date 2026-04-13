@@ -1,6 +1,6 @@
 // File: src/components/leJeu/Jeu.tsx
 import { invalidateGameQuestions } from "@/api/game/invalidateGameQueries";
-import { useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, {
 	useCallback,
 	useEffect,
@@ -25,9 +25,9 @@ import FeedbackMessage from "./feedbackMessage";
 
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { Answer } from "@/types/enums";
 import { NavigationType } from "@/types/general";
@@ -38,6 +38,7 @@ import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize20 } from "@/constants/fontsizes";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
+import useJwtToken from "@/hooks/useJwtToken";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -214,15 +215,32 @@ export default function Jeu() {
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { auth } = useAuthSession();
+	const { token, loading: loadingToken } = useJwtToken();
+	const { categoryId } = useLocalSearchParams<{ categoryId?: string | string[] }>();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isCompletingSession, setIsCompletingSession] = useState(false);
 	const submittedAnswerKeysRef = useRef<Set<string>>(new Set());
-
-	const { dataGame, sessionId, gameStatus } = useGameContext();
+	const parsedCategoryId = Number(
+		Array.isArray(categoryId) ? categoryId[0] : categoryId,
+	);
+	const categoryFilter =
+		Number.isFinite(parsedCategoryId) && parsedCategoryId > 0
+			? parsedCategoryId
+			: null;
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(auth?.user.id);
+	const { data: sessionData, isLoading: loadingSession } = useGameQuestions(
+		auth?.user.id,
+		categoryFilter,
+		token,
+		loadingToken,
+	);
+	const gameSession = sessionData?.data;
+	const dataGame = gameSession?.questionsPool ?? null;
+	const sessionId = gameSession?.sessionId ?? null;
+	const gameStatus = gameSession?.status ?? "finished";
 
 	const insertAnswer = useInsertAnswer();
 
@@ -260,7 +278,7 @@ export default function Jeu() {
 		setFeedbackAnswer(null);
 	}, []);
 
-	if (dataGame === null || !catData || !fqIsFetched) {
+	if (loadingSession || dataGame === null || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
 
@@ -289,7 +307,7 @@ export default function Jeu() {
 						Essaie de relancer une session ou reviens plus tard pour une
 						nouvelle série.
 					</Text>
-					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+						<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 						<Text style={styles.textBackButton}>Retour</Text>
 					</TouchableOpacity>
 				</View>
@@ -320,11 +338,15 @@ export default function Jeu() {
 				questionId: currentCard.id,
 				categorie: currentCard.attributes.CATEGORIE,
 				answer: isRight,
+				categoryFilter,
 			},
 			{
 				onSuccess: () => {
 					if (isLastCard) {
-						navigation.navigate("finishedSession");
+						router.push({
+							pathname: "/leJeu/finishedSession",
+							params: { sessionId: String(sessionId) },
+						});
 					}
 				},
 				onError: () => {

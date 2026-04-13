@@ -1,4 +1,3 @@
-// File: src/app/(tabs)/leJeu/index.tsx
 import {
 	colorBlack,
 	colorWhite,
@@ -8,7 +7,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useNewSession } from "@/api/game/useNewSession";
 import { UseAuth } from "@/auth/AuthContext";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
@@ -21,18 +19,15 @@ import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { useSubscription } from "@/src/hooks/useSubscription";
-import { NavigationType } from "@/types/general";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 // import { useMemo } from "react";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
 export default function LeJeu() {
 	const insets = useSafeAreaInsets();
-	const navigation = useNavigation<NavigationType>();
 	const { isConnected } = useNetwork();
 	const { selectedTab, setSelectedTab } = useTab();
 
@@ -74,19 +69,6 @@ export default function LeJeu() {
 	const totalAnsweredQuestions =
 		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
 
-	const {
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-		gameStatus,
-		sessionId,
-		answeredCount,
-	} = useGameContext();
-
-	const sessionInProgress =
-		gameStatus === "in_progress" && !!sessionId && answeredCount > 0;
 	const [showSessionTooltip, setShowSessionTooltip] = useState(false);
 	const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -113,35 +95,15 @@ export default function LeJeu() {
 	);
 
 	// session‑restart mutation
-	const { mutate: newSession } = useNewSession(
-		(payload) => {
-			setGameStatus(payload.status);
-			setSessionsId(payload.sessionId);
-			setQuestionsLeft(payload.questionsLeft);
-			setAnsweredCount(payload.answeredCount);
-			setDataGame(payload.questionsPool);
-		},
-		(err) => console.error("newSession failed:", err),
-	);
+	const {
+		data: sessionData,
+		refetch,
+	} = useGameQuestions(auth?.user.id, null, token, loadingToken);
 
-	// ref to skip the very first render
-	const didMountRef = useRef(false);
-
-	// whenever filterByCat returns to null, restart the session
-	useEffect(() => {
-		// wait until token is loaded
-		if (loadingToken) return;
-
-		// skip initial mount
-		if (!didMountRef.current) {
-			didMountRef.current = true;
-			return;
-		}
-
-		if (filterByCat === null && token && auth?.user.id) {
-			newSession({ userId: auth?.user.id, token });
-		}
-	}, [filterByCat, token, loadingToken, newSession, auth?.user.id]);
+	const sessionInProgress =
+		sessionData?.data.status === "in_progress" &&
+		!!sessionData.data.sessionId &&
+		sessionData.data.answeredCount > 0;
 
 	useEffect(() => {
 		if (sessionInProgress && activeTab === 1) {
@@ -165,14 +127,6 @@ export default function LeJeu() {
 		};
 	}, []);
 
-	// fetch either “all” or “by‑category”
-	// ⬇️ pass token + loading into the hook
-	const {
-		data: sessionData,
-		isLoading: loadingQuestions,
-		refetch,
-	} = useGameQuestions(auth?.user.id, filterByCat, token, loadingToken);
-
 	// ⬇️ ONLY refetch on focus if the token is ready
 	useFocusEffect(
 		useCallback(() => {
@@ -181,25 +135,6 @@ export default function LeJeu() {
 			}
 		}, [loadingToken, token, auth?.user.id, refetch]),
 	);
-
-	// when the network fetch returns, update context
-	useEffect(() => {
-		if (loadingQuestions || !sessionData) return;
-
-		setGameStatus(sessionData.data.status);
-		setSessionsId(sessionData.data.sessionId);
-		setQuestionsLeft(sessionData.data.questionsLeft);
-		setAnsweredCount(sessionData.data.answeredCount);
-		setDataGame(sessionData.data.questionsPool);
-	}, [
-		loadingQuestions,
-		sessionData,
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-	]);
 
 	useTrackPageMetrics({ page: "Jeu" });
 
@@ -226,8 +161,12 @@ export default function LeJeu() {
 			return;
 		}
 
-		navigation.navigate("jeu");
-	}, [navigation, totalAnsweredQuestions, isFreeUser]);
+		router.push({
+			pathname: "/leJeu/jeu",
+			params:
+				filterByCat !== null ? { categoryId: String(filterByCat) } : undefined,
+		});
+	}, [totalAnsweredQuestions, isFreeUser, filterByCat]);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>

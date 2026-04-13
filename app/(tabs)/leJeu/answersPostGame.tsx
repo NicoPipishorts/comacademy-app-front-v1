@@ -11,23 +11,20 @@ import {
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
-import { useGameContext } from "@/providers/gameDataContext";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { useCallback } from "react";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function AnswersPostGame() {
-	const { sessionId: contextGameId } = useGameContext();
 	const { sessionId: sessionIdParam } = useLocalSearchParams<{
 		sessionId?: string | string[];
 	}>();
 	const parsedParamId = Number(
 		Array.isArray(sessionIdParam) ? sessionIdParam[0] : sessionIdParam,
 	);
-	const gameId = Number.isFinite(parsedParamId) && parsedParamId > 0
-		? parsedParamId
-		: contextGameId;
+	const gameId =
+		Number.isFinite(parsedParamId) && parsedParamId > 0 ? parsedParamId : 0;
 
 	const { data: allAnswerData } = useGetEndOfSessionResults(gameId);
 

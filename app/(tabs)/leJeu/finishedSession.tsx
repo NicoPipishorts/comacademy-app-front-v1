@@ -1,7 +1,6 @@
-// File: src/components/leJeu/FinishedSession.tsx
 import Foundation from "@expo/vector-icons/Foundation";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,7 +14,6 @@ import {
 	useGetEndOfSessionResults,
 } from "@/hooks/useGetEndOfSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import { useGameContext } from "@/providers/gameDataContext";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import {
 	FontSize14,
@@ -31,14 +29,16 @@ export default function FinishedSession() {
 	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
-	const {
-		sessionId,
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-	} = useGameContext();
+	const { sessionId: sessionIdParam } = useLocalSearchParams<{
+		sessionId?: string | string[];
+	}>();
+	const parsedSessionId = Number(
+		Array.isArray(sessionIdParam) ? sessionIdParam[0] : sessionIdParam,
+	);
+	const sessionId =
+		Number.isFinite(parsedSessionId) && parsedSessionId > 0
+			? parsedSessionId
+			: null;
 
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
@@ -51,18 +51,10 @@ export default function FinishedSession() {
 
 	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
 
-	const originalSessionIdRef = React.useRef(sessionId);
-	const { data: sessionResults } = useGetEndOfSessionResults(
-		originalSessionIdRef.current
-	);
+	const { data: sessionResults } = useGetEndOfSessionResults(sessionId);
 
 	const { mutate: newSession } = useNewSession(
-		(payload) => {
-			setDataGame(payload.questionsPool);
-			setSessionsId(payload.sessionId);
-			setQuestionsLeft(payload.questionsLeft);
-			setAnsweredCount(payload.answeredCount);
-			setGameStatus(payload.status);
+		() => {
 			router.replace("/leJeu/jeu");
 		},
 		(err) => console.error("New session failed:", err),
@@ -140,7 +132,7 @@ export default function FinishedSession() {
 						router.push({
 							pathname: "/leJeu/answersPostGame",
 							params: {
-								sessionId: String(originalSessionIdRef.current),
+								sessionId: String(sessionId),
 							},
 						})
 					}>

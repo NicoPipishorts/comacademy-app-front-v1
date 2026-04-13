@@ -3,7 +3,6 @@ import {
 	invalidateGameResults,
 } from "@/api/game/invalidateGameQueries";
 import { queryClient } from "@/hooks/reactQueryConfig";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
@@ -25,13 +24,6 @@ export const useEndSession = (
 	onSuccess: (status: string | null) => void,
 	onError: (err: AxiosError) => void,
 ) => {
-	const {
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-	} = useGameContext();
 	return useMutation<EndResponse, AxiosError, EndSessionPayload>({
 		mutationFn: async ({ userId, token }) => {
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/end`;
@@ -44,13 +36,6 @@ export const useEndSession = (
 		},
 		onSuccess: (resp, vars) => {
 			onSuccess(resp.data.status);
-			if (resp.data.status === "finished") {
-				setDataGame([]);
-				setSessionsId(null);
-				setQuestionsLeft(null);
-				setAnsweredCount(0);
-				setGameStatus("finished");
-			}
 			void invalidateGameQuestions(queryClient, vars.userId);
 			void invalidateGameResults(queryClient, vars.userId, resp.data.sessionId);
 		},
