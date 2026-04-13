@@ -1,9 +1,7 @@
 // src/api/game/useInsertAnswer.ts
 import {
-	invalidateGameQuestions,
 	invalidateGameResults,
 } from "@/api/game/invalidateGameQueries";
-import { QK } from "@/helpers/api/queryKeys";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -14,7 +12,6 @@ type Vars = {
 	questionId: number;
 	categorie: number;
 	answer: boolean;
-	categoryFilter?: number | null;
 };
 
 export function useInsertAnswer() {
@@ -42,12 +39,6 @@ export function useInsertAnswer() {
 		},
 
 		onSettled: (_res, _err, vars) => {
-			void invalidateGameQuestions(queryClient, vars.userId);
-			if (typeof vars.categoryFilter === "number") {
-				void queryClient.invalidateQueries({
-					queryKey: QK.gameQuestions(vars.userId, vars.categoryFilter),
-				});
-			}
 			void invalidateGameResults(queryClient, vars.userId, vars.gameId);
 		},
 	});

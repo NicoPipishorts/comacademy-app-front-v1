@@ -36,6 +36,7 @@ import { QuestionData } from "@/types/userGameSessionStatus";
 import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize20 } from "@/constants/fontsizes";
+import { QUESTIONS_PER_ROUND } from "@/helpers/gameProgress";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -220,8 +221,15 @@ export default function Jeu() {
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [currentIndex, setCurrentIndex] = useState(0);
+	const [currentCardNumber, setCurrentCardNumber] = useState(1);
 	const [isCompletingSession, setIsCompletingSession] = useState(false);
+	const [activeQuestions, setActiveQuestions] = useState<QuestionData[] | null>(null);
+	const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+	const [activeGameStatus, setActiveGameStatus] = useState<
+		"in_progress" | "finished"
+	>("finished");
 	const submittedAnswerKeysRef = useRef<Set<string>>(new Set());
+	const initializedRunKeyRef = useRef<string | null>(null);
 	const parsedCategoryId = Number(
 		Array.isArray(categoryId) ? categoryId[0] : categoryId,
 	);
@@ -238,9 +246,9 @@ export default function Jeu() {
 		loadingToken,
 	);
 	const gameSession = sessionData?.data;
-	const dataGame = gameSession?.questionsPool ?? null;
-	const sessionId = gameSession?.sessionId ?? null;
-	const gameStatus = gameSession?.status ?? "finished";
+	const dataGame = activeQuestions;
+	const sessionId = activeSessionId;
+	const gameStatus = activeGameStatus;
 
 	const insertAnswer = useInsertAnswer();
 
@@ -250,14 +258,28 @@ export default function Jeu() {
 	}, [hideTabBar, showTabBar]);
 
 	useEffect(() => {
-		if (dataGame?.length) {
-			setCurrentIndex(dataGame.length - 1);
-		} else {
-			setCurrentIndex(0);
+		if (!gameSession) return;
+
+		const runKey = `${gameSession.sessionId}:${categoryFilter ?? "all"}`;
+		if (initializedRunKeyRef.current === runKey) {
+			return;
 		}
+
+		initializedRunKeyRef.current = runKey;
+		setActiveQuestions(gameSession.questionsPool);
+		setActiveSessionId(gameSession.sessionId);
+		setActiveGameStatus(gameSession.status);
+		setCurrentCardNumber(
+			gameSession.questionsPool.length > 0
+				? Math.min(QUESTIONS_PER_ROUND, gameSession.answeredCount + 1)
+				: QUESTIONS_PER_ROUND,
+		);
+		setCurrentIndex(
+			gameSession.questionsPool.length > 0 ? gameSession.questionsPool.length - 1 : 0,
+		);
 		setIsCompletingSession(false);
 		submittedAnswerKeysRef.current.clear();
-	}, [dataGame]);
+	}, [gameSession, categoryFilter]);
 
 	const cardsToRender = useMemo(() => {
 		if (!dataGame || dataGame.length === 0) {
@@ -282,10 +304,8 @@ export default function Jeu() {
 		return <Loader />;
 	}
 
-	const cardsTotal = dataGame.length;
-	const cardsSeen = cardsTotal > 0
-		? Math.min(cardsTotal, Math.max(1, cardsTotal - currentIndex))
-		: 0;
+	const cardsTotal = QUESTIONS_PER_ROUND;
+	const cardsSeen = dataGame.length > 0 ? currentCardNumber : cardsTotal;
 
 	const handlePress = () => {
 		void invalidateGameQuestions(queryClient, auth?.user.id);
@@ -338,7 +358,6 @@ export default function Jeu() {
 				questionId: currentCard.id,
 				categorie: currentCard.attributes.CATEGORIE,
 				answer: isRight,
-				categoryFilter,
 			},
 			{
 				onSuccess: () => {
@@ -359,10 +378,19 @@ export default function Jeu() {
 		);
 
 		if (isLastCard) {
+			setCurrentCardNumber(QUESTIONS_PER_ROUND);
 			setIsCompletingSession(true);
+			setActiveGameStatus("finished");
+			setActiveQuestions([]);
 			return;
 		}
 
+		setCurrentCardNumber((count) =>
+			Math.min(QUESTIONS_PER_ROUND, count + 1),
+		);
+		setActiveQuestions((prev) =>
+			prev ? prev.filter((question) => question.id !== currentCard.id) : prev,
+		);
 		setCurrentIndex(currentIndex - 1);
 	};
 
