@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse, isAxiosError } from "axios";
+import { getApiBaseUrl } from "@/helpers/api/buildApiUrl";
 
 // Define the payload and response types
 interface PageMetricsPayload {
@@ -26,16 +27,7 @@ export const useCustomPageMetrics = (
 ) => {
 	return useMutation<SuccessResponse, AxiosError, PageMetricsPayload>({
 		mutationFn: async ({ page, authToken }: PageMetricsPayload) => {
-			const baseUrl = process.env.EXPO_PUBLIC_API_URL;
-			if (!baseUrl) {
-				throw new Error(
-					"EXPO_PUBLIC_API_URL is not configured. Unable to send page metrics."
-				);
-			}
-
-			const sanitizedBase = baseUrl.endsWith("/")
-				? baseUrl.slice(0, -1)
-				: baseUrl;
+			const sanitizedBase = getApiBaseUrl();
 			const targetUrl = `${sanitizedBase}/custom-metrics/page-metrics/${encodeURIComponent(
 				page
 			)}`;

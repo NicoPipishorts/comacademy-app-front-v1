@@ -32,6 +32,11 @@ import { useSnackbar } from "@/context/snackBar";
 import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
 import {
+	getAuthUrl,
+	getForgotPasswordUrl,
+	getResetPasswordUrl,
+} from "@/helpers/api/buildApiUrl";
+import {
 	parseResetPasswordDeepLink,
 	processInitialDeepLink,
 	subscribeToDeepLinks,
@@ -44,9 +49,9 @@ const SignIn = () => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
-	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
-	const forgotPasswordUrl = process.env.EXPO_PUBLIC_FORGOT_PASSWORD_URL;
-	const resetPasswordUrl = process.env.EXPO_PUBLIC_RESET_PASSWORD_URL;
+	const authUrl = getAuthUrl();
+	const forgotPasswordUrl = getForgotPasswordUrl();
+	const resetPasswordUrl = getResetPasswordUrl();
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");

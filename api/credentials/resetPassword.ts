@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { getResetPasswordUrl } from "@/helpers/api/buildApiUrl";
 
 interface ResetPasswordPayload {
 	code: string;
@@ -18,7 +19,7 @@ interface ResetPasswordResponse {
 }
 
 export const useResetPasswordMutation = (
-	resetPasswordUrl: string | undefined,
+	resetPasswordUrl: string,
 	onSuccess: (data: ResetPasswordResponse) => void,
 	onError: (error: AxiosError | Error) => void
 ) => {
@@ -28,15 +29,9 @@ export const useResetPasswordMutation = (
 		ResetPasswordPayload
 	>({
 		mutationFn: async (payload) => {
-			if (!resetPasswordUrl) {
-				throw new Error(
-					"EXPO_PUBLIC_RESET_PASSWORD_URL is not configured. Unable to finalise password reset."
-				);
-			}
-
 			try {
 				const response: AxiosResponse<ResetPasswordResponse> = await axios.post(
-					resetPasswordUrl,
+					resetPasswordUrl || getResetPasswordUrl(),
 					payload
 				);
 				return response.data;

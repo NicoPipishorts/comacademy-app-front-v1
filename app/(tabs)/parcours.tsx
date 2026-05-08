@@ -1,19 +1,24 @@
 import { useParcoursTimeline } from "@/api/parcours/useParcours";
+import bonusPinkIcon from "@/assets/imgs/parcours/Bonus 1.svg";
+import bonusGreenIcon from "@/assets/imgs/parcours/Bonus 2.svg";
+import bonusLockedIcon from "@/assets/imgs/parcours/Bonus-locked.svg";
+import bonusUnlockedIcon from "@/assets/imgs/parcours/Bonus-unlocked.svg";
+import connectorLeftIcon from "@/assets/imgs/parcours/line-connecter-left.svg";
+import connectorRightIcon from "@/assets/imgs/parcours/line-connecter-rightsvg.svg";
+import quizPinkIcon from "@/assets/imgs/parcours/Quiz-1.svg";
+import quizGreenIcon from "@/assets/imgs/parcours/Quiz-2.svg";
+import quizBlueIcon from "@/assets/imgs/parcours/Quiz-3.svg";
+import { ParcoursDayStatusBadge } from "@/components/parcours/ParcoursDayStatusBadge";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import Loader from "@/components/experience/loader";
-import {
-	colorBlack,
-	colorDarkGrey,
-	colorGrey,
-	colorWhite,
-	primaryBackground,
-} from "@/constants/colors";
+import { colorBlack, colorDarkGrey, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useJwtToken from "@/hooks/useJwtToken";
-import { ParcoursTimelineDay, ParcoursTimelineWeek } from "@/types/parcours";
+import { ParcoursTimelineWeek } from "@/types/parcours";
+import { useAssets } from "expo-asset";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
 	Pressable,
 	RefreshControl,
@@ -23,6 +28,10 @@ import {
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgUri } from "react-native-svg";
+
+const quizAssets = [quizPinkIcon, quizGreenIcon, quizBlueIcon];
+const bonusAssets = [bonusPinkIcon, bonusGreenIcon];
 
 const dayLabel = (dayKey: string) =>
 	({
@@ -33,24 +42,64 @@ const dayLabel = (dayKey: string) =>
 		friday: "Ven",
 	}[dayKey] || dayKey);
 
-const weekStatusLabel = (status: ParcoursTimelineWeek["status"]) =>
-	({
-		not_started: "A commencer",
-		in_progress: "En cours",
-		completed: "Complet",
-		expired: "Termine",
-	}[status] || status);
+const weekLabel = (week: ParcoursTimelineWeek) =>
+	week.weekLabel || `Semaine ${week.programOrder}`;
 
-const dayStatusLabel = (status: ParcoursTimelineDay["status"]) =>
-	({
-		ready: "Pret",
-		in_progress: "Continuer",
-		completed: "Complet",
-		expired: "Lecture seule",
-		locked: "Verrouille",
-	}[status] || status);
+function SvgAsset({
+	source,
+	width,
+	height,
+	style,
+}: {
+	source: any;
+	width: number;
+	height: number;
+	style?: object;
+}) {
+	const [assets] = useAssets([source]);
+	const uri = assets?.[0]?.localUri ?? assets?.[0]?.uri;
 
-function TimelineWeekCard({ week }: { week: ParcoursTimelineWeek }) {
+	if (!uri) {
+		return <View style={[{ width, height }, style]} />;
+	}
+
+	return <SvgUri uri={uri} width={width} height={height} style={style as any} />;
+}
+
+function getBonusIcon(week: ParcoursTimelineWeek, index: number) {
+	if (!week.bonus || week.bonus.status === "locked") {
+		return bonusLockedIcon;
+	}
+
+	if (week.bonus.status === "unlocked" || week.bonus.status === "viewed") {
+		return bonusAssets[index % bonusAssets.length];
+	}
+
+	return bonusUnlockedIcon;
+}
+
+function getActivityIcon(week: ParcoursTimelineWeek, index: number) {
+	if (week.status === "completed") {
+		return quizAssets[index % quizAssets.length];
+	}
+
+	if (week.status === "expired") {
+		return quizGreenIcon;
+	}
+
+	return quizPinkIcon;
+}
+
+function TimelineWeekSection({
+	week,
+	index,
+}: {
+	week: ParcoursTimelineWeek;
+	index: number;
+}) {
+	const isRightAligned = index % 2 === 1;
+	const connectorSource = index % 2 === 0 ? connectorLeftIcon : connectorRightIcon;
+
 	return (
 		<Pressable
 			onPress={() =>
@@ -59,96 +108,144 @@ function TimelineWeekCard({ week }: { week: ParcoursTimelineWeek }) {
 					params: { weekId: String(week.id) },
 				})
 			}
-			style={styles.weekCard}>
-			<View style={styles.weekCardHeader}>
-				<View style={styles.weekTitleBlock}>
-					<Text style={styles.weekEyebrow}>PARCOURS {week.programOrder}</Text>
-					<Text style={styles.weekTitle}>{week.title}</Text>
-					<Text style={styles.weekSubtitle}>
-						{week.weekLabel || weekStatusLabel(week.status)}
-					</Text>
-				</View>
-				<View style={styles.weekMetaPill}>
-					<Text style={styles.weekMetaText}>
-						{week.completedDaysCount}/{week.totalDaysCount}
-					</Text>
-				</View>
-			</View>
+			style={styles.sectionBlock}>
+			<Text style={styles.sectionWeekLabel}>{weekLabel(week)}</Text>
 
-			<View style={styles.daysRow}>
-				{week.days.map((day) => {
-					const backgroundColor = day.isLocked
-						? "#ECECEC"
-						: day.status === "completed"
-							? colorBlack
-							: day.accentColor || colorGrey;
-
-					return (
-						<View key={day.id} style={styles.dayChipWrap}>
-							<View style={[styles.dayChip, { backgroundColor }]}>
-								<Text
-									style={[
-										styles.dayChipText,
-										(day.isLocked || day.status === "ready") &&
-											styles.dayChipTextDark,
-									]}>
-									{dayLabel(day.dayKey)}
-								</Text>
+			<View
+				style={[
+					styles.nodeRow,
+					styles.activityNodeRow,
+					isRightAligned && styles.activityNodeRowRight,
+				]}>
+				<View
+					style={[
+						styles.iconColumn,
+						isRightAligned && styles.activityIconColumnRight,
+					]}>
+					<SvgAsset
+						source={getActivityIcon(week, index)}
+						width={72}
+						height={72}
+					/>
+				</View>
+				<View
+					style={[
+						styles.contentColumn,
+						isRightAligned && styles.activityContentColumnRight,
+					]}>
+					<Text style={styles.nodeTitle}>Activites</Text>
+					<View style={styles.daysStatusRow}>
+						{week.days.map((day) => (
+							<View key={day.id} style={styles.dayStatusItem}>
+								<ParcoursDayStatusBadge status={day.status} size={20} />
+								<Text style={styles.dayLabel}>{dayLabel(day.dayKey)}</Text>
 							</View>
-							<Text style={styles.dayStateText}>{dayStatusLabel(day.status)}</Text>
-						</View>
-					);
-				})}
+						))}
+					</View>
+				</View>
 			</View>
 
-			{week.bonus && (
-				<View style={styles.bonusRow}>
-					<Text style={styles.bonusLabel}>Bonus</Text>
-					<Text style={styles.bonusValue}>
-						{week.bonus.status === "unlocked"
-							? "Disponible"
-							: week.bonus.status === "viewed"
-								? "Vu"
-								: "Verrouille"}
-					</Text>
+			<View
+				style={[
+					styles.connectorRow,
+					isRightAligned && styles.connectorRowRight,
+				]}>
+				<View
+					style={[
+						styles.connectorWrap,
+						isRightAligned && styles.connectorWrapRight,
+					]}>
+					<SvgAsset source={connectorSource} width={36} height={60} />
 				</View>
-			)}
+			</View>
+
+			<View
+				style={[
+					styles.nodeRow,
+					isRightAligned && styles.bonusNodeRowRight,
+				]}>
+				<View
+					style={[
+						styles.iconColumn,
+						styles.bonusIconColumnLeft,
+						isRightAligned && styles.bonusIconColumnRight,
+					]}>
+					<View style={styles.bonusIconWrap}>
+						<SvgAsset
+							source={getBonusIcon(week, index)}
+							width={72}
+							height={72}
+						/>
+					</View>
+				</View>
+				<View
+					style={[
+						styles.contentColumn,
+						styles.bonusContentColumnLeft,
+						isRightAligned && styles.bonusContentColumnRight,
+					]}>
+					<Text style={styles.nodeTitle}>Bonus</Text>
+				</View>
+			</View>
 		</Pressable>
 	);
 }
 
 export default function ParcoursScreen() {
 	const insets = useSafeAreaInsets();
+	const scrollViewRef = useRef<ScrollView>(null);
 	const { token, loading: loadingToken } = useJwtToken();
-	const { data, error, isError, isLoading, isFetching, refetch } = useParcoursTimeline(
-		token,
-		loadingToken
-	);
+	const {
+		data,
+		error,
+		isError,
+		isLoading,
+		isFetching,
+		refetch,
+	} = useParcoursTimeline(token, loadingToken);
 
 	useTrackPageMetrics({ page: "Parcours" });
-
-	if (isLoading) {
-		return <Loader />;
-	}
 
 	const weeks = data?.data || [];
 	const errorMessage =
 		error instanceof Error ? error.message : "Erreur inconnue";
 
+	useEffect(() => {
+		if (!weeks.length) {
+			return;
+		}
+
+		requestAnimationFrame(() => {
+			scrollViewRef.current?.scrollToEnd({ animated: false });
+		});
+	}, [weeks.length]);
+
+	if (isLoading) {
+		return <Loader />;
+	}
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<PageTitleAvatarHeader
 				title='Parcours'
+				showAvatar={false}
 				containerStyle={styles.headerContainer}
 			/>
 			<ScrollView
+				ref={scrollViewRef}
 				contentContainerStyle={{
-					paddingHorizontal: 24,
-					paddingBottom: insets.bottom + 110,
-					paddingTop: 8,
-					gap: 18,
-					flexGrow: weeks.length === 0 ? 1 : 0,
-					justifyContent: weeks.length === 0 ? "center" : "flex-start",
+					paddingHorizontal: 30,
+					paddingBottom: insets.bottom + 106,
+					paddingTop: 12,
+					flexGrow: 1,
+					justifyContent: weeks.length === 0 ? "center" : "flex-end",
+				}}
+				onContentSizeChange={() => {
+					if (!weeks.length) {
+						return;
+					}
+
+					scrollViewRef.current?.scrollToEnd({ animated: false });
 				}}
 				refreshControl={
 					<RefreshControl
@@ -169,7 +266,9 @@ export default function ParcoursScreen() {
 						</Text>
 					</View>
 				) : weeks.length > 0 ? (
-					weeks.map((week) => <TimelineWeekCard key={week.id} week={week} />)
+					weeks.map((week, index) => (
+						<TimelineWeekSection key={week.id} week={week} index={index} />
+					))
 				) : (
 					<View style={styles.emptyState}>
 						<Text style={styles.emptyTitle}>Aucun parcours disponible</Text>
@@ -191,101 +290,97 @@ const styles = StyleSheet.create({
 	headerContainer: {
 		paddingHorizontal: 24,
 	},
-	weekCard: {
-		backgroundColor: colorWhite,
-		borderRadius: 28,
-		padding: 20,
-		gap: 16,
+	sectionBlock: {
+		paddingTop: 10,
+		paddingBottom: 22,
 	},
-	weekCardHeader: {
+	sectionWeekLabel: {
+		fontSize: FontSize14,
+		fontWeight: "800",
+		color: colorBlack,
+		marginBottom: 18,
+	},
+	nodeRow: {
 		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "flex-start",
-		gap: 12,
+		alignItems: "center",
 	},
-	weekTitleBlock: {
+	activityNodeRow: {
+		marginBottom: 6,
+	},
+	activityNodeRowRight: {
+		marginBottom: 2,
+	},
+	iconColumn: {
+		width: 104,
+		alignItems: "center",
+	},
+	activityIconColumnRight: {
+		transform: [{ translateX: 70 }],
+	},
+	bonusIconColumnLeft: {
+		transform: [{ translateX: 52 }],
+	},
+	bonusIconColumnRight: {
+		transform: [{ translateX: 36 }],
+	},
+	contentColumn: {
 		flex: 1,
-		gap: 4,
+		paddingLeft: 10,
 	},
-	weekEyebrow: {
-		fontSize: FontSize14,
-		fontWeight: "800",
-		color: colorDarkGrey,
-		letterSpacing: 0.8,
+	activityContentColumnRight: {
+		paddingLeft: 70,
 	},
-	weekTitle: {
-		fontSize: FontSizeH1,
+	bonusContentColumnLeft: {
+		paddingLeft: 54,
+	},
+	bonusContentColumnRight: {
+		paddingLeft: 38,
+	},
+	nodeTitle: {
+		fontSize: 22,
 		fontWeight: "800",
 		color: colorBlack,
+		marginBottom: 8,
 	},
-	weekSubtitle: {
-		fontSize: FontSize16,
-		fontWeight: "500",
-		color: colorDarkGrey,
-	},
-	weekMetaPill: {
-		backgroundColor: "#F1F1F1",
-		paddingHorizontal: 12,
-		paddingVertical: 8,
-		borderRadius: 999,
-	},
-	weekMetaText: {
-		fontSize: FontSize14,
-		fontWeight: "700",
-		color: colorBlack,
-	},
-	daysRow: {
+	daysStatusRow: {
 		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 10,
+		alignItems: "flex-start",
+		gap: 8,
+		flexWrap: "nowrap",
 	},
-	dayChipWrap: {
-		gap: 6,
+	dayStatusItem: {
 		alignItems: "center",
-		minWidth: 52,
+		gap: 4,
+		minWidth: 24,
 	},
-	dayChip: {
-		width: 48,
-		height: 48,
-		borderRadius: 16,
-		alignItems: "center",
+	dayLabel: {
+		fontSize: 12,
+		fontWeight: "700",
+		color: colorDarkGrey,
+	},
+	connectorRow: {
+		height: 52,
 		justifyContent: "center",
 	},
-	dayChipText: {
-		fontSize: FontSize14,
-		fontWeight: "800",
-		color: colorWhite,
+	connectorRowRight: {
+		height: 64,
 	},
-	dayChipTextDark: {
-		color: colorBlack,
-	},
-	dayStateText: {
-		fontSize: 11,
-		fontWeight: "600",
-		color: colorDarkGrey,
-		textAlign: "center",
-	},
-	bonusRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
+	connectorWrap: {
+		width: 104,
 		alignItems: "center",
-		paddingTop: 4,
-		borderTopWidth: 1,
-		borderTopColor: "#EFEFEF",
 	},
-	bonusLabel: {
-		fontSize: FontSize14,
-		fontWeight: "700",
-		color: colorDarkGrey,
+	connectorWrapRight: {
+		transform: [{ translateX: 70 }],
 	},
-	bonusValue: {
-		fontSize: FontSize14,
-		fontWeight: "800",
-		color: colorBlack,
+	bonusIconWrap: {
+		width: 72,
+		height: 72,
+	},
+	bonusNodeRowRight: {
+		marginTop: 6,
 	},
 	emptyState: {
 		minHeight: 260,
-		borderRadius: 28,
 		alignItems: "center",
 		justifyContent: "center",
 		padding: 28,

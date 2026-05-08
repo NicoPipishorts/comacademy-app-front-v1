@@ -3,19 +3,30 @@ import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import { CitationData } from "@/types/lesCitations";
 import React, { memo } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import CitationHeart from "../buttons/CitationHeart";
 
 type Props = {
 	citation: CitationData;
 	/** Optional: show a "+" action for this citation (e.g., add to playlist) */
 	onAddPress?: (citationId: number) => void;
+	showFavorite?: boolean;
+	wrapperStyle?: StyleProp<ViewStyle>;
+	cardStyle?: StyleProp<ViewStyle>;
+	actionsRowStyle?: StyleProp<ViewStyle>;
 };
 
-function CardLesCitationsBase({ citation, onAddPress }: Props) {
+function CardLesCitationsBase({
+	citation,
+	onAddPress,
+	showFavorite = true,
+	wrapperStyle,
+	cardStyle,
+	actionsRowStyle,
+}: Props) {
 	return (
-		<View key={citation.id} style={styles.cardWrapper}>
-			<View style={styles.cardContainer}>
+		<View key={citation.id} style={[styles.cardWrapper, wrapperStyle]}>
+			<View style={[styles.cardContainer, cardStyle]}>
 				{/* Decorative quotes */}
 				<Image
 					source={require("@/assets/imgs/icons/quote_close.png")}
@@ -40,13 +51,15 @@ function CardLesCitationsBase({ citation, onAddPress }: Props) {
 			</View>
 
 			{/* Action row (top-right): Plus (optional) + Heart */}
-			<View style={styles.actionsRow}>
-				<CitationHeart
-					id={citation.id}
-					containerStyle={styles.actionIconButton}
-					imageStyle={styles.actionIconImage}
-				/>
-			</View>
+			{showFavorite ? (
+				<View style={[styles.actionsRow, actionsRowStyle]}>
+					<CitationHeart
+						id={citation.id}
+						containerStyle={styles.actionIconButton}
+						imageStyle={styles.actionIconImage}
+					/>
+				</View>
+			) : null}
 		</View>
 	);
 }
@@ -63,8 +76,21 @@ const propsAreEqual = (prev: Props, next: Props) => {
 	// If your API updates other visible fields, add them here as well.
 
 	const sameOnAddPress = prev.onAddPress === next.onAddPress;
+	const sameShowFavorite = prev.showFavorite === next.showFavorite;
+	const sameWrapperStyle = prev.wrapperStyle === next.wrapperStyle;
+	const sameCardStyle = prev.cardStyle === next.cardStyle;
+	const sameActionsRowStyle = prev.actionsRowStyle === next.actionsRowStyle;
 
-	return sameId && sameCitation && sameAuteur && sameOnAddPress;
+	return (
+		sameId &&
+		sameCitation &&
+		sameAuteur &&
+		sameOnAddPress &&
+		sameShowFavorite &&
+		sameWrapperStyle &&
+		sameCardStyle &&
+		sameActionsRowStyle
+	);
 };
 
 const CardLesCitations = memo(CardLesCitationsBase, propsAreEqual);
@@ -79,7 +105,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		maxWidth: 350,
-		minHeight: 250,
+		minHeight: 290,
 		backgroundColor: colorBlack,
 		marginHorizontal: 20,
 		borderRadius: 20,
@@ -91,8 +117,8 @@ const styles = StyleSheet.create({
 	},
 	openIcon: {
 		position: "absolute",
-		top: 20,
-		left: 20,
+		top: 16,
+		left: 16,
 		width: 45,
 		height: 45,
 	},
@@ -119,7 +145,9 @@ const styles = StyleSheet.create({
 		height: 28,
 	},
 	cardContent: {
-		padding: 20,
+		paddingTop: 72,
+		paddingHorizontal: 20,
+		paddingBottom: 20,
 		borderRadius: 10,
 	},
 	cardTextCitation: {

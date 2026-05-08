@@ -1,3 +1,4 @@
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 import useJwtToken from "@/hooks/useJwtToken";
 import { DicoPayload } from "@/types/dico";
 import { useQuery } from "@tanstack/react-query";
@@ -5,7 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 const fetchCitations = async (token: string): Promise<DicoPayload> => {
 	try {
 		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/dicos?filters[aLaUne][$eq]=true&sort=updatedAt:desc&pagination[limit]=1`,
+			buildApiUrl(
+				"/dicos?filters[aLaUne][$eq]=true&sort=updatedAt:desc&pagination[limit]=1"
+			),
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,

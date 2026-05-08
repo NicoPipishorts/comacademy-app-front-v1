@@ -1,4 +1,5 @@
 import { useCustomPageMetrics } from "@/api/customPageMetrics";
+import { hasApiBaseUrl } from "@/helpers/api/buildApiUrl";
 import { AxiosError } from "axios";
 import { useEffect } from "react";
 import useJwtToken from "../useJwtToken";
@@ -29,7 +30,7 @@ export const useTrackPageMetrics = ({ page }: UseTrackPageMetricsProps) => {
 			return;
 		}
 
-		if (!process.env.EXPO_PUBLIC_API_URL) {
+		if (!hasApiBaseUrl()) {
 			console.warn("Page metrics API URL is not configured; skipping metric tracking.");
 			return;
 		}

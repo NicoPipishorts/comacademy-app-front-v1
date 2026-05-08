@@ -3,6 +3,7 @@ import { FormPayload } from "@/screens/Register/Register";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { normalizeAuthResponse } from "@/helpers/strapi";
+import { getRegisterUrl } from "@/helpers/api/buildApiUrl";
 
 export const useRegisterNewUser = (
 	onSuccess: (data: AuthResponse) => void,
@@ -17,10 +18,7 @@ export const useRegisterNewUser = (
 					password: formPayload.password,
 				};
 
-				const response = await axios.post(
-					process.env.EXPO_PUBLIC_REGISTER_URL,
-					registerPayload
-				);
+				const response = await axios.post(getRegisterUrl(), registerPayload);
 				return normalizeAuthResponse(response.data);
 			} catch (error) {
 				if (axios.isAxiosError(error)) {
