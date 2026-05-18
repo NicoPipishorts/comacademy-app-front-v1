@@ -605,7 +605,6 @@ export default function ParcoursDayScreen() {
 							<ParcoursSpecificRubriqueVideoStep
 								title={String(currentStepContent.title || "")}
 								videoUri={specificVideoUri}
-								rubriqueType={currentStepContent.rubriqueType}
 								accentColor={currentAccentColor}
 								initialPositionMillis={specificVideoResumeMillis}
 								onPlaybackStatusUpdate={handleSpecificVideoStatusUpdate}
