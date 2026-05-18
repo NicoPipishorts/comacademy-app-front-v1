@@ -7,264 +7,49 @@ import {
 import ParcoursCitationRevealCard from "@/components/parcours/ParcoursCitationRevealCard";
 import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestionStep";
 import Loader from "@/components/experience/loader";
+import ParcoursFloatingNav from "@/components/parcours/ParcoursFloatingNav";
+import ParcoursStepCounter from "@/components/parcours/ParcoursStepCounter";
 import {
 	colorBlack,
 	colorDarkGrey,
-	colorPink,
-	colorWhite,
 	primaryBackground,
+	colorWhite,
 } from "@/constants/colors";
 import {
 	FontSize14,
 	FontSize16,
 	FontSize18,
-	FontSizeH1,
 } from "@/constants/fontsizes";
+import {
+	formatParcoursDayDate,
+	resolveParcoursAccentColor,
+} from "@/helpers/parcours/theme";
+import {
+	getStepState,
+	mergeProgressPayload,
+	resolveInitialParcoursStepIndex,
+	StepStateRecord,
+} from "@/helpers/parcours/progress";
+import {
+	getParcoursStepId,
+	isCitationParcoursStep,
+	isDicoQuestionParcoursStep,
+	toParcoursDayStep,
+} from "@/helpers/parcours/steps";
 import useJwtToken from "@/hooks/useJwtToken";
 import {
 	ParcoursDayStep,
 	ParcoursDicoAnswerOption,
-	ParcoursDicoQuestionStep as ParcoursDicoQuestionStepRecord,
 } from "@/types/parcours";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-type StepStateRecord = {
-	citationRevealProgress?: number;
-	citationRevealed?: boolean;
-	selectedAnswerKey?: string;
-	answered?: boolean;
-};
-
-type ProgressPayload = {
-	activeStepId?: string | null;
-	stepState?: Record<string, StepStateRecord>;
-	[key: string]: unknown;
-};
-
-const toStepRecord = (value: unknown): ParcoursDayStep =>
-	value && typeof value === "object" ? (value as ParcoursDayStep) : {};
-
-const isCitationStepRecord = (
-	step: ParcoursDayStep | null | undefined
-): step is Extract<ParcoursDayStep, { type: "citation" }> => step?.type === "citation";
-
-const isDicoQuestionStepRecord = (
-	step: ParcoursDayStep | null | undefined
-): step is ParcoursDicoQuestionStepRecord => step?.type === "dico_question";
-
-const capitalize = (value: string) =>
-	value.length ? value.charAt(0).toUpperCase() + value.slice(1) : value;
-
-const normalizeThemeColor = (value?: string | null) => {
-	const raw = String(value || "").trim();
-	if (!raw) {
-		return null;
-	}
-
-	if (raw.startsWith("#")) {
-		return raw;
-	}
-
-	if (/^[0-9A-Fa-f]{6}$/u.test(raw) || /^[0-9A-Fa-f]{3}$/u.test(raw)) {
-		return `#${raw}`;
-	}
-
-	return raw;
-};
-
-const formatDayDate = (value?: string | null, fallback?: string | null) => {
-	if (fallback && fallback.trim().length > 0) {
-		return fallback;
-	}
-
-	if (!value) {
-		return "Jour du parcours";
-	}
-
-	try {
-		return capitalize(format(new Date(value), "EEEE d MMMM yyyy", { locale: fr }));
-	} catch {
-		return "Jour du parcours";
-	}
-};
-
-const getProgressPayload = (
-	value: Record<string, unknown> | string | null | undefined
-): ProgressPayload => {
-	if (!value) {
-		return {};
-	}
-
-	if (typeof value === "string") {
-		try {
-			const parsed = JSON.parse(value) as unknown;
-			return parsed && typeof parsed === "object" ? (parsed as ProgressPayload) : {};
-		} catch {
-			return {};
-		}
-	}
-
-	return typeof value === "object" ? (value as ProgressPayload) : {};
-};
-
-const getStepState = (
-	payload: Record<string, unknown> | string | null | undefined,
-	stepId?: string | null
-): StepStateRecord => {
-	if (!stepId) {
-		return {};
-	}
-
-	const progressPayload = getProgressPayload(payload);
-	const rawStepState = progressPayload.stepState;
-	const stepStateMap =
-		rawStepState && typeof rawStepState === "string"
-			? getProgressPayload(rawStepState).stepState || {}
-			: rawStepState || {};
-	const entry = stepStateMap[stepId];
-
-	if (!entry) {
-		return {};
-	}
-
-	if (typeof entry === "string") {
-		try {
-			const parsed = JSON.parse(entry) as unknown;
-			return parsed && typeof parsed === "object"
-				? (parsed as StepStateRecord)
-				: {};
-		} catch {
-			return {};
-		}
-	}
-
-	return typeof entry === "object" ? (entry as StepStateRecord) : {};
-};
-
-const getActiveStepId = (
-	payload: Record<string, unknown> | string | null | undefined
-) => {
-	const progressPayload = getProgressPayload(payload);
-	return typeof progressPayload.activeStepId === "string"
-		? progressPayload.activeStepId
-		: null;
-};
-
-const mergeProgressPayload = ({
-	basePayload,
-	activeStepId,
-	stepId,
-	stepPatch,
-}: {
-	basePayload: Record<string, unknown> | null | undefined;
-	activeStepId?: string | null;
-	stepId?: string | null;
-	stepPatch?: StepStateRecord;
-}): ProgressPayload => {
-	const current = getProgressPayload(basePayload);
-	const nextStepState = { ...(current.stepState || {}) };
-
-	if (stepId && stepPatch) {
-		nextStepState[stepId] = {
-			...(nextStepState[stepId] || {}),
-			...stepPatch,
-		};
-	}
-
-	return {
-		...current,
-		activeStepId: activeStepId ?? current.activeStepId ?? null,
-		stepState: nextStepState,
-	};
-};
-
-function StepCounter({
-	currentIndex,
-	totalSteps,
-	accentColor,
-}: {
-	currentIndex: number;
-	totalSteps: number;
-	accentColor: string;
-}) {
-	const safeTotal = Math.max(totalSteps, 1);
-	const safeCurrent = Math.min(currentIndex + 1, safeTotal);
-
-	return (
-		<View style={styles.counterBlock}>
-			<Text style={styles.counterText}>
-				{safeCurrent}/{safeTotal}
-			</Text>
-			<View style={styles.counterTrack}>
-				<View
-					style={[
-						styles.counterFill,
-						{ backgroundColor: accentColor },
-						{ width: `${(safeCurrent / safeTotal) * 100}%` },
-					]}
-				/>
-			</View>
-		</View>
-	);
-}
-
-function FloatingNav({
-	canAdvance,
-	isCompleting,
-	isFirstStep,
-	onQuit,
-	onBack,
-	onNext,
-	nextLabel,
-	bottomOffset,
-	accentColor,
-}: {
-	canAdvance: boolean;
-	isCompleting: boolean;
-	isFirstStep: boolean;
-	onQuit: () => void;
-	onBack: () => void;
-	onNext: () => void;
-	nextLabel: string;
-	bottomOffset: number;
-	accentColor: string;
-}) {
-	return (
-		<View pointerEvents='box-none' style={[styles.floatingNav, { bottom: bottomOffset }]}>
-			<Pressable onPress={isFirstStep ? onQuit : onBack} style={styles.quitButton}>
-				<View style={styles.quitIconWrap}>
-					<Ionicons name='arrow-back' size={18} color={colorWhite} />
-				</View>
-				<Text style={styles.quitLabel}>{isFirstStep ? "Quitter" : "Retour"}</Text>
-			</Pressable>
-			<Pressable
-				disabled={!canAdvance || isCompleting}
-				onPress={onNext}
-				style={[
-					styles.nextButton,
-					{ backgroundColor: accentColor },
-					(!canAdvance || isCompleting) && styles.nextButtonDisabled,
-				]}>
-				<View style={styles.nextIconWrap}>
-					<Ionicons name='arrow-forward' size={18} color={accentColor} />
-				</View>
-				<Text style={styles.nextLabel}>{nextLabel}</Text>
-			</Pressable>
-		</View>
-	);
-}
 
 function StepFallback({ step }: { step: ParcoursDayStep }) {
 	return (
@@ -295,28 +80,26 @@ export default function ParcoursDayScreen() {
 	const hasStartedRef = useRef(false);
 	const revealPersistedRef = useRef(false);
 	const day = data?.data;
+
 	const steps = useMemo(
-		() => (Array.isArray(day?.stepsPayload?.steps) ? day?.stepsPayload?.steps.map(toStepRecord) : []),
+		() =>
+			Array.isArray(day?.stepsPayload?.steps)
+				? day.stepsPayload.steps.map(toParcoursDayStep)
+				: [],
 		[day?.stepsPayload?.steps]
 	);
 	const totalSteps = day?.stepsPayload?.dayMeta?.totalSteps || steps.length;
-	const initialIndex = useMemo(() => {
-		const progressPayload = day?.progression?.lastProgressPayload;
-		const activeStepId = getActiveStepId(progressPayload);
-		if (activeStepId) {
-			const activeStepIndex = steps.findIndex((step, index) => {
-				const stepId =
-					typeof step?.id === "string" ? step.id : `step_${index}`;
-				return stepId === activeStepId;
-			});
+	const initialIndex = useMemo(
+		() =>
+			resolveInitialParcoursStepIndex({
+				steps,
+				currentStepIndex: day?.progression?.currentStepIndex,
+				lastProgressPayload: day?.progression?.lastProgressPayload,
+				getStepId: getParcoursStepId,
+			}),
+		[day?.progression?.currentStepIndex, day?.progression?.lastProgressPayload, steps]
+	);
 
-			if (activeStepIndex >= 0) {
-				return activeStepIndex;
-			}
-		}
-
-		return day?.progression?.currentStepIndex || 0;
-	}, [day?.progression?.currentStepIndex, day?.progression?.lastProgressPayload, steps]);
 	const [activeIndex, setActiveIndex] = useState(initialIndex);
 	const [lastProgressPayload, setLastProgressPayload] = useState<Record<string, unknown> | null>(
 		day?.progression?.lastProgressPayload || null
@@ -358,21 +141,16 @@ export default function ParcoursDayScreen() {
 	}, [day, startDay, token]);
 
 	const currentStep = steps[activeIndex] || null;
-	const currentStepId =
-		typeof currentStep?.id === "string" ? currentStep.id : `step_${activeIndex}`;
+	const currentStepId = getParcoursStepId(currentStep, activeIndex);
 	const currentStepContent =
 		currentStep?.content && typeof currentStep.content === "object"
 			? currentStep.content
 			: {};
-	const currentAccentColor =
-		normalizeThemeColor(String(currentStepContent.accentColor || "")) ||
-		normalizeThemeColor(day?.accentColor) ||
-		normalizeThemeColor(day?.category?.color) ||
-		colorPink;
-	// Server payload is the source of truth and is available the moment the day
-	// loads; local optimistic state is layered on top for in-session updates.
-	// Reading only from local state caused a mount race where the citation
-	// briefly (or persistently, if startDay refetched) showed unrevealed.
+	const currentAccentColor = resolveParcoursAccentColor(
+		String(currentStepContent.accentColor || ""),
+		day?.accentColor,
+		day?.category?.color
+	);
 	const persistedStepState = useMemo(
 		() => ({
 			...getStepState(day?.progression?.lastProgressPayload, currentStepId),
@@ -380,8 +158,9 @@ export default function ParcoursDayScreen() {
 		}),
 		[currentStepId, day?.progression?.lastProgressPayload, lastProgressPayload]
 	);
-	const isCitationStep = isCitationStepRecord(currentStep);
-	const isDicoStep = isDicoQuestionStepRecord(currentStep);
+
+	const isCitationStep = isCitationParcoursStep(currentStep);
+	const isDicoStep = isDicoQuestionParcoursStep(currentStep);
 	const citationRevealed =
 		Boolean(persistedStepState.citationRevealed) ||
 		locallyRevealedStepId === currentStepId;
@@ -467,8 +246,7 @@ export default function ParcoursDayScreen() {
 		if (!isLastStep) {
 			const nextIndex = activeIndex + 1;
 			const nextStep = steps[nextIndex];
-			const nextStepId =
-				typeof nextStep?.id === "string" ? nextStep.id : `step_${nextIndex}`;
+			const nextStepId = getParcoursStepId(nextStep, nextIndex);
 			setActiveIndex(nextIndex);
 			await persistProgress({
 				nextIndex,
@@ -498,8 +276,7 @@ export default function ParcoursDayScreen() {
 
 		const prevIndex = activeIndex - 1;
 		const prevStep = steps[prevIndex];
-		const prevStepId =
-			typeof prevStep?.id === "string" ? prevStep.id : `step_${prevIndex}`;
+		const prevStepId = getParcoursStepId(prevStep, prevIndex);
 		setActiveIndex(prevIndex);
 		await persistProgress({
 			nextIndex: prevIndex,
@@ -538,9 +315,12 @@ export default function ParcoursDayScreen() {
 					showsVerticalScrollIndicator={false}>
 					<View style={styles.topMeta}>
 						<Text style={styles.dateLabel}>
-							{formatDayDate(day?.availableFrom, day?.stepsPayload?.dayMeta?.dateLabel)}
+							{formatParcoursDayDate(
+								day?.availableFrom,
+								day?.stepsPayload?.dayMeta?.dateLabel
+							)}
 						</Text>
-						<StepCounter
+						<ParcoursStepCounter
 							currentIndex={activeIndex}
 							totalSteps={totalSteps}
 							accentColor={currentAccentColor}
@@ -579,9 +359,12 @@ export default function ParcoursDayScreen() {
 					showsVerticalScrollIndicator={false}>
 					<View style={styles.topMeta}>
 						<Text style={styles.dateLabel}>
-							{formatDayDate(day?.availableFrom, day?.stepsPayload?.dayMeta?.dateLabel)}
+							{formatParcoursDayDate(
+								day?.availableFrom,
+								day?.stepsPayload?.dayMeta?.dateLabel
+							)}
 						</Text>
-						<StepCounter
+						<ParcoursStepCounter
 							currentIndex={activeIndex}
 							totalSteps={totalSteps}
 							accentColor={currentAccentColor}
@@ -612,7 +395,7 @@ export default function ParcoursDayScreen() {
 				</ScrollView>
 			)}
 
-			<FloatingNav
+			<ParcoursFloatingNav
 				canAdvance={Boolean(canAdvance)}
 				isCompleting={completeDay.isPending || updateProgress.isPending}
 				isFirstStep={activeIndex === 0}
@@ -636,9 +419,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: primaryBackground,
 	},
-	pageBody: {
-		flex: 1,
-	},
 	dateLabel: {
 		fontSize: FontSize18,
 		fontWeight: "800",
@@ -647,25 +427,6 @@ const styles = StyleSheet.create({
 	},
 	topMeta: {
 		paddingTop: 2,
-	},
-	counterBlock: {
-		marginBottom: 22,
-	},
-	counterText: {
-		fontSize: FontSizeH1,
-		fontWeight: "800",
-		color: colorBlack,
-		marginBottom: 10,
-	},
-	counterTrack: {
-		height: 4,
-		borderRadius: 999,
-		backgroundColor: "#F0D6E6",
-		overflow: "hidden",
-	},
-	counterFill: {
-		height: "100%",
-		borderRadius: 999,
 	},
 	fallbackCard: {
 		backgroundColor: colorWhite,
@@ -691,67 +452,5 @@ const styles = StyleSheet.create({
 	stepStageCentered: {
 		paddingTop: 100,
 		justifyContent: "flex-start",
-	},
-	floatingNav: {
-		position: "absolute",
-		left: 24,
-		right: 24,
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	quitButton: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 10,
-	},
-	quitIconWrap: {
-		width: 38,
-		height: 38,
-		borderRadius: 19,
-		backgroundColor: colorBlack,
-		alignItems: "center",
-		justifyContent: "center",
-		shadowColor: colorBlack,
-		shadowOffset: { width: 0, height: 14 },
-		shadowOpacity: 0.15,
-		shadowRadius: 24,
-		elevation: 8,
-	},
-	quitLabel: {
-		fontSize: FontSize16,
-		fontWeight: "800",
-		color: colorBlack,
-	},
-	nextButton: {
-		flexDirection: "row",
-		alignItems: "center",
-		backgroundColor: colorPink,
-		borderRadius: 999,
-		paddingLeft: 10,
-		paddingRight: 20,
-		paddingVertical: 10,
-		shadowColor: colorBlack,
-		shadowOffset: { width: 0, height: 14 },
-		shadowOpacity: 0.15,
-		shadowRadius: 24,
-		elevation: 8,
-	},
-	nextButtonDisabled: {
-		opacity: 0.45,
-	},
-	nextIconWrap: {
-		width: 34,
-		height: 34,
-		borderRadius: 17,
-		backgroundColor: colorWhite,
-		alignItems: "center",
-		justifyContent: "center",
-		marginRight: 10,
-	},
-	nextLabel: {
-		fontSize: FontSize16,
-		fontWeight: "800",
-		color: colorWhite,
 	},
 });
