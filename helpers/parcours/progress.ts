@@ -13,6 +13,11 @@ export type StepStateRecord = {
 	videoDurationMillis?: number;
 	videoNextUnlocked?: boolean;
 	videoCompleted?: boolean;
+	videoRewatched?: boolean;
+	videoRewatchCount?: number;
+	tipsPairIndex?: number;
+	tipsPhase?: "question" | "card";
+	tipsProgress?: Record<string, StepStateRecord>;
 };
 
 export type ProgressPayload = {

@@ -75,11 +75,7 @@ const getDayCardPresentation = (
 
 	if (day.status === "in_progress") {
 		return {
-			containerStyle: [
-				styles.dayCardDefault,
-				styles.dayCardInProgress,
-				{ borderColor: themeColor },
-			],
+			containerStyle: styles.dayCardDefault,
 			titleStyle: styles.dayTitle,
 			subtitleStyle: styles.daySubtitle,
 			label: "Incomplet",
@@ -176,18 +172,15 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		shadowColor: colorBlack,
 		shadowOffset: { width: 0, height: 16 },
-		shadowOpacity: 0.08,
-		shadowRadius: 24,
-		elevation: 2,
+		shadowOpacity: 0.16,
+		shadowRadius: 28,
+		elevation: 6,
 	},
 	dayCardDefault: {
 		backgroundColor: colorWhite,
 	},
 	dayCardReady: {
 		borderWidth: 4,
-	},
-	dayCardInProgress: {
-		borderWidth: 3,
 	},
 	dayCardLocked: {
 		backgroundColor: "#E4E4E4",

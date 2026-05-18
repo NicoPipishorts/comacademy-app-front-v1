@@ -4,15 +4,11 @@ import ExpoVideo, {
 	ManagedVideoHandle,
 } from "@/components/media/ExpoVideo";
 import {
-	colorBlack,
 	colorWhite,
 	primaryBackground,
 } from "@/constants/colors";
-import {
-	FontSize14,
-	FontSize18,
-} from "@/constants/fontsizes";
-import React, { useRef, useState } from "react";
+import { FontSize14 } from "@/constants/fontsizes";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Animated,
 	Image,
@@ -26,13 +22,11 @@ const VIDEO_WIDTH = 280;
 const VIDEO_HEIGHT = 498;
 
 export default function ParcoursSpecificRubriqueVideoStep({
-	title,
 	videoUri,
 	accentColor,
 	initialPositionMillis = 0,
 	onPlaybackStatusUpdate,
 }: {
-	title: string;
 	videoUri: string;
 	accentColor: string;
 	initialPositionMillis?: number;
@@ -40,35 +34,81 @@ export default function ParcoursSpecificRubriqueVideoStep({
 }) {
 	const videoRef = useRef<ManagedVideoHandle | null>(null);
 	const overlayOpacity = useRef(new Animated.Value(1)).current;
+	const previousPositionMillisRef = useRef(initialPositionMillis);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [startPositionMillis] = useState(initialPositionMillis);
+	const videoSource = useMemo(() => ({ uri: videoUri }), [videoUri]);
 
-	const fadeOutOverlay = () => {
+	const fadeOutOverlay = useCallback(() => {
 		Animated.timing(overlayOpacity, {
 			toValue: 0,
 			duration: 350,
 			useNativeDriver: true,
 		}).start();
-	};
+	}, [overlayOpacity]);
 
-	const showOverlay = () => {
+	const showOverlay = useCallback(() => {
 		Animated.timing(overlayOpacity, {
 			toValue: 1,
 			duration: 250,
 			useNativeDriver: true,
 		}).start();
-	};
+	}, [overlayOpacity]);
+
+	const finalizePlayback = useCallback(
+		(status?: CompatVideoStatus) => {
+			setIsPlaying(false);
+			showOverlay();
+			videoRef.current?.pauseAsync().catch(() => {});
+			if (status) {
+				onPlaybackStatusUpdate?.({
+					...status,
+					isPlaying: false,
+					didJustFinish: true,
+				});
+			}
+		},
+		[onPlaybackStatusUpdate, showOverlay]
+	);
+
+	useEffect(() => {
+		if (!isPlaying || !videoRef.current || !onPlaybackStatusUpdate) {
+			return;
+		}
+
+		const interval = setInterval(() => {
+			videoRef.current
+				?.getStatusAsync()
+				.then((status) => {
+					const previousPositionMillis = previousPositionMillisRef.current;
+					const wrappedToStart =
+						typeof status.durationMillis === "number" &&
+						previousPositionMillis >= status.durationMillis - 5_000 &&
+						status.positionMillis < 1_000;
+
+					if ((!status.isPlaying && status.didJustFinish) || wrappedToStart) {
+						finalizePlayback(status);
+						previousPositionMillisRef.current = status.positionMillis;
+						return;
+					}
+
+					previousPositionMillisRef.current = status.positionMillis;
+					onPlaybackStatusUpdate(status);
+				})
+				.catch(() => {});
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [finalizePlayback, isPlaying, onPlaybackStatusUpdate]);
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.stepTitle}>{title}</Text>
-
 			<View style={[styles.videoCard, { borderColor: accentColor }]}>
 				<ExpoVideo
 					ref={(ref) => {
 						videoRef.current = ref;
 					}}
-					source={{ uri: videoUri }}
+					source={videoSource}
 					style={styles.video}
 					isMuted={false}
 					isLooping={false}
@@ -78,9 +118,11 @@ export default function ParcoursSpecificRubriqueVideoStep({
 					resizeMode='cover'
 					onPlaybackStatusUpdate={(status) => {
 						if (!status.isPlaying && status.didJustFinish) {
-							setIsPlaying(false);
-							showOverlay();
+							finalizePlayback(status);
+							previousPositionMillisRef.current = status.positionMillis;
+							return;
 						}
+						previousPositionMillisRef.current = status.positionMillis;
 						onPlaybackStatusUpdate?.(status);
 					}}
 				/>
@@ -111,15 +153,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 
 const styles = StyleSheet.create({
 	container: {
-		gap: 16,
 		alignItems: "center",
-	},
-	stepTitle: {
-		alignSelf: "flex-start",
-		fontSize: FontSize18,
-		lineHeight: 24,
-		fontWeight: "800",
-		color: colorBlack,
 	},
 	videoCard: {
 		width: VIDEO_WIDTH,

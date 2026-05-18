@@ -170,8 +170,34 @@ export interface ParcoursSpecificRubriqueStep extends ParcoursStepBase {
 	};
 }
 
+export interface ParcoursTipsAndTacticsCard {
+	linkedCardIndex?: number;
+	title?: string | null;
+	text?: string | null;
+	cta?: string | null;
+}
+
+export interface ParcoursTipsAndTacticsQuestion {
+	question?: string;
+	correctAnswerKey?: string;
+	answers?: ParcoursDicoAnswerOption[];
+	card?: ParcoursTipsAndTacticsCard | null;
+}
+
+export interface ParcoursTipsAndTacticsBlockStep extends ParcoursStepBase {
+	type: "tips_and_tactics_block";
+	content: {
+		theme?: string;
+		dayQuestionCount?: number;
+		accentColor?: string;
+		questions?: ParcoursTipsAndTacticsQuestion[];
+		[key: string]: unknown;
+	};
+}
+
 export type ParcoursDayStep =
 	| ParcoursCitationStep
 	| ParcoursDicoQuestionStep
 	| ParcoursSpecificRubriqueStep
+	| ParcoursTipsAndTacticsBlockStep
 	| ParcoursStepBase;

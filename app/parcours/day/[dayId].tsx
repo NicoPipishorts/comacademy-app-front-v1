@@ -4,6 +4,7 @@ import {
 	useStartParcoursDay,
 	useUpdateParcoursDayProgress,
 } from "@/api/parcours/useParcours";
+import CommandementCard from "@/components/cards/CommandementCard";
 import ParcoursCitationRevealCard from "@/components/parcours/ParcoursCitationRevealCard";
 import ParcoursDayHeader from "@/components/parcours/ParcoursDayHeader";
 import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestionStep";
@@ -28,6 +29,12 @@ import {
 	resolveParcoursDicoState,
 } from "@/helpers/parcours/dico";
 import {
+	buildParcoursTipsPairPatch,
+	buildTimedOutParcoursTipsPairPatch,
+	buildValidatedParcoursTipsPairPatch,
+	resolveParcoursTipsState,
+} from "@/helpers/parcours/tips";
+import {
 	formatParcoursDayDate,
 	resolveParcoursAccentColor,
 } from "@/helpers/parcours/theme";
@@ -50,6 +57,7 @@ import {
 	isCitationParcoursStep,
 	isDicoQuestionParcoursStep,
 	isSpecificRubriqueParcoursStep,
+	isTipsAndTacticsParcoursStep,
 	toParcoursDayStep,
 } from "@/helpers/parcours/steps";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -65,6 +73,7 @@ import {
 	ScrollView,
 	StyleSheet,
 	Text,
+	useWindowDimensions,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -84,6 +93,7 @@ function StepFallback({ step }: { step: ParcoursDayStep }) {
 
 export default function ParcoursDayScreen() {
 	const insets = useSafeAreaInsets();
+	const { width: screenWidth } = useWindowDimensions();
 	const params = useLocalSearchParams<{ dayId?: string | string[] }>();
 	const dayId = Number(Array.isArray(params.dayId) ? params.dayId[0] : params.dayId);
 	const { token, loading: loadingToken } = useJwtToken();
@@ -127,19 +137,33 @@ export default function ParcoursDayScreen() {
 	const [draftAnswerByStepId, setDraftAnswerByStepId] = useState<Record<string, string>>({});
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [timeoutFeedbackLabel, setTimeoutFeedbackLabel] = useState<string | null>(null);
+	const [locallyUnlockedVideoStepId, setLocallyUnlockedVideoStepId] = useState<string | null>(
+		null
+	);
 	const lastProgressPayloadRef = useRef<Record<string, unknown> | null>(
 		day?.progression?.lastProgressPayload || null
 	);
 	const pendingCorrectAdvanceRef = useRef(false);
 	const dicoFinalizingRef = useRef(false);
+	const tipsFinalizingRef = useRef(false);
 	const specificVideoProgressRef = useRef<{
 		stepId: string | null;
 		checkpointMillis: number;
+		positionMillis: number;
+		durationMillis: number | null;
 		nextUnlocked: boolean;
+		completed: boolean;
+		rewatchedHalf: boolean;
+		rewatchCountIncremented: boolean;
 	}>({
 		stepId: null,
 		checkpointMillis: 0,
+		positionMillis: 0,
+		durationMillis: null,
 		nextUnlocked: false,
+		completed: false,
+		rewatchedHalf: false,
+		rewatchCountIncremented: false,
 	});
 
 	useEffect(() => {
@@ -157,6 +181,7 @@ export default function ParcoursDayScreen() {
 		setDraftAnswerByStepId({});
 		setFeedbackAnswer(null);
 		setTimeoutFeedbackLabel(null);
+		setLocallyUnlockedVideoStepId(null);
 		pendingCorrectAdvanceRef.current = false;
 	}, [day?.id]);
 
@@ -202,6 +227,7 @@ export default function ParcoursDayScreen() {
 	const isCitationStep = isCitationParcoursStep(currentStep);
 	const isDicoStep = isDicoQuestionParcoursStep(currentStep);
 	const isSpecificRubriqueStep = isSpecificRubriqueParcoursStep(currentStep);
+	const isTipsStep = isTipsAndTacticsParcoursStep(currentStep);
 	const citationRevealed =
 		Boolean(persistedStepState.citationRevealed) ||
 		locallyRevealedStepId === currentStepId;
@@ -222,11 +248,44 @@ export default function ParcoursDayScreen() {
 		draftAnswerKey: draftAnswerByStepId[currentStepId],
 		isReadOnly: day?.progression.isReadOnly,
 	});
+	const tipsDraftKey = `${currentStepId}:${
+		typeof persistedStepState.tipsPairIndex === "number"
+			? persistedStepState.tipsPairIndex
+			: 0
+	}`;
+	const {
+		currentPair: tipsCurrentPair,
+		pairIndex: tipsPairIndex,
+		phase: tipsPhase,
+		isLastPair: tipsIsLastPair,
+		answered: tipsAnswered,
+		correctAnswerKey: tipsCorrectAnswerKey,
+		selectedAnswerKey: tipsDisplayedAnswerKey,
+		submittedAnswerKey: tipsSubmittedAnswerKey,
+		answerLocked: tipsAnswerLocked,
+		hasSelection: tipsHasSelection,
+		answerWasCorrect: tipsAnswerWasCorrect,
+		persistedCorrectAnswerKey: tipsPersistedCorrectAnswerKey,
+	} = resolveParcoursTipsState({
+		content: currentStepContent,
+		stepState: persistedStepState,
+		draftAnswerKey: draftAnswerByStepId[tipsDraftKey],
+		isReadOnly: day?.progression.isReadOnly,
+	});
+	const tipsPairDraftKey = `${currentStepId}:${tipsPairIndex}`;
+	const tipsQuestionAnswers = tipsCurrentPair?.answers || [];
+	const isTipsQuestionPhase = isTipsStep && tipsPhase === "question";
+	const isTipsCardPhase = isTipsStep && tipsPhase === "card";
+	const commandementCardWidth = Math.min(Math.max(screenWidth - 48, 280), 360);
 	const requiresReveal = isCitationStep && currentStep?.stateMode === "reveal_once";
 	const specificVideoUri = resolveParcoursVideoUri(currentStepContent);
-	const specificVideoNextUnlocked = getParcoursVideoNextUnlocked(persistedStepState);
+	const specificVideoNextUnlocked =
+		getParcoursVideoNextUnlocked(persistedStepState) ||
+		locallyUnlockedVideoStepId === currentStepId;
 	const specificVideoResumeMillis =
-		typeof persistedStepState.videoCheckpointMillis === "number"
+		Boolean(persistedStepState.videoCompleted)
+			? 0
+			: typeof persistedStepState.videoCheckpointMillis === "number"
 			? persistedStepState.videoCheckpointMillis
 			: 0;
 	const requiresSpecificVideoWatch =
@@ -234,13 +293,28 @@ export default function ParcoursDayScreen() {
 		(currentStepContent.rubriqueType === "thirty_seconds" ||
 			currentStepContent.rubriqueType === "top_deflop") &&
 		Boolean(specificVideoUri);
+
 	useEffect(() => {
 		specificVideoProgressRef.current = {
 			stepId: currentStepId,
 			checkpointMillis: specificVideoResumeMillis,
+			positionMillis: specificVideoResumeMillis,
+			durationMillis:
+				typeof persistedStepState.videoDurationMillis === "number"
+					? persistedStepState.videoDurationMillis
+					: null,
 			nextUnlocked: specificVideoNextUnlocked,
+			completed: Boolean(persistedStepState.videoCompleted),
+			rewatchedHalf: false,
+			rewatchCountIncremented: false,
 		};
-	}, [currentStepId, specificVideoResumeMillis, specificVideoNextUnlocked]);
+	}, [
+		currentStepId,
+		persistedStepState.videoCompleted,
+		persistedStepState.videoDurationMillis,
+		specificVideoNextUnlocked,
+		specificVideoResumeMillis,
+	]);
 	const canAdvance =
 		Boolean(
 			!feedbackAnswer &&
@@ -248,10 +322,20 @@ export default function ParcoursDayScreen() {
 				(day?.progression.isReadOnly ||
 					((!requiresReveal || citationRevealed) &&
 						(!isDicoStep || dicoAnswered || dicoHasSelection) &&
+						(!isTipsStep ||
+							(isTipsQuestionPhase
+								? tipsAnswered || tipsHasSelection
+								: isTipsCardPhase)) &&
 						(!requiresSpecificVideoWatch || specificVideoNextUnlocked)))
 		);
 	const timeoutCorrectAnswer =
-		dicoAnswers.find((answer) => answer.key === dicoCorrectAnswerKey) || null;
+		(isDicoStep
+			? dicoAnswers.find((answer) => answer.key === dicoCorrectAnswerKey)
+			: isTipsStep
+				? tipsQuestionAnswers.find(
+						(answer) => answer.key === tipsCorrectAnswerKey
+				  )
+				: null) || null;
 	const timeoutAnswerLabel = timeoutCorrectAnswer
 		? `La bonne réponse était ${timeoutCorrectAnswer.key.toUpperCase()} · ${timeoutCorrectAnswer.label}`
 		: "La bonne réponse a été révélée.";
@@ -346,6 +430,66 @@ export default function ParcoursDayScreen() {
 		}
 	};
 
+	const finalizeTipsStep = async ({
+		selectedAnswerKey,
+		showFeedback,
+	}: {
+		selectedAnswerKey?: string | null;
+		showFeedback: boolean;
+	}) => {
+		if (
+			!day ||
+			!tipsCorrectAnswerKey ||
+			!tipsCurrentPair ||
+			day.progression.isReadOnly ||
+			tipsAnswerLocked ||
+			tipsFinalizingRef.current
+		) {
+			return;
+		}
+
+		tipsFinalizingRef.current = true;
+
+		try {
+			const isCorrect = selectedAnswerKey === tipsCorrectAnswerKey;
+
+			await persistProgress({
+				nextIndex: activeIndex,
+				activeStepId: currentStepId,
+				stepId: currentStepId,
+				stepPatch:
+					showFeedback && selectedAnswerKey
+						? buildValidatedParcoursTipsPairPatch({
+								stepState: persistedStepState,
+								pairIndex: tipsPairIndex,
+								selectedAnswerKey,
+								correctAnswerKey: tipsCorrectAnswerKey,
+						  })
+						: buildTimedOutParcoursTipsPairPatch({
+								stepState: persistedStepState,
+								pairIndex: tipsPairIndex,
+								selectedAnswerKey,
+								correctAnswerKey: tipsCorrectAnswerKey,
+						  }),
+			});
+
+			setDraftAnswerByStepId((currentDraft) => {
+				const nextDraft = { ...currentDraft };
+				delete nextDraft[tipsPairDraftKey];
+				return nextDraft;
+			});
+
+			pendingCorrectAdvanceRef.current = false;
+			if (showFeedback && selectedAnswerKey) {
+				setFeedbackAnswer(isCorrect ? Answer.true : Answer.false);
+			} else {
+				setTimeoutFeedbackLabel(timeoutAnswerLabel);
+			}
+		} finally {
+			tipsFinalizingRef.current = false;
+		}
+	};
+
 	const handleCitationRevealComplete = async () => {
 		if (citationRevealed || revealPersistedRef.current) {
 			return;
@@ -366,6 +510,50 @@ export default function ParcoursDayScreen() {
 
 	const handleNext = async () => {
 		if (!day || !canAdvance) return;
+
+		if (isTipsStep) {
+			if (isTipsQuestionPhase) {
+				if (tipsAnswerLocked) {
+					await persistProgress({
+						nextIndex: activeIndex,
+						activeStepId: currentStepId,
+						stepId: currentStepId,
+						stepPatch: buildParcoursTipsPairPatch({
+							stepState: persistedStepState,
+							pairIndex: tipsPairIndex,
+							phase: "card",
+						}),
+					});
+					return;
+				}
+
+				if (!tipsDisplayedAnswerKey || !tipsCorrectAnswerKey) {
+					return;
+				}
+
+				await finalizeTipsStep({
+					selectedAnswerKey: tipsDisplayedAnswerKey,
+					showFeedback: true,
+				});
+
+				return;
+			}
+
+			if (isTipsCardPhase && !tipsIsLastPair) {
+				const nextPairIndex = tipsPairIndex + 1;
+				await persistProgress({
+					nextIndex: activeIndex,
+					activeStepId: currentStepId,
+					stepId: currentStepId,
+					stepPatch: buildParcoursTipsPairPatch({
+						stepState: persistedStepState,
+						pairIndex: nextPairIndex,
+						phase: "question",
+					}),
+				});
+				return;
+			}
+		}
 
 		if (isDicoStep && !dicoAnswerLocked) {
 			if (!dicoDisplayedAnswerKey || !dicoCorrectAnswerKey) {
@@ -390,6 +578,8 @@ export default function ParcoursDayScreen() {
 			await persistProgress({
 				nextIndex,
 				activeStepId: nextStepId,
+				stepId: requiresSpecificVideoWatch ? currentStepId : undefined,
+				stepPatch: getCurrentVideoStepPatch(),
 			});
 			return;
 		}
@@ -420,7 +610,22 @@ export default function ParcoursDayScreen() {
 		await persistProgress({
 			nextIndex: prevIndex,
 			activeStepId: prevStepId,
+			stepId: requiresSpecificVideoWatch ? currentStepId : undefined,
+			stepPatch: getCurrentVideoStepPatch(),
 		});
+	};
+
+	const handleQuit = async () => {
+		if (day && !day.progression.isReadOnly) {
+			await persistProgress({
+				nextIndex: activeIndex,
+				activeStepId: currentStepId,
+				stepId: requiresSpecificVideoWatch ? currentStepId : undefined,
+				stepPatch: getCurrentVideoStepPatch(),
+			});
+		}
+
+		router.back();
 	};
 
 	const handleSelectDicoAnswer = (answerKey: string) => {
@@ -432,6 +637,78 @@ export default function ParcoursDayScreen() {
 			...currentDraft,
 			[currentStepId]: answerKey,
 		}));
+	};
+
+	const handleSelectTipsAnswer = (answerKey: string) => {
+		if (day?.progression.isReadOnly || tipsAnswerLocked) {
+			return;
+		}
+
+		setDraftAnswerByStepId((currentDraft) => ({
+			...currentDraft,
+			[tipsPairDraftKey]: answerKey,
+		}));
+	};
+
+	const getCurrentVideoStepPatch = () => {
+		if (!requiresSpecificVideoWatch || currentStepId !== specificVideoProgressRef.current.stepId) {
+			return undefined;
+		}
+
+		const {
+			positionMillis,
+			durationMillis,
+			completed,
+			rewatchedHalf,
+			rewatchCountIncremented,
+		} =
+			specificVideoProgressRef.current;
+		const wasCompleted = Boolean(persistedStepState.videoCompleted);
+		const persistedRewatchCount =
+			typeof persistedStepState.videoRewatchCount === "number" &&
+			Number.isFinite(persistedStepState.videoRewatchCount)
+				? persistedStepState.videoRewatchCount
+				: 0;
+
+		if (!Number.isFinite(positionMillis) || positionMillis <= 0) {
+			if (completed && !wasCompleted) {
+				return buildParcoursVideoProgressPatch({
+					positionMillis: durationMillis || 0,
+					durationMillis,
+					nextUnlocked: true,
+					completed: true,
+				});
+			}
+
+			return undefined;
+		}
+
+		if (wasCompleted) {
+			if (!rewatchedHalf || rewatchCountIncremented) {
+				return undefined;
+			}
+
+			specificVideoProgressRef.current = {
+				...specificVideoProgressRef.current,
+				rewatchCountIncremented: true,
+			};
+
+			return buildParcoursVideoProgressPatch({
+				positionMillis,
+				durationMillis,
+				nextUnlocked: true,
+				completed: true,
+				rewatched: true,
+				rewatchCount: persistedRewatchCount + 1,
+			});
+		}
+
+		return buildParcoursVideoProgressPatch({
+			positionMillis,
+			durationMillis,
+			nextUnlocked: completed ? true : false,
+			completed,
+		});
 	};
 
 	const handleSpecificVideoStatusUpdate = (status: CompatVideoStatus) => {
@@ -454,51 +731,48 @@ export default function ParcoursDayScreen() {
 			});
 
 		if (nextUnlockedNow && !specificVideoProgressRef.current.nextUnlocked) {
+			setLocallyUnlockedVideoStepId(currentStepId);
 			specificVideoProgressRef.current = {
 				...specificVideoProgressRef.current,
 				checkpointMillis: getParcoursVideoCheckpoint(status.positionMillis),
+				positionMillis: status.positionMillis,
+				durationMillis: status.durationMillis,
 				nextUnlocked: true,
+				completed: status.didJustFinish,
 			};
-			void persistProgress({
-				nextIndex: activeIndex,
-				activeStepId: currentStepId,
-				stepId: currentStepId,
-				stepPatch: buildParcoursVideoProgressPatch({
-					positionMillis: status.positionMillis,
-					durationMillis: status.durationMillis,
-					nextUnlocked: true,
-					completed: status.didJustFinish,
-				}),
-			});
 			return;
 		}
 
-		if (
-			shouldPersistParcoursVideoCheckpoint({
-				previousCheckpointMillis: checkpointMillis,
-				nextPositionMillis: status.positionMillis,
-			})
-		) {
-			const nextCheckpointMillis = Math.max(
-				checkpointMillis,
-				getParcoursVideoCheckpoint(status.positionMillis)
-			);
-			specificVideoProgressRef.current = {
-				...specificVideoProgressRef.current,
-				checkpointMillis: nextCheckpointMillis,
-			};
-			void persistProgress({
-				nextIndex: activeIndex,
-				activeStepId: currentStepId,
-				stepId: currentStepId,
-				stepPatch: buildParcoursVideoProgressPatch({
-					positionMillis: status.positionMillis,
-					durationMillis: status.durationMillis,
-					nextUnlocked: false,
-					completed: false,
-				}),
-			});
-		}
+		const nextCheckpointMillis = shouldPersistParcoursVideoCheckpoint({
+			previousCheckpointMillis: checkpointMillis,
+			nextPositionMillis: status.positionMillis,
+		})
+			? Math.max(checkpointMillis, getParcoursVideoCheckpoint(status.positionMillis))
+			: checkpointMillis;
+		const previousState = specificVideoProgressRef.current;
+		const effectiveDurationMillis =
+			typeof status.durationMillis === "number"
+				? status.durationMillis
+				: previousState.durationMillis;
+		const alreadyCompleted =
+			previousState.completed || Boolean(persistedStepState.videoCompleted);
+		const rewatchedHalf =
+			previousState.rewatchedHalf ||
+			(Boolean(alreadyCompleted) &&
+				typeof effectiveDurationMillis === "number" &&
+				effectiveDurationMillis > 0 &&
+				status.positionMillis >= effectiveDurationMillis / 2);
+
+		specificVideoProgressRef.current = {
+			...previousState,
+			checkpointMillis: nextCheckpointMillis,
+			positionMillis: status.positionMillis,
+			durationMillis: effectiveDurationMillis,
+			nextUnlocked: previousState.nextUnlocked,
+			completed: status.didJustFinish || previousState.completed,
+			rewatchedHalf,
+			rewatchCountIncremented: previousState.rewatchCountIncremented,
+		};
 	};
 
 	if (isLoading) {
@@ -561,12 +835,25 @@ export default function ParcoursDayScreen() {
 						totalSteps={totalSteps}
 						accentColor={currentAccentColor}
 						trailing={
-							isDicoStep && !dicoAnswerLocked ? (
+							(isDicoStep && !dicoAnswerLocked) ||
+							(isTipsQuestionPhase && !tipsAnswerLocked) ? (
 								<ParcoursStepTimer
-									key={currentStepId}
+									key={
+										isTipsQuestionPhase
+											? `${currentStepId}:${tipsPairIndex}`
+											: currentStepId
+									}
 									accentColor={currentAccentColor}
 									durationSeconds={30}
 									onComplete={() => {
+										if (isTipsQuestionPhase) {
+											void finalizeTipsStep({
+												selectedAnswerKey: tipsDisplayedAnswerKey,
+												showFeedback: false,
+											});
+											return;
+										}
+
 										void finalizeDicoStep({
 											selectedAnswerKey: dicoDisplayedAnswerKey,
 											showFeedback: false,
@@ -577,7 +864,11 @@ export default function ParcoursDayScreen() {
 						}
 					/>
 
-					<View style={styles.stepStage}>
+					<View
+						style={[
+							styles.stepStage,
+							isTipsCardPhase && styles.stepStageCentered,
+						]}>
 						{isDicoStep ? (
 							<ParcoursDicoQuestionStep
 								word={String(currentStepContent.word || "")}
@@ -598,12 +889,39 @@ export default function ParcoursDayScreen() {
 								disabled={Boolean(day?.progression.isReadOnly)}
 								locked={dicoAnswerLocked}
 							/>
+						) : isTipsStep && tipsCurrentPair ? (
+							isTipsQuestionPhase ? (
+								<ParcoursDicoQuestionStep
+									stepLabel='Tips & Tactics'
+									word={String(tipsCurrentPair.question || "")}
+									definition={null}
+									answers={tipsQuestionAnswers}
+									selectedAnswerKey={tipsDisplayedAnswerKey}
+									submittedAnswerKey={tipsSubmittedAnswerKey}
+									correctAnswerKey={tipsPersistedCorrectAnswerKey}
+									answerWasCorrect={tipsAnswerWasCorrect}
+									onSelectAnswer={(answerKey) => {
+										handleSelectTipsAnswer(answerKey);
+									}}
+									accentColor={currentAccentColor}
+									disabled={Boolean(day?.progression.isReadOnly)}
+									locked={tipsAnswerLocked}
+								/>
+							) : (
+								<CommandementCard
+									title={String(tipsCurrentPair.card?.title || "Tips & Tactics")}
+									text={String(tipsCurrentPair.card?.text || "")}
+									cardWidth={commandementCardWidth}
+									cardMargin={0}
+									cta={String(tipsCurrentPair.card?.cta || "")}
+									index={tipsPairIndex + 1}
+								/>
+							)
 						) : requiresSpecificVideoWatch &&
 						  (currentStepContent.rubriqueType === "thirty_seconds" ||
 								currentStepContent.rubriqueType === "top_deflop") &&
 						  specificVideoUri ? (
 							<ParcoursSpecificRubriqueVideoStep
-								title={String(currentStepContent.title || "")}
 								videoUri={specificVideoUri}
 								accentColor={currentAccentColor}
 								initialPositionMillis={specificVideoResumeMillis}
@@ -625,7 +943,9 @@ export default function ParcoursDayScreen() {
 					Boolean(timeoutFeedbackLabel)
 				}
 				isFirstStep={activeIndex === 0}
-				onQuit={() => router.back()}
+				onQuit={() => {
+					void handleQuit();
+				}}
 				onBack={() => {
 					void handlePrevious();
 				}}
@@ -690,7 +1010,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	stepStageCentered: {
-		paddingTop: 100,
-		justifyContent: "flex-start",
+		justifyContent: "center",
+		paddingBottom: 32,
 	},
 });
