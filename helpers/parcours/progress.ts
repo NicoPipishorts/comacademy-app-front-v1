@@ -9,6 +9,10 @@ export type StepStateRecord = {
 	answerWasCorrect?: boolean;
 	answerLocked?: boolean;
 	answered?: boolean;
+	videoCheckpointMillis?: number;
+	videoDurationMillis?: number;
+	videoNextUnlocked?: boolean;
+	videoCompleted?: boolean;
 };
 
 export type ProgressPayload = {

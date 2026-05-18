@@ -1,6 +1,7 @@
 import {
 	ParcoursDayStep,
 	ParcoursDicoQuestionStep,
+	ParcoursSpecificRubriqueStep,
 } from "@/types/parcours";
 
 export const toParcoursDayStep = (value: unknown): ParcoursDayStep =>
@@ -18,3 +19,7 @@ export const isCitationParcoursStep = (
 export const isDicoQuestionParcoursStep = (
 	step: ParcoursDayStep | null | undefined
 ): step is ParcoursDicoQuestionStep => step?.type === "dico_question";
+
+export const isSpecificRubriqueParcoursStep = (
+	step: ParcoursDayStep | null | undefined
+): step is ParcoursSpecificRubriqueStep => step?.type === "specific_rubrique";

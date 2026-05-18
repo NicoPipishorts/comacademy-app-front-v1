@@ -7,6 +7,7 @@ import {
 import ParcoursCitationRevealCard from "@/components/parcours/ParcoursCitationRevealCard";
 import ParcoursDayHeader from "@/components/parcours/ParcoursDayHeader";
 import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestionStep";
+import ParcoursSpecificRubriqueVideoStep from "@/components/parcours/ParcoursSpecificRubriqueVideoStep";
 import Loader from "@/components/experience/loader";
 import ParcoursFloatingNav from "@/components/parcours/ParcoursFloatingNav";
 import ParcoursStepTimer from "@/components/parcours/ParcoursStepTimer";
@@ -31,6 +32,14 @@ import {
 	resolveParcoursAccentColor,
 } from "@/helpers/parcours/theme";
 import {
+	buildParcoursVideoProgressPatch,
+	getParcoursVideoCheckpoint,
+	getParcoursVideoNextUnlocked,
+	hasParcoursVideoReachedNextThreshold,
+	resolveParcoursVideoUri,
+	shouldPersistParcoursVideoCheckpoint,
+} from "@/helpers/parcours/video";
+import {
 	getStepState,
 	mergeProgressPayload,
 	resolveInitialParcoursStepIndex,
@@ -40,10 +49,12 @@ import {
 	getParcoursStepId,
 	isCitationParcoursStep,
 	isDicoQuestionParcoursStep,
+	isSpecificRubriqueParcoursStep,
 	toParcoursDayStep,
 } from "@/helpers/parcours/steps";
 import useJwtToken from "@/hooks/useJwtToken";
 import { Answer } from "@/types/enums";
+import { CompatVideoStatus } from "@/components/media/ExpoVideo";
 import {
 	ParcoursDayStep,
 } from "@/types/parcours";
@@ -121,6 +132,15 @@ export default function ParcoursDayScreen() {
 	);
 	const pendingCorrectAdvanceRef = useRef(false);
 	const dicoFinalizingRef = useRef(false);
+	const specificVideoProgressRef = useRef<{
+		stepId: string | null;
+		checkpointMillis: number;
+		nextUnlocked: boolean;
+	}>({
+		stepId: null,
+		checkpointMillis: 0,
+		nextUnlocked: false,
+	});
 
 	useEffect(() => {
 		setActiveIndex(initialIndex);
@@ -181,13 +201,10 @@ export default function ParcoursDayScreen() {
 
 	const isCitationStep = isCitationParcoursStep(currentStep);
 	const isDicoStep = isDicoQuestionParcoursStep(currentStep);
+	const isSpecificRubriqueStep = isSpecificRubriqueParcoursStep(currentStep);
 	const citationRevealed =
 		Boolean(persistedStepState.citationRevealed) ||
 		locallyRevealedStepId === currentStepId;
-
-	if (isLoading) {
-		return <Loader />;
-	}
 
 	const dicoAnswers = getParcoursDicoAnswers(currentStepContent);
 	const {
@@ -206,13 +223,32 @@ export default function ParcoursDayScreen() {
 		isReadOnly: day?.progression.isReadOnly,
 	});
 	const requiresReveal = isCitationStep && currentStep?.stateMode === "reveal_once";
+	const specificVideoUri = resolveParcoursVideoUri(currentStepContent);
+	const specificVideoNextUnlocked = getParcoursVideoNextUnlocked(persistedStepState);
+	const specificVideoResumeMillis =
+		typeof persistedStepState.videoCheckpointMillis === "number"
+			? persistedStepState.videoCheckpointMillis
+			: 0;
+	const requiresSpecificVideoWatch =
+		isSpecificRubriqueStep &&
+		(currentStepContent.rubriqueType === "thirty_seconds" ||
+			currentStepContent.rubriqueType === "top_deflop") &&
+		Boolean(specificVideoUri);
+	useEffect(() => {
+		specificVideoProgressRef.current = {
+			stepId: currentStepId,
+			checkpointMillis: specificVideoResumeMillis,
+			nextUnlocked: specificVideoNextUnlocked,
+		};
+	}, [currentStepId, specificVideoResumeMillis, specificVideoNextUnlocked]);
 	const canAdvance =
 		Boolean(
 			!feedbackAnswer &&
 				!timeoutFeedbackLabel &&
 				(day?.progression.isReadOnly ||
 					((!requiresReveal || citationRevealed) &&
-						(!isDicoStep || dicoAnswered || dicoHasSelection)))
+						(!isDicoStep || dicoAnswered || dicoHasSelection) &&
+						(!requiresSpecificVideoWatch || specificVideoNextUnlocked)))
 		);
 	const timeoutCorrectAnswer =
 		dicoAnswers.find((answer) => answer.key === dicoCorrectAnswerKey) || null;
@@ -398,6 +434,77 @@ export default function ParcoursDayScreen() {
 		}));
 	};
 
+	const handleSpecificVideoStatusUpdate = (status: CompatVideoStatus) => {
+		if (
+			!day ||
+			day.progression.isReadOnly ||
+			!requiresSpecificVideoWatch ||
+			currentStepId !== specificVideoProgressRef.current.stepId ||
+			!status.isLoaded
+		) {
+			return;
+		}
+
+		const checkpointMillis = specificVideoProgressRef.current.checkpointMillis;
+		const nextUnlockedNow =
+			status.didJustFinish ||
+			hasParcoursVideoReachedNextThreshold({
+				positionMillis: status.positionMillis,
+				durationMillis: status.durationMillis,
+			});
+
+		if (nextUnlockedNow && !specificVideoProgressRef.current.nextUnlocked) {
+			specificVideoProgressRef.current = {
+				...specificVideoProgressRef.current,
+				checkpointMillis: getParcoursVideoCheckpoint(status.positionMillis),
+				nextUnlocked: true,
+			};
+			void persistProgress({
+				nextIndex: activeIndex,
+				activeStepId: currentStepId,
+				stepId: currentStepId,
+				stepPatch: buildParcoursVideoProgressPatch({
+					positionMillis: status.positionMillis,
+					durationMillis: status.durationMillis,
+					nextUnlocked: true,
+					completed: status.didJustFinish,
+				}),
+			});
+			return;
+		}
+
+		if (
+			shouldPersistParcoursVideoCheckpoint({
+				previousCheckpointMillis: checkpointMillis,
+				nextPositionMillis: status.positionMillis,
+			})
+		) {
+			const nextCheckpointMillis = Math.max(
+				checkpointMillis,
+				getParcoursVideoCheckpoint(status.positionMillis)
+			);
+			specificVideoProgressRef.current = {
+				...specificVideoProgressRef.current,
+				checkpointMillis: nextCheckpointMillis,
+			};
+			void persistProgress({
+				nextIndex: activeIndex,
+				activeStepId: currentStepId,
+				stepId: currentStepId,
+				stepPatch: buildParcoursVideoProgressPatch({
+					positionMillis: status.positionMillis,
+					durationMillis: status.durationMillis,
+					nextUnlocked: false,
+					completed: false,
+				}),
+			});
+		}
+	};
+
+	if (isLoading) {
+		return <Loader />;
+	}
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
@@ -490,6 +597,18 @@ export default function ParcoursDayScreen() {
 								accentColor={currentAccentColor}
 								disabled={Boolean(day?.progression.isReadOnly)}
 								locked={dicoAnswerLocked}
+							/>
+						) : requiresSpecificVideoWatch &&
+						  (currentStepContent.rubriqueType === "thirty_seconds" ||
+								currentStepContent.rubriqueType === "top_deflop") &&
+						  specificVideoUri ? (
+							<ParcoursSpecificRubriqueVideoStep
+								title={String(currentStepContent.title || "")}
+								videoUri={specificVideoUri}
+								rubriqueType={currentStepContent.rubriqueType}
+								accentColor={currentAccentColor}
+								initialPositionMillis={specificVideoResumeMillis}
+								onPlaybackStatusUpdate={handleSpecificVideoStatusUpdate}
 							/>
 						) : (
 							<StepFallback step={currentStep || {}} />

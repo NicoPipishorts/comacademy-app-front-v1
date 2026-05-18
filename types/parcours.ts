@@ -57,7 +57,7 @@ export interface ParcoursTimelineWeek {
 	days: ParcoursTimelineDay[];
 }
 
-export interface ParcoursWeekDetail extends ParcoursTimelineWeek {}
+export type ParcoursWeekDetail = ParcoursTimelineWeek;
 
 export interface ParcoursDayDetail {
 	id: number;
@@ -79,7 +79,7 @@ export interface ParcoursDayDetail {
 			dateLabel?: string;
 			totalSteps?: number;
 		};
-		steps?: Array<Record<string, unknown>>;
+		steps?: Record<string, unknown>[];
 	} | null;
 	progression: {
 		status: ParcoursDayStatus;
@@ -153,7 +153,25 @@ export interface ParcoursDicoQuestionStep extends ParcoursStepBase {
 	};
 }
 
+export interface ParcoursSpecificRubriqueStep extends ParcoursStepBase {
+	type: "specific_rubrique";
+	content: {
+		rubriqueType?: "thirty_seconds" | "top_deflop";
+		title?: string;
+		videoLink?: string | null;
+		videoId?: string | null;
+		videoUri?: {
+			url?: string | null;
+			width?: number | null;
+			height?: number | null;
+		} | null;
+		accentColor?: string;
+		[key: string]: unknown;
+	};
+}
+
 export type ParcoursDayStep =
 	| ParcoursCitationStep
 	| ParcoursDicoQuestionStep
+	| ParcoursSpecificRubriqueStep
 	| ParcoursStepBase;
