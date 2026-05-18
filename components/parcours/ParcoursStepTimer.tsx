@@ -1,11 +1,11 @@
 import { colorBlack, colorGrey } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
-const TIMER_SIZE = 58;
-const STROKE_WIDTH = 5;
+const TIMER_SIZE = 78;
+const STROKE_WIDTH = 6;
 const RADIUS = (TIMER_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -19,14 +19,18 @@ const formatSeconds = (value: number) => {
 export default function ParcoursStepTimer({
 	durationSeconds = 30,
 	accentColor,
+	onComplete,
 }: {
 	durationSeconds?: number;
 	accentColor: string;
+	onComplete?: () => void;
 }) {
 	const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds);
+	const hasCompletedRef = useRef(false);
 
 	useEffect(() => {
 		setRemainingSeconds(durationSeconds);
+		hasCompletedRef.current = false;
 
 		const interval = setInterval(() => {
 			setRemainingSeconds((current) => {
@@ -41,6 +45,15 @@ export default function ParcoursStepTimer({
 
 		return () => clearInterval(interval);
 	}, [durationSeconds]);
+
+	useEffect(() => {
+		if (remainingSeconds !== 0 || hasCompletedRef.current) {
+			return;
+		}
+
+		hasCompletedRef.current = true;
+		onComplete?.();
+	}, [onComplete, remainingSeconds]);
 
 	const progress = useMemo(
 		() => (durationSeconds - remainingSeconds) / Math.max(durationSeconds, 1),

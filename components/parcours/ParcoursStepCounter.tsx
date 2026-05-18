@@ -38,6 +38,7 @@ export default function ParcoursStepCounter({
 const styles = StyleSheet.create({
 	counterBlock: {
 		marginBottom: 22,
+		marginTop: 12,
 	},
 	counterText: {
 		fontSize: FontSizeH1,

@@ -79,12 +79,6 @@ export default function ParcoursDicoQuestionStep({
 									backgroundColor: accentTintColor,
 									borderColor: accentColor,
 								},
-								locked &&
-									answerWasCorrect &&
-									isSelected && {
-									backgroundColor: accentTintColor,
-									borderColor: accentColor,
-								},
 							]}>
 							<View
 								style={[
