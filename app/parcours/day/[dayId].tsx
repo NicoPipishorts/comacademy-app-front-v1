@@ -415,59 +415,6 @@ export default function ParcoursDayScreen() {
 		specificVideoResumeMillis,
 	]);
 
-	useEffect(() => {
-		if (
-			!isGameStep ||
-			!day ||
-			!token ||
-			day.progression.isReadOnly ||
-			!parcoursGameSessionId
-		) {
-			return;
-		}
-
-		const syncKey = `${currentStepId}:${parcoursGameSessionId}:${parcoursGameAnsweredCount}:${parcoursGameCompleted}`;
-		if (gameSessionSyncKeyRef.current === syncKey) {
-			return;
-		}
-
-		if (
-			persistedStepState.gameSessionId === parcoursGameSessionId &&
-			persistedStepState.gameAnsweredCount === parcoursGameAnsweredCount &&
-			Boolean(persistedStepState.gameCompleted) === parcoursGameCompleted
-		) {
-			gameSessionSyncKeyRef.current = syncKey;
-			return;
-		}
-
-		gameSessionSyncKeyRef.current = syncKey;
-		void persistProgress({
-			nextIndex: activeIndex,
-			activeStepId: currentStepId,
-			stepId: currentStepId,
-			stepPatch: buildParcoursGameStepPatch({
-				sessionId: parcoursGameSessionId,
-				answeredCount: parcoursGameAnsweredCount,
-				questionCount: parcoursGameTotalQuestions,
-				completed: parcoursGameCompleted,
-			}),
-		});
-	}, [
-		activeIndex,
-		currentStepId,
-		day,
-		isGameStep,
-		parcoursGameAnsweredCount,
-		parcoursGameCompleted,
-		parcoursGameSessionId,
-			parcoursGameTotalQuestions,
-			persistProgress,
-			persistedStepState.gameAnsweredCount,
-		persistedStepState.gameCompleted,
-		persistedStepState.gameSessionId,
-		token,
-	]);
-
 	const canAdvance =
 		Boolean(
 			!feedbackAnswer &&
@@ -528,6 +475,59 @@ export default function ParcoursDayScreen() {
 			},
 		});
 	}, [day, token, updateProgress]);
+
+	useEffect(() => {
+		if (
+			!isGameStep ||
+			!day ||
+			!token ||
+			day.progression.isReadOnly ||
+			!parcoursGameSessionId
+		) {
+			return;
+		}
+
+		const syncKey = `${currentStepId}:${parcoursGameSessionId}:${parcoursGameAnsweredCount}:${parcoursGameCompleted}`;
+		if (gameSessionSyncKeyRef.current === syncKey) {
+			return;
+		}
+
+		if (
+			persistedStepState.gameSessionId === parcoursGameSessionId &&
+			persistedStepState.gameAnsweredCount === parcoursGameAnsweredCount &&
+			Boolean(persistedStepState.gameCompleted) === parcoursGameCompleted
+		) {
+			gameSessionSyncKeyRef.current = syncKey;
+			return;
+		}
+
+		gameSessionSyncKeyRef.current = syncKey;
+		void persistProgress({
+			nextIndex: activeIndex,
+			activeStepId: currentStepId,
+			stepId: currentStepId,
+			stepPatch: buildParcoursGameStepPatch({
+				sessionId: parcoursGameSessionId,
+				answeredCount: parcoursGameAnsweredCount,
+				questionCount: parcoursGameTotalQuestions,
+				completed: parcoursGameCompleted,
+			}),
+		});
+	}, [
+		activeIndex,
+		currentStepId,
+		day,
+		isGameStep,
+		parcoursGameAnsweredCount,
+		parcoursGameCompleted,
+		parcoursGameSessionId,
+		parcoursGameTotalQuestions,
+		persistProgress,
+		persistedStepState.gameAnsweredCount,
+		persistedStepState.gameCompleted,
+		persistedStepState.gameSessionId,
+		token,
+	]);
 
 	const finalizeDicoStep = async ({
 		selectedAnswerKey,
