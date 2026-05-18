@@ -13,12 +13,14 @@ interface FeedbackMessageProps {
 	answer: Answer;
 	onHide: () => void;
 	isHomeButtonModel: boolean;
+	durationMs?: number;
 }
 
 export default function FeedbackMessage({
 	answer,
 	onHide,
 	isHomeButtonModel,
+	durationMs = 500,
 }: FeedbackMessageProps) {
 	const slideAnim = useSharedValue(250);
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -36,7 +38,7 @@ export default function FeedbackMessage({
 					runOnJS(onHide)();
 				}
 			});
-		}, 500);
+		}, durationMs);
 
 		return () => {
 			if (timerRef.current) {
@@ -44,7 +46,7 @@ export default function FeedbackMessage({
 				timerRef.current = null;
 			}
 		};
-	}, [answer, slideAnim, onHide]);
+	}, [answer, durationMs, slideAnim, onHide]);
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		transform: [{ translateY: slideAnim.value }],

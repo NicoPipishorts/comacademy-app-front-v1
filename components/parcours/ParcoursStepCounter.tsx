@@ -1,5 +1,6 @@
 import { colorBlack } from "@/constants/colors";
 import { FontSizeH1 } from "@/constants/fontsizes";
+import { mixParcoursColorWithWhite } from "@/helpers/parcours/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -14,13 +15,14 @@ export default function ParcoursStepCounter({
 }) {
 	const safeTotal = Math.max(totalSteps, 1);
 	const safeCurrent = Math.min(currentIndex + 1, safeTotal);
+	const trackColor = mixParcoursColorWithWhite(accentColor, 0.82);
 
 	return (
 		<View style={styles.counterBlock}>
 			<Text style={styles.counterText}>
 				{safeCurrent}/{safeTotal}
 			</Text>
-			<View style={styles.counterTrack}>
+			<View style={[styles.counterTrack, { backgroundColor: trackColor }]}>
 				<View
 					style={[
 						styles.counterFill,
@@ -46,7 +48,6 @@ const styles = StyleSheet.create({
 	counterTrack: {
 		height: 4,
 		borderRadius: 999,
-		backgroundColor: "#F0D6E6",
 		overflow: "hidden",
 	},
 	counterFill: {

@@ -1,8 +1,9 @@
 import {
 	colorBlack,
 	colorDarkGrey,
+	colorGreen,
+	colorLightGrey,
 	colorWhite,
-	primaryBackground,
 } from "@/constants/colors";
 import {
 	FontSize12,
@@ -10,6 +11,7 @@ import {
 	FontSize16,
 	FontSize18,
 } from "@/constants/fontsizes";
+import { mixParcoursColorWithWhite } from "@/helpers/parcours/theme";
 import { ParcoursDicoAnswerOption } from "@/types/parcours";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -19,18 +21,28 @@ export default function ParcoursDicoQuestionStep({
 	definition,
 	answers,
 	selectedAnswerKey,
+	submittedAnswerKey,
+	correctAnswerKey,
+	answerWasCorrect,
 	onSelectAnswer,
 	accentColor,
 	disabled = false,
+	locked = false,
 }: {
 	word: string;
 	definition?: string | null;
 	answers: ParcoursDicoAnswerOption[];
 	selectedAnswerKey?: string | null;
+	submittedAnswerKey?: string | null;
+	correctAnswerKey?: string | null;
+	answerWasCorrect?: boolean;
 	onSelectAnswer: (answerKey: string) => void;
 	accentColor: string;
 	disabled?: boolean;
+	locked?: boolean;
 }) {
+	const accentTintColor = mixParcoursColorWithWhite(accentColor, 0.84);
+
 	return (
 		<View style={styles.container}>
 			<Text style={styles.stepLabel}>Dico Quiz</Text>
@@ -41,23 +53,64 @@ export default function ParcoursDicoQuestionStep({
 			<View style={styles.answersList}>
 				{answers.map((answer) => {
 					const isSelected = selectedAnswerKey === answer.key;
+					const isSubmittedChoice = submittedAnswerKey === answer.key;
+					const isCorrectAnswer = correctAnswerKey === answer.key;
+					const showCorrectState = locked && isCorrectAnswer;
+					const showSubmittedWrongState =
+						locked && answerWasCorrect === false && isSubmittedChoice && !isCorrectAnswer;
 					return (
 						<Pressable
 							key={answer.key}
-							disabled={disabled}
+							disabled={disabled || locked}
 							onPress={() => onSelectAnswer(answer.key)}
 							style={[
 								styles.answerRow,
 								disabled && styles.answerRowDisabled,
-								isSelected && {
+								!locked &&
+									isSelected && {
+										backgroundColor: accentTintColor,
+										borderColor: accentColor,
+									},
+								showCorrectState && {
+									backgroundColor: "rgba(121, 233, 161, 0.22)",
+									borderColor: colorGreen,
+								},
+								showSubmittedWrongState && {
+									backgroundColor: accentTintColor,
 									borderColor: accentColor,
-									borderWidth: 3,
+								},
+								locked &&
+									answerWasCorrect &&
+									isSelected && {
+									backgroundColor: accentTintColor,
+									borderColor: accentColor,
 								},
 							]}>
-							<View style={styles.answerKeyWrap}>
-								<Text style={styles.answerKeyText}>{answer.key.toUpperCase()}</Text>
+							<View
+								style={[
+									styles.answerKeyWrap,
+									showCorrectState && styles.answerKeyWrapCorrect,
+									showSubmittedWrongState && {
+										backgroundColor: accentColor,
+									},
+								]}>
+								<Text
+									style={[
+										styles.answerKeyText,
+										showCorrectState && styles.answerKeyTextCorrect,
+										showSubmittedWrongState && styles.answerKeyTextSubmittedWrong,
+									]}>
+									{answer.key.toUpperCase()}
+								</Text>
 							</View>
-							<Text style={styles.answerLabel}>{answer.label}</Text>
+							<Text
+								style={[
+									styles.answerLabel,
+									showCorrectState && styles.answerLabelCorrect,
+									showSubmittedWrongState && styles.answerLabelSubmittedWrong,
+								]}>
+								{answer.label}
+							</Text>
 						</Pressable>
 					);
 				})}
@@ -97,14 +150,14 @@ const styles = StyleSheet.create({
 		gap: 14,
 	},
 	answerRow: {
-		backgroundColor: primaryBackground,
+		backgroundColor: colorLightGrey,
 		borderRadius: 22,
 		paddingHorizontal: 14,
 		paddingVertical: 16,
 		flexDirection: "row",
 		alignItems: "center",
-		borderWidth: 1,
-		borderColor: "transparent",
+		borderWidth: 2,
+		borderColor: colorLightGrey,
 	},
 	answerRowDisabled: {
 		opacity: 0.72,
@@ -123,11 +176,26 @@ const styles = StyleSheet.create({
 		fontWeight: "800",
 		color: colorBlack,
 	},
+	answerKeyWrapCorrect: {
+		backgroundColor: colorGreen,
+	},
+	answerKeyTextCorrect: {
+		color: colorBlack,
+	},
+	answerKeyTextSubmittedWrong: {
+		color: colorWhite,
+	},
 	answerLabel: {
 		flex: 1,
 		fontSize: FontSize14,
 		lineHeight: 20,
 		fontWeight: "700",
 		color: colorDarkGrey,
+	},
+	answerLabelCorrect: {
+		color: colorBlack,
+	},
+	answerLabelSubmittedWrong: {
+		color: colorBlack,
 	},
 });

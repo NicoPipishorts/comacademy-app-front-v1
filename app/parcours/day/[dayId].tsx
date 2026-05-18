@@ -9,6 +9,7 @@ import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestion
 import Loader from "@/components/experience/loader";
 import ParcoursFloatingNav from "@/components/parcours/ParcoursFloatingNav";
 import ParcoursStepCounter from "@/components/parcours/ParcoursStepCounter";
+import ParcoursStepTimer from "@/components/parcours/ParcoursStepTimer";
 import {
 	colorBlack,
 	colorDarkGrey,
@@ -37,12 +38,14 @@ import {
 	toParcoursDayStep,
 } from "@/helpers/parcours/steps";
 import useJwtToken from "@/hooks/useJwtToken";
+import { Answer } from "@/types/enums";
 import {
 	ParcoursDayStep,
 	ParcoursDicoAnswerOption,
 } from "@/types/parcours";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import FeedbackMessage from "../../(tabs)/leJeu/feedbackMessage";
 import {
 	ScrollView,
 	StyleSheet,
@@ -106,9 +109,12 @@ export default function ParcoursDayScreen() {
 	);
 	const [isScratchGestureActive, setIsScratchGestureActive] = useState(false);
 	const [locallyRevealedStepId, setLocallyRevealedStepId] = useState<string | null>(null);
+	const [draftAnswerByStepId, setDraftAnswerByStepId] = useState<Record<string, string>>({});
+	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const lastProgressPayloadRef = useRef<Record<string, unknown> | null>(
 		day?.progression?.lastProgressPayload || null
 	);
+	const pendingCorrectAdvanceRef = useRef(false);
 
 	useEffect(() => {
 		setActiveIndex(initialIndex);
@@ -122,6 +128,9 @@ export default function ParcoursDayScreen() {
 	useEffect(() => {
 		setLocallyRevealedStepId(null);
 		revealPersistedRef.current = false;
+		setDraftAnswerByStepId({});
+		setFeedbackAnswer(null);
+		pendingCorrectAdvanceRef.current = false;
 	}, [day?.id]);
 
 	useEffect(() => {
@@ -169,9 +178,7 @@ export default function ParcoursDayScreen() {
 		return <Loader />;
 	}
 
-	const dicoAnswered = Boolean(
-		persistedStepState.answered && persistedStepState.selectedAnswerKey
-	);
+	const dicoAnswered = Boolean(persistedStepState.answered);
 	const dicoAnswers = Array.isArray(currentStepContent.answers)
 		? (currentStepContent.answers as ParcoursDicoAnswerOption[]).filter(
 				(answer) =>
@@ -180,10 +187,29 @@ export default function ParcoursDayScreen() {
 					typeof answer.label === "string"
 		  )
 		: [];
+	const dicoCorrectAnswerKey =
+		typeof currentStepContent.correctAnswerKey === "string"
+			? currentStepContent.correctAnswerKey
+			: null;
+	const dicoDisplayedAnswerKey =
+		typeof persistedStepState.selectedAnswerKey === "string"
+			? persistedStepState.selectedAnswerKey
+			: draftAnswerByStepId[currentStepId] || null;
+	const dicoSubmittedAnswerKey =
+		typeof persistedStepState.answerSubmittedKey === "string"
+			? persistedStepState.answerSubmittedKey
+			: null;
+	const dicoAnswerLocked =
+		Boolean(day?.progression.isReadOnly) || Boolean(persistedStepState.answerLocked || dicoAnswered);
+	const dicoHasSelection = Boolean(dicoDisplayedAnswerKey);
 	const requiresReveal = isCitationStep && currentStep?.stateMode === "reveal_once";
 	const canAdvance =
-		day?.progression.isReadOnly ||
-		((!requiresReveal || citationRevealed) && (!isDicoStep || dicoAnswered));
+		Boolean(
+			!feedbackAnswer &&
+				(day?.progression.isReadOnly ||
+					((!requiresReveal || citationRevealed) &&
+						(!isDicoStep || dicoAnswered || dicoHasSelection)))
+		);
 
 	const persistProgress = async ({
 		nextIndex,
@@ -241,6 +267,39 @@ export default function ParcoursDayScreen() {
 	const handleNext = async () => {
 		if (!day || !canAdvance) return;
 
+		if (isDicoStep && !dicoAnswerLocked) {
+			if (!dicoDisplayedAnswerKey || !dicoCorrectAnswerKey) {
+				return;
+			}
+
+			const isCorrect = dicoDisplayedAnswerKey === dicoCorrectAnswerKey;
+
+			await persistProgress({
+				nextIndex: activeIndex,
+				activeStepId: currentStepId,
+				stepId: currentStepId,
+				stepPatch: {
+					selectedAnswerKey: isCorrect ? dicoDisplayedAnswerKey : dicoCorrectAnswerKey,
+					answerSubmittedKey: dicoDisplayedAnswerKey,
+					correctAnswerKey: dicoCorrectAnswerKey,
+					answerWasCorrect: isCorrect,
+					answerLocked: true,
+					answered: true,
+				},
+			});
+
+			setDraftAnswerByStepId((currentDraft) => {
+				const nextDraft = { ...currentDraft };
+				delete nextDraft[currentStepId];
+				return nextDraft;
+			});
+
+			pendingCorrectAdvanceRef.current = isCorrect;
+			setFeedbackAnswer(isCorrect ? Answer.true : Answer.false);
+
+			return;
+		}
+
 		const isLastStep = activeIndex >= steps.length - 1;
 
 		if (!isLastStep) {
@@ -285,19 +344,14 @@ export default function ParcoursDayScreen() {
 	};
 
 	const handleSelectDicoAnswer = async (answerKey: string) => {
-		if (day?.progression.isReadOnly) {
+		if (day?.progression.isReadOnly || dicoAnswerLocked) {
 			return;
 		}
 
-		await persistProgress({
-			nextIndex: activeIndex,
-			activeStepId: currentStepId,
-			stepId: currentStepId,
-			stepPatch: {
-				selectedAnswerKey: answerKey,
-				answered: true,
-			},
-		});
+		setDraftAnswerByStepId((currentDraft) => ({
+			...currentDraft,
+			[currentStepId]: answerKey,
+		}));
 	};
 
 	return (
@@ -358,12 +412,21 @@ export default function ParcoursDayScreen() {
 					}}
 					showsVerticalScrollIndicator={false}>
 					<View style={styles.topMeta}>
-						<Text style={styles.dateLabel}>
-							{formatParcoursDayDate(
-								day?.availableFrom,
-								day?.stepsPayload?.dayMeta?.dateLabel
-							)}
-						</Text>
+						<View style={styles.headerRow}>
+							<Text style={styles.dateLabel}>
+								{formatParcoursDayDate(
+									day?.availableFrom,
+									day?.stepsPayload?.dayMeta?.dateLabel
+								)}
+							</Text>
+							{isDicoStep && !dicoAnswerLocked ? (
+								<ParcoursStepTimer
+									key={currentStepId}
+									accentColor={currentAccentColor}
+									durationSeconds={30}
+								/>
+							) : null}
+						</View>
 						<ParcoursStepCounter
 							currentIndex={activeIndex}
 							totalSteps={totalSteps}
@@ -381,12 +444,24 @@ export default function ParcoursDayScreen() {
 										: null
 								}
 								answers={dicoAnswers}
-								selectedAnswerKey={persistedStepState.selectedAnswerKey || null}
+								selectedAnswerKey={dicoDisplayedAnswerKey}
+								submittedAnswerKey={dicoSubmittedAnswerKey}
+								correctAnswerKey={
+									typeof persistedStepState.correctAnswerKey === "string"
+										? persistedStepState.correctAnswerKey
+										: dicoCorrectAnswerKey
+								}
+								answerWasCorrect={
+									typeof persistedStepState.answerWasCorrect === "boolean"
+										? persistedStepState.answerWasCorrect
+										: undefined
+								}
 								onSelectAnswer={(answerKey) => {
 									void handleSelectDicoAnswer(answerKey);
 								}}
 								accentColor={currentAccentColor}
 								disabled={Boolean(day?.progression.isReadOnly)}
+								locked={dicoAnswerLocked}
 							/>
 						) : (
 							<StepFallback step={currentStep || {}} />
@@ -397,7 +472,11 @@ export default function ParcoursDayScreen() {
 
 			<ParcoursFloatingNav
 				canAdvance={Boolean(canAdvance)}
-				isCompleting={completeDay.isPending || updateProgress.isPending}
+				isCompleting={
+					completeDay.isPending ||
+					updateProgress.isPending ||
+					Boolean(feedbackAnswer)
+				}
 				isFirstStep={activeIndex === 0}
 				onQuit={() => router.back()}
 				onBack={() => {
@@ -410,6 +489,21 @@ export default function ParcoursDayScreen() {
 				bottomOffset={Math.max(insets.bottom, 14)}
 				accentColor={currentAccentColor}
 			/>
+			{feedbackAnswer ? (
+				<FeedbackMessage
+					answer={feedbackAnswer}
+					durationMs={2000}
+					isHomeButtonModel
+					onHide={() => {
+						const shouldAdvance = pendingCorrectAdvanceRef.current;
+						pendingCorrectAdvanceRef.current = false;
+						setFeedbackAnswer(null);
+						if (shouldAdvance) {
+							void handleNext();
+						}
+					}}
+				/>
+			) : null}
 		</View>
 	);
 }
@@ -417,16 +511,23 @@ export default function ParcoursDayScreen() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		backgroundColor: primaryBackground,
+		backgroundColor: colorWhite,
 	},
 	dateLabel: {
 		fontSize: FontSize18,
 		fontWeight: "800",
 		color: colorBlack,
-		marginBottom: 18,
 	},
 	topMeta: {
 		paddingTop: 2,
+		marginBottom: 18,
+	},
+	headerRow: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		justifyContent: "space-between",
+		gap: 16,
+		marginBottom: 14,
 	},
 	fallbackCard: {
 		backgroundColor: colorWhite,

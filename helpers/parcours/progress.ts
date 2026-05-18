@@ -4,6 +4,10 @@ export type StepStateRecord = {
 	citationRevealProgress?: number;
 	citationRevealed?: boolean;
 	selectedAnswerKey?: string;
+	answerSubmittedKey?: string;
+	correctAnswerKey?: string;
+	answerWasCorrect?: boolean;
+	answerLocked?: boolean;
 	answered?: boolean;
 };
 
