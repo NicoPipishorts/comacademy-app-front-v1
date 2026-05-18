@@ -98,16 +98,13 @@ export default CardLesCitations;
 
 const styles = StyleSheet.create({
 	cardWrapper: {
-		marginTop: 60,
-		maxHeight: 420,
+		marginTop: 24,
+		width: "100%",
 	},
 	cardContainer: {
-		flex: 1,
-		justifyContent: "center",
-		maxWidth: 350,
+		width: "100%",
 		minHeight: 290,
 		backgroundColor: colorBlack,
-		marginHorizontal: 20,
 		borderRadius: 20,
 		shadowColor: colorBlack,
 		shadowOpacity: 0.35,
@@ -146,24 +143,29 @@ const styles = StyleSheet.create({
 	},
 	cardContent: {
 		paddingTop: 72,
-		paddingHorizontal: 20,
-		paddingBottom: 20,
+		paddingHorizontal: 24,
+		paddingBottom: 12,
 		borderRadius: 10,
+		flexShrink: 1,
 	},
 	cardTextCitation: {
 		color: colorWhite,
 		fontSize: FontSize22,
 		fontWeight: "bold",
+		lineHeight: 30,
 	},
 	containerTextAuteur: {
 		width: "100%",
 		justifyContent: "flex-start",
-		paddingHorizontal: 20,
-		paddingBottom: 15,
+		paddingHorizontal: 24,
+		paddingRight: 72,
+		paddingBottom: 28,
+		marginTop: 8,
 	},
 	cardTextAuteur: {
 		color: colorWhite,
 		fontSize: FontSize16,
 		fontWeight: "bold",
+		lineHeight: 22,
 	},
 });

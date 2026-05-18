@@ -5,6 +5,7 @@ import {
 	useUpdateParcoursDayProgress,
 } from "@/api/parcours/useParcours";
 import ParcoursCitationRevealCard from "@/components/parcours/ParcoursCitationRevealCard";
+import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestionStep";
 import Loader from "@/components/experience/loader";
 import {
 	colorBlack,
@@ -14,13 +15,17 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import {
-	FontSize12,
 	FontSize14,
 	FontSize16,
 	FontSize18,
 	FontSizeH1,
 } from "@/constants/fontsizes";
 import useJwtToken from "@/hooks/useJwtToken";
+import {
+	ParcoursDayStep,
+	ParcoursDicoAnswerOption,
+	ParcoursDicoQuestionStep as ParcoursDicoQuestionStepRecord,
+} from "@/types/parcours";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -35,16 +40,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type StepRecord = Record<string, unknown> & {
-	id?: string;
-	type?: string;
-	stateMode?: string;
-	content?: Record<string, unknown>;
-};
-
 type StepStateRecord = {
 	citationRevealProgress?: number;
 	citationRevealed?: boolean;
+	selectedAnswerKey?: string;
+	answered?: boolean;
 };
 
 type ProgressPayload = {
@@ -53,8 +53,16 @@ type ProgressPayload = {
 	[key: string]: unknown;
 };
 
-const toStepRecord = (value: unknown): StepRecord =>
-	value && typeof value === "object" ? (value as StepRecord) : {};
+const toStepRecord = (value: unknown): ParcoursDayStep =>
+	value && typeof value === "object" ? (value as ParcoursDayStep) : {};
+
+const isCitationStepRecord = (
+	step: ParcoursDayStep | null | undefined
+): step is Extract<ParcoursDayStep, { type: "citation" }> => step?.type === "citation";
+
+const isDicoQuestionStepRecord = (
+	step: ParcoursDayStep | null | undefined
+): step is ParcoursDicoQuestionStepRecord => step?.type === "dico_question";
 
 const capitalize = (value: string) =>
 	value.length ? value.charAt(0).toUpperCase() + value.slice(1) : value;
@@ -92,11 +100,27 @@ const formatDayDate = (value?: string | null, fallback?: string | null) => {
 	}
 };
 
-const getProgressPayload = (value: Record<string, unknown> | null | undefined): ProgressPayload =>
-	value && typeof value === "object" ? (value as ProgressPayload) : {};
+const getProgressPayload = (
+	value: Record<string, unknown> | string | null | undefined
+): ProgressPayload => {
+	if (!value) {
+		return {};
+	}
+
+	if (typeof value === "string") {
+		try {
+			const parsed = JSON.parse(value) as unknown;
+			return parsed && typeof parsed === "object" ? (parsed as ProgressPayload) : {};
+		} catch {
+			return {};
+		}
+	}
+
+	return typeof value === "object" ? (value as ProgressPayload) : {};
+};
 
 const getStepState = (
-	payload: Record<string, unknown> | null | undefined,
+	payload: Record<string, unknown> | string | null | undefined,
 	stepId?: string | null
 ): StepStateRecord => {
 	if (!stepId) {
@@ -104,8 +128,38 @@ const getStepState = (
 	}
 
 	const progressPayload = getProgressPayload(payload);
-	const stepStateMap = progressPayload.stepState || {};
-	return stepStateMap[stepId] || {};
+	const rawStepState = progressPayload.stepState;
+	const stepStateMap =
+		rawStepState && typeof rawStepState === "string"
+			? getProgressPayload(rawStepState).stepState || {}
+			: rawStepState || {};
+	const entry = stepStateMap[stepId];
+
+	if (!entry) {
+		return {};
+	}
+
+	if (typeof entry === "string") {
+		try {
+			const parsed = JSON.parse(entry) as unknown;
+			return parsed && typeof parsed === "object"
+				? (parsed as StepStateRecord)
+				: {};
+		} catch {
+			return {};
+		}
+	}
+
+	return typeof entry === "object" ? (entry as StepStateRecord) : {};
+};
+
+const getActiveStepId = (
+	payload: Record<string, unknown> | string | null | undefined
+) => {
+	const progressPayload = getProgressPayload(payload);
+	return typeof progressPayload.activeStepId === "string"
+		? progressPayload.activeStepId
+		: null;
 };
 
 const mergeProgressPayload = ({
@@ -169,7 +223,9 @@ function StepCounter({
 function FloatingNav({
 	canAdvance,
 	isCompleting,
+	isFirstStep,
 	onQuit,
+	onBack,
 	onNext,
 	nextLabel,
 	bottomOffset,
@@ -177,7 +233,9 @@ function FloatingNav({
 }: {
 	canAdvance: boolean;
 	isCompleting: boolean;
+	isFirstStep: boolean;
 	onQuit: () => void;
+	onBack: () => void;
 	onNext: () => void;
 	nextLabel: string;
 	bottomOffset: number;
@@ -185,11 +243,11 @@ function FloatingNav({
 }) {
 	return (
 		<View pointerEvents='box-none' style={[styles.floatingNav, { bottom: bottomOffset }]}>
-			<Pressable onPress={onQuit} style={styles.quitButton}>
+			<Pressable onPress={isFirstStep ? onQuit : onBack} style={styles.quitButton}>
 				<View style={styles.quitIconWrap}>
 					<Ionicons name='arrow-back' size={18} color={colorWhite} />
 				</View>
-				<Text style={styles.quitLabel}>Quitter</Text>
+				<Text style={styles.quitLabel}>{isFirstStep ? "Quitter" : "Retour"}</Text>
 			</Pressable>
 			<Pressable
 				disabled={!canAdvance || isCompleting}
@@ -208,7 +266,7 @@ function FloatingNav({
 	);
 }
 
-function StepFallback({ step }: { step: StepRecord }) {
+function StepFallback({ step }: { step: ParcoursDayStep }) {
 	return (
 		<View style={styles.fallbackCard}>
 			<Text style={styles.fallbackType}>
@@ -235,15 +293,37 @@ export default function ParcoursDayScreen() {
 	const updateProgress = useUpdateParcoursDayProgress();
 	const completeDay = useCompleteParcoursDay();
 	const hasStartedRef = useRef(false);
+	const revealPersistedRef = useRef(false);
 	const day = data?.data;
 	const steps = useMemo(
 		() => (Array.isArray(day?.stepsPayload?.steps) ? day?.stepsPayload?.steps.map(toStepRecord) : []),
 		[day?.stepsPayload?.steps]
 	);
 	const totalSteps = day?.stepsPayload?.dayMeta?.totalSteps || steps.length;
-	const initialIndex = day?.progression?.currentStepIndex || 0;
+	const initialIndex = useMemo(() => {
+		const progressPayload = day?.progression?.lastProgressPayload;
+		const activeStepId = getActiveStepId(progressPayload);
+		if (activeStepId) {
+			const activeStepIndex = steps.findIndex((step, index) => {
+				const stepId =
+					typeof step?.id === "string" ? step.id : `step_${index}`;
+				return stepId === activeStepId;
+			});
+
+			if (activeStepIndex >= 0) {
+				return activeStepIndex;
+			}
+		}
+
+		return day?.progression?.currentStepIndex || 0;
+	}, [day?.progression?.currentStepIndex, day?.progression?.lastProgressPayload, steps]);
 	const [activeIndex, setActiveIndex] = useState(initialIndex);
 	const [lastProgressPayload, setLastProgressPayload] = useState<Record<string, unknown> | null>(
+		day?.progression?.lastProgressPayload || null
+	);
+	const [isScratchGestureActive, setIsScratchGestureActive] = useState(false);
+	const [locallyRevealedStepId, setLocallyRevealedStepId] = useState<string | null>(null);
+	const lastProgressPayloadRef = useRef<Record<string, unknown> | null>(
 		day?.progression?.lastProgressPayload || null
 	);
 
@@ -253,22 +333,29 @@ export default function ParcoursDayScreen() {
 
 	useEffect(() => {
 		setLastProgressPayload(day?.progression?.lastProgressPayload || null);
+		lastProgressPayloadRef.current = day?.progression?.lastProgressPayload || null;
 	}, [day?.progression?.lastProgressPayload]);
+
+	useEffect(() => {
+		setLocallyRevealedStepId(null);
+		revealPersistedRef.current = false;
+	}, [day?.id]);
 
 	useEffect(() => {
 		if (!day || !token || hasStartedRef.current) {
 			return;
 		}
 
-		if (day.progression.status === "ready" || day.progression.status === "in_progress") {
+		if (day.progression.status === "ready") {
 			hasStartedRef.current = true;
 			void startDay.mutateAsync({ dayId: day.id, token });
+			return;
+		}
+
+		if (day.progression.status === "in_progress") {
+			hasStartedRef.current = true;
 		}
 	}, [day, startDay, token]);
-
-	if (isLoading) {
-		return <Loader />;
-	}
 
 	const currentStep = steps[activeIndex] || null;
 	const currentStepId =
@@ -278,12 +365,46 @@ export default function ParcoursDayScreen() {
 			? currentStep.content
 			: {};
 	const currentAccentColor =
-		normalizeThemeColor(String(currentStepContent.accentColor || "")) || colorPink;
-	const persistedStepState = getStepState(lastProgressPayload, currentStepId);
-	const isCitationStep = currentStep?.type === "citation";
-	const citationRevealed = Boolean(persistedStepState.citationRevealed);
+		normalizeThemeColor(String(currentStepContent.accentColor || "")) ||
+		normalizeThemeColor(day?.accentColor) ||
+		normalizeThemeColor(day?.category?.color) ||
+		colorPink;
+	// Server payload is the source of truth and is available the moment the day
+	// loads; local optimistic state is layered on top for in-session updates.
+	// Reading only from local state caused a mount race where the citation
+	// briefly (or persistently, if startDay refetched) showed unrevealed.
+	const persistedStepState = useMemo(
+		() => ({
+			...getStepState(day?.progression?.lastProgressPayload, currentStepId),
+			...getStepState(lastProgressPayload, currentStepId),
+		}),
+		[currentStepId, day?.progression?.lastProgressPayload, lastProgressPayload]
+	);
+	const isCitationStep = isCitationStepRecord(currentStep);
+	const isDicoStep = isDicoQuestionStepRecord(currentStep);
+	const citationRevealed =
+		Boolean(persistedStepState.citationRevealed) ||
+		locallyRevealedStepId === currentStepId;
+
+	if (isLoading) {
+		return <Loader />;
+	}
+
+	const dicoAnswered = Boolean(
+		persistedStepState.answered && persistedStepState.selectedAnswerKey
+	);
+	const dicoAnswers = Array.isArray(currentStepContent.answers)
+		? (currentStepContent.answers as ParcoursDicoAnswerOption[]).filter(
+				(answer) =>
+					answer &&
+					typeof answer.key === "string" &&
+					typeof answer.label === "string"
+		  )
+		: [];
 	const requiresReveal = isCitationStep && currentStep?.stateMode === "reveal_once";
-	const canAdvance = day?.progression.isReadOnly || !requiresReveal || citationRevealed;
+	const canAdvance =
+		day?.progression.isReadOnly ||
+		((!requiresReveal || citationRevealed) && (!isDicoStep || dicoAnswered));
 
 	const persistProgress = async ({
 		nextIndex,
@@ -301,12 +422,13 @@ export default function ParcoursDayScreen() {
 		}
 
 		const nextPayload = mergeProgressPayload({
-			basePayload: lastProgressPayload,
+			basePayload: lastProgressPayloadRef.current,
 			activeStepId,
 			stepId,
 			stepPatch,
 		});
 
+		lastProgressPayloadRef.current = nextPayload;
 		setLastProgressPayload(nextPayload);
 
 		await updateProgress.mutateAsync({
@@ -320,10 +442,12 @@ export default function ParcoursDayScreen() {
 	};
 
 	const handleCitationRevealComplete = async () => {
-		if (citationRevealed) {
+		if (citationRevealed || revealPersistedRef.current) {
 			return;
 		}
 
+		revealPersistedRef.current = true;
+		setLocallyRevealedStepId(currentStepId);
 		await persistProgress({
 			nextIndex: activeIndex,
 			activeStepId: currentStepId,
@@ -369,18 +493,49 @@ export default function ParcoursDayScreen() {
 		router.back();
 	};
 
+	const handlePrevious = async () => {
+		if (!day || activeIndex <= 0) return;
+
+		const prevIndex = activeIndex - 1;
+		const prevStep = steps[prevIndex];
+		const prevStepId =
+			typeof prevStep?.id === "string" ? prevStep.id : `step_${prevIndex}`;
+		setActiveIndex(prevIndex);
+		await persistProgress({
+			nextIndex: prevIndex,
+			activeStepId: prevStepId,
+		});
+	};
+
+	const handleSelectDicoAnswer = async (answerKey: string) => {
+		if (day?.progression.isReadOnly) {
+			return;
+		}
+
+		await persistProgress({
+			nextIndex: activeIndex,
+			activeStepId: currentStepId,
+			stepId: currentStepId,
+			stepPatch: {
+				selectedAnswerKey: answerKey,
+				answered: true,
+			},
+		});
+	};
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
 			{isCitationStep ? (
-				<View
-					style={[
-						styles.pageBody,
-						{
-							paddingHorizontal: 24,
-							justifyContent: "flex-start",
-						},
-					]}>
+				<ScrollView
+					contentContainerStyle={{
+						paddingHorizontal: 24,
+						paddingBottom: insets.bottom + 110,
+						paddingTop: 2,
+						flexGrow: 1,
+					}}
+					scrollEnabled={citationRevealed && !isScratchGestureActive}
+					showsVerticalScrollIndicator={false}>
 					<View style={styles.topMeta}>
 						<Text style={styles.dateLabel}>
 							{formatDayDate(day?.availableFrom, day?.stepsPayload?.dayMeta?.dateLabel)}
@@ -399,12 +554,20 @@ export default function ParcoursDayScreen() {
 							text={String(currentStepContent.text || "")}
 							author={String(currentStepContent.author || "")}
 							revealed={citationRevealed}
+							accentColor={currentAccentColor}
+							onScratchStart={() => {
+								setIsScratchGestureActive(true);
+							}}
+							onScratchEnd={() => {
+								setIsScratchGestureActive(false);
+							}}
 							onRevealComplete={() => {
+								setIsScratchGestureActive(false);
 								void handleCitationRevealComplete();
 							}}
 						/>
 					</View>
-				</View>
+				</ScrollView>
 			) : (
 				<ScrollView
 					contentContainerStyle={{
@@ -426,7 +589,25 @@ export default function ParcoursDayScreen() {
 					</View>
 
 					<View style={styles.stepStage}>
-						<StepFallback step={currentStep || {}} />
+						{isDicoStep ? (
+							<ParcoursDicoQuestionStep
+								word={String(currentStepContent.word || "")}
+								definition={
+									currentStepContent.definition
+										? String(currentStepContent.definition)
+										: null
+								}
+								answers={dicoAnswers}
+								selectedAnswerKey={persistedStepState.selectedAnswerKey || null}
+								onSelectAnswer={(answerKey) => {
+									void handleSelectDicoAnswer(answerKey);
+								}}
+								accentColor={currentAccentColor}
+								disabled={Boolean(day?.progression.isReadOnly)}
+							/>
+						) : (
+							<StepFallback step={currentStep || {}} />
+						)}
 					</View>
 				</ScrollView>
 			)}
@@ -434,7 +615,11 @@ export default function ParcoursDayScreen() {
 			<FloatingNav
 				canAdvance={Boolean(canAdvance)}
 				isCompleting={completeDay.isPending || updateProgress.isPending}
+				isFirstStep={activeIndex === 0}
 				onQuit={() => router.back()}
+				onBack={() => {
+					void handlePrevious();
+				}}
 				onNext={() => {
 					void handleNext();
 				}}

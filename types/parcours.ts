@@ -116,3 +116,44 @@ export interface ParcoursDayProgressPayload {
 	currentStepIndex: number;
 	lastProgressPayload?: Record<string, unknown> | null;
 }
+
+export interface ParcoursStepBase {
+	id?: string;
+	type?: string;
+	stateMode?: string;
+	componentKey?: string;
+	content?: Record<string, unknown>;
+}
+
+export interface ParcoursCitationStep extends ParcoursStepBase {
+	type: "citation";
+	content: {
+		theme?: string;
+		text?: string;
+		author?: string;
+		accentColor?: string;
+		[key: string]: unknown;
+	};
+}
+
+export interface ParcoursDicoAnswerOption {
+	key: string;
+	label: string;
+}
+
+export interface ParcoursDicoQuestionStep extends ParcoursStepBase {
+	type: "dico_question";
+	content: {
+		word?: string;
+		definition?: string;
+		correctAnswerKey?: string;
+		answers?: ParcoursDicoAnswerOption[];
+		accentColor?: string;
+		[key: string]: unknown;
+	};
+}
+
+export type ParcoursDayStep =
+	| ParcoursCitationStep
+	| ParcoursDicoQuestionStep
+	| ParcoursStepBase;

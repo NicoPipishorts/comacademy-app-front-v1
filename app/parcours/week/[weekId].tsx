@@ -105,6 +105,11 @@ const getDayCardPresentation = (
 	day: ParcoursTimelineDay,
 	isCurrentReadyDay: boolean
 ): DayCardPresentation => {
+	const themeColor =
+		normalizeThemeColor(day.accentColor) ||
+		normalizeThemeColor(day.category?.color) ||
+		colorPink;
+
 	if (day.isLocked) {
 		return {
 			containerStyle: styles.dayCardLocked,
@@ -135,12 +140,16 @@ const getDayCardPresentation = (
 
 	if (day.status === "in_progress") {
 		return {
-			containerStyle: styles.dayCardDefault,
+			containerStyle: [
+				styles.dayCardDefault,
+				styles.dayCardInProgress,
+				{ borderColor: themeColor },
+			],
 			titleStyle: styles.dayTitle,
 			subtitleStyle: styles.daySubtitle,
 			label: "Incomplet",
-			labelStyle: styles.metaPillWarning,
-			labelTextStyle: styles.metaPillWarningText,
+			labelStyle: [styles.metaPillAccent, { backgroundColor: `${themeColor}1A` }],
+			labelTextStyle: [styles.metaPillAccentText, { color: themeColor }],
 			buttonStyle: null,
 			buttonTextStyle: null,
 			isAction: false,
@@ -148,10 +157,6 @@ const getDayCardPresentation = (
 	}
 
 	if (day.status === "ready") {
-		const themeColor =
-			normalizeThemeColor(day.accentColor) ||
-			normalizeThemeColor(day.category?.color) ||
-			colorPink;
 		return {
 			containerStyle: isCurrentReadyDay
 				? [styles.dayCardDefault, styles.dayCardReady, { borderColor: themeColor }]
@@ -398,6 +403,9 @@ const styles = StyleSheet.create({
 	dayCardReady: {
 		borderWidth: 4,
 	},
+	dayCardInProgress: {
+		borderWidth: 3,
+	},
 	dayCardLocked: {
 		backgroundColor: "#E4E4E4",
 		shadowOpacity: 0,
@@ -445,6 +453,15 @@ const styles = StyleSheet.create({
 	},
 	metaPillWarningText: {
 		color: "#F0781D",
+	},
+	metaPillAccent: {
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 999,
+	},
+	metaPillAccentText: {
+		fontSize: FontSize12,
+		fontWeight: "800",
 	},
 	metaPillMuted: {
 		paddingHorizontal: 14,
