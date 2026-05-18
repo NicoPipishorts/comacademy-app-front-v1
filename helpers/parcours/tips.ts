@@ -134,7 +134,7 @@ export const buildValidatedParcoursTipsPairPatch = ({
 	buildParcoursTipsPairPatch({
 		stepState,
 		pairIndex,
-		phase: "card",
+		phase: "question",
 		pairPatch: buildValidatedParcoursDicoStepPatch({
 			selectedAnswerKey,
 			correctAnswerKey,
@@ -155,7 +155,7 @@ export const buildTimedOutParcoursTipsPairPatch = ({
 	buildParcoursTipsPairPatch({
 		stepState,
 		pairIndex,
-		phase: "card",
+		phase: "question",
 		pairPatch: buildTimedOutParcoursDicoStepPatch({
 			selectedAnswerKey,
 			correctAnswerKey,

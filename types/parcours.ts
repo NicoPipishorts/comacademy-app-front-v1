@@ -10,6 +10,7 @@ export interface ParcoursCategory {
 	name: string | null;
 	title: string | null;
 	color: string | null;
+	staticId?: number | null;
 }
 
 export interface ParcoursBonus {
@@ -195,9 +196,20 @@ export interface ParcoursTipsAndTacticsBlockStep extends ParcoursStepBase {
 	};
 }
 
+export interface ParcoursGameBlockStep extends ParcoursStepBase {
+	type: "game_block";
+	content: {
+		categoryStaticId?: number | null;
+		questionCount?: number | null;
+		accentColor?: string;
+		[key: string]: unknown;
+	};
+}
+
 export type ParcoursDayStep =
 	| ParcoursCitationStep
 	| ParcoursDicoQuestionStep
 	| ParcoursSpecificRubriqueStep
 	| ParcoursTipsAndTacticsBlockStep
+	| ParcoursGameBlockStep
 	| ParcoursStepBase;

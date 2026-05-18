@@ -15,6 +15,10 @@ export type StepStateRecord = {
 	videoCompleted?: boolean;
 	videoRewatched?: boolean;
 	videoRewatchCount?: number;
+	gameSessionId?: number;
+	gameAnsweredCount?: number;
+	gameQuestionCount?: number;
+	gameCompleted?: boolean;
 	tipsPairIndex?: number;
 	tipsPhase?: "question" | "card";
 	tipsProgress?: Record<string, StepStateRecord>;
@@ -119,14 +123,20 @@ export const mergeProgressPayload = ({
 export const resolveInitialParcoursStepIndex = ({
 	steps,
 	currentStepIndex,
+	progressionStatus,
 	lastProgressPayload,
 	getStepId,
 }: {
 	steps: ParcoursDayStep[];
 	currentStepIndex?: number | null;
+	progressionStatus?: string | null;
 	lastProgressPayload?: Record<string, unknown> | string | null;
 	getStepId: (step: ParcoursDayStep, index: number) => string;
 }) => {
+	if (progressionStatus === "completed") {
+		return 0;
+	}
+
 	const activeStepId = getActiveStepId(lastProgressPayload);
 	if (activeStepId) {
 		const activeStepIndex = steps.findIndex(

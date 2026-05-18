@@ -4,6 +4,13 @@ export const QK = {
 	gameSession: (sessionId: number) => ["game-session", sessionId] as const,
 	gameQuestions: (userId: number, cat: number | null) =>
 		["game-questions", userId, cat ?? "all"] as const,
+	parcoursGameQuestions: (
+		userId: number,
+		categoryId: number,
+		questionCount: number,
+		sessionId?: number | null
+	) =>
+		["parcours-game-questions", userId, categoryId, questionCount, sessionId ?? "new"] as const,
 	endOfSession: (userId: number) => ["end-of-session", userId] as const,
 	endOfSessionResults: (gameId: number) =>
 		["end-of-session-results", gameId] as const,
