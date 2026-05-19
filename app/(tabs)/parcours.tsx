@@ -1,24 +1,25 @@
 import { useParcoursTimeline } from "@/api/parcours/useParcours";
-import bonusPinkIcon from "@/assets/imgs/parcours/Bonus 1.svg";
-import bonusGreenIcon from "@/assets/imgs/parcours/Bonus 2.svg";
+import bonusPinkIcon from "@/assets/imgs/parcours/Bonus-1.svg";
+import bonusGreenIcon from "@/assets/imgs/parcours/Bonus-2.svg";
 import bonusLockedIcon from "@/assets/imgs/parcours/Bonus-locked.svg";
-import bonusUnlockedIcon from "@/assets/imgs/parcours/Bonus-unlocked.svg";
 import connectorLeftIcon from "@/assets/imgs/parcours/line-connecter-left.svg";
 import connectorRightIcon from "@/assets/imgs/parcours/line-connecter-rightsvg.svg";
 import quizPinkIcon from "@/assets/imgs/parcours/Quiz-1.svg";
 import quizGreenIcon from "@/assets/imgs/parcours/Quiz-2.svg";
 import quizBlueIcon from "@/assets/imgs/parcours/Quiz-3.svg";
+import quizGreyIcon from "@/assets/imgs/parcours/Quiz-grey.svg";
 import { ParcoursDayStatusBadge } from "@/components/parcours/ParcoursDayStatusBadge";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import Loader from "@/components/experience/loader";
 import { colorBlack, colorDarkGrey, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { isParcoursWeekOpen } from "@/helpers/parcours/week";
 import useJwtToken from "@/hooks/useJwtToken";
 import { ParcoursTimelineWeek } from "@/types/parcours";
 import { useAssets } from "expo-asset";
-import { router } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Pressable,
 	RefreshControl,
@@ -32,6 +33,12 @@ import { SvgUri } from "react-native-svg";
 
 const quizAssets = [quizPinkIcon, quizGreenIcon, quizBlueIcon];
 const bonusAssets = [bonusPinkIcon, bonusGreenIcon];
+
+const getQuizThemeIndex = (week: ParcoursTimelineWeek) =>
+	Math.max(0, Number(week.programOrder || 1) - 1) % quizAssets.length;
+
+const getBonusThemeIndex = (week: ParcoursTimelineWeek) =>
+	Math.max(0, Number(week.programOrder || 1) - 1) % bonusAssets.length;
 
 const dayLabel = (dayKey: string) =>
 	({
@@ -66,28 +73,36 @@ function SvgAsset({
 	return <SvgUri uri={uri} width={width} height={height} style={style as any} />;
 }
 
-function getBonusIcon(week: ParcoursTimelineWeek, index: number) {
+function getBonusIcon(week: ParcoursTimelineWeek) {
+	const isUpcomingLockedWeek =
+		week.status === "not_started" &&
+		week.days.every((day) => day.status === "locked");
+
+	if (isUpcomingLockedWeek) {
+		return bonusLockedIcon;
+	}
+
 	if (!week.bonus || week.bonus.status === "locked") {
 		return bonusLockedIcon;
 	}
 
 	if (week.bonus.status === "unlocked" || week.bonus.status === "viewed") {
-		return bonusAssets[index % bonusAssets.length];
+		return bonusAssets[getBonusThemeIndex(week)];
 	}
 
-	return bonusUnlockedIcon;
+	return bonusLockedIcon;
 }
 
-function getActivityIcon(week: ParcoursTimelineWeek, index: number) {
-	if (week.status === "completed") {
-		return quizAssets[index % quizAssets.length];
+function getActivityIcon(week: ParcoursTimelineWeek) {
+	const isUpcomingLockedWeek =
+		week.status === "not_started" &&
+		week.days.every((day) => day.status === "locked");
+
+	if (isUpcomingLockedWeek) {
+		return quizGreyIcon;
 	}
 
-	if (week.status === "expired") {
-		return quizGreenIcon;
-	}
-
-	return quizPinkIcon;
+	return quizAssets[getQuizThemeIndex(week)];
 }
 
 function TimelineWeekSection({
@@ -99,15 +114,21 @@ function TimelineWeekSection({
 }) {
 	const isRightAligned = index % 2 === 1;
 	const connectorSource = index % 2 === 0 ? connectorLeftIcon : connectorRightIcon;
+	const isWeekOpen = isParcoursWeekOpen(week);
 
 	return (
 		<Pressable
-			onPress={() =>
+			disabled={!isWeekOpen}
+			onPress={() => {
+				if (!isWeekOpen) {
+					return;
+				}
+
 				router.push({
 					pathname: "/parcours/week/[weekId]",
 					params: { weekId: String(week.id) },
-				})
-			}
+				});
+			}}
 			style={styles.sectionBlock}>
 			<Text style={styles.sectionWeekLabel}>{weekLabel(week)}</Text>
 
@@ -123,7 +144,7 @@ function TimelineWeekSection({
 						isRightAligned && styles.activityIconColumnRight,
 					]}>
 					<SvgAsset
-						source={getActivityIcon(week, index)}
+						source={getActivityIcon(week)}
 						width={72}
 						height={72}
 					/>
@@ -172,7 +193,7 @@ function TimelineWeekSection({
 					]}>
 					<View style={styles.bonusIconWrap}>
 						<SvgAsset
-							source={getBonusIcon(week, index)}
+							source={getBonusIcon(week)}
 							width={72}
 							height={72}
 						/>
@@ -194,13 +215,13 @@ function TimelineWeekSection({
 export default function ParcoursScreen() {
 	const insets = useSafeAreaInsets();
 	const scrollViewRef = useRef<ScrollView>(null);
+	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 	const { token, loading: loadingToken } = useJwtToken();
 	const {
 		data,
 		error,
 		isError,
 		isLoading,
-		isFetching,
 		refetch,
 	} = useParcoursTimeline(token, loadingToken);
 
@@ -210,15 +231,29 @@ export default function ParcoursScreen() {
 	const errorMessage =
 		error instanceof Error ? error.message : "Erreur inconnue";
 
+	const scrollToLatestWeek = useCallback(() => {
+		requestAnimationFrame(() => {
+			scrollViewRef.current?.scrollToEnd({ animated: false });
+		});
+	}, []);
+
 	useEffect(() => {
 		if (!weeks.length) {
 			return;
 		}
 
-		requestAnimationFrame(() => {
-			scrollViewRef.current?.scrollToEnd({ animated: false });
-		});
-	}, [weeks.length]);
+		scrollToLatestWeek();
+	}, [weeks.length, scrollToLatestWeek]);
+
+	useFocusEffect(
+		useCallback(() => {
+			if (!weeks.length) {
+				return;
+			}
+
+			scrollToLatestWeek();
+		}, [weeks.length, scrollToLatestWeek])
+	);
 
 	if (isLoading) {
 		return <Loader />;
@@ -245,13 +280,16 @@ export default function ParcoursScreen() {
 						return;
 					}
 
-					scrollViewRef.current?.scrollToEnd({ animated: false });
+					scrollToLatestWeek();
 				}}
 				refreshControl={
 					<RefreshControl
-						refreshing={isFetching}
+						refreshing={isPullRefreshing}
 						onRefresh={() => {
-							void refetch();
+							setIsPullRefreshing(true);
+							void refetch().finally(() => {
+								setIsPullRefreshing(false);
+							});
 						}}
 					/>
 				}>

@@ -75,7 +75,11 @@ const getDayCardPresentation = (
 
 	if (day.status === "in_progress") {
 		return {
-			containerStyle: styles.dayCardDefault,
+			containerStyle: [
+				styles.dayCardDefault,
+				styles.dayCardReady,
+				{ borderColor: themeColor },
+			],
 			titleStyle: styles.dayTitle,
 			subtitleStyle: styles.daySubtitle,
 			label: "Incomplet",

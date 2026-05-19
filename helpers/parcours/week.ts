@@ -38,3 +38,6 @@ export const getCurrentReadyParcoursDayId = (days: ParcoursTimelineDay[]) => {
 		day.sortOrder > latest.sortOrder ? day : latest
 	).id;
 };
+
+export const isParcoursWeekOpen = (week: Pick<ParcoursWeekDetail, "days">) =>
+	(week.days || []).some((day) => !day.isLocked);

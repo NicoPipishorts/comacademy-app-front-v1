@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import * as Haptics from "expo-haptics";
 import {
 	Animated,
 	Dimensions,
@@ -68,6 +69,7 @@ function SwipeableCard({
 		(direction: "left" | "right") => {
 			if (!isTopCard || isSwipingRef.current) return;
 			isSwipingRef.current = true;
+			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,

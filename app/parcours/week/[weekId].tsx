@@ -12,7 +12,10 @@ import {
 	FontSize16,
 } from "@/constants/fontsizes";
 import useJwtToken from "@/hooks/useJwtToken";
-import { getCurrentReadyParcoursDayId } from "@/helpers/parcours/week";
+import {
+	getCurrentReadyParcoursDayId,
+	isParcoursWeekOpen,
+} from "@/helpers/parcours/week";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
@@ -42,6 +45,7 @@ export default function ParcoursWeekScreen() {
 	const currentReadyDayId = week
 		? getCurrentReadyParcoursDayId(week.days || [])
 		: null;
+	const isWeekOpen = week ? isParcoursWeekOpen(week) : false;
 	const contentBottomPadding = insets.bottom + 124;
 	const floatingButtonBottom = Math.max(insets.bottom, 14);
 
@@ -56,6 +60,26 @@ export default function ParcoursWeekScreen() {
 					contentStyle={styles.headerContent}
 				/>
 				<EmptyWeekState />
+			</View>
+		);
+	}
+
+	if (!isWeekOpen) {
+		return (
+			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+				<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
+				<PageTitleAvatarHeader
+					title='Activités'
+					showAvatar={false}
+					containerStyle={styles.headerContainer}
+					contentStyle={styles.headerContent}
+				/>
+				<EmptyWeekState title='Semaine indisponible' />
+				<View
+					pointerEvents='box-none'
+					style={[styles.floatingReturnWrap, { bottom: floatingButtonBottom }]}>
+					<ReturnButton variant='floating' />
+				</View>
 			</View>
 		);
 	}
@@ -101,10 +125,10 @@ export default function ParcoursWeekScreen() {
 	);
 }
 
-function EmptyWeekState() {
+function EmptyWeekState({ title = "Semaine introuvable" }: { title?: string }) {
 	return (
 		<View style={styles.emptyState}>
-			<Text style={styles.emptyTitle}>Semaine introuvable</Text>
+			<Text style={styles.emptyTitle}>{title}</Text>
 		</View>
 	);
 }

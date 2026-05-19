@@ -76,6 +76,7 @@ import {
 	ParcoursDayStep,
 } from "@/types/parcours";
 import { QuestionData } from "@/types/userGameSessionStatus";
+import * as Haptics from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FeedbackMessage from "../../(tabs)/leJeu/feedbackMessage";
@@ -651,6 +652,7 @@ export default function ParcoursDayScreen() {
 		}
 
 		revealPersistedRef.current = true;
+		void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 		setLocallyRevealedStepId(currentStepId);
 		await persistProgress({
 			nextIndex: activeIndex,

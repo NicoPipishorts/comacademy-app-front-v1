@@ -1,6 +1,7 @@
 // File: src/components/leJeu/Jeu.tsx
 import { invalidateGameQuestions } from "@/api/game/invalidateGameQueries";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import * as Haptics from "expo-haptics";
 import React, {
 	useCallback,
 	useEffect,
@@ -100,6 +101,7 @@ const SwipeableCard = ({
 		(direction: "left" | "right") => {
 			if (!isTopCard || isSwipingRef.current) return;
 			isSwipingRef.current = true;
+			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,
