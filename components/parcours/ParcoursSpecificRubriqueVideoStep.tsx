@@ -35,6 +35,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 	const videoRef = useRef<ManagedVideoHandle | null>(null);
 	const overlayOpacity = useRef(new Animated.Value(1)).current;
 	const previousPositionMillisRef = useRef(initialPositionMillis);
+	const hasFinishedPlaybackRef = useRef(false);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [startPositionMillis] = useState(initialPositionMillis);
 	const videoSource = useMemo(() => ({ uri: videoUri }), [videoUri]);
@@ -57,13 +58,28 @@ export default function ParcoursSpecificRubriqueVideoStep({
 
 	const finalizePlayback = useCallback(
 		(status?: CompatVideoStatus) => {
+			hasFinishedPlaybackRef.current = true;
 			setIsPlaying(false);
 			showOverlay();
-			videoRef.current?.pauseAsync().catch(() => {});
+			const endPositionMillis =
+				typeof status?.durationMillis === "number" && status.durationMillis > 0
+					? Math.max(status.durationMillis - 250, 0)
+					: status?.positionMillis ?? 0;
+			previousPositionMillisRef.current = endPositionMillis;
+			videoRef.current
+				?.setPositionAsync(endPositionMillis, { toleranceMillis: 0 })
+				.catch(() => {})
+				.finally(() => {
+					videoRef.current?.pauseAsync().catch(() => {});
+				});
 			if (status) {
 				onPlaybackStatusUpdate?.({
 					...status,
 					isPlaying: false,
+					positionMillis:
+						typeof status.durationMillis === "number"
+							? status.durationMillis
+							: status.positionMillis,
 					didJustFinish: true,
 				});
 			}
@@ -138,6 +154,11 @@ export default function ParcoursSpecificRubriqueVideoStep({
 						<Pressable
 							style={styles.playButtonContainer}
 							onPress={() => {
+								if (hasFinishedPlaybackRef.current) {
+									hasFinishedPlaybackRef.current = false;
+									previousPositionMillisRef.current = 0;
+									videoRef.current?.setPositionAsync(0, { toleranceMillis: 0 }).catch(() => {});
+								}
 								setIsPlaying(true);
 								fadeOutOverlay();
 								videoRef.current?.playAsync().catch(() => {});

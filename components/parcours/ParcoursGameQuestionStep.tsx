@@ -37,7 +37,7 @@ export default function ParcoursGameQuestionStep({
 			<View style={styles.stateCard}>
 				<Text style={styles.stateTitle}>Jeu terminé</Text>
 				<Text style={styles.stateBody}>
-					Le score de cette manche a été ajouté à votre total. Vous pouvez passer à l’étape suivante.
+					Le parcours du jour est terminé, vous pouvez passer au prochain.
 				</Text>
 			</View>
 		);
@@ -68,6 +68,8 @@ const styles = StyleSheet.create({
 		backgroundColor: colorWhite,
 		borderRadius: 24,
 		padding: 24,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	stateTitle: {
 		fontSize: FontSize14,
@@ -75,11 +77,13 @@ const styles = StyleSheet.create({
 		color: colorDarkGrey,
 		marginBottom: 8,
 		textTransform: "uppercase",
+		textAlign: "center",
 	},
 	stateBody: {
 		fontSize: FontSize16,
 		lineHeight: 22,
 		fontWeight: "600",
 		color: colorBlack,
+		textAlign: "center",
 	},
 });

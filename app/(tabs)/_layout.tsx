@@ -147,7 +147,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='secrets'
 					options={{
-						tabBarLabel: "3 Secrets",
+						tabBarLabel: "La Capsule",
 						headerShown: false,
 						href: null,
 					}}

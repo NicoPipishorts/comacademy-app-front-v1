@@ -33,7 +33,7 @@ export default function Secrets() {
 			<UpgradeSubscriptionModal
 				visible={showUpgradeModal}
 				onClose={closeUpgradeModal}
-				message='Les 5 premiers 3 secrets du succès sont gratuits. Passez à un abonnement premium pour accéder à tous les contenus.'
+				message='Les 5 premières capsules sont gratuites. Passez à un abonnement premium pour accéder à tous les contenus.'
 			/>
 
 			<ScrollView
@@ -43,7 +43,7 @@ export default function Secrets() {
 					{ paddingTop: insets.top },
 				]}>
 				<PageTitleAvatarHeader
-					title='3 secrets du succès'
+					title='La Capsule'
 					showAvatar={false}
 					containerStyle={styles.pageHeaderContainer}
 				/>

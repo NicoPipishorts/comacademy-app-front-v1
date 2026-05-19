@@ -8,6 +8,7 @@ import { useParcoursGameSession } from "@/api/game/useParcoursGameSession";
 import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import CommandementCard from "@/components/cards/CommandementCard";
 import ParcoursCitationRevealCard from "@/components/parcours/ParcoursCitationRevealCard";
+import ParcoursDayCompletionCelebration from "@/components/parcours/ParcoursDayCompletionCelebration";
 import ParcoursDayHeader from "@/components/parcours/ParcoursDayHeader";
 import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestionStep";
 import ParcoursGameQuestionStep from "@/components/parcours/ParcoursGameQuestionStep";
@@ -158,6 +159,8 @@ export default function ParcoursDayScreen() {
 	const [draftAnswerByStepId, setDraftAnswerByStepId] = useState<Record<string, string>>({});
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [timeoutFeedbackLabel, setTimeoutFeedbackLabel] = useState<string | null>(null);
+	const [isGameCompletionCelebrationVisible, setIsGameCompletionCelebrationVisible] =
+		useState(false);
 	const [optimisticGameQuestions, setOptimisticGameQuestions] = useState<QuestionData[] | null>(
 		null
 	);
@@ -173,6 +176,10 @@ export default function ParcoursDayScreen() {
 	const pendingCorrectAdvanceRef = useRef(false);
 	const dicoFinalizingRef = useRef(false);
 	const tipsFinalizingRef = useRef(false);
+	const gameCompletionCelebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null
+	);
+	const pendingGameCompletionCelebrationRef = useRef(false);
 	const specificVideoProgressRef = useRef<{
 		stepId: string | null;
 		checkpointMillis: number;
@@ -210,10 +217,12 @@ export default function ParcoursDayScreen() {
 		setDraftAnswerByStepId({});
 		setFeedbackAnswer(null);
 		setTimeoutFeedbackLabel(null);
+		setIsGameCompletionCelebrationVisible(false);
 		setOptimisticGameQuestions(null);
 		setTipsReviewStateByStepId({});
 		setLocallyUnlockedVideoStepId(null);
 		pendingCorrectAdvanceRef.current = false;
+		pendingGameCompletionCelebrationRef.current = false;
 	}, [day?.id]);
 
 	useEffect(() => {
@@ -382,6 +391,24 @@ export default function ParcoursDayScreen() {
 		isLoadingParcoursGameSession &&
 		!parcoursGameCompleted &&
 		(!optimisticGameQuestions || optimisticGameQuestions.length === 0);
+
+	const showGameCompletionCelebration = useCallback(() => {
+		void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+		setIsGameCompletionCelebrationVisible(true);
+		gameCompletionCelebrationTimeoutRef.current = setTimeout(() => {
+			setIsGameCompletionCelebrationVisible(false);
+			gameCompletionCelebrationTimeoutRef.current = null;
+		}, 2200);
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			if (gameCompletionCelebrationTimeoutRef.current) {
+				clearTimeout(gameCompletionCelebrationTimeoutRef.current);
+				gameCompletionCelebrationTimeoutRef.current = null;
+			}
+		};
+	}, []);
 
 	useEffect(() => {
 		if (!isGameStep) {
@@ -764,7 +791,12 @@ export default function ParcoursDayScreen() {
 			return;
 		}
 
-		if (!token || day.progression.isReadOnly) return;
+		if (day.progression.isReadOnly) {
+			router.back();
+			return;
+		}
+
+		if (!token) return;
 
 		await completeDay.mutateAsync({
 			dayId: day.id,
@@ -1096,6 +1128,15 @@ export default function ParcoursDayScreen() {
 					completed: refreshedSession.status === "finished",
 				}),
 			});
+
+			if (
+				isGameStep &&
+				activeIndex === steps.length - 1 &&
+				refreshedSession.status === "finished" &&
+				!day?.progression.isReadOnly
+			) {
+				pendingGameCompletionCelebrationRef.current = true;
+			}
 		} catch {
 			await refetchParcoursGameSession();
 		}
@@ -1303,12 +1344,18 @@ export default function ParcoursDayScreen() {
 			{feedbackAnswer ? (
 				<FeedbackMessage
 					answer={feedbackAnswer}
-					durationMs={2000}
+					durationMs={1500}
 					isHomeButtonModel
 					onHide={() => {
 						const shouldAdvance = pendingCorrectAdvanceRef.current;
+						const shouldShowGameCelebration =
+							pendingGameCompletionCelebrationRef.current;
 						pendingCorrectAdvanceRef.current = false;
+						pendingGameCompletionCelebrationRef.current = false;
 						setFeedbackAnswer(null);
+						if (shouldShowGameCelebration) {
+							showGameCompletionCelebration();
+						}
 						if (shouldAdvance) {
 							void handleNext();
 						}
@@ -1323,6 +1370,7 @@ export default function ParcoursDayScreen() {
 					}}
 				/>
 			) : null}
+			{isGameCompletionCelebrationVisible ? <ParcoursDayCompletionCelebration /> : null}
 		</View>
 	);
 }
