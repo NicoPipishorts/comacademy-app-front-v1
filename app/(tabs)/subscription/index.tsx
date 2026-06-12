@@ -7,6 +7,7 @@ import SubscriptionPlanCard from "@/components/subscription/SubscriptionPlanCard
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { useAnalyticsEventTracker } from "@/hooks/Metrics/useAnalyticsEvents";
 import { useSubscription } from "@/src/hooks/useSubscription";
 import {
 	formatSubscriptionPrice,
@@ -261,6 +262,7 @@ export default function SubscriptionScreen() {
 	const router = useRouter();
 	const { from } = useLocalSearchParams<{ from?: string | string[] }>();
 	const { session } = UseAuth();
+	const trackEvent = useAnalyticsEventTracker();
 	const purchaseFeedbackSheetRef = useRef<BottomSheetModal>(null);
 	const purchaseFeedbackSnapPoints = useMemo(() => ["36%"], []);
 	const [purchaseFeedback, setPurchaseFeedback] =
@@ -504,6 +506,16 @@ export default function SubscriptionScreen() {
 				});
 				return;
 			}
+
+			void trackEvent({
+				eventName: "purchase_succeeded",
+				screenName: "Subscription",
+				properties: {
+					productId: selectedProductId,
+					price: safeFormatPrice(product, ""),
+					source: Array.isArray(from) ? from[0] : from ?? null,
+				},
+			});
 
 			openPurchaseFeedbackSheet({
 				title: "Succès !",

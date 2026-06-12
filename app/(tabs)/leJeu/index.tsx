@@ -16,6 +16,7 @@ import { useTab } from "@/context/floatingTabbarContext";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { getGameLevel } from "@/helpers/gameProgress";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
+import { useAnalyticsEventTracker } from "@/hooks/Metrics/useAnalyticsEvents";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
@@ -32,6 +33,7 @@ export default function LeJeu() {
 	const { isConnected } = useNetwork();
 	const { selectedTab, setSelectedTab } = useTab();
 	const { showTabBar } = useTabBarVisibility();
+	const trackEvent = useAnalyticsEventTracker();
 
 	const [isEnabled, setIsEnabled] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
@@ -164,12 +166,21 @@ export default function LeJeu() {
 			return;
 		}
 
+		void trackEvent({
+			eventName: "game_session_started",
+			screenName: "Jeu",
+			properties: {
+				categoryId: filterByCat,
+				level: currentLevel,
+			},
+		});
+
 		router.push({
 			pathname: "/leJeu/jeu",
 			params:
 				filterByCat !== null ? { categoryId: String(filterByCat) } : undefined,
 		});
-	}, [totalAnsweredQuestions, isFreeUser, filterByCat]);
+	}, [totalAnsweredQuestions, isFreeUser, filterByCat, trackEvent]);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>

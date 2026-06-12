@@ -12,11 +12,12 @@ import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
 	ListRenderItem,
+	RefreshControl,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -30,6 +31,7 @@ const Feed = () => {
 	useTrackRubricOpened("feed");
 	const insets = useSafeAreaInsets();
 	const [visibleItems, setVisibleItems] = useState<number[]>([]);
+	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 
 	useTrackPageMetrics({ page: "Feed" });
 
@@ -59,7 +61,6 @@ const Feed = () => {
 	const {
 		data,
 		isLoading,
-		isRefetching,
 		isError,
 		error,
 		isFetchingNextPage,
@@ -84,6 +85,19 @@ const Feed = () => {
 	const renderItem: ListRenderItem<FeedItem> = ({ item }) => {
 		return <FeedWrapper feed={item} visibleItems={visibleItems} />;
 	};
+
+	const handleRefresh = useCallback(async () => {
+		if (isPullRefreshing) {
+			return;
+		}
+
+		setIsPullRefreshing(true);
+		try {
+			await refetch();
+		} finally {
+			setIsPullRefreshing(false);
+		}
+	}, [isPullRefreshing, refetch]);
 
 	if (isLoading) {
 		return <FeedSkeleton />;
@@ -110,7 +124,17 @@ const Feed = () => {
 
 	return (
 		<View style={styles.wrapper}>
+			<PageTitleAvatarHeader
+				title='Feed'
+				containerStyle={[
+					styles.headerWrapper,
+					{
+						paddingTop: insets.top,
+					},
+				]}
+			/>
 			<FlatList
+				style={styles.feedList}
 				data={data?.pages.flatMap((page) => page.data) ?? []}
 				keyExtractor={(item) => item.id.toString()}
 				renderItem={renderItem}
@@ -123,21 +147,16 @@ const Feed = () => {
 				ListFooterComponent={renderFooter} // Loader at the bottom
 				viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
 				contentContainerStyle={styles.scrollContent}
-				ListHeaderComponent={
-					<PageTitleAvatarHeader
-						title='Feed'
-						containerStyle={[
-							styles.headerWrapper,
-							{
-								paddingTop: insets.top,
-							},
-						]}
+				refreshControl={
+					<RefreshControl
+						refreshing={isPullRefreshing}
+						onRefresh={handleRefresh}
+						tintColor={colorDarkGrey}
+						colors={[colorDarkGrey]}
+						progressBackgroundColor={primaryBackground}
+						progressViewOffset={8}
 					/>
 				}
-				refreshing={isRefetching}
-				onRefresh={() => {
-					refetch();
-				}}
 				ListEmptyComponent={
 					<View style={styles.emptyState}>
 						<Text style={styles.emptyText}>Aucun contenu pour le moment.</Text>
@@ -179,8 +198,11 @@ const styles = StyleSheet.create({
 		paddingBottom: 120,
 		paddingHorizontal: 24,
 	},
+	feedList: {
+		flex: 1,
+	},
 	headerWrapper: {
-		paddingHorizontal: 0,
+		paddingHorizontal: 24,
 	},
 	feedWrapper: {
 		width: "100%",

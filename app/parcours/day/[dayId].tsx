@@ -8,12 +8,28 @@ import { useParcoursGameSession } from "@/api/game/useParcoursGameSession";
 import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import CommandementCard from "@/components/cards/CommandementCard";
 import ParcoursCitationRevealCard from "@/components/parcours/ParcoursCitationRevealCard";
-import ParcoursDayCompletionCelebration from "@/components/parcours/ParcoursDayCompletionCelebration";
+import ParcoursCitationOnboardingStep, {
+	CITATION_ONBOARDING_BACKGROUND,
+} from "@/components/parcours/ParcoursCitationOnboardingStep";
+import ParcoursDayCompletionScreen from "@/components/parcours/ParcoursDayCompletionScreen";
 import ParcoursDayHeader from "@/components/parcours/ParcoursDayHeader";
+import ParcoursDicoOnboardingStep, {
+	DICO_ONBOARDING_BACKGROUND,
+} from "@/components/parcours/ParcoursDicoOnboardingStep";
 import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestionStep";
+import ParcoursGameOnboardingStep, {
+	GAME_ONBOARDING_BACKGROUND,
+} from "@/components/parcours/ParcoursGameOnboardingStep";
 import ParcoursGameQuestionStep from "@/components/parcours/ParcoursGameQuestionStep";
 import ParcoursSpecificRubriqueVideoStep from "@/components/parcours/ParcoursSpecificRubriqueVideoStep";
+import ParcoursTipsOnboardingStep, {
+	TIPS_ONBOARDING_BACKGROUND,
+} from "@/components/parcours/ParcoursTipsOnboardingStep";
+import ParcoursVideoOnboardingStep, {
+	VIDEO_ONBOARDING_BACKGROUND,
+} from "@/components/parcours/ParcoursVideoOnboardingStep";
 import Loader from "@/components/experience/loader";
+import ParcoursComingSoonScreen from "@/components/parcours/ParcoursComingSoonScreen";
 import ParcoursFloatingNav from "@/components/parcours/ParcoursFloatingNav";
 import ParcoursStepTimer from "@/components/parcours/ParcoursStepTimer";
 import ParcoursTimeoutFeedback from "@/components/parcours/ParcoursTimeoutFeedback";
@@ -26,6 +42,7 @@ import {
 	FontSize14,
 	FontSize16,
 } from "@/constants/fontsizes";
+import { isParcoursEnabled } from "@/constants/featureFlags";
 import {
 	buildTimedOutParcoursDicoStepPatch,
 	buildValidatedParcoursDicoStepPatch,
@@ -55,6 +72,7 @@ import {
 	shouldPersistParcoursVideoCheckpoint,
 } from "@/helpers/parcours/video";
 import {
+	getProgressPayload,
 	getStepState,
 	mergeProgressPayload,
 	resolveInitialParcoursStepIndex,
@@ -103,7 +121,52 @@ function StepFallback({ step }: { step: ParcoursDayStep }) {
 	);
 }
 
+type ParcoursOnboardingKind = "tips" | "video" | "game";
+
+const getParcoursOnboardingKind = (
+	step: ParcoursDayStep | null | undefined
+): ParcoursOnboardingKind | null => {
+	if (isTipsAndTacticsParcoursStep(step)) {
+		return "tips";
+	}
+
+	if (isGameBlockParcoursStep(step)) {
+		return "game";
+	}
+
+	if (isSpecificRubriqueParcoursStep(step)) {
+		const content =
+			step.content && typeof step.content === "object" ? step.content : {};
+		return resolveParcoursVideoUri(content) ? "video" : null;
+	}
+
+	return null;
+};
+
+const getParcoursOnboardingBackground = (
+	kind: ParcoursOnboardingKind | null
+) => {
+	switch (kind) {
+		case "tips":
+			return TIPS_ONBOARDING_BACKGROUND;
+		case "video":
+			return VIDEO_ONBOARDING_BACKGROUND;
+		case "game":
+			return GAME_ONBOARDING_BACKGROUND;
+		default:
+			return null;
+	}
+};
+
 export default function ParcoursDayScreen() {
+	if (!isParcoursEnabled) {
+		return <ParcoursComingSoonScreen />;
+	}
+
+	return <ParcoursDayContent />;
+}
+
+function ParcoursDayContent() {
 	const insets = useSafeAreaInsets();
 	const { width: screenWidth } = useWindowDimensions();
 	const { auth } = useAuthSession();
@@ -123,6 +186,10 @@ export default function ParcoursDayScreen() {
 	const revealPersistedRef = useRef(false);
 	const gameSessionSyncKeyRef = useRef<string | null>(null);
 	const videoCompletionPersistedStepIdRef = useRef<string | null>(null);
+	const dicoOnboardingAdvancedStepIdsRef = useRef<Record<string, boolean>>({});
+	const onboardingAdvancedStepIdsRef = useRef<Record<string, boolean>>({});
+	const progressWriteQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+	const progressPayloadDayIdRef = useRef<number | null>(null);
 	const day = data?.data;
 
 	const steps = useMemo(
@@ -134,14 +201,52 @@ export default function ParcoursDayScreen() {
 	);
 	const totalSteps = day?.stepsPayload?.dayMeta?.totalSteps || steps.length;
 	const initialIndex = useMemo(
-		() =>
-			resolveInitialParcoursStepIndex({
+		() => {
+			const resolvedIndex = resolveInitialParcoursStepIndex({
 				steps,
 				currentStepIndex: day?.progression?.currentStepIndex,
 				progressionStatus: day?.progression?.status,
 				lastProgressPayload: day?.progression?.lastProgressPayload,
 				getStepId: getParcoursStepId,
-			}),
+			});
+			const resolvedStep = steps[resolvedIndex] || null;
+			const previousStepIndex = resolvedIndex - 1;
+			const previousStep = steps[previousStepIndex] || null;
+			const previousStepId = getParcoursStepId(previousStep, previousStepIndex);
+			const previousStepState = getStepState(
+				day?.progression?.lastProgressPayload,
+				previousStepId
+			);
+			const resolvedStepId = getParcoursStepId(resolvedStep, resolvedIndex);
+			const resolvedStepState = getStepState(
+				day?.progression?.lastProgressPayload,
+				resolvedStepId
+			);
+			const onboardingKind = getParcoursOnboardingKind(resolvedStep);
+
+			if (
+				isDicoQuestionParcoursStep(resolvedStep) &&
+				isCitationParcoursStep(previousStep) &&
+				previousStepState.citationRevealed &&
+				!dicoOnboardingAdvancedStepIdsRef.current[resolvedStepId]
+			) {
+				return previousStepIndex;
+			}
+
+			if (
+				onboardingKind &&
+				previousStep &&
+				!(
+					onboardingKind === "video" &&
+					Boolean(resolvedStepState.videoCompleted)
+				) &&
+				!onboardingAdvancedStepIdsRef.current[resolvedStepId]
+			) {
+				return previousStepIndex;
+			}
+
+			return resolvedIndex;
+		},
 		[
 			day?.progression?.currentStepIndex,
 			day?.progression?.lastProgressPayload,
@@ -159,11 +264,23 @@ export default function ParcoursDayScreen() {
 	const [draftAnswerByStepId, setDraftAnswerByStepId] = useState<Record<string, string>>({});
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [timeoutFeedbackLabel, setTimeoutFeedbackLabel] = useState<string | null>(null);
-	const [isGameCompletionCelebrationVisible, setIsGameCompletionCelebrationVisible] =
+	const [isDayCompletionScreenVisible, setIsDayCompletionScreenVisible] =
 		useState(false);
+	const [isFinalizingGameStep, setIsFinalizingGameStep] = useState(false);
 	const [optimisticGameQuestions, setOptimisticGameQuestions] = useState<QuestionData[] | null>(
 		null
 	);
+	const [seenDicoOnboardingStepIds, setSeenDicoOnboardingStepIds] = useState<
+		Record<string, boolean>
+	>({});
+	const [pendingDicoOnboardingStepIndex, setPendingDicoOnboardingStepIndex] =
+		useState<number | null>(null);
+	const [seenOnboardingStepIds, setSeenOnboardingStepIds] = useState<
+		Record<string, boolean>
+	>({});
+	const [pendingOnboardingStepIndex, setPendingOnboardingStepIndex] = useState<
+		number | null
+	>(null);
 	const [tipsReviewStateByStepId, setTipsReviewStateByStepId] = useState<
 		Record<string, { pairIndex: number; phase: "question" | "card" }>
 	>({});
@@ -176,10 +293,7 @@ export default function ParcoursDayScreen() {
 	const pendingCorrectAdvanceRef = useRef(false);
 	const dicoFinalizingRef = useRef(false);
 	const tipsFinalizingRef = useRef(false);
-	const gameCompletionCelebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-		null
-	);
-	const pendingGameCompletionCelebrationRef = useRef(false);
+	const pendingDayCompletionRef = useRef(false);
 	const specificVideoProgressRef = useRef<{
 		stepId: string | null;
 		checkpointMillis: number;
@@ -205,9 +319,30 @@ export default function ParcoursDayScreen() {
 	}, [initialIndex]);
 
 	useEffect(() => {
-		setLastProgressPayload(day?.progression?.lastProgressPayload || null);
-		lastProgressPayloadRef.current = day?.progression?.lastProgressPayload || null;
-	}, [day?.progression?.lastProgressPayload]);
+		const serverPayload = getProgressPayload(
+			day?.progression?.lastProgressPayload
+		);
+		if (progressPayloadDayIdRef.current !== (day?.id ?? null)) {
+			progressPayloadDayIdRef.current = day?.id ?? null;
+			lastProgressPayloadRef.current = serverPayload;
+			setLastProgressPayload(serverPayload);
+			return;
+		}
+
+		setLastProgressPayload((currentPayload) => {
+			const current = getProgressPayload(currentPayload);
+			const merged = {
+				...serverPayload,
+				...current,
+				stepState: {
+					...(serverPayload.stepState || {}),
+					...(current.stepState || {}),
+				},
+			};
+			lastProgressPayloadRef.current = merged;
+			return merged;
+		});
+	}, [day?.id, day?.progression?.lastProgressPayload]);
 
 	useEffect(() => {
 		setLocallyRevealedStepId(null);
@@ -217,12 +352,19 @@ export default function ParcoursDayScreen() {
 		setDraftAnswerByStepId({});
 		setFeedbackAnswer(null);
 		setTimeoutFeedbackLabel(null);
-		setIsGameCompletionCelebrationVisible(false);
+		setIsDayCompletionScreenVisible(false);
+		setIsFinalizingGameStep(false);
 		setOptimisticGameQuestions(null);
+		setSeenDicoOnboardingStepIds({});
+		setPendingDicoOnboardingStepIndex(null);
+		setSeenOnboardingStepIds({});
+		setPendingOnboardingStepIndex(null);
+		dicoOnboardingAdvancedStepIdsRef.current = {};
+		onboardingAdvancedStepIdsRef.current = {};
 		setTipsReviewStateByStepId({});
 		setLocallyUnlockedVideoStepId(null);
 		pendingCorrectAdvanceRef.current = false;
-		pendingGameCompletionCelebrationRef.current = false;
+		pendingDayCompletionRef.current = false;
 	}, [day?.id]);
 
 	useEffect(() => {
@@ -243,6 +385,12 @@ export default function ParcoursDayScreen() {
 
 	const currentStep = steps[activeIndex] || null;
 	const currentStepId = getParcoursStepId(currentStep, activeIndex);
+	const previousStepIndex = activeIndex - 1;
+	const previousStep = steps[previousStepIndex] || null;
+	const previousStepId = getParcoursStepId(previousStep, previousStepIndex);
+	const nextStepIndex = activeIndex + 1;
+	const nextStep = steps[nextStepIndex] || null;
+	const nextStepId = getParcoursStepId(nextStep, nextStepIndex);
 	const currentStepContent =
 		currentStep?.content && typeof currentStep.content === "object"
 			? currentStep.content
@@ -259,12 +407,31 @@ export default function ParcoursDayScreen() {
 		}),
 		[currentStepId, day?.progression?.lastProgressPayload, lastProgressPayload]
 	);
+	const previousStepState = useMemo(
+		() => ({
+			...getStepState(day?.progression?.lastProgressPayload, previousStepId),
+			...getStepState(lastProgressPayload, previousStepId),
+		}),
+		[previousStepId, day?.progression?.lastProgressPayload, lastProgressPayload]
+	);
+	const nextStepState = useMemo(
+		() => ({
+			...getStepState(day?.progression?.lastProgressPayload, nextStepId),
+			...getStepState(lastProgressPayload, nextStepId),
+		}),
+		[nextStepId, day?.progression?.lastProgressPayload, lastProgressPayload]
+	);
 	const dayDateLabel = formatParcoursDayDate(
 		day?.availableFrom,
 		day?.stepsPayload?.dayMeta?.dateLabel
 	);
 
 	const isCitationStep = isCitationParcoursStep(currentStep);
+	const shouldShowCitationOnboarding = Boolean(
+		isCitationStep &&
+			currentStepId &&
+			!seenOnboardingStepIds[currentStepId]
+	);
 	const isDicoStep = isDicoQuestionParcoursStep(currentStep);
 	const isGameStep = isGameBlockParcoursStep(currentStep);
 	const isSpecificRubriqueStep = isSpecificRubriqueParcoursStep(currentStep);
@@ -272,6 +439,48 @@ export default function ParcoursDayScreen() {
 	const citationRevealed =
 		Boolean(persistedStepState.citationRevealed) ||
 		locallyRevealedStepId === currentStepId;
+	const previousCitationRevealed =
+		Boolean(previousStepState.citationRevealed) ||
+		locallyRevealedStepId === previousStepId;
+	const dicoOnboardingStepIndex =
+		pendingDicoOnboardingStepIndex !== null
+			? pendingDicoOnboardingStepIndex
+			: isDicoStep &&
+				  isCitationParcoursStep(previousStep) &&
+				  previousCitationRevealed
+			? activeIndex
+			: null;
+	const dicoOnboardingStepId =
+		dicoOnboardingStepIndex === activeIndex
+			? currentStepId
+			: dicoOnboardingStepIndex === nextStepIndex
+				? nextStepId
+				: null;
+	const shouldShowDicoOnboarding =
+		Boolean(
+			dicoOnboardingStepId &&
+				dicoOnboardingStepIndex !== null &&
+				!seenDicoOnboardingStepIds[dicoOnboardingStepId]
+		);
+	const pendingOnboardingStep =
+		pendingOnboardingStepIndex !== null
+			? steps[pendingOnboardingStepIndex] || null
+			: null;
+	const pendingOnboardingStepId =
+		pendingOnboardingStepIndex !== null
+			? getParcoursStepId(
+					pendingOnboardingStep,
+					pendingOnboardingStepIndex
+			  )
+			: null;
+	const pendingOnboardingKind = getParcoursOnboardingKind(
+		pendingOnboardingStep
+	);
+	const shouldShowStepOnboarding = Boolean(
+		pendingOnboardingStepId &&
+			pendingOnboardingKind &&
+			!seenOnboardingStepIds[pendingOnboardingStepId]
+	);
 
 	const dicoAnswers = getParcoursDicoAnswers(currentStepContent);
 	const {
@@ -350,7 +559,12 @@ export default function ParcoursDayScreen() {
 		locallyUnlockedVideoStepId === currentStepId;
 	const specificVideoResumeMillis =
 		Boolean(persistedStepState.videoCompleted)
-			? 0
+			? Math.max(
+					(typeof persistedStepState.videoDurationMillis === "number"
+						? persistedStepState.videoDurationMillis
+						: persistedStepState.videoCheckpointMillis || 0) - 250,
+					0
+			  )
 			: typeof persistedStepState.videoCheckpointMillis === "number"
 			? persistedStepState.videoCheckpointMillis
 			: 0;
@@ -388,27 +602,9 @@ export default function ParcoursDayScreen() {
 		questionCount: gameQuestionCount,
 	});
 	const shouldShowGameLoader =
-		isLoadingParcoursGameSession &&
+		(isFinalizingGameStep || isLoadingParcoursGameSession) &&
 		!parcoursGameCompleted &&
 		(!optimisticGameQuestions || optimisticGameQuestions.length === 0);
-
-	const showGameCompletionCelebration = useCallback(() => {
-		void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-		setIsGameCompletionCelebrationVisible(true);
-		gameCompletionCelebrationTimeoutRef.current = setTimeout(() => {
-			setIsGameCompletionCelebrationVisible(false);
-			gameCompletionCelebrationTimeoutRef.current = null;
-		}, 2200);
-	}, []);
-
-	useEffect(() => {
-		return () => {
-			if (gameCompletionCelebrationTimeoutRef.current) {
-				clearTimeout(gameCompletionCelebrationTimeoutRef.current);
-				gameCompletionCelebrationTimeoutRef.current = null;
-			}
-		};
-	}, []);
 
 	useEffect(() => {
 		if (!isGameStep) {
@@ -494,14 +690,20 @@ export default function ParcoursDayScreen() {
 		lastProgressPayloadRef.current = nextPayload;
 		setLastProgressPayload(nextPayload);
 
-		await updateProgress.mutateAsync({
-			dayId: day.id,
-			token,
-			payload: {
-				currentStepIndex: nextIndex,
-				lastProgressPayload: nextPayload,
-			},
-		});
+		const write = progressWriteQueueRef.current
+			.catch(() => undefined)
+			.then(() =>
+				updateProgress.mutateAsync({
+					dayId: day.id,
+					token,
+					payload: {
+						currentStepIndex: nextIndex,
+						lastProgressPayload: nextPayload,
+					},
+				})
+			);
+		progressWriteQueueRef.current = write.catch(() => undefined);
+		await write;
 	}, [day, token, updateProgress]);
 
 	useEffect(() => {
@@ -679,7 +881,7 @@ export default function ParcoursDayScreen() {
 		}
 
 		revealPersistedRef.current = true;
-		void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+		void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 		setLocallyRevealedStepId(currentStepId);
 		await persistProgress({
 			nextIndex: activeIndex,
@@ -692,8 +894,58 @@ export default function ParcoursDayScreen() {
 		});
 	};
 
+	const completeParcoursDayAndShowScreen = async () => {
+		if (
+			!day ||
+			!token ||
+			day.progression.isReadOnly ||
+			completeDay.isPending ||
+			isDayCompletionScreenVisible
+		) {
+			return;
+		}
+
+		await progressWriteQueueRef.current.catch(() => undefined);
+		await completeDay.mutateAsync({
+			dayId: day.id,
+			token,
+			payload: {
+				currentStepIndex: activeIndex,
+				lastProgressPayload: mergeProgressPayload({
+					basePayload: lastProgressPayloadRef.current,
+					activeStepId: currentStepId,
+				}),
+			},
+		});
+		void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+		setIsDayCompletionScreenVisible(true);
+	};
+
 	const handleNext = async () => {
 		if (!day || !canAdvance) return;
+
+		if (
+			isCitationStep &&
+			citationRevealed &&
+			isDicoQuestionParcoursStep(nextStep) &&
+			!nextStepState.answered &&
+			!seenDicoOnboardingStepIds[nextStepId]
+		) {
+			setPendingDicoOnboardingStepIndex(nextStepIndex);
+			return;
+		}
+
+		if (
+			getParcoursOnboardingKind(nextStep) &&
+			!(
+				getParcoursOnboardingKind(nextStep) === "video" &&
+				Boolean(nextStepState.videoCompleted)
+			) &&
+			!seenOnboardingStepIds[nextStepId]
+		) {
+			setPendingOnboardingStepIndex(nextStepIndex);
+			return;
+		}
 
 		if (isTipsStep) {
 			if (isTipsQuestionPhase) {
@@ -796,20 +1048,64 @@ export default function ParcoursDayScreen() {
 			return;
 		}
 
-		if (!token) return;
+		await completeParcoursDayAndShowScreen();
+	};
 
-		await completeDay.mutateAsync({
-			dayId: day.id,
-			token,
-			payload: {
-				currentStepIndex: activeIndex,
-				lastProgressPayload: mergeProgressPayload({
-					basePayload: lastProgressPayload,
-					activeStepId: currentStepId,
-				}),
-			},
+	const handleDicoOnboardingStart = async () => {
+		if (!day || !dicoOnboardingStepId || dicoOnboardingStepIndex === null) {
+			return;
+		}
+
+		setSeenDicoOnboardingStepIds((currentSeen) => ({
+			...currentSeen,
+			[dicoOnboardingStepId]: true,
+		}));
+		dicoOnboardingAdvancedStepIdsRef.current[dicoOnboardingStepId] = true;
+		setPendingDicoOnboardingStepIndex(null);
+
+		if (dicoOnboardingStepIndex === activeIndex) {
+			return;
+		}
+
+		setActiveIndex(dicoOnboardingStepIndex);
+		await persistProgress({
+			nextIndex: dicoOnboardingStepIndex,
+			activeStepId: dicoOnboardingStepId,
 		});
-		router.back();
+	};
+
+	const handleCitationOnboardingStart = () => {
+		if (!currentStepId) {
+			return;
+		}
+
+		setSeenOnboardingStepIds((currentSeen) => ({
+			...currentSeen,
+			[currentStepId]: true,
+		}));
+	};
+
+	const handleStepOnboardingStart = async () => {
+		if (
+			!day ||
+			pendingOnboardingStepIndex === null ||
+			!pendingOnboardingStepId ||
+			!pendingOnboardingKind
+		) {
+			return;
+		}
+
+		onboardingAdvancedStepIdsRef.current[pendingOnboardingStepId] = true;
+		setSeenOnboardingStepIds((currentSeen) => ({
+			...currentSeen,
+			[pendingOnboardingStepId]: true,
+		}));
+		setPendingOnboardingStepIndex(null);
+		setActiveIndex(pendingOnboardingStepIndex);
+		await persistProgress({
+			nextIndex: pendingOnboardingStepIndex,
+			activeStepId: pendingOnboardingStepId,
+		});
 	};
 
 	const handlePrevious = async () => {
@@ -1005,38 +1301,26 @@ export default function ParcoursDayScreen() {
 			return;
 		}
 
-		const checkpointMillis = specificVideoProgressRef.current.checkpointMillis;
+		const previousState = specificVideoProgressRef.current;
+		const checkpointMillis = previousState.checkpointMillis;
+		const effectiveDurationMillis =
+			typeof status.durationMillis === "number"
+				? status.durationMillis
+				: previousState.durationMillis;
 		const nextUnlockedNow =
 			status.didJustFinish ||
 			hasParcoursVideoReachedNextThreshold({
 				positionMillis: status.positionMillis,
-				durationMillis: status.durationMillis,
+				durationMillis: effectiveDurationMillis,
 			});
-
-		if (nextUnlockedNow && !specificVideoProgressRef.current.nextUnlocked) {
-			setLocallyUnlockedVideoStepId(currentStepId);
-			specificVideoProgressRef.current = {
-				...specificVideoProgressRef.current,
-				checkpointMillis: getParcoursVideoCheckpoint(status.positionMillis),
-				positionMillis: status.positionMillis,
-				durationMillis: status.durationMillis,
-				nextUnlocked: true,
-				completed: status.didJustFinish,
-			};
-			return;
-		}
-
 		const nextCheckpointMillis = shouldPersistParcoursVideoCheckpoint({
 			previousCheckpointMillis: checkpointMillis,
 			nextPositionMillis: status.positionMillis,
 		})
 			? Math.max(checkpointMillis, getParcoursVideoCheckpoint(status.positionMillis))
 			: checkpointMillis;
-		const previousState = specificVideoProgressRef.current;
-		const effectiveDurationMillis =
-			typeof status.durationMillis === "number"
-				? status.durationMillis
-				: previousState.durationMillis;
+		const nextUnlocked = nextUnlockedNow || previousState.nextUnlocked;
+		const completed = status.didJustFinish || previousState.completed;
 		const alreadyCompleted =
 			previousState.completed || Boolean(persistedStepState.videoCompleted);
 		const rewatchedHalf =
@@ -1051,15 +1335,20 @@ export default function ParcoursDayScreen() {
 			checkpointMillis: nextCheckpointMillis,
 			positionMillis: status.positionMillis,
 			durationMillis: effectiveDurationMillis,
-			nextUnlocked: previousState.nextUnlocked,
-			completed: status.didJustFinish || previousState.completed,
+			nextUnlocked,
+			completed,
 			rewatchedHalf,
 			rewatchCountIncremented: previousState.rewatchCountIncremented,
 		};
 
+		if (nextUnlocked && !previousState.nextUnlocked) {
+			setLocallyUnlockedVideoStepId(currentStepId);
+		}
+
+		const completionChanged =
+			completed && !Boolean(persistedStepState.videoCompleted);
 		if (
-			status.didJustFinish &&
-			!Boolean(persistedStepState.videoCompleted) &&
+			completionChanged &&
 			videoCompletionPersistedStepIdRef.current !== currentStepId
 		) {
 			videoCompletionPersistedStepIdRef.current = currentStepId;
@@ -1075,6 +1364,24 @@ export default function ParcoursDayScreen() {
 					durationMillis: effectiveDurationMillis,
 					nextUnlocked: true,
 					completed: true,
+				}),
+			});
+			return;
+		}
+
+		if (
+			nextCheckpointMillis > checkpointMillis ||
+			nextUnlocked !== previousState.nextUnlocked
+		) {
+			void persistProgress({
+				nextIndex: activeIndex,
+				activeStepId: currentStepId,
+				stepId: currentStepId,
+				stepPatch: buildParcoursVideoProgressPatch({
+					positionMillis: status.positionMillis,
+					durationMillis: effectiveDurationMillis,
+					nextUnlocked,
+					completed,
 				}),
 			});
 		}
@@ -1094,13 +1401,21 @@ export default function ParcoursDayScreen() {
 		if (!question) {
 			return;
 		}
+		const visibleGameQuestionCount =
+			optimisticGameQuestions?.length ?? parcoursGameSession.questionsPool.length;
+		const isLastGameQuestion = visibleGameQuestionCount <= 1;
+		const gameFeedbackAnswer =
+			question.attributes.ANSWER === isRight ? Answer.true : Answer.false;
 
 		setOptimisticGameQuestions((currentQuestions) =>
 			currentQuestions
 				? currentQuestions.filter((item) => item.id !== questionId)
 				: currentQuestions
 		);
-		setFeedbackAnswer(question.attributes.ANSWER === isRight ? Answer.true : Answer.false);
+		setIsFinalizingGameStep(isLastGameQuestion);
+		if (!isLastGameQuestion) {
+			setFeedbackAnswer(gameFeedbackAnswer);
+		}
 
 		try {
 			await insertGameAnswer.mutateAsync({
@@ -1135,10 +1450,15 @@ export default function ParcoursDayScreen() {
 				refreshedSession.status === "finished" &&
 				!day?.progression.isReadOnly
 			) {
-				pendingGameCompletionCelebrationRef.current = true;
+				pendingDayCompletionRef.current = true;
+			}
+			if (isLastGameQuestion) {
+				setFeedbackAnswer(gameFeedbackAnswer);
 			}
 		} catch {
 			await refetchParcoursGameSession();
+		} finally {
+			setIsFinalizingGameStep(false);
 		}
 	};
 
@@ -1147,9 +1467,74 @@ export default function ParcoursDayScreen() {
 	}
 
 	return (
-		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+		<View
+			style={[
+				styles.wrapper,
+				{
+					paddingTop: insets.top,
+					backgroundColor: isDayCompletionScreenVisible
+						? "#F7F7F7"
+						: shouldShowCitationOnboarding
+						? CITATION_ONBOARDING_BACKGROUND
+						: shouldShowDicoOnboarding
+							? DICO_ONBOARDING_BACKGROUND
+							: getParcoursOnboardingBackground(pendingOnboardingKind) ||
+							  colorWhite,
+				},
+			]}>
 			<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
-			{isCitationStep ? (
+			{isDayCompletionScreenVisible ? (
+				<ParcoursDayCompletionScreen
+					dateLabel={dayDateLabel}
+					weekProgramOrder={day?.week.programOrder}
+					onReturn={() => {
+						router.replace("/parcours");
+					}}
+				/>
+			) : shouldShowCitationOnboarding ? (
+				<ParcoursCitationOnboardingStep
+					dateLabel={dayDateLabel}
+					currentIndex={activeIndex}
+					totalSteps={totalSteps}
+					onStart={handleCitationOnboardingStart}
+				/>
+			) : shouldShowDicoOnboarding ? (
+				<ParcoursDicoOnboardingStep
+					dateLabel={dayDateLabel}
+					currentIndex={dicoOnboardingStepIndex ?? nextStepIndex}
+					totalSteps={totalSteps}
+					onStart={() => {
+						void handleDicoOnboardingStart();
+					}}
+				/>
+			) : shouldShowStepOnboarding && pendingOnboardingKind === "tips" ? (
+				<ParcoursTipsOnboardingStep
+					dateLabel={dayDateLabel}
+					currentIndex={pendingOnboardingStepIndex ?? activeIndex}
+					totalSteps={totalSteps}
+					onStart={() => {
+						void handleStepOnboardingStart();
+					}}
+				/>
+			) : shouldShowStepOnboarding && pendingOnboardingKind === "video" ? (
+				<ParcoursVideoOnboardingStep
+					dateLabel={dayDateLabel}
+					currentIndex={pendingOnboardingStepIndex ?? activeIndex}
+					totalSteps={totalSteps}
+					onStart={() => {
+						void handleStepOnboardingStart();
+					}}
+				/>
+			) : shouldShowStepOnboarding && pendingOnboardingKind === "game" ? (
+				<ParcoursGameOnboardingStep
+					dateLabel={dayDateLabel}
+					currentIndex={pendingOnboardingStepIndex ?? activeIndex}
+					totalSteps={totalSteps}
+					onStart={() => {
+						void handleStepOnboardingStart();
+					}}
+				/>
+			) : isCitationStep ? (
 				<ScrollView
 					contentContainerStyle={{
 						paddingHorizontal: 24,
@@ -1212,7 +1597,7 @@ export default function ParcoursDayScreen() {
 											: currentStepId
 									}
 									accentColor={currentAccentColor}
-									durationSeconds={30}
+									durationSeconds={15}
 									onComplete={() => {
 										if (isTipsQuestionPhase) {
 											void finalizeTipsStep({
@@ -1310,6 +1695,7 @@ export default function ParcoursDayScreen() {
 								videoUri={specificVideoUri}
 								accentColor={currentAccentColor}
 								initialPositionMillis={specificVideoResumeMillis}
+								completed={Boolean(persistedStepState.videoCompleted)}
 								onPlaybackStatusUpdate={handleSpecificVideoStatusUpdate}
 							/>
 						) : (
@@ -1319,28 +1705,33 @@ export default function ParcoursDayScreen() {
 				</ScrollView>
 			)}
 
-			<ParcoursFloatingNav
-				canAdvance={Boolean(canAdvance)}
-				isCompleting={
-					completeDay.isPending ||
-					updateProgress.isPending ||
-					Boolean(feedbackAnswer) ||
-					Boolean(timeoutFeedbackLabel)
-				}
-				isFirstStep={activeIndex === 0}
-				onQuit={() => {
-					void handleQuit();
-				}}
-				onBack={() => {
-					void handlePrevious();
-				}}
-				onNext={() => {
-					void handleNext();
-				}}
-				nextLabel={activeIndex < steps.length - 1 ? "Suivant" : "Terminer"}
-				bottomOffset={Math.max(insets.bottom, 14)}
-				accentColor={currentAccentColor}
-			/>
+			{isDayCompletionScreenVisible ||
+			shouldShowCitationOnboarding ||
+			shouldShowDicoOnboarding ||
+			shouldShowStepOnboarding ? null : (
+				<ParcoursFloatingNav
+					canAdvance={Boolean(canAdvance)}
+					isCompleting={
+						completeDay.isPending ||
+						updateProgress.isPending ||
+						Boolean(feedbackAnswer) ||
+						Boolean(timeoutFeedbackLabel)
+					}
+					isFirstStep={activeIndex === 0}
+					onQuit={() => {
+						void handleQuit();
+					}}
+					onBack={() => {
+						void handlePrevious();
+					}}
+					onNext={() => {
+						void handleNext();
+					}}
+					nextLabel={activeIndex < steps.length - 1 ? "Suivant" : "Terminer"}
+					bottomOffset={Math.max(insets.bottom, 14)}
+					accentColor={currentAccentColor}
+				/>
+			)}
 			{feedbackAnswer ? (
 				<FeedbackMessage
 					answer={feedbackAnswer}
@@ -1348,13 +1739,14 @@ export default function ParcoursDayScreen() {
 					isHomeButtonModel
 					onHide={() => {
 						const shouldAdvance = pendingCorrectAdvanceRef.current;
-						const shouldShowGameCelebration =
-							pendingGameCompletionCelebrationRef.current;
+						const shouldShowCompletionScreen =
+							pendingDayCompletionRef.current;
 						pendingCorrectAdvanceRef.current = false;
-						pendingGameCompletionCelebrationRef.current = false;
+						pendingDayCompletionRef.current = false;
 						setFeedbackAnswer(null);
-						if (shouldShowGameCelebration) {
-							showGameCompletionCelebration();
+						if (shouldShowCompletionScreen) {
+							void completeParcoursDayAndShowScreen();
+							return;
 						}
 						if (shouldAdvance) {
 							void handleNext();
@@ -1370,7 +1762,6 @@ export default function ParcoursDayScreen() {
 					}}
 				/>
 			) : null}
-			{isGameCompletionCelebrationVisible ? <ParcoursDayCompletionCelebration /> : null}
 		</View>
 	);
 }

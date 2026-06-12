@@ -1,26 +1,27 @@
 import { useParcoursTimeline } from "@/api/parcours/useParcours";
-import bonusPinkIcon from "@/assets/imgs/parcours/Bonus-1.svg";
-import bonusGreenIcon from "@/assets/imgs/parcours/Bonus-2.svg";
-import bonusLockedIcon from "@/assets/imgs/parcours/Bonus-locked.svg";
+import bonusPinkIcon from "@/assets/imgs/parcours/Bonus-1.png";
+import bonusGreenIcon from "@/assets/imgs/parcours/Bonus-2.png";
+import bonusBlueIcon from "@/assets/imgs/parcours/Bonus-3.png";
+import bonusLockedIcon from "@/assets/imgs/parcours/Bonus-Lock.png";
 import connectorLeftIcon from "@/assets/imgs/parcours/line-connecter-left.svg";
 import connectorRightIcon from "@/assets/imgs/parcours/line-connecter-rightsvg.svg";
-import quizPinkIcon from "@/assets/imgs/parcours/Quiz-1.svg";
-import quizGreenIcon from "@/assets/imgs/parcours/Quiz-2.svg";
-import quizBlueIcon from "@/assets/imgs/parcours/Quiz-3.svg";
-import quizGreyIcon from "@/assets/imgs/parcours/Quiz-grey.svg";
+import ParcoursComingSoonScreen from "@/components/parcours/ParcoursComingSoonScreen";
 import { ParcoursDayStatusBadge } from "@/components/parcours/ParcoursDayStatusBadge";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import Loader from "@/components/experience/loader";
 import { colorBlack, colorDarkGrey, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
+import { isParcoursEnabled } from "@/constants/featureFlags";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { isParcoursWeekOpen } from "@/helpers/parcours/week";
+import { getParcoursTimelineActivityIcon } from "@/helpers/parcours/icons";
 import useJwtToken from "@/hooks/useJwtToken";
 import { ParcoursTimelineWeek } from "@/types/parcours";
 import { useAssets } from "expo-asset";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+	Image,
 	Pressable,
 	RefreshControl,
 	ScrollView,
@@ -31,11 +32,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
 
-const quizAssets = [quizPinkIcon, quizGreenIcon, quizBlueIcon];
-const bonusAssets = [bonusPinkIcon, bonusGreenIcon];
-
-const getQuizThemeIndex = (week: ParcoursTimelineWeek) =>
-	Math.max(0, Number(week.programOrder || 1) - 1) % quizAssets.length;
+const bonusAssets = [bonusPinkIcon, bonusGreenIcon, bonusBlueIcon];
 
 const getBonusThemeIndex = (week: ParcoursTimelineWeek) =>
 	Math.max(0, Number(week.programOrder || 1) - 1) % bonusAssets.length;
@@ -73,6 +70,36 @@ function SvgAsset({
 	return <SvgUri uri={uri} width={width} height={height} style={style as any} />;
 }
 
+function PngAsset({
+	source,
+	width,
+	height,
+	style,
+	renderScale = 3,
+	imageTranslateY = 0,
+}: {
+	source: any;
+	width: number;
+	height: number;
+	style?: object;
+	renderScale?: number;
+	imageTranslateY?: number;
+}) {
+	return (
+		<View style={[styles.pngIconSlot, { width, height }, style]}>
+			<Image
+				source={source}
+				resizeMode='contain'
+				style={{
+					width: width * renderScale,
+					height: height * renderScale,
+					transform: [{ translateY: imageTranslateY }],
+				}}
+			/>
+		</View>
+	);
+}
+
 function getBonusIcon(week: ParcoursTimelineWeek) {
 	const isUpcomingLockedWeek =
 		week.status === "not_started" &&
@@ -93,18 +120,6 @@ function getBonusIcon(week: ParcoursTimelineWeek) {
 	return bonusLockedIcon;
 }
 
-function getActivityIcon(week: ParcoursTimelineWeek) {
-	const isUpcomingLockedWeek =
-		week.status === "not_started" &&
-		week.days.every((day) => day.status === "locked");
-
-	if (isUpcomingLockedWeek) {
-		return quizGreyIcon;
-	}
-
-	return quizAssets[getQuizThemeIndex(week)];
-}
-
 function TimelineWeekSection({
 	week,
 	index,
@@ -115,24 +130,25 @@ function TimelineWeekSection({
 	const isRightAligned = index % 2 === 1;
 	const connectorSource = index % 2 === 0 ? connectorLeftIcon : connectorRightIcon;
 	const isWeekOpen = isParcoursWeekOpen(week);
+	const activityIconOffsetY = isRightAligned ? 22 : 18;
+	const bonusIconOffsetY = isRightAligned ? 0 : 18;
 
 	return (
-		<Pressable
-			disabled={!isWeekOpen}
-			onPress={() => {
-				if (!isWeekOpen) {
-					return;
-				}
-
-				router.push({
-					pathname: "/parcours/week/[weekId]",
-					params: { weekId: String(week.id) },
-				});
-			}}
-			style={styles.sectionBlock}>
+		<View style={styles.sectionBlock}>
 			<Text style={styles.sectionWeekLabel}>{weekLabel(week)}</Text>
 
-			<View
+			<Pressable
+				disabled={!isWeekOpen}
+				onPress={() => {
+					if (!isWeekOpen) {
+						return;
+					}
+
+					router.push({
+						pathname: "/parcours/week/[weekId]",
+						params: { weekId: String(week.id) },
+					});
+				}}
 				style={[
 					styles.nodeRow,
 					styles.activityNodeRow,
@@ -143,10 +159,11 @@ function TimelineWeekSection({
 						styles.iconColumn,
 						isRightAligned && styles.activityIconColumnRight,
 					]}>
-					<SvgAsset
-						source={getActivityIcon(week)}
+					<PngAsset
+						source={getParcoursTimelineActivityIcon(week)}
 						width={72}
 						height={72}
+						imageTranslateY={activityIconOffsetY}
 					/>
 				</View>
 				<View
@@ -164,7 +181,7 @@ function TimelineWeekSection({
 						))}
 					</View>
 				</View>
-			</View>
+			</Pressable>
 
 			<View
 				style={[
@@ -192,10 +209,11 @@ function TimelineWeekSection({
 						isRightAligned && styles.bonusIconColumnRight,
 					]}>
 					<View style={styles.bonusIconWrap}>
-						<SvgAsset
+						<PngAsset
 							source={getBonusIcon(week)}
 							width={72}
 							height={72}
+							imageTranslateY={bonusIconOffsetY}
 						/>
 					</View>
 				</View>
@@ -208,11 +226,19 @@ function TimelineWeekSection({
 					<Text style={styles.nodeTitle}>Bonus</Text>
 				</View>
 			</View>
-		</Pressable>
+		</View>
 	);
 }
 
 export default function ParcoursScreen() {
+	if (!isParcoursEnabled) {
+		return <ParcoursComingSoonScreen />;
+	}
+
+	return <ParcoursTimelineScreen />;
+}
+
+function ParcoursTimelineScreen() {
 	const insets = useSafeAreaInsets();
 	const scrollViewRef = useRef<ScrollView>(null);
 	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -305,7 +331,11 @@ export default function ParcoursScreen() {
 					</View>
 				) : weeks.length > 0 ? (
 					weeks.map((week, index) => (
-						<TimelineWeekSection key={week.id} week={week} index={index} />
+						<TimelineWeekSection
+							key={week.id}
+							week={week}
+							index={index}
+						/>
 					))
 				) : (
 					<View style={styles.emptyState}>
@@ -413,6 +443,11 @@ const styles = StyleSheet.create({
 	bonusIconWrap: {
 		width: 72,
 		height: 72,
+	},
+	pngIconSlot: {
+		alignItems: "center",
+		justifyContent: "center",
+		overflow: "visible",
 	},
 	bonusNodeRowRight: {
 		marginTop: 6,

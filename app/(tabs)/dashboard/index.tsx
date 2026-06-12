@@ -49,7 +49,11 @@ export default function DashboardScreen() {
 	};
 
 	const cards: DashboardCard[] = [
-		{ id: "trophees", source: tropheesCard },
+		{
+			id: "trophees",
+			source: tropheesCard,
+			onPress: () => router.push("/trophees"),
+		},
 		{
 			id: "bonus",
 			source: bonusCard,

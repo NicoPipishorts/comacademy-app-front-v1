@@ -1,5 +1,6 @@
 import "react-native-reanimated";
 
+import AnalyticsSessionTracker from "@/components/AnalyticsSessionTracker";
 import LogOverlay from "@/components/LogOverlay";
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
@@ -53,6 +54,7 @@ export default function RootLayout() {
 	return (
 		<SafeAreaProvider>
 			<AuthProvider>
+				<AnalyticsSessionTracker />
 				<SubscriptionProvider>
 					<QueryClientProvider client={queryClient}>
 						<GestureHandlerRootView style={{ flex: 1 }}>

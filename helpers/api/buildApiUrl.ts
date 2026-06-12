@@ -31,7 +31,7 @@ const extractHostFromCandidate = (candidate: unknown): string | null => {
 const getDevServerHost = (): string | null => {
 	if (Platform.OS === "web") return null;
 
-	const constants = Constants as Constants & {
+	const constants = Constants as typeof Constants & {
 		manifest2?: {
 			extra?: {
 				expoClient?: {
@@ -112,6 +112,8 @@ const buildApiPath = (path: string): string => {
 };
 
 export const getAuthUrl = (): string => buildApiPath("/auth/local");
+export const getSessionValidationUrl = (): string =>
+	buildApiPath("/auth/session");
 
 export const getRegisterUrl = (): string =>
 	resolveConfiguredUrl(

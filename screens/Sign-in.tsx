@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useForgotPasswordMutation } from "@/api/credentials/forgotPassword";
 import { useLoginMutation } from "@/api/credentials/login";
 import { useResetPasswordMutation } from "@/api/credentials/resetPassword";
+import { sendAnalyticsEvent } from "@/api/analyticsEvents";
 import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import ForgotPasswordSheet from "@/components/modal/ForgotPasswordSheet";
@@ -136,6 +137,13 @@ const SignIn = () => {
 	const onSuccess = async (data: AuthResponse) => {
 		await persistBiometricSession(data, email);
 		await login(data);
+		void sendAnalyticsEvent({
+			eventName: "login_succeeded",
+			authToken: data.jwt,
+			userId: data.user.id,
+			screenName: "SignIn",
+			properties: { method: "password" },
+		});
 		navigation.navigate("(tabs)");
 	};
 
@@ -248,6 +256,13 @@ const SignIn = () => {
 
 			const payload = JSON.parse(payloadRaw) as AuthResponse;
 			await login(payload);
+			void sendAnalyticsEvent({
+				eventName: "login_succeeded",
+				authToken: payload.jwt,
+				userId: payload.user.id,
+				screenName: "SignIn",
+				properties: { method: "biometric" },
+			});
 			navigation.navigate("(tabs)");
 		} catch (error) {
 			showSnackbar(

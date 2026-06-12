@@ -316,6 +316,14 @@ export default function Jeu() {
 		setTimeout(() => navigation.navigate("index"), 100);
 	};
 
+	if (isCompletingSession) {
+		return (
+			<View style={styles.wrapper}>
+				<Loader />
+			</View>
+		);
+	}
+
 	if (dataGame.length === 0) {
 		const swiperTopMargin = isHomeButtonModel ? -40 : 0;
 
@@ -383,7 +391,6 @@ export default function Jeu() {
 			setCurrentCardNumber(QUESTIONS_PER_ROUND);
 			setIsCompletingSession(true);
 			setActiveGameStatus("finished");
-			setActiveQuestions([]);
 			return;
 		}
 

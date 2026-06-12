@@ -94,6 +94,14 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
+					name='trophees/index'
+					options={{
+						tabBarLabel: "Trophees",
+						headerShown: false,
+						href: null,
+					}}
+				/>
+				<Tabs.Screen
 					name='dashboard'
 					options={{
 						tabBarLabel: "Moi",

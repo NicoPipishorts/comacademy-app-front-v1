@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
 // Import Assets
+import { sendAnalyticsEvent } from "@/api/analyticsEvents";
 import { useRegisterNewUser } from "@/api/credentials/registerNewUser";
 import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
@@ -31,6 +32,15 @@ const Register = () => {
 
 	const onSuccess = async (data: AuthResponse) => {
 		await login(data);
+		void sendAnalyticsEvent({
+			eventName: "signup_completed",
+			authToken: data.jwt,
+			userId: data.user.id,
+			screenName: "Register",
+			properties: {
+				profile: formPayload?.profile ?? null,
+			},
+		});
 		navigation.navigate("(tabs)");
 	};
 

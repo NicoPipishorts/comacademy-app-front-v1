@@ -1,4 +1,5 @@
 import CardLesCitations from "@/components/cards/CardLesCitations";
+import { CitationFavoritesProvider } from "@/context/CitationFavoritesContext";
 import { CitationData } from "@/types/lesCitations";
 import {
 	BlurMask,
@@ -141,12 +142,14 @@ export default function ParcoursCitationRevealCard({
 }) {
 	const [dims, setDims] = useState({ width: 0, height: 0 });
 	const [locallyRevealed, setLocallyRevealed] = useState(revealed);
+	const [revealFinished, setRevealFinished] = useState(revealed);
 
 	// Progress tracking lives entirely in refs — no re-render while erasing.
 	const clearedCellsRef = useRef<Set<number>>(new Set());
 	const maxProgressRef = useRef(revealed ? 1 : 0);
 	const gridColsRef = useRef(1);
 	const gridRowsRef = useRef(1);
+	const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// Erase path is a Skia path held in a shared value (UI-thread reactive).
 	const erasePath = useSharedValue(Skia.Path.Make());
@@ -166,11 +169,25 @@ export default function ParcoursCitationRevealCard({
 	// Reset everything when the citation or revealed prop changes.
 	useEffect(() => {
 		setLocallyRevealed(revealed);
+		setRevealFinished(revealed);
 		maxProgressRef.current = revealed ? 1 : 0;
 		clearedCellsRef.current = new Set();
 		erasePath.value = Skia.Path.Make();
 		overlayOpacity.value = revealed ? 0 : 1;
+		if (revealTimerRef.current) {
+			clearTimeout(revealTimerRef.current);
+			revealTimerRef.current = null;
+		}
 	}, [id, revealed, erasePath, overlayOpacity]);
+
+	useEffect(
+		() => () => {
+			if (revealTimerRef.current) {
+				clearTimeout(revealTimerRef.current);
+			}
+		},
+		[]
+	);
 
 	const overlayInteractive = !locallyRevealed && !revealed;
 	const showOverlay = !revealed;
@@ -247,7 +264,13 @@ export default function ParcoursCitationRevealCard({
 
 			if (safe >= REVEAL_THRESHOLD && !locallyRevealed) {
 				setLocallyRevealed(true);
-				onRevealComplete?.();
+				if (!revealTimerRef.current) {
+					revealTimerRef.current = setTimeout(() => {
+						revealTimerRef.current = null;
+						setRevealFinished(true);
+						onRevealComplete?.();
+					}, FADE_DURATION);
+				}
 			}
 		},
 		[overlayInteractive, locallyRevealed, onRevealProgress, onRevealComplete]
@@ -324,12 +347,14 @@ export default function ParcoursCitationRevealCard({
 	return (
 		<View style={styles.container}>
 			<View onLayout={handleLayout} style={styles.cardWrap}>
-				<CardLesCitations
-					citation={citation}
-					showFavorite={false}
-					wrapperStyle={styles.cardWrapper}
-					cardStyle={styles.cardStyle}
-				/>
+				<CitationFavoritesProvider>
+					<CardLesCitations
+						citation={citation}
+						showFavorite={revealFinished}
+						wrapperStyle={styles.cardWrapper}
+						cardStyle={styles.cardStyle}
+					/>
+				</CitationFavoritesProvider>
 
 				{showOverlay && hasLayout ? (
 					<ReAnimated.View
@@ -399,8 +424,7 @@ const styles = StyleSheet.create({
 		position: "relative",
 		width: "100%",
 		borderRadius: 22,
-		overflow: "hidden",
-		backgroundColor: "#000",
+		backgroundColor: "transparent",
 	},
 	cardWrapper: {
 		marginTop: 0,

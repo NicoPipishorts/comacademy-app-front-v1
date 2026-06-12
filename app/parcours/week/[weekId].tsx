@@ -2,6 +2,7 @@ import { useParcoursWeek } from "@/api/parcours/useParcours";
 import ReturnButton from "@/components/buttons/returnButton";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import Loader from "@/components/experience/loader";
+import ParcoursComingSoonScreen from "@/components/parcours/ParcoursComingSoonScreen";
 import ParcoursWeekDayCard from "@/components/parcours/ParcoursWeekDayCard";
 import ParcoursWeekProgressCard from "@/components/parcours/ParcoursWeekProgressCard";
 import {
@@ -11,6 +12,7 @@ import {
 import {
 	FontSize16,
 } from "@/constants/fontsizes";
+import { isParcoursEnabled } from "@/constants/featureFlags";
 import useJwtToken from "@/hooks/useJwtToken";
 import {
 	getCurrentReadyParcoursDayId,
@@ -27,6 +29,14 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ParcoursWeekScreen() {
+	if (!isParcoursEnabled) {
+		return <ParcoursComingSoonScreen />;
+	}
+
+	return <ParcoursWeekContent />;
+}
+
+function ParcoursWeekContent() {
 	const insets = useSafeAreaInsets();
 	const params = useLocalSearchParams<{ weekId?: string | string[] }>();
 	const weekId = Number(Array.isArray(params.weekId) ? params.weekId[0] : params.weekId);

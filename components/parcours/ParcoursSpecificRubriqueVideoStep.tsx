@@ -25,18 +25,21 @@ export default function ParcoursSpecificRubriqueVideoStep({
 	videoUri,
 	accentColor,
 	initialPositionMillis = 0,
+	completed = false,
 	onPlaybackStatusUpdate,
 }: {
 	videoUri: string;
 	accentColor: string;
 	initialPositionMillis?: number;
+	completed?: boolean;
 	onPlaybackStatusUpdate?: (status: CompatVideoStatus) => void;
 }) {
 	const videoRef = useRef<ManagedVideoHandle | null>(null);
 	const overlayOpacity = useRef(new Animated.Value(1)).current;
 	const previousPositionMillisRef = useRef(initialPositionMillis);
-	const hasFinishedPlaybackRef = useRef(false);
+	const hasFinishedPlaybackRef = useRef(completed);
 	const [isPlaying, setIsPlaying] = useState(false);
+	const [hasFinishedPlayback, setHasFinishedPlayback] = useState(completed);
 	const [startPositionMillis] = useState(initialPositionMillis);
 	const videoSource = useMemo(() => ({ uri: videoUri }), [videoUri]);
 
@@ -59,6 +62,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 	const finalizePlayback = useCallback(
 		(status?: CompatVideoStatus) => {
 			hasFinishedPlaybackRef.current = true;
+			setHasFinishedPlayback(true);
 			setIsPlaying(false);
 			showOverlay();
 			const endPositionMillis =
@@ -148,14 +152,26 @@ export default function ParcoursSpecificRubriqueVideoStep({
 						style={[
 							StyleSheet.absoluteFillObject,
 							styles.overlayContainer,
-							{ opacity: overlayOpacity },
+							{
+								opacity: overlayOpacity,
+								backgroundColor: hasFinishedPlayback
+									? "transparent"
+									: "#000000",
+							},
 						]}>
-						<Image source={SplashScreen} style={styles.thumbnail} resizeMode='cover' />
+						{hasFinishedPlayback ? null : (
+							<Image
+								source={SplashScreen}
+								style={styles.thumbnail}
+								resizeMode='cover'
+							/>
+						)}
 						<Pressable
 							style={styles.playButtonContainer}
 							onPress={() => {
 								if (hasFinishedPlaybackRef.current) {
 									hasFinishedPlaybackRef.current = false;
+									setHasFinishedPlayback(false);
 									previousPositionMillisRef.current = 0;
 									videoRef.current?.setPositionAsync(0, { toleranceMillis: 0 }).catch(() => {});
 								}

@@ -17,7 +17,7 @@ const formatSeconds = (value: number) => {
 };
 
 export default function ParcoursStepTimer({
-	durationSeconds = 30,
+	durationSeconds = 15,
 	accentColor,
 	onComplete,
 }: {

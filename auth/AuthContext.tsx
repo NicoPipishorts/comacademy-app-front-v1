@@ -2,6 +2,7 @@ import { SESSION_MIGRATION_VERSION, STORAGE_MIGRATION_KEY } from "@/constants";
 import { AuthResponse } from "@/types/credentials/auth";
 import { normalizeAuthResponse } from "@/helpers/strapi";
 import { logDevice } from "@/helpers/logDevice";
+import { getSessionValidationUrl } from "@/helpers/api/buildApiUrl";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Constants from "expo-constants";
@@ -59,10 +60,10 @@ interface AuthProviderProps {
 }
 
 const resolveBuildIdentifier = (): string => {
-	const expoConfig = Constants.expoConfig ?? {};
-	const candidateValues: Array<string | number | undefined | null> = [
+	const expoConfig = Constants.expoConfig;
+	const candidateValues: (string | number | undefined | null)[] = [
 		Constants.nativeBuildVersion,
-		Platform.select({
+		Platform.select<string | number | undefined>({
 			ios: expoConfig?.ios?.buildNumber,
 			android: expoConfig?.android?.versionCode,
 			default: undefined,
@@ -121,7 +122,9 @@ const setAxiosAuthHeader = (value: string | null) => {
 	}
 };
 
-const hasAuthorizationHeader = (headers?: HeadersInit | null): boolean => {
+const hasAuthorizationHeader = (
+	headers?: RequestInit["headers"] | null
+): boolean => {
 	if (!headers) return false;
 
 	if (typeof Headers !== "undefined" && headers instanceof Headers) {
@@ -385,16 +388,94 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		updateTokenState,
 	]);
 
+	const handleUnauthorizedLogout = useCallback(
+		async (reason: string) => {
+			if (logoutInFlightRef.current) return;
+			logoutInFlightRef.current = true;
+			try {
+				await clearPersistedSession(reason);
+			} finally {
+				logoutInFlightRef.current = false;
+			}
+		},
+		[clearPersistedSession]
+	);
+
+	const applySessionMigration = useCallback(async () => {
+		const seenVersion = await AsyncStorage.getItem(STORAGE_MIGRATION_KEY);
+		if (seenVersion === SESSION_MIGRATION_VERSION) {
+			return false;
+		}
+
+		await clearPersistedSession("migration version bump");
+		await AsyncStorage.setItem(
+			STORAGE_MIGRATION_KEY,
+			SESSION_MIGRATION_VERSION
+		);
+		return true;
+	}, [clearPersistedSession]);
+
+	const validateRemoteSession = useCallback(
+		async (currentToken: string) => {
+			try {
+				const response = await fetch(getSessionValidationUrl(), {
+					headers: {
+						Authorization: `Bearer ${currentToken}`,
+					},
+				});
+
+				if (response.status === 401) {
+					await handleUnauthorizedLogout("server session invalidated");
+					return false;
+				}
+
+				if (!response.ok) {
+					logDevice(
+						"[AuthContext] Session validation unavailable; keeping local session",
+						{ status: response.status },
+						"warn"
+					);
+				}
+
+				return true;
+			} catch (error) {
+				logDevice(
+					"[AuthContext] Session validation request failed; keeping local session",
+					{
+						error: error instanceof Error ? error.message : String(error),
+					},
+					"warn"
+				);
+				return true;
+			}
+		},
+		[handleUnauthorizedLogout]
+	);
+
 	const checkLoggedIn = useCallback(async () => {
 		if (loginPromiseRef.current) {
 			logDevice("[AuthContext] checkLoggedIn awaiting login");
 			await loginPromiseRef.current;
 		}
 
+		const migrated = await applySessionMigration();
+		if (migrated) {
+			logDevice("[AuthContext] checkLoggedIn invalidated by migration");
+			return false;
+		}
+
 		const isValid = await hydrateFromStorage();
-		logDevice("[AuthContext] checkLoggedIn result", { isValid });
-		return isValid;
-	}, [hydrateFromStorage]);
+		if (!isValid || !tokenRef.current) {
+			logDevice("[AuthContext] checkLoggedIn result", { isValid: false });
+			return false;
+		}
+
+		const isCurrentOnServer = await validateRemoteSession(tokenRef.current);
+		logDevice("[AuthContext] checkLoggedIn result", {
+			isValid: isCurrentOnServer,
+		});
+		return isCurrentOnServer;
+	}, [applySessionMigration, hydrateFromStorage, validateRemoteSession]);
 
 	const login = useCallback(
 		async (data: AuthResponse) => {
@@ -445,7 +526,13 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 				}
 			}
 		},
-		[buildIdentifier, scheduleTokenExpiryCheck, shouldTrackBuild]
+		[
+			buildIdentifier,
+			scheduleTokenExpiryCheck,
+			shouldTrackBuild,
+			updateSessionState,
+			updateTokenState,
+		]
 	);
 
 	const logout = useCallback(async () => {
@@ -453,37 +540,15 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 		setIsRegistering(false);
 	}, [clearPersistedSession]);
 
-	const handleUnauthorizedLogout = useCallback(
-		async (reason: string) => {
-			if (logoutInFlightRef.current) return;
-			logoutInFlightRef.current = true;
-			try {
-				await clearPersistedSession(reason);
-			} finally {
-				logoutInFlightRef.current = false;
-			}
-		},
-		[clearPersistedSession]
-	);
-
 	useEffect(() => {
 		const initializeAuth = async () => {
-			const seenVersion = await AsyncStorage.getItem(STORAGE_MIGRATION_KEY);
-			if (seenVersion !== SESSION_MIGRATION_VERSION) {
-				await clearPersistedSession("migration version bump");
-				await AsyncStorage.setItem(
-					STORAGE_MIGRATION_KEY,
-					SESSION_MIGRATION_VERSION
-				);
-			}
-
-			await hydrateFromStorage();
+			await checkLoggedIn();
 			setIsRegistering(false);
 			setLoading(false);
 		};
 
-		initializeAuth();
-	}, [clearPersistedSession, hydrateFromStorage]);
+		void initializeAuth();
+	}, [checkLoggedIn]);
 
 	useEffect(() => {
 		const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -564,7 +629,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 
 	useEffect(() => {
 		const originalFetch = globalThis.fetch;
-		if (!originalFetch) return;
+		if (!originalFetch) return undefined;
 
 		const authAwareFetch: typeof fetch = async (input, init) => {
 			const requestHeaders =
