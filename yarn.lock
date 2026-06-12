@@ -9181,10 +9181,6 @@ react-native-element-dropdown@^2.12.4:
   dependencies:
     lodash "^4.17.21"
 
-"react-native-fast-confetti@github:AlirezaHadjar/react-native-fast-confetti#feat/v2":
-  version "2.0.0-beta.4"
-  resolved "git+ssh://git@github.com/AlirezaHadjar/react-native-fast-confetti.git#6b8f1bdff141a109a339815e0a25c33443a2420e"
-
 react-native-gesture-handler@*, react-native-gesture-handler@>=2.16.1, react-native-gesture-handler@~2.28.0:
   version "2.28.0"
   resolved "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.28.0.tgz"
