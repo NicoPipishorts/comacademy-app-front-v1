@@ -135,7 +135,7 @@ export default function ParcoursWeekDayCard({
 
 	return (
 		<Pressable
-			disabled={day.isLocked}
+			disabled={!day.isAccessible}
 			onPress={onPress}
 			style={[styles.dayCard, card.containerStyle]}>
 			<View style={styles.dayTextColumn}>

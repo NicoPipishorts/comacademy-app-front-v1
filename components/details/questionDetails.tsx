@@ -243,7 +243,7 @@ export default function QuestionDetails({
 	useEffect(() => {
 		if (LOCAL_RESPONSE_DEBUG_DELAY_MS === 0) {
 			setLocalDelayComplete(true);
-			return;
+			return undefined;
 		}
 
 		setLocalDelayComplete(false);

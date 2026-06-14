@@ -87,9 +87,14 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	} = props;
 
 	const statusRef = useRef<CompatVideoStatus>({ ...defaultStatus });
+	const onPlaybackStatusUpdateRef = useRef(onPlaybackStatusUpdate);
 	const videoTrackSizeRef = useRef<{ width: number; height: number } | null>(
 		null
 	);
+
+	useEffect(() => {
+		onPlaybackStatusUpdateRef.current = onPlaybackStatusUpdate;
+	}, [onPlaybackStatusUpdate]);
 
 	const player = useVideoPlayer(source, (instance) => {
 		instance.loop = isLooping;
@@ -127,12 +132,13 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 						? update.durationMillis
 						: statusRef.current.durationMillis,
 			};
-			if (onPlaybackStatusUpdate) {
+			const statusUpdateHandler = onPlaybackStatusUpdateRef.current;
+			if (statusUpdateHandler) {
 				const snapshot = { ...statusRef.current };
-				setTimeout(() => onPlaybackStatusUpdate(snapshot), 0);
+				setTimeout(() => statusUpdateHandler(snapshot), 0);
 			}
 		},
-		[onPlaybackStatusUpdate]
+		[]
 	);
 
 	const syncDuration = useCallback(

@@ -12,10 +12,12 @@ export default function ParcoursGameQuestionStep({
 	questions,
 	onSwipe,
 	completed,
+	hideStateMessage = false,
 }: {
 	questions: QuestionData[];
 	onSwipe: (question: QuestionData, isRight: boolean) => void;
 	completed: boolean;
+	hideStateMessage?: boolean;
 }) {
 	const { data: catData } = useCategories();
 	const hasQuestions = questions.length > 0;
@@ -33,17 +35,14 @@ export default function ParcoursGameQuestionStep({
 	}
 
 	if (completed) {
-		return (
-			<View style={styles.stateCard}>
-				<Text style={styles.stateTitle}>Jeu terminé</Text>
-				<Text style={styles.stateBody}>
-					Le parcours du jour est terminé, vous pouvez passer au prochain.
-				</Text>
-			</View>
-		);
+		return <View style={styles.emptyStateSpacer} />;
 	}
 
 	if (!hasQuestions) {
+		if (hideStateMessage) {
+			return <View style={styles.emptyStateSpacer} />;
+		}
+
 		return (
 			<View style={styles.stateCard}>
 				<Text style={styles.stateTitle}>Aucune question disponible</Text>
@@ -64,6 +63,9 @@ export default function ParcoursGameQuestionStep({
 }
 
 const styles = StyleSheet.create({
+	emptyStateSpacer: {
+		minHeight: 180,
+	},
 	stateCard: {
 		backgroundColor: colorWhite,
 		borderRadius: 24,

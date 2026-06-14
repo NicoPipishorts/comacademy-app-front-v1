@@ -197,7 +197,18 @@ function TimelineWeekSection({
 				</View>
 			</View>
 
-			<View
+			<Pressable
+				disabled={!week.bonus || week.bonus.status === "locked"}
+				onPress={() => {
+					if (!week.bonus || week.bonus.status === "locked") {
+						return;
+					}
+
+					router.push({
+						pathname: "/bonus",
+						params: { bonusId: String(week.bonus.id) },
+					});
+				}}
 				style={[
 					styles.nodeRow,
 					isRightAligned && styles.bonusNodeRowRight,
@@ -225,7 +236,7 @@ function TimelineWeekSection({
 					]}>
 					<Text style={styles.nodeTitle}>Bonus</Text>
 				</View>
-			</View>
+			</Pressable>
 		</View>
 	);
 }
@@ -273,12 +284,14 @@ function ParcoursTimelineScreen() {
 
 	useFocusEffect(
 		useCallback(() => {
+			void refetch();
+
 			if (!weeks.length) {
 				return;
 			}
 
 			scrollToLatestWeek();
-		}, [weeks.length, scrollToLatestWeek])
+		}, [refetch, weeks.length, scrollToLatestWeek])
 	);
 
 	if (isLoading) {

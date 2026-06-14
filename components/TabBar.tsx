@@ -106,7 +106,9 @@ export default function CustomTabBar({
 								activeRouteName?.startsWith("parcours/"))) ||
 						(tab.routeName === "dashboard" &&
 							(activeRouteName === "dashboard" ||
-								activeRouteName?.startsWith("dashboard/")));
+								activeRouteName?.startsWith("dashboard/") ||
+								activeRouteName === "bonus" ||
+								activeRouteName?.startsWith("bonus/")));
 
 					const onPress = () => {
 						const event = navigation.emit({

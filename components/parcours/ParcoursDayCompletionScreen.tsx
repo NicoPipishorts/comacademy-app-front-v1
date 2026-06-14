@@ -1,5 +1,5 @@
 import endImage from "@/assets/imgs/parcours/OnboardingPages/end.png";
-import { colorBlack, colorWhite } from "@/constants/colors";
+import { colorBlack, colorGreen, colorWhite, colorYellow } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { getParcoursQuizIconForProgramOrder } from "@/helpers/parcours/icons";
 import React from "react";
@@ -85,11 +85,13 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 	},
 	parcoursIcon: {
-		width: 84,
-		height: 84,
-		marginBottom: 10,
+		marginTop: -30,
+		width: 278,
+		height: 278,
+		marginRight: -40
 	},
 	title: {
+		marginTop: -80,
 		fontSize: 56,
 		fontWeight: "900",
 		color: colorBlack,

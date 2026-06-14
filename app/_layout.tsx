@@ -2,6 +2,7 @@ import "react-native-reanimated";
 
 import AnalyticsSessionTracker from "@/components/AnalyticsSessionTracker";
 import LogOverlay from "@/components/LogOverlay";
+import { TabBarVisibilityProvider } from "@/context/TabBarVisibilityContext";
 import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
@@ -62,19 +63,25 @@ export default function RootLayout() {
 								<PaperProvider>
 									<SnackbarProvider>
 										<NetworkProvider>
-											<TabProvider>
-												<Stack screenOptions={{ animation: "none", headerShown: false }}>
-													<Stack.Screen
-														name='(tabs)'
-														options={{ headerShown: false }}
-													/>
-													<Stack.Screen
-														name='parcours'
-														options={{ headerShown: false }}
-													/>
-												</Stack>
-												{shouldShowDeviceLogs ? <LogOverlay /> : null}
-											</TabProvider>
+											<TabBarVisibilityProvider>
+												<TabProvider>
+													<Stack
+														screenOptions={{
+															animation: "none",
+															headerShown: false,
+														}}>
+														<Stack.Screen
+															name='(tabs)'
+															options={{ headerShown: false }}
+														/>
+														<Stack.Screen
+															name='parcours'
+															options={{ headerShown: false }}
+														/>
+													</Stack>
+													{shouldShowDeviceLogs ? <LogOverlay /> : null}
+												</TabProvider>
+											</TabBarVisibilityProvider>
 										</NetworkProvider>
 									</SnackbarProvider>
 								</PaperProvider>

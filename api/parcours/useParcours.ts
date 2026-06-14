@@ -6,6 +6,7 @@ import {
 	ParcoursDayProgressPayload,
 	ParcoursResponse,
 	ParcoursTimelineWeek,
+	ParcoursUserBonus,
 	ParcoursWeekDetail,
 } from "@/types/parcours";
 import {
@@ -70,6 +71,53 @@ export const useParcoursWeek = (
 				`/parcours/weeks/${weekId}`,
 				token
 			),
+	});
+};
+
+export const useParcoursBonuses = (
+	token: string | null,
+	loadingToken: boolean
+) =>
+	useQuery<ParcoursResponse<ParcoursUserBonus[]>>({
+		queryKey: QK.parcoursBonuses(),
+		enabled: !!token && !loadingToken,
+		queryFn: () =>
+			requestJson<ParcoursResponse<ParcoursUserBonus[]>>(
+				"/parcours/bonuses",
+				token
+			),
+	});
+
+export const useMarkParcoursBonusViewed = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({
+			bonusId,
+			token,
+		}: {
+			bonusId: number;
+			token: string | null;
+		}) =>
+			requestJson<ParcoursResponse<ParcoursUserBonus>>(
+				`/parcours/bonuses/${bonusId}/view`,
+				token,
+				{ method: "POST" }
+			),
+		onSuccess: ({ data }) => {
+			queryClient.setQueryData<ParcoursResponse<ParcoursUserBonus[]>>(
+				QK.parcoursBonuses(),
+				(current) =>
+					current
+						? {
+								...current,
+								data: current.data.map((bonus) =>
+									bonus.id === data.id ? data : bonus
+								),
+						  }
+						: current
+			);
+		},
 	});
 };
 

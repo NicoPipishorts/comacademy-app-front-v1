@@ -1,10 +1,7 @@
 // app/(tabs)/_layout.tsx
 import { UseAuth } from "@/auth/AuthContext";
 import TabBar from "@/components/TabBar";
-import {
-	TabBarVisibilityProvider,
-	useTabBarVisibility,
-} from "@/context/TabBarVisibilityContext";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import Register from "@/screens/Register/Register";
 import * as Notifications from "expo-notifications";
 import { Tabs } from "expo-router";
@@ -44,7 +41,7 @@ const TabsLayout: React.FC = () => {
 	}
 
 	return (
-		<TabBarVisibilityProvider>
+		<>
 			{/* Add the notification scheduler */}
 			<NotificationScheduler />
 			<Tabs tabBar={(props) => <CustomTabBar {...props} />}>
@@ -201,7 +198,7 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 			</Tabs>
-		</TabBarVisibilityProvider>
+		</>
 	);
 };
 

@@ -20,6 +20,48 @@ export interface ParcoursBonus {
 	unlockedAt: string | null;
 }
 
+export interface ParcoursBonusVideoPayload {
+	type: "video";
+	programOrder?: number;
+	themeIndex?: number;
+	rubriqueType?: "thirty_seconds" | "top_deflop";
+	rubriqueLabel?: string | null;
+	title?: string | null;
+	videoLink?: string | null;
+	videoId?: string | null;
+	videoUri?: {
+		url?: string | null;
+		width?: number | null;
+		height?: number | null;
+	} | null;
+	coverPhoto?: {
+		url?: string | null;
+		width?: number | null;
+		height?: number | null;
+	} | null;
+	weekStartAt?: string | null;
+	weekEndAt?: string | null;
+}
+
+export interface ParcoursUserBonus {
+	id: number;
+	documentId: string | null;
+	title: string;
+	description: string | null;
+	payload: ParcoursBonusVideoPayload | null;
+	status: "unlocked" | "viewed";
+	unlockedAt: string | null;
+	viewedAt: string | null;
+	week: {
+		id: number;
+		title: string;
+		weekLabel: string | null;
+		programOrder: number;
+		weekStartAt: string | null;
+		weekEndAt: string | null;
+	};
+}
+
 export interface ParcoursTimelineDay {
 	id: number;
 	documentId: string | null;

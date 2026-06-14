@@ -133,6 +133,10 @@ export const resolveInitialParcoursStepIndex = ({
 	lastProgressPayload?: Record<string, unknown> | string | null;
 	getStepId: (step: ParcoursDayStep, index: number) => string;
 }) => {
+	if (!steps.length) {
+		return 0;
+	}
+
 	if (progressionStatus === "completed") {
 		return 0;
 	}
@@ -148,5 +152,5 @@ export const resolveInitialParcoursStepIndex = ({
 		}
 	}
 
-	return currentStepIndex || 0;
+	return Math.min(Math.max(currentStepIndex || 0, 0), steps.length - 1);
 };

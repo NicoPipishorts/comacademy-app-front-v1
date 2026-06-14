@@ -67,7 +67,7 @@ export default function ParcoursDicoQuestionStep({
 							onPress={() => onSelectAnswer(answer.key)}
 							style={[
 								styles.answerRow,
-								disabled && styles.answerRowDisabled,
+								disabled && !locked && styles.answerRowDisabled,
 								!locked &&
 									isSelected && {
 										backgroundColor: accentTintColor,

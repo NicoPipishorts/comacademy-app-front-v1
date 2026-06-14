@@ -20,6 +20,7 @@ import ParcoursDicoQuestionStep from "@/components/parcours/ParcoursDicoQuestion
 import ParcoursGameOnboardingStep, {
 	GAME_ONBOARDING_BACKGROUND,
 } from "@/components/parcours/ParcoursGameOnboardingStep";
+import ParcoursGameAnswersReview from "@/components/parcours/ParcoursGameAnswersReview";
 import ParcoursGameQuestionStep from "@/components/parcours/ParcoursGameQuestionStep";
 import ParcoursSpecificRubriqueVideoStep from "@/components/parcours/ParcoursSpecificRubriqueVideoStep";
 import ParcoursTipsOnboardingStep, {
@@ -71,6 +72,7 @@ import {
 	resolveParcoursVideoUri,
 	shouldPersistParcoursVideoCheckpoint,
 } from "@/helpers/parcours/video";
+import { getReviewableParcoursSteps } from "@/helpers/parcours/review";
 import {
 	getProgressPayload,
 	getStepState,
@@ -89,6 +91,7 @@ import {
 } from "@/helpers/parcours/steps";
 import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
+import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
 import { Answer } from "@/types/enums";
 import { CompatVideoStatus } from "@/components/media/ExpoVideo";
 import {
@@ -192,14 +195,40 @@ function ParcoursDayContent() {
 	const progressPayloadDayIdRef = useRef<number | null>(null);
 	const day = data?.data;
 
-	const steps = useMemo(
-		() =>
-			Array.isArray(day?.stepsPayload?.steps)
-				? day.stepsPayload.steps.map(toParcoursDayStep)
-				: [],
-		[day?.stepsPayload?.steps]
+	const steps = useMemo(() => {
+		const payloadSteps = Array.isArray(day?.stepsPayload?.steps)
+			? day.stepsPayload.steps.map(toParcoursDayStep)
+			: [];
+
+		if (day?.progression.status !== "expired") {
+			return payloadSteps;
+		}
+
+		return getReviewableParcoursSteps({
+			steps: payloadSteps,
+			currentStepIndex: day.progression.currentStepIndex,
+			lastProgressPayload: day.progression.lastProgressPayload,
+		});
+	}, [
+		day?.progression.currentStepIndex,
+		day?.progression.lastProgressPayload,
+		day?.progression.status,
+		day?.stepsPayload?.steps,
+	]);
+	const hasNoReviewableSteps = Boolean(
+		day?.progression.isReadOnly && steps.length === 0
 	);
-	const totalSteps = day?.stepsPayload?.dayMeta?.totalSteps || steps.length;
+	const isHistoricalReview = Boolean(
+		day &&
+			typeof data?.meta.currentWeekOrder === "number" &&
+			day.week.programOrder < data.meta.currentWeekOrder
+	);
+	const isCompletedReview = day?.progression.status === "completed";
+	const isReviewMode = isHistoricalReview || isCompletedReview;
+	const totalSteps =
+		day?.progression.status === "expired"
+			? steps.length
+			: day?.stepsPayload?.dayMeta?.totalSteps || steps.length;
 	const initialIndex = useMemo(
 		() => {
 			const resolvedIndex = resolveInitialParcoursStepIndex({
@@ -209,6 +238,11 @@ function ParcoursDayContent() {
 				lastProgressPayload: day?.progression?.lastProgressPayload,
 				getStepId: getParcoursStepId,
 			});
+
+			if (isReviewMode) {
+				return resolvedIndex;
+			}
+
 			const resolvedStep = steps[resolvedIndex] || null;
 			const previousStepIndex = resolvedIndex - 1;
 			const previousStep = steps[previousStepIndex] || null;
@@ -251,6 +285,7 @@ function ParcoursDayContent() {
 			day?.progression?.currentStepIndex,
 			day?.progression?.lastProgressPayload,
 			day?.progression?.status,
+			isReviewMode,
 			steps,
 		]
 	);
@@ -428,7 +463,8 @@ function ParcoursDayContent() {
 
 	const isCitationStep = isCitationParcoursStep(currentStep);
 	const shouldShowCitationOnboarding = Boolean(
-		isCitationStep &&
+		!isReviewMode &&
+			isCitationStep &&
 			currentStepId &&
 			!seenOnboardingStepIds[currentStepId]
 	);
@@ -458,7 +494,8 @@ function ParcoursDayContent() {
 				: null;
 	const shouldShowDicoOnboarding =
 		Boolean(
-			dicoOnboardingStepId &&
+			!isReviewMode &&
+				dicoOnboardingStepId &&
 				dicoOnboardingStepIndex !== null &&
 				!seenDicoOnboardingStepIds[dicoOnboardingStepId]
 		);
@@ -477,7 +514,8 @@ function ParcoursDayContent() {
 		pendingOnboardingStep
 	);
 	const shouldShowStepOnboarding = Boolean(
-		pendingOnboardingStepId &&
+		!isReviewMode &&
+			pendingOnboardingStepId &&
 			pendingOnboardingKind &&
 			!seenOnboardingStepIds[pendingOnboardingStepId]
 	);
@@ -578,6 +616,10 @@ function ParcoursDayContent() {
 		Number.isFinite(persistedStepState.gameSessionId)
 			? persistedStepState.gameSessionId
 			: null;
+	const { data: completedGameResults, isLoading: isLoadingCompletedGameResults } =
+		useGetEndOfSessionResults(
+			isCompletedReview && isGameStep ? persistedGameSessionId || 0 : 0
+		);
 	const {
 		data: parcoursGameSessionData,
 		isLoading: isLoadingParcoursGameSession,
@@ -605,6 +647,13 @@ function ParcoursDayContent() {
 		(isFinalizingGameStep || isLoadingParcoursGameSession) &&
 		!parcoursGameCompleted &&
 		(!optimisticGameQuestions || optimisticGameQuestions.length === 0);
+	const isFinalGameTransition =
+		isGameStep &&
+		activeIndex === steps.length - 1 &&
+		(isFinalizingGameStep ||
+			Boolean(feedbackAnswer) ||
+			parcoursGameCompleted ||
+			completeDay.isPending);
 
 	useEffect(() => {
 		if (!isGameStep) {
@@ -864,7 +913,8 @@ function ParcoursDayContent() {
 			});
 
 			if (showFeedback && selectedAnswerKey) {
-				pendingCorrectAdvanceRef.current = isCorrect;
+				// The persisted phase now reveals the associated card after feedback.
+				pendingCorrectAdvanceRef.current = false;
 				setFeedbackAnswer(isCorrect ? Answer.true : Answer.false);
 			} else {
 				pendingCorrectAdvanceRef.current = false;
@@ -923,29 +973,6 @@ function ParcoursDayContent() {
 
 	const handleNext = async () => {
 		if (!day || !canAdvance) return;
-
-		if (
-			isCitationStep &&
-			citationRevealed &&
-			isDicoQuestionParcoursStep(nextStep) &&
-			!nextStepState.answered &&
-			!seenDicoOnboardingStepIds[nextStepId]
-		) {
-			setPendingDicoOnboardingStepIndex(nextStepIndex);
-			return;
-		}
-
-		if (
-			getParcoursOnboardingKind(nextStep) &&
-			!(
-				getParcoursOnboardingKind(nextStep) === "video" &&
-				Boolean(nextStepState.videoCompleted)
-			) &&
-			!seenOnboardingStepIds[nextStepId]
-		) {
-			setPendingOnboardingStepIndex(nextStepIndex);
-			return;
-		}
 
 		if (isTipsStep) {
 			if (isTipsQuestionPhase) {
@@ -1023,6 +1050,31 @@ function ParcoursDayContent() {
 				showFeedback: true,
 			});
 
+			return;
+		}
+
+		if (
+			!isReviewMode &&
+			isCitationStep &&
+			citationRevealed &&
+			isDicoQuestionParcoursStep(nextStep) &&
+			!nextStepState.answered &&
+			!seenDicoOnboardingStepIds[nextStepId]
+		) {
+			setPendingDicoOnboardingStepIndex(nextStepIndex);
+			return;
+		}
+
+		if (
+			!isReviewMode &&
+			getParcoursOnboardingKind(nextStep) &&
+			!(
+				getParcoursOnboardingKind(nextStep) === "video" &&
+				Boolean(nextStepState.videoCompleted)
+			) &&
+			!seenOnboardingStepIds[nextStepId]
+		) {
+			setPendingOnboardingStepIndex(nextStepIndex);
 			return;
 		}
 
@@ -1483,7 +1535,14 @@ function ParcoursDayContent() {
 				},
 			]}>
 			<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
-			{isDayCompletionScreenVisible ? (
+			{hasNoReviewableSteps ? (
+				<View style={styles.emptyReviewState}>
+					<Text style={styles.emptyReviewTitle}>Aucune étape terminée</Text>
+					<Text style={styles.emptyReviewBody}>
+						Ce parcours est maintenant en lecture seule.
+					</Text>
+				</View>
+			) : isDayCompletionScreenVisible ? (
 				<ParcoursDayCompletionScreen
 					dateLabel={dayDateLabel}
 					weekProgramOrder={day?.week.programOrder}
@@ -1580,7 +1639,7 @@ function ParcoursDayContent() {
 						paddingTop: 2,
 						flexGrow: 1,
 					}}
-					scrollEnabled={!isGameStep}
+					scrollEnabled={!isGameStep || isCompletedReview}
 					showsVerticalScrollIndicator={false}>
 					<ParcoursDayHeader
 						dateLabel={dayDateLabel}
@@ -1620,7 +1679,7 @@ function ParcoursDayContent() {
 					<View
 						style={[
 							styles.stepStage,
-							isGameStep && styles.stepStageCentered,
+							isGameStep && !isCompletedReview && styles.stepStageCentered,
 							isTipsCardPhase && styles.stepStageCentered,
 						]}>
 						{isDicoStep ? (
@@ -1672,12 +1731,25 @@ function ParcoursDayContent() {
 								/>
 							)
 						) : isGameStep ? (
-							shouldShowGameLoader ? (
+							isCompletedReview ? (
+								isLoadingCompletedGameResults ? (
+									<Loader />
+								) : (
+									<ParcoursGameAnswersReview
+										answers={completedGameResults?.data.allQuestions || []}
+									/>
+								)
+							) : shouldShowGameLoader && !isFinalGameTransition ? (
 								<Loader />
 							) : (
 								<ParcoursGameQuestionStep
 									questions={optimisticGameQuestions || []}
 									completed={parcoursGameCompleted}
+									hideStateMessage={
+										isFinalGameTransition ||
+										isFinalizingGameStep ||
+										Boolean(feedbackAnswer)
+									}
 									onSwipe={(question, isRight) => {
 										void handleGameSwipe(
 											question.id,
@@ -1727,7 +1799,13 @@ function ParcoursDayContent() {
 					onNext={() => {
 						void handleNext();
 					}}
-					nextLabel={activeIndex < steps.length - 1 ? "Suivant" : "Terminer"}
+					nextLabel={
+						hasNoReviewableSteps
+							? "Retour"
+							: activeIndex < steps.length - 1
+								? "Suivant"
+								: "Terminer"
+					}
 					bottomOffset={Math.max(insets.bottom, 14)}
 					accentColor={currentAccentColor}
 				/>
@@ -1795,5 +1873,24 @@ const styles = StyleSheet.create({
 	stepStageCentered: {
 		justifyContent: "center",
 		paddingBottom: 32,
+	},
+	emptyReviewState: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 32,
+	},
+	emptyReviewTitle: {
+		fontSize: FontSize16,
+		fontWeight: "900",
+		color: colorBlack,
+		textAlign: "center",
+		marginBottom: 8,
+	},
+	emptyReviewBody: {
+		fontSize: FontSize14,
+		fontWeight: "600",
+		color: colorDarkGrey,
+		textAlign: "center",
 	},
 });
