@@ -75,6 +75,7 @@ export default function LeJeu() {
 
 	const [showSessionTooltip, setShowSessionTooltip] = useState(false);
 	const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const shouldResetCategoryOnReturnRef = useRef(false);
 
 	const handleSessionBlockedAction = useCallback(() => {
 		setShowSessionTooltip(true);
@@ -141,6 +142,15 @@ export default function LeJeu() {
 		}, [showTabBar, loadingToken, token, auth?.user.id, refetch]),
 	);
 
+	useEffect(() => {
+		if (!shouldResetCategoryOnReturnRef.current || sessionInProgress) {
+			return;
+		}
+
+		setFilterByCat(null);
+		shouldResetCategoryOnReturnRef.current = false;
+	}, [sessionInProgress]);
+
 	useTrackPageMetrics({ page: "Jeu" });
 
 	const toggleSwitch = useCallback(() => {
@@ -174,6 +184,8 @@ export default function LeJeu() {
 				level: currentLevel,
 			},
 		});
+
+		shouldResetCategoryOnReturnRef.current = filterByCat !== null;
 
 		router.push({
 			pathname: "/leJeu/jeu",

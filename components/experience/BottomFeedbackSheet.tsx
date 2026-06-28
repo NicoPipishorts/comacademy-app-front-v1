@@ -67,7 +67,11 @@ export default function BottomFeedbackSheet({
 				{ backgroundColor, height },
 			]}>
 			<View style={styles.content}>
-				<Text style={[styles.title, { fontSize: titleSize, color: textColor }]}>
+				<Text
+					adjustsFontSizeToFit
+					minimumFontScale={0.7}
+					numberOfLines={1}
+					style={[styles.title, { fontSize: titleSize, color: textColor }]}>
 					{title}
 				</Text>
 				{subtitle ? (
@@ -112,6 +116,7 @@ const styles = StyleSheet.create({
 		color: colorWhite,
 		fontWeight: "bold",
 		textAlign: "center",
+		width: "100%",
 	},
 	subtitle: {
 		color: colorWhite,

@@ -1,11 +1,9 @@
 import CardSimpleButtonCitrationsMenu from "@/components/cards/CardSimpleButtonCitrationsMenu";
 import LargeImageCardListSkeleton from "@/components/experience/LargeImageCardListSkeleton";
 import ScreenHeaders from "@/components/ScreenHeaders";
-import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { primaryBackground } from "@/constants/colors";
 import useGetCitationsMenu from "@/hooks/Citations/useGetCitationsMenu";
 import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
-import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -19,13 +17,6 @@ const Citations = () => {
 		fromDaily?: string;
 		citationCategory?: string;
 	}>();
-
-	const {
-		showUpgradeModal,
-		handleLockedItemPress,
-		closeUpgradeModal,
-		isFreeUser,
-	} = useSubscriptionLimit({ freeLimit: 0 }); // No citations available for free users
 
 	useEffect(() => {
 		if (fromDaily === "true") {
@@ -48,16 +39,10 @@ const Citations = () => {
 				<ScreenHeaders content='Citations' />
 			</View>
 
-			<UpgradeSubscriptionModal
-				visible={showUpgradeModal}
-				onClose={closeUpgradeModal}
-				message="Les citations complètes sont réservées aux membres premium. Seule la citation du jour est accessible gratuitement."
-			/>
-
 			<ScrollView
 				showsVerticalScrollIndicator={false}
 				style={{ paddingHorizontal: 20 }}
-				contentContainerStyle={{ paddingBottom: 100 }}>
+				contentContainerStyle={{ paddingBottom: 140 }}>
 				{isLoading ? (
 					<LargeImageCardListSkeleton
 						cardCount={3}
@@ -67,15 +52,12 @@ const Citations = () => {
 				) : (
 					(Array.isArray(data?.data?.cards) ? data.data.cards : []).map(
 						(citation) => {
-							const locked = isFreeUser;
 							return (
 								<CardSimpleButtonCitrationsMenu
 									key={citation.title}
 									image={citation.url}
 									content={citation.title}
 									category={citation.category}
-									locked={locked}
-									onPress={locked ? handleLockedItemPress : undefined}
 								/>
 							);
 						},

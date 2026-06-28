@@ -21,9 +21,10 @@ export default function ParcoursDayCompletionScreen({
 	weekProgramOrder?: number | null;
 	onReturn: () => void;
 }) {
-	const { height } = useWindowDimensions();
+	const { height, width } = useWindowDimensions();
 	const mountainSize = Math.min(Math.max(height * 0.37, 300), 390);
 	const mountainOffsetY = mountainSize * (-62.5 / 456);
+	const titleFontSize = Math.min(56, Math.max(42, width * 0.14));
 
 	return (
 		<View style={styles.wrapper}>
@@ -34,7 +35,13 @@ export default function ParcoursDayCompletionScreen({
 					resizeMode='contain'
 					style={styles.parcoursIcon}
 				/>
-				<Text style={styles.title}>Bravo !</Text>
+				<Text
+					adjustsFontSizeToFit
+					minimumFontScale={0.8}
+					numberOfLines={1}
+					style={[styles.title, { fontSize: titleFontSize }]}>
+					Bravo !
+				</Text>
 			</View>
 
 			<View style={styles.mountainWrap}>
@@ -92,10 +99,10 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		marginTop: -80,
-		fontSize: 56,
 		fontWeight: "900",
 		color: colorBlack,
 		textAlign: "center",
+		width: "100%",
 	},
 	mountainWrap: {
 		position: "absolute",

@@ -142,7 +142,7 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 		<View style={[styles.cardsWrapper, { paddingTop: insets.top }]}>
 			<ModalGestureLine />
 			<View style={styles.header}>
-				<Text style={styles.headerText}>La Capsule</Text>
+				<Text style={styles.headerText}>3 Secrets du succès</Text>
 			</View>
 
 			<Animated.FlatList

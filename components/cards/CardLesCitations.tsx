@@ -14,6 +14,7 @@ type Props = {
 	wrapperStyle?: StyleProp<ViewStyle>;
 	cardStyle?: StyleProp<ViewStyle>;
 	actionsRowStyle?: StyleProp<ViewStyle>;
+	overlay?: React.ReactNode;
 };
 
 function CardLesCitationsBase({
@@ -23,6 +24,7 @@ function CardLesCitationsBase({
 	wrapperStyle,
 	cardStyle,
 	actionsRowStyle,
+	overlay,
 }: Props) {
 	return (
 		<View key={citation.id} style={[styles.cardWrapper, wrapperStyle]}>
@@ -48,6 +50,7 @@ function CardLesCitationsBase({
 						{citation.attributes.AUTEUR}
 					</Text>
 				</View>
+				{overlay ? <View style={styles.overlayContainer}>{overlay}</View> : null}
 			</View>
 
 			{/* Action row (top-right): Plus (optional) + Heart */}
@@ -80,6 +83,7 @@ const propsAreEqual = (prev: Props, next: Props) => {
 	const sameWrapperStyle = prev.wrapperStyle === next.wrapperStyle;
 	const sameCardStyle = prev.cardStyle === next.cardStyle;
 	const sameActionsRowStyle = prev.actionsRowStyle === next.actionsRowStyle;
+	const sameOverlay = prev.overlay === next.overlay;
 
 	return (
 		sameId &&
@@ -89,7 +93,8 @@ const propsAreEqual = (prev: Props, next: Props) => {
 		sameShowFavorite &&
 		sameWrapperStyle &&
 		sameCardStyle &&
-		sameActionsRowStyle
+		sameActionsRowStyle &&
+		sameOverlay
 	);
 };
 
@@ -99,10 +104,10 @@ export default CardLesCitations;
 const styles = StyleSheet.create({
 	cardWrapper: {
 		marginTop: 24,
-		width: "100%",
+		alignSelf: "center",
 	},
 	cardContainer: {
-		width: "100%",
+		maxWidth: "100%",
 		minHeight: 290,
 		backgroundColor: colorBlack,
 		borderRadius: 20,
@@ -128,8 +133,13 @@ const styles = StyleSheet.create({
 	},
 	actionsRow: {
 		marginTop: 10,
-		width: "90%",
+		maxWidth: "100%",
 		alignItems: "flex-end",
+	},
+	overlayContainer: {
+		...StyleSheet.absoluteFillObject,
+		borderRadius: 20,
+		overflow: "hidden",
 	},
 	actionIconButton: {
 		width: 28,
