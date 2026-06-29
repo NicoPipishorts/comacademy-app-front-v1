@@ -256,6 +256,10 @@ const SignIn = () => {
 
 			const payload = JSON.parse(payloadRaw) as AuthResponse;
 			await login(payload);
+			const sessionIsCurrent = await checkLoggedIn();
+			if (!sessionIsCurrent) {
+				throw new Error("La session Face ID n’est plus valide.");
+			}
 			void sendAnalyticsEvent({
 				eventName: "login_succeeded",
 				authToken: payload.jwt,
@@ -273,7 +277,15 @@ const SignIn = () => {
 		} finally {
 			setIsBiometricLoading(false);
 		}
-	}, [biometricLabel, biometricPrompt, isExpoGo, login, navigation, showSnackbar]);
+	}, [
+		biometricLabel,
+		biometricPrompt,
+		checkLoggedIn,
+		isExpoGo,
+		login,
+		navigation,
+		showSnackbar,
+	]);
 
 	const handleForgotPasswordSubmit = useCallback(
 		(targetEmail: string) => {

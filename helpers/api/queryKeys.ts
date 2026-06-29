@@ -2,8 +2,11 @@ export const QK = {
 	gameQuestionsRoot: (userId?: number) =>
 		userId ? (["game-questions", userId] as const) : (["game-questions"] as const),
 	gameSession: (sessionId: number) => ["game-session", sessionId] as const,
-	gameQuestions: (userId: number, cat: number | null) =>
-		["game-questions", userId, cat ?? "all"] as const,
+	gameQuestions: (
+		userId: number,
+		cat: number | null,
+		createIfMissing = false
+	) => ["game-questions", userId, cat ?? "all", createIfMissing ? "create" : "read"] as const,
 	parcoursGameQuestions: (
 		userId: number,
 		categoryId: number,

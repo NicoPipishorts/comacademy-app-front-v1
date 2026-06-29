@@ -580,6 +580,19 @@ const createIAPService = () => {
 			await processPendingPurchases();
 		},
 
+		async presentOfferCodeRedemptionSheet() {
+			if (Platform.OS !== "ios") {
+				throw new Error("Offer code redemption is only available on iOS");
+			}
+
+			const iap = await ensureConnection();
+			if (typeof iap.presentCodeRedemptionSheetIOS !== "function") {
+				throw new Error("Offer code redemption is unavailable on this device");
+			}
+
+			return iap.presentCodeRedemptionSheetIOS();
+		},
+
 		// iap.service.ts
 		async getProducts() {
 			debugIAP("getProducts triggered");

@@ -435,6 +435,39 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 						{ status: response.status },
 						"warn"
 					);
+					return true;
+				}
+
+				const payload = (await response.json()) as {
+					user?: {
+						id?: number;
+						manualPremium?: boolean;
+						hasPremiumAccess?: boolean;
+					};
+				};
+				const currentSession = sessionRef.current;
+				if (
+					currentSession &&
+					payload.user?.id === currentSession.user.id
+				) {
+					const refreshedSession = normalizeAuthResponse({
+						jwt: currentToken,
+						user: {
+							...currentSession.user,
+							...payload.user,
+						},
+					});
+
+					await AsyncStorage.setItem(
+						AUTH_STORAGE_KEY,
+						JSON.stringify(refreshedSession)
+					);
+					updateSessionState(refreshedSession);
+					logDevice("[AuthContext] Session user refreshed", {
+						userId: refreshedSession.user.id,
+						manualPremium: refreshedSession.user.manualPremium,
+						hasPremiumAccess: refreshedSession.user.hasPremiumAccess,
+					});
 				}
 
 				return true;
@@ -449,7 +482,7 @@ export const AuthProvider: FunctionComponent<AuthProviderProps> = ({
 				return true;
 			}
 		},
-		[handleUnauthorizedLogout]
+		[handleUnauthorizedLogout, updateSessionState]
 	);
 
 	const checkLoggedIn = useCallback(async () => {

@@ -7,6 +7,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 export interface NewSessionPayload {
 	userId: number;
 	token: string;
+	sessionId?: number | null;
 }
 
 export interface NewSessionResponse {
@@ -25,11 +26,11 @@ export const useNewSession = (
 	onError: (err: AxiosError) => void,
 ) => {
 	return useMutation<NewSessionResponse, AxiosError, NewSessionPayload>({
-		mutationFn: async ({ userId, token }) => {
+		mutationFn: async ({ userId, token, sessionId }) => {
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/new`;
 			const response: AxiosResponse<NewSessionResponse> = await axios.post(
 				url,
-				{},
+				{ sessionId: sessionId ?? undefined },
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 			return response.data;

@@ -125,16 +125,18 @@ export const buildValidatedParcoursTipsPairPatch = ({
 	pairIndex,
 	selectedAnswerKey,
 	correctAnswerKey,
+	phase = "card",
 }: {
 	stepState: StepStateRecord;
 	pairIndex: number;
 	selectedAnswerKey: string;
 	correctAnswerKey: string;
+	phase?: "question" | "card";
 }) =>
 	buildParcoursTipsPairPatch({
 		stepState,
 		pairIndex,
-		phase: "card",
+		phase,
 		pairPatch: buildValidatedParcoursDicoStepPatch({
 			selectedAnswerKey,
 			correctAnswerKey,
@@ -146,16 +148,18 @@ export const buildTimedOutParcoursTipsPairPatch = ({
 	pairIndex,
 	selectedAnswerKey,
 	correctAnswerKey,
+	phase = "card",
 }: {
 	stepState: StepStateRecord;
 	pairIndex: number;
 	selectedAnswerKey?: string | null;
 	correctAnswerKey: string;
+	phase?: "question" | "card";
 }) =>
 	buildParcoursTipsPairPatch({
 		stepState,
 		pairIndex,
-		phase: "card",
+		phase,
 		pairPatch: buildTimedOutParcoursDicoStepPatch({
 			selectedAnswerKey,
 			correctAnswerKey,

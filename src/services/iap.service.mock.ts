@@ -65,6 +65,11 @@ export const IAPService = {
 	async processPendingPurchases() {
 	},
 
+	async presentOfferCodeRedemptionSheet() {
+		await delay(300);
+		return true;
+	},
+
 	/**
 	 * Get available products (mock)
 	 */

@@ -55,7 +55,7 @@ export default function FinishedSession() {
 
 	const { mutate: newSession } = useNewSession(
 		() => {
-			router.replace("/leJeu/jeu");
+			router.replace({ pathname: "/leJeu/jeu", params: { categoryId: "" } });
 		},
 		(err) => console.error("New session failed:", err),
 	);
@@ -155,13 +155,17 @@ export default function FinishedSession() {
 
 			<View style={[styles.containerBackButton, { bottom: 60 }]}>
 				<TouchableOpacity
-					onPress={() => endSession({ userId: auth?.user.id, token })}
+					onPress={() =>
+						endSession({ userId: auth?.user.id, token, sessionId })
+					}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity
-					onPress={() => newSession({ userId: auth?.user.id, token })}
+					onPress={() =>
+						newSession({ userId: auth?.user.id, token, sessionId })
+					}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Suivant</Text>
 					<Ionicons name='arrow-forward' size={24} color={colorBlack} />

@@ -897,12 +897,14 @@ function ParcoursDayContent() {
 								pairIndex: tipsPairIndex,
 								selectedAnswerKey,
 								correctAnswerKey: tipsCorrectAnswerKey,
+								phase: "question",
 						  })
 						: buildTimedOutParcoursTipsPairPatch({
 								stepState: persistedStepState,
 								pairIndex: tipsPairIndex,
 								selectedAnswerKey,
 								correctAnswerKey: tipsCorrectAnswerKey,
+								phase: "question",
 						  }),
 			});
 
@@ -913,7 +915,6 @@ function ParcoursDayContent() {
 			});
 
 			if (showFeedback && selectedAnswerKey) {
-				// The persisted phase now reveals the associated card after feedback.
 				pendingCorrectAdvanceRef.current = false;
 				setFeedbackAnswer(isCorrect ? Answer.true : Answer.false);
 			} else {
@@ -969,6 +970,34 @@ function ParcoursDayContent() {
 		});
 		void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 		setIsDayCompletionScreenVisible(true);
+	};
+
+	const revealTipsCardAfterFeedback = async () => {
+		if (!day || !isTipsStep || !isTipsQuestionPhase) {
+			return;
+		}
+
+		if (day.progression.isReadOnly) {
+			setTipsReviewStateByStepId((currentState) => ({
+				...currentState,
+				[currentStepId]: {
+					pairIndex: tipsPairIndex,
+					phase: "card",
+				},
+			}));
+			return;
+		}
+
+		await persistProgress({
+			nextIndex: activeIndex,
+			activeStepId: currentStepId,
+			stepId: currentStepId,
+			stepPatch: buildParcoursTipsPairPatch({
+				stepState: persistedStepState,
+				pairIndex: tipsPairIndex,
+				phase: "card",
+			}),
+		});
 	};
 
 	const handleNext = async () => {
@@ -1817,6 +1846,8 @@ function ParcoursDayContent() {
 					isHomeButtonModel
 					onHide={() => {
 						const shouldAdvance = pendingCorrectAdvanceRef.current;
+						const shouldRevealTipsCard =
+							isTipsStep && isTipsQuestionPhase;
 						const shouldShowCompletionScreen =
 							pendingDayCompletionRef.current;
 						pendingCorrectAdvanceRef.current = false;
@@ -1824,6 +1855,10 @@ function ParcoursDayContent() {
 						setFeedbackAnswer(null);
 						if (shouldShowCompletionScreen) {
 							void completeParcoursDayAndShowScreen();
+							return;
+						}
+						if (shouldRevealTipsCard) {
+							void revealTipsCardAfterFeedback();
 							return;
 						}
 						if (shouldAdvance) {
@@ -1836,7 +1871,12 @@ function ParcoursDayContent() {
 				<ParcoursTimeoutFeedback
 					answerLabel={timeoutFeedbackLabel}
 					onHide={() => {
+						const shouldRevealTipsCard =
+							isTipsStep && isTipsQuestionPhase;
 						setTimeoutFeedbackLabel(null);
+						if (shouldRevealTipsCard) {
+							void revealTipsCardAfterFeedback();
+						}
 					}}
 				/>
 			) : null}

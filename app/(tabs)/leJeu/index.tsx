@@ -75,7 +75,6 @@ export default function LeJeu() {
 
 	const [showSessionTooltip, setShowSessionTooltip] = useState(false);
 	const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const shouldResetCategoryOnReturnRef = useRef(false);
 
 	const handleSessionBlockedAction = useCallback(() => {
 		setShowSessionTooltip(true);
@@ -88,17 +87,6 @@ export default function LeJeu() {
 		}, 2000);
 	}, []);
 
-	const handleTabChange = useCallback(
-		(nextTab: number) => {
-			if (sessionInProgress && nextTab === 1) {
-				handleSessionBlockedAction();
-				return false;
-			}
-			return true;
-		},
-		[sessionInProgress, handleSessionBlockedAction],
-	);
-
 	// session‑restart mutation
 	const {
 		data: sessionData,
@@ -109,6 +97,17 @@ export default function LeJeu() {
 		sessionData?.data.status === "in_progress" &&
 		!!sessionData.data.sessionId &&
 		sessionData.data.answeredCount > 0;
+
+	const handleTabChange = useCallback(
+		(nextTab: number) => {
+			if (sessionInProgress && nextTab === 1) {
+				handleSessionBlockedAction();
+				return false;
+			}
+			return true;
+		},
+		[sessionInProgress, handleSessionBlockedAction],
+	);
 
 	useEffect(() => {
 		if (sessionInProgress && activeTab === 1) {
@@ -142,15 +141,6 @@ export default function LeJeu() {
 		}, [showTabBar, loadingToken, token, auth?.user.id, refetch]),
 	);
 
-	useEffect(() => {
-		if (!shouldResetCategoryOnReturnRef.current || sessionInProgress) {
-			return;
-		}
-
-		setFilterByCat(null);
-		shouldResetCategoryOnReturnRef.current = false;
-	}, [sessionInProgress]);
-
 	useTrackPageMetrics({ page: "Jeu" });
 
 	const toggleSwitch = useCallback(() => {
@@ -168,6 +158,7 @@ export default function LeJeu() {
 
 	const handlePressPlay = useCallback(() => {
 		const currentLevel = getGameLevel(totalAnsweredQuestions);
+		const selectedCategoryId = filterByCat;
 
 		// Only block if user is FREE AND has reached level 1
 		if (isFreeUser && currentLevel >= 1) {
@@ -180,17 +171,19 @@ export default function LeJeu() {
 			eventName: "game_session_started",
 			screenName: "Jeu",
 			properties: {
-				categoryId: filterByCat,
+				categoryId: selectedCategoryId,
 				level: currentLevel,
 			},
 		});
 
-		shouldResetCategoryOnReturnRef.current = filterByCat !== null;
+		setFilterByCat(null);
 
 		router.push({
 			pathname: "/leJeu/jeu",
-			params:
-				filterByCat !== null ? { categoryId: String(filterByCat) } : undefined,
+			params: {
+				categoryId:
+					selectedCategoryId !== null ? String(selectedCategoryId) : "",
+			},
 		});
 	}, [totalAnsweredQuestions, isFreeUser, filterByCat, trackEvent]);
 

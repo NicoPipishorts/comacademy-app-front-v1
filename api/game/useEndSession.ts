@@ -9,6 +9,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 export interface EndSessionPayload {
 	userId: number;
 	token: string;
+	sessionId?: number | null;
 }
 
 interface EndResponse {
@@ -25,11 +26,11 @@ export const useEndSession = (
 	onError: (err: AxiosError) => void,
 ) => {
 	return useMutation<EndResponse, AxiosError, EndSessionPayload>({
-		mutationFn: async ({ userId, token }) => {
+		mutationFn: async ({ userId, token, sessionId }) => {
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/end`;
 			const response: AxiosResponse<EndResponse> = await axios.post(
 				url,
-				{},
+				{ sessionId: sessionId ?? undefined },
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
 			return response.data;

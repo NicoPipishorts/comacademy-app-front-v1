@@ -34,6 +34,7 @@ type SubscriptionState = {
 	error: string | null;
 	purchase: (product: SubscriptionProduct) => Promise<void>;
 	restore: () => Promise<void>;
+	redeemOfferCode: () => Promise<void>;
 	checkSubscription: () => Promise<any>;
 	cancelSubscription: () => Promise<boolean>;
 	refresh: () => Promise<void>;
@@ -439,6 +440,17 @@ export const SubscriptionProvider = ({
 		}
 	}, [checkSubscription]);
 
+	const redeemOfferCode = useCallback(async () => {
+		try {
+			setError(null);
+			await IAPService.presentOfferCodeRedemptionSheet();
+		} catch (err: any) {
+			debugIAP("Offer code redemption error:", err);
+			setError(err?.message || "Offer code redemption failed");
+			throw err;
+		}
+	}, []);
+
 	const cancelSubscription = useCallback(async () => {
 		try {
 			setLoading(true);
@@ -471,6 +483,7 @@ export const SubscriptionProvider = ({
 			error,
 			purchase,
 			restore,
+			redeemOfferCode,
 			checkSubscription,
 			cancelSubscription,
 			refresh,
@@ -486,6 +499,7 @@ export const SubscriptionProvider = ({
 			error,
 			purchase,
 			restore,
+			redeemOfferCode,
 			checkSubscription,
 			cancelSubscription,
 			refresh,

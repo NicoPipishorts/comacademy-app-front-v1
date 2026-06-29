@@ -252,6 +252,7 @@ export default function Jeu() {
 		categoryFilter,
 		token,
 		loadingToken,
+		{ createIfMissing: true },
 	);
 	const gameSession = sessionData?.data;
 	const dataGame = activeQuestions;

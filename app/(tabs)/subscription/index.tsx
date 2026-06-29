@@ -277,6 +277,7 @@ export default function SubscriptionScreen() {
 		purchase,
 		checkSubscription,
 		restore,
+		redeemOfferCode,
 		cancelSubscription,
 		refresh,
 		refreshing,
@@ -554,6 +555,18 @@ export default function SubscriptionScreen() {
 		}
 	};
 
+	const handleRedeemOfferCode = async () => {
+		try {
+			await redeemOfferCode();
+		} catch (err) {
+			console.warn("[SubscriptionScreen] offer code error:", err);
+			Alert.alert(
+				"Code indisponible",
+				"Impossible d’ouvrir la saisie du code pour le moment. Réessaie depuis l’App Store.",
+			);
+		}
+	};
+
 	const openExternalLink = useCallback(async (url: string) => {
 		try {
 			const supported = await Linking.canOpenURL(url);
@@ -721,6 +734,37 @@ export default function SubscriptionScreen() {
 							</View>
 						</View>
 					</View>
+
+					{Platform.OS === "android" && !hasPremiumAccess && (
+						<View style={styles.promoCodeInfo}>
+							<Text style={styles.promoCodeTitle}>
+								Tu as un code promotionnel ?
+							</Text>
+							<Text style={styles.promoCodeText}>
+								Sélectionne l’abonnement associé au code. Dans la fenêtre
+								Google Play, appuie sur ton moyen de paiement, puis sur
+								« Utiliser un code ».
+							</Text>
+						</View>
+					)}
+
+					{Platform.OS === "ios" && !hasPremiumAccess && (
+						<View style={styles.promoCodeInfo}>
+							<Text style={styles.promoCodeTitle}>
+								Tu as un code promotionnel ?
+							</Text>
+							<Text style={styles.promoCodeText}>
+								Saisis ton code dans la fenêtre sécurisée de l’App Store pour
+								activer ton offre.
+							</Text>
+							<TouchableOpacity
+								style={styles.promoCodeButton}
+								onPress={handleRedeemOfferCode}
+								disabled={purchasing}>
+								<Text style={styles.promoCodeButtonText}>Saisir mon code</Text>
+							</TouchableOpacity>
+						</View>
+					)}
 
 					{/* Subscription Plans */}
 					<View style={styles.plansSection}>
@@ -938,6 +982,38 @@ const styles = StyleSheet.create({
 		fontSize: FontSize16,
 		color: colorBlack,
 		flex: 1,
+	},
+	promoCodeInfo: {
+		backgroundColor: "#FFF8D8",
+		borderColor: "#E0B800",
+		borderWidth: 1,
+		borderRadius: 12,
+		padding: 16,
+		marginBottom: 24,
+	},
+	promoCodeTitle: {
+		fontSize: FontSize16,
+		fontWeight: "700",
+		color: colorBlack,
+		marginBottom: 6,
+	},
+	promoCodeText: {
+		fontSize: FontSize14,
+		lineHeight: 20,
+		color: "#4A4300",
+	},
+	promoCodeButton: {
+		alignSelf: "flex-start",
+		backgroundColor: colorBlack,
+		borderRadius: 50,
+		paddingHorizontal: 18,
+		paddingVertical: 11,
+		marginTop: 14,
+	},
+	promoCodeButtonText: {
+		color: colorWhite,
+		fontSize: FontSize14,
+		fontWeight: "700",
 	},
 	plansSection: {
 		marginBottom: 20,
