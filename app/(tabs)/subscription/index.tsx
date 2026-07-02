@@ -11,6 +11,10 @@ import { useAnalyticsEventTracker } from "@/hooks/Metrics/useAnalyticsEvents";
 import { useSubscription } from "@/src/hooks/useSubscription";
 import {
 	formatSubscriptionPrice,
+	getAndroidBasePlanId,
+	getAndroidOfferId,
+	getAndroidOfferTags,
+	getPreferredIosPromotionalOffer,
 	getSubscriptionProductId,
 	type SubscriptionProduct,
 } from "@/src/utils/iap";
@@ -41,6 +45,14 @@ const PRIVACY_POLICY_URL =
 const TERMS_OF_SERVICE_URL =
 	process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL ??
 	"https://comacademy.fr/conditions-generales-d-utilisation";
+const IOS_PROMOTIONAL_OFFER_ID =
+	process.env.EXPO_PUBLIC_IOS_PROMOTIONAL_OFFER_ID?.trim() || null;
+const ANDROID_NEW_SUBSCRIPTION_OFFER_ID =
+	process.env.EXPO_PUBLIC_ANDROID_NEW_SUBSCRIPTION_OFFER_ID?.trim() || null;
+const ANDROID_EXISTING_SUBSCRIPTION_OFFER_ID =
+	process.env.EXPO_PUBLIC_ANDROID_EXISTING_SUBSCRIPTION_OFFER_ID?.trim() || null;
+const ANDROID_EXISTING_USERS_CUTOFF_DATE =
+	process.env.EXPO_PUBLIC_ANDROID_EXISTING_USERS_CUTOFF_DATE?.trim() || null;
 
 const FORCED_EURO_PLAN_DISPLAY: Record<
 	string,
@@ -258,6 +270,32 @@ const resolvePlanCopy = (planId: string, durationDays: number) => {
 	};
 };
 
+const resolveCanonicalPlanId = (
+	product: SubscriptionProduct,
+	rawId: string
+): string => {
+	if (Platform.OS !== "android") {
+		return rawId;
+	}
+
+	const basePlanId = getAndroidBasePlanId(product);
+	if (basePlanId === "yearly-full") {
+		return "fullAccess1200";
+	}
+
+	if (basePlanId === "monthly-full") {
+		return "fullAccess100";
+	}
+
+	return rawId;
+};
+
+const parseDateSafely = (value?: string | null): number | null => {
+	if (!value) return null;
+	const timestamp = new Date(value).getTime();
+	return Number.isNaN(timestamp) ? null : timestamp;
+};
+
 export default function SubscriptionScreen() {
 	const router = useRouter();
 	const { from } = useLocalSearchParams<{ from?: string | string[] }>();
@@ -277,7 +315,6 @@ export default function SubscriptionScreen() {
 		purchase,
 		checkSubscription,
 		restore,
-		redeemOfferCode,
 		cancelSubscription,
 		refresh,
 		refreshing,
@@ -362,59 +399,149 @@ export default function SubscriptionScreen() {
 		session?.user?.subscription?.status,
 	]);
 	const isFreeUser = !hasPremiumAccess;
+	const hasSubscriptionHistory = Boolean(
+		session?.user?.subscription?.id ||
+			session?.user?.subscription?.status ||
+			session?.user?.subscription?.productId
+	);
+	const existingUsersCutoffMs = useMemo(
+		() => parseDateSafely(ANDROID_EXISTING_USERS_CUTOFF_DATE),
+		[]
+	);
+	const userCreatedAtMs = useMemo(
+		() => parseDateSafely(session?.user?.createdAt),
+		[session?.user?.createdAt]
+	);
+	const isExistingRegisteredUser = useMemo(() => {
+		if (!existingUsersCutoffMs || !userCreatedAtMs) {
+			return false;
+		}
+
+		return userCreatedAtMs <= existingUsersCutoffMs;
+	}, [existingUsersCutoffMs, userCreatedAtMs]);
+	const preferredAndroidYearlyOfferId = useMemo(() => {
+		if (Platform.OS !== "android") {
+			return null;
+		}
+
+		if (isExistingRegisteredUser && ANDROID_EXISTING_SUBSCRIPTION_OFFER_ID) {
+			return ANDROID_EXISTING_SUBSCRIPTION_OFFER_ID;
+		}
+
+		if (!hasSubscriptionHistory && ANDROID_NEW_SUBSCRIPTION_OFFER_ID) {
+			return ANDROID_NEW_SUBSCRIPTION_OFFER_ID;
+		}
+
+		return null;
+	}, [hasSubscriptionHistory, isExistingRegisteredUser]);
 
 	const plans = useMemo(() => {
-		const seen = new Set<string>();
+		const mappedById = new Map<
+			string,
+			{
+				id: string;
+				product: SubscriptionProduct;
+				title: string;
+				price: string;
+				duration: string;
+				durationDays: number;
+				features: string[];
+				promotionalOfferId: string | null;
+			}
+		>();
 
-		const mapped = products
-			.map((product) => {
-				const rawId =
-					getSubscriptionProductId(product) ||
-					(product as unknown as { productId?: string }).productId ||
-					(product as unknown as { id?: string }).id;
+		for (const product of products) {
+			const rawId =
+				getSubscriptionProductId(product) ||
+				(product as unknown as { productId?: string }).productId ||
+				(product as unknown as { id?: string }).id;
 
-				if (!rawId) {
-					return null;
-				}
+			if (!rawId) {
+				continue;
+			}
 
-				const id = String(rawId);
-				if (seen.has(id)) {
-					return null;
-				}
-				seen.add(id);
+			const canonicalId = resolveCanonicalPlanId(product, String(rawId));
+			const durationInfo = getDurationInfoForProduct(product);
+			const forcedPlanDisplay = FORCED_EURO_PLAN_DISPLAY[canonicalId];
+			const durationDays =
+				forcedPlanDisplay?.durationDays ?? durationInfo?.days ?? 0;
+			const planCopy = resolvePlanCopy(canonicalId, durationDays);
+			const androidOfferId = getAndroidOfferId(product);
+			const androidOfferTags = getAndroidOfferTags(product);
+			const promotionalOffer =
+				Platform.OS === "ios" &&
+				canonicalId === "fullAccess1200" &&
+				hasSubscriptionHistory
+					? getPreferredIosPromotionalOffer(
+							product,
+							IOS_PROMOTIONAL_OFFER_ID
+					  )
+					: null;
+			const hasSelectedAndroidOffer =
+				Platform.OS === "android" &&
+				canonicalId === "fullAccess1200" &&
+				((preferredAndroidYearlyOfferId &&
+					androidOfferId === preferredAndroidYearlyOfferId) ||
+					(preferredAndroidYearlyOfferId &&
+						androidOfferTags.includes(preferredAndroidYearlyOfferId)));
+			const displayedPrice =
+				promotionalOffer?.displayPrice ??
+				(Platform.OS === "android" ? null : forcedPlanDisplay?.price) ??
+				safeFormatPrice(product, "—");
+			const features = promotionalOffer
+				? [...planCopy.features, "Offre de retour iOS appliquée si éligible"]
+				: hasSelectedAndroidOffer
+					? [...planCopy.features, "Offre Play Store 50% appliquée automatiquement"]
+					: planCopy.features;
+			const candidate = {
+				id: canonicalId,
+				product,
+				title: planCopy.title,
+				price: displayedPrice,
+				duration: forcedPlanDisplay?.duration ?? durationInfo?.label ?? "",
+				durationDays,
+				features,
+				promotionalOfferId: promotionalOffer?.id ?? null,
+			};
 
-				const durationInfo = getDurationInfoForProduct(product);
-				const forcedPlanDisplay = FORCED_EURO_PLAN_DISPLAY[id];
-				const durationDays =
-					forcedPlanDisplay?.durationDays ?? durationInfo?.days ?? 0;
-				const planCopy = resolvePlanCopy(id, durationDays);
+			const current = mappedById.get(canonicalId);
+			if (!current) {
+				mappedById.set(canonicalId, candidate);
+				continue;
+			}
 
-				return {
-					id,
-					product,
-					title: planCopy.title,
-					price: forcedPlanDisplay?.price ?? safeFormatPrice(product, "—"),
-					duration: forcedPlanDisplay?.duration ?? durationInfo?.label ?? "",
-					durationDays,
-					features: planCopy.features,
-				};
-			})
-			.filter(Boolean) as {
-			id: string;
-			product: SubscriptionProduct;
-			title: string;
-			price: string;
-			duration: string;
-			durationDays: number;
-			features: string[];
-		}[];
+			if (Platform.OS !== "android" || canonicalId !== "fullAccess1200") {
+				continue;
+			}
+
+			const currentOfferId = getAndroidOfferId(current.product);
+			const currentTags = getAndroidOfferTags(current.product);
+			const currentIsSelected =
+				(preferredAndroidYearlyOfferId &&
+					currentOfferId === preferredAndroidYearlyOfferId) ||
+				(preferredAndroidYearlyOfferId &&
+					currentTags.includes(preferredAndroidYearlyOfferId));
+			const currentIsStandard = !currentOfferId;
+			const candidateIsStandard = !androidOfferId;
+
+			if (hasSelectedAndroidOffer && !currentIsSelected) {
+				mappedById.set(canonicalId, candidate);
+				continue;
+			}
+
+			if (!preferredAndroidYearlyOfferId && candidateIsStandard && !currentIsStandard) {
+				mappedById.set(canonicalId, candidate);
+			}
+		}
+
+		const mapped = Array.from(mappedById.values());
 
 		if (mapped.length > 1) {
 			mapped.sort((a, b) => b.durationDays - a.durationDays);
 		}
 
 		return mapped;
-	}, [products]);
+	}, [hasSubscriptionHistory, preferredAndroidYearlyOfferId, products]);
 
 	const activeProductId = useMemo(() => {
 		const candidates = [
@@ -467,7 +594,10 @@ export default function SubscriptionScreen() {
 		return false;
 	}, [checkSubscription]);
 
-	const handlePurchase = async (product: SubscriptionProduct) => {
+	const handlePurchase = async (
+		product: SubscriptionProduct,
+		options?: { iosPromotionalOfferId?: string | null }
+	) => {
 		const selectedProductId = getSubscriptionProductId(product);
 		const isDowngradeFromYearlyToMonthly =
 			Platform.OS === "ios" &&
@@ -494,7 +624,7 @@ export default function SubscriptionScreen() {
 		}
 
 		try {
-			await purchase(product);
+			await purchase(product, options);
 			const isActivated = await waitForActivation();
 			await refresh();
 
@@ -551,18 +681,6 @@ export default function SubscriptionScreen() {
 			Alert.alert(
 				"Erreur",
 				"Impossible de restaurer vos achats. Assurez-vous d'être connecté avec le même compte.",
-			);
-		}
-	};
-
-	const handleRedeemOfferCode = async () => {
-		try {
-			await redeemOfferCode();
-		} catch (err) {
-			console.warn("[SubscriptionScreen] offer code error:", err);
-			Alert.alert(
-				"Code indisponible",
-				"Impossible d’ouvrir la saisie du code pour le moment. Réessaie depuis l’App Store.",
 			);
 		}
 	};
@@ -735,34 +853,35 @@ export default function SubscriptionScreen() {
 						</View>
 					</View>
 
-					{Platform.OS === "android" && !hasPremiumAccess && (
+					{Platform.OS === "ios" &&
+						!hasPremiumAccess &&
+						hasSubscriptionHistory && (
 						<View style={styles.promoCodeInfo}>
 							<Text style={styles.promoCodeTitle}>
-								Tu as un code promotionnel ?
+								Offre spéciale disponible sur iPhone
 							</Text>
 							<Text style={styles.promoCodeText}>
-								Sélectionne l’abonnement associé au code. Dans la fenêtre
-								Google Play, appuie sur ton moyen de paiement, puis sur
-								« Utiliser un code ».
+								Si ton compte Apple est éligible à l’offre promotionnelle
+								configurée dans App Store Connect, l’abonnement annuel
+								utilisera automatiquement le tarif réduit pendant la première
+								période, puis reviendra au prix normal au renouvellement.
 							</Text>
 						</View>
 					)}
 
-					{Platform.OS === "ios" && !hasPremiumAccess && (
+					{Platform.OS === "android" &&
+						!hasPremiumAccess &&
+						preferredAndroidYearlyOfferId && (
 						<View style={styles.promoCodeInfo}>
 							<Text style={styles.promoCodeTitle}>
-								Tu as un code promotionnel ?
+								Offre spéciale disponible sur Android
 							</Text>
 							<Text style={styles.promoCodeText}>
-								Saisis ton code dans la fenêtre sécurisée de l’App Store pour
-								activer ton offre.
+								Si ton compte correspond aux critères définis dans Google Play,
+								l’abonnement annuel affichera automatiquement le tarif
+								promotionnel pendant la première année, puis reviendra au prix
+								normal au renouvellement.
 							</Text>
-							<TouchableOpacity
-								style={styles.promoCodeButton}
-								onPress={handleRedeemOfferCode}
-								disabled={purchasing}>
-								<Text style={styles.promoCodeButtonText}>Saisir mon code</Text>
-							</TouchableOpacity>
 						</View>
 					)}
 
@@ -781,7 +900,11 @@ export default function SubscriptionScreen() {
 										hasActiveSubscription &&
 										matchesActivePlan(plan.id, activeProductId)
 									}
-									onPress={() => handlePurchase(plan.product)}
+									onPress={() =>
+										handlePurchase(plan.product, {
+											iosPromotionalOfferId: plan.promotionalOfferId,
+										})
+									}
 									disabled={purchasing}
 								/>
 							))
@@ -1001,19 +1124,6 @@ const styles = StyleSheet.create({
 		fontSize: FontSize14,
 		lineHeight: 20,
 		color: "#4A4300",
-	},
-	promoCodeButton: {
-		alignSelf: "flex-start",
-		backgroundColor: colorBlack,
-		borderRadius: 50,
-		paddingHorizontal: 18,
-		paddingVertical: 11,
-		marginTop: 14,
-	},
-	promoCodeButtonText: {
-		color: colorWhite,
-		fontSize: FontSize14,
-		fontWeight: "700",
 	},
 	plansSection: {
 		marginBottom: 20,

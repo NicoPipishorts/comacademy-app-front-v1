@@ -5,6 +5,7 @@ import * as Updates from "expo-updates";
 import { jwtDecode } from "jwt-decode";
 import { Platform } from "react-native";
 import type {
+	DiscountOfferInputIOS,
 	Purchase,
 	RequestPurchaseProps,
 	RequestSubscriptionAndroidProps,
@@ -22,6 +23,7 @@ import {
 	type SubscriptionProduct,
 } from "../utils/iap";
 import type {
+	IosPromotionalOfferSignature,
 	PendingPurchaseMetadata,
 	PurchaseValidationPayload,
 } from "./iap.types";
@@ -328,6 +330,22 @@ const createPendingMetadata = (
 	originalTransactionId: normalized.originalTransactionId,
 });
 
+const fetchIosPromotionalOfferSignature = async (
+	productId: string,
+	offerId: string
+): Promise<IosPromotionalOfferSignature> => {
+	const apiBaseUrl = getApiBaseUrl();
+	const response = await axios.post(
+		`${apiBaseUrl}/iap/apple/promotional-offer-signature`,
+		{
+			productId,
+			offerId,
+		}
+	);
+
+	return response.data;
+};
+
 const buildValidationPayload = (
 	normalized: NormalizedPurchase,
 	purchase: Purchase,
@@ -580,19 +598,6 @@ const createIAPService = () => {
 			await processPendingPurchases();
 		},
 
-		async presentOfferCodeRedemptionSheet() {
-			if (Platform.OS !== "ios") {
-				throw new Error("Offer code redemption is only available on iOS");
-			}
-
-			const iap = await ensureConnection();
-			if (typeof iap.presentCodeRedemptionSheetIOS !== "function") {
-				throw new Error("Offer code redemption is unavailable on this device");
-			}
-
-			return iap.presentCodeRedemptionSheetIOS();
-		},
-
 		// iap.service.ts
 		async getProducts() {
 			debugIAP("getProducts triggered");
@@ -653,17 +658,23 @@ const createIAPService = () => {
 								const phase = offer.pricingPhases?.pricingPhaseList?.[0];
 
 								if (phase) {
+									const offerSuffix =
+										offer.offerId || offer.basePlanId || String(offerIndex);
 									const expandedProduct = {
 										...product,
 										// Create unique ID for each offer
-										id: `${product.id}_${offer.basePlanId || offerIndex}`,
-										productId: `${product.id}_${offer.basePlanId || offerIndex}`,
+										id: `${product.id}_${offerSuffix}`,
+										productId: `${product.id}_${offerSuffix}`,
 										// Store original product ID for purchase
 										originalProductId: product.id,
 										// Store the specific offer details
 										selectedOffer: offer,
 										offerToken: offer.offerToken,
 										basePlanId: offer.basePlanId,
+										offerId: offer.offerId ?? null,
+										offerTags: Array.isArray(offer.offerTags)
+											? offer.offerTags
+											: [],
 										// Update pricing from this specific offer
 										price: phase.formattedPrice,
 										displayPrice: phase.formattedPrice,
@@ -677,6 +688,7 @@ const createIAPService = () => {
 									debugIAP(`Expanded offer ${offerIndex + 1}`, {
 										id: expandedProduct.id,
 										basePlanId: offer.basePlanId,
+										offerId: offer.offerId ?? null,
 										price: phase.formattedPrice,
 										period: phase.billingPeriod,
 										offerToken: offer.offerToken,
@@ -743,7 +755,13 @@ const createIAPService = () => {
 		/**
 		 * Request a subscription purchase
 		 */
-		async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
+		async purchaseSubscription(
+			product: SubscriptionProduct,
+			userId?: string,
+			options?: {
+				iosPromotionalOfferId?: string | null;
+			}
+		) {
 			debugIAP("purchaseSubscription called", product);
 			try {
 				// For expanded Android products, use the original product ID
@@ -763,11 +781,24 @@ const createIAPService = () => {
 					const appAccountToken = userId
 						? createDeterministicUuid(String(userId))
 						: undefined;
-					debugIAP("iOS subscription request", request);
+					let withOffer: DiscountOfferInputIOS | undefined;
+					if (options?.iosPromotionalOfferId) {
+						withOffer = await fetchIosPromotionalOfferSignature(
+							sku,
+							options.iosPromotionalOfferId
+						);
+					}
+
 					request.ios = {
 						sku,
 						...(appAccountToken ? { appAccountToken } : {}),
+						...(withOffer ? { withOffer } : {}),
 					};
+					debugIAP("iOS subscription request", {
+						sku,
+						hasAppAccountToken: Boolean(appAccountToken),
+						promotionalOfferId: withOffer?.identifier ?? null,
+					});
 				} else if (Platform.OS === "android") {
 					const obfuscatedAccountId = userId
 						? createObfuscatedAccountId(String(userId))

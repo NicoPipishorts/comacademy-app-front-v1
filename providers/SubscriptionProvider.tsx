@@ -32,9 +32,11 @@ type SubscriptionState = {
 	refreshing: boolean;
 	purchasing: boolean;
 	error: string | null;
-	purchase: (product: SubscriptionProduct) => Promise<void>;
+	purchase: (
+		product: SubscriptionProduct,
+		options?: { iosPromotionalOfferId?: string | null }
+	) => Promise<void>;
 	restore: () => Promise<void>;
-	redeemOfferCode: () => Promise<void>;
 	checkSubscription: () => Promise<any>;
 	cancelSubscription: () => Promise<boolean>;
 	refresh: () => Promise<void>;
@@ -363,7 +365,10 @@ export const SubscriptionProvider = ({
 	}, [session?.user?.id, fetchProductsAndSubscription]);
 
 	const purchase = useCallback(
-		async (product: SubscriptionProduct) => {
+		async (
+			product: SubscriptionProduct,
+			options?: { iosPromotionalOfferId?: string | null }
+		) => {
 			const sku = getSubscriptionProductId(product);
 			if (!sku) {
 				const invalidError = new Error("Invalid product identifier");
@@ -396,7 +401,7 @@ export const SubscriptionProvider = ({
 					};
 				});
 
-				await IAPService.purchaseSubscription(product, userId);
+				await IAPService.purchaseSubscription(product, userId, options);
 				await completionPromise;
 			} catch (err) {
 				rejectPendingPurchase(err);
@@ -440,17 +445,6 @@ export const SubscriptionProvider = ({
 		}
 	}, [checkSubscription]);
 
-	const redeemOfferCode = useCallback(async () => {
-		try {
-			setError(null);
-			await IAPService.presentOfferCodeRedemptionSheet();
-		} catch (err: any) {
-			debugIAP("Offer code redemption error:", err);
-			setError(err?.message || "Offer code redemption failed");
-			throw err;
-		}
-	}, []);
-
 	const cancelSubscription = useCallback(async () => {
 		try {
 			setLoading(true);
@@ -483,7 +477,6 @@ export const SubscriptionProvider = ({
 			error,
 			purchase,
 			restore,
-			redeemOfferCode,
 			checkSubscription,
 			cancelSubscription,
 			refresh,
@@ -499,7 +492,6 @@ export const SubscriptionProvider = ({
 			error,
 			purchase,
 			restore,
-			redeemOfferCode,
 			checkSubscription,
 			cancelSubscription,
 			refresh,
