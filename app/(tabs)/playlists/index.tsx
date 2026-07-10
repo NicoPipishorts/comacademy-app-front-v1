@@ -1,11 +1,11 @@
 import { useCreateNewPlaylist } from "@/api/playlist/createNewPlaylist";
 import { useDeletePlaylist } from "@/api/playlist/deletePlaylist";
 import AddPlaylist from "@/assets/imgs/icons/AddPlaylist.png";
-import ScreenHeaders from "@/components/ScreenHeaders";
 import CardFavoritesList from "@/components/cards/CardFavoritesList";
 import CardPlaylist from "@/components/cards/CardPlaylists";
-import Loader from "@/components/experience/loader";
+import PlaylistsSkeleton from "@/components/experience/PlaylistsSkeleton";
 import NewPlaylistModal from "@/components/modal/NewPlaylistModal";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { FontSize12, FontSize18 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
@@ -37,7 +37,7 @@ const Playlist = () => {
 	const [playlistId, setPlaylistId] = useState<number | null>(null);
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(
-		auth?.user.id
+		auth?.user.id,
 	);
 	useTrackPageMetrics({ page: "Playlists" });
 
@@ -64,7 +64,7 @@ const Playlist = () => {
 
 	const { mutate: createNewPlaylist } = useCreateNewPlaylist(
 		onSuccess,
-		onError
+		onError,
 	);
 	const handleCreatePlaylist = (name: string, selectedColor: string) => {
 		createNewPlaylist({
@@ -91,7 +91,7 @@ const Playlist = () => {
 	};
 
 	if (!playlistsData && !isFetched) {
-		return <Loader />;
+		return <PlaylistsSkeleton />;
 	}
 
 	const closeSwipeable = () => {
@@ -108,59 +108,64 @@ const Playlist = () => {
 
 	return (
 		<TouchableWithoutFeedback onPress={handleOutsidePress} accessible={false}>
-			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-				<ScreenHeaders content='Playlists' />
-
-				<TouchableOpacity
-					style={styles.addPlaylistContainer}
-					onPress={() => {
-						setModalVisible(true);
-						setPlaylistId(null);
-						setModalType("new");
-						if (openedSwipeable) {
-							openedSwipeable.close();
-							setOpenedSwipeable(null);
-						}
-					}}>
-					<Image source={AddPlaylist} style={styles.addPlaylistImage} />
-					<View style={{ flexDirection: "column" }}>
-						<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
-							Nouvelle Playlist
-						</Text>
-						<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
-					</View>
-				</TouchableOpacity>
-
+			<View style={styles.wrapper}>
 				<ScrollView
-					contentContainerStyle={styles.playlistsContainer}
+					contentContainerStyle={[
+						styles.scrollContent,
+						{ paddingTop: insets.top, paddingBottom: insets.bottom + 90 },
+					]}
 					showsVerticalScrollIndicator={false}
 					keyboardShouldPersistTaps='handled'>
-					<CardFavoritesList type='favorites' title='Questions ' />
-					<CardFavoritesList type='metiers' title='Metiers ' />
-					<CardFavoritesList type='dicos' title='Dico ' />
-					<CardFavoritesList type='citations' title='Citations ' />
-					{isFetched &&
-						playlistsData?.data &&
-						playlistsData.data?.map((playlist) => {
-							const refKey = `swipeable-${playlist.id}`;
-							if (!swipeableRefs.current[refKey]) {
-								swipeableRefs.current[refKey] = React.createRef();
+					<PageTitleAvatarHeader title='Playlists' />
+
+					<TouchableOpacity
+						style={styles.addPlaylistContainer}
+						onPress={() => {
+							setModalVisible(true);
+							setPlaylistId(null);
+							setModalType("new");
+							if (openedSwipeable) {
+								openedSwipeable.close();
+								setOpenedSwipeable(null);
 							}
-							return (
-								<CardPlaylist
-									key={playlist.id}
-									id={playlist.id}
-									refKey={refKey}
-									swipeableRefs={swipeableRefs}
-									openedSwipeable={openedSwipeable}
-									title={playlist.attributes.name}
-									color={playlist.attributes.selectedColor}
-									setOpenedSwipeable={setOpenedSwipeable}
-									handDeletePlaylist={handDeletePlaylist}
-									handleEditPlaylist={handleEditPlaylist}
-								/>
-							);
-						})}
+						}}>
+						<Image source={AddPlaylist} style={styles.addPlaylistImage} />
+						<View style={{ flexDirection: "column" }}>
+							<Text style={{ fontSize: FontSize18, fontWeight: "bold" }}>
+								Nouvelle Playlist
+							</Text>
+							<Text style={{ fontSize: FontSize12 }}>Ajouter une Playlist</Text>
+						</View>
+					</TouchableOpacity>
+
+					<View style={styles.playlistsContainer}>
+						<CardFavoritesList type='favorites' title='Questions ' />
+						<CardFavoritesList type='metiers' title='Metiers ' />
+						<CardFavoritesList type='dicos' title='Dico ' />
+						<CardFavoritesList type='citations' title='Citations ' />
+						{isFetched &&
+							playlistsData?.data &&
+							playlistsData.data?.map((playlist) => {
+								const refKey = `swipeable-${playlist.id}`;
+								if (!swipeableRefs.current[refKey]) {
+									swipeableRefs.current[refKey] = React.createRef();
+								}
+								return (
+									<CardPlaylist
+										key={playlist.id}
+										id={playlist.id}
+										refKey={refKey}
+										swipeableRefs={swipeableRefs}
+										openedSwipeable={openedSwipeable}
+										title={playlist.attributes.name}
+										color={playlist.attributes.selectedColor}
+										setOpenedSwipeable={setOpenedSwipeable}
+										handDeletePlaylist={handDeletePlaylist}
+										handleEditPlaylist={handleEditPlaylist}
+									/>
+								);
+							})}
+					</View>
 				</ScrollView>
 
 				<NewPlaylistModal
@@ -177,18 +182,18 @@ const Playlist = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		paddingHorizontal: 30,
-		paddingBottom: 90,
+		paddingHorizontal: 24,
 		backgroundColor: primaryBackground,
+	},
+	scrollContent: {
+		flexGrow: 1,
 	},
 	playlistsContainer: {
 		paddingTop: 30,
-		paddingBottom: 10,
 	},
 	addPlaylistContainer: {
 		flexDirection: "row",
 		alignItems: "center",
-		paddingTop: 30,
 	},
 	addPlaylistImage: {
 		width: 70,

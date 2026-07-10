@@ -87,9 +87,14 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	} = props;
 
 	const statusRef = useRef<CompatVideoStatus>({ ...defaultStatus });
+	const onPlaybackStatusUpdateRef = useRef(onPlaybackStatusUpdate);
 	const videoTrackSizeRef = useRef<{ width: number; height: number } | null>(
 		null
 	);
+
+	useEffect(() => {
+		onPlaybackStatusUpdateRef.current = onPlaybackStatusUpdate;
+	}, [onPlaybackStatusUpdate]);
 
 	const player = useVideoPlayer(source, (instance) => {
 		instance.loop = isLooping;
@@ -127,12 +132,13 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 						? update.durationMillis
 						: statusRef.current.durationMillis,
 			};
-			if (onPlaybackStatusUpdate) {
+			const statusUpdateHandler = onPlaybackStatusUpdateRef.current;
+			if (statusUpdateHandler) {
 				const snapshot = { ...statusRef.current };
-				setTimeout(() => onPlaybackStatusUpdate(snapshot), 0);
+				setTimeout(() => statusUpdateHandler(snapshot), 0);
 			}
 		},
-		[onPlaybackStatusUpdate]
+		[]
 	);
 
 	const syncDuration = useCallback(
@@ -229,7 +235,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		if (typeof isPlaying !== "boolean") {
 			return;
 		}
-		emitStatus({ isPlaying, didJustFinish: false });
+		emitStatus({ isPlaying });
 	});
 
 	useEvent(player, "timeUpdate", (payload) => {
@@ -307,8 +313,31 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 				emitStatus({ isPlaying: false });
 			},
 			async getStatusAsync() {
-				syncDuration(player);
-				return { ...statusRef.current };
+				const durationMillis =
+					Number.isFinite(player.duration) && player.duration >= 0
+						? player.duration * 1000
+						: statusRef.current.durationMillis;
+				const positionMillis = Number.isFinite(player.currentTime)
+					? player.currentTime * 1000
+					: statusRef.current.positionMillis;
+				const didJustFinish = Boolean(
+					durationMillis &&
+						durationMillis > 0 &&
+						positionMillis >= durationMillis - 250 &&
+						!player.playing
+				);
+
+				const snapshot = {
+					...statusRef.current,
+					isLoaded: Boolean(durationMillis || statusRef.current.isLoaded),
+					isPlaying: player.playing,
+					positionMillis,
+					durationMillis,
+					didJustFinish,
+				};
+
+				statusRef.current = snapshot;
+				return snapshot;
 			},
 			async setPositionAsync(millis: number) {
 				const seconds = millis / 1000;
@@ -316,7 +345,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 				emitStatus({ positionMillis: millis, didJustFinish: false });
 			},
 		}),
-		[player, emitStatus, syncDuration]
+		[player, emitStatus]
 	);
 
 	const memoizedProps = useMemo(() => {

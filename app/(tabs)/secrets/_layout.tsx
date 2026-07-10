@@ -8,14 +8,14 @@ const LeJeuLayout = () => {
 				name='index'
 				options={{
 					headerShown: false,
-					headerTitle: "Les 3 Secrets",
+					headerTitle: "La Capsule",
 				}}
 			/>
 			<Stack.Screen
 				name='SecretsDetails'
 				options={{
 					headerShown: false,
-					headerTitle: "Details les 3 Secrets",
+					headerTitle: "Détails La Capsule",
 					presentation: "modal",
 				}}
 			/>

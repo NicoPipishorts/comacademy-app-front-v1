@@ -28,6 +28,7 @@ export default function CardFavoriteQuestion({
 			<TouchableOpacity
 				onPress={() => {
 					navigation.navigate("favoriteQuestionDetails", {
+						questionDocumentId: data.documentId,
 						questionId: data.id,
 					});
 				}}>

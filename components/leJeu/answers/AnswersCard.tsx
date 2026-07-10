@@ -12,17 +12,28 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
 	id: number;
+	answerDocumentId?: string | null;
+	questionDocumentId?: string | null;
 	data: SessionResultsAllquestions;
 	postGame?: boolean;
 }
 
-export default function AnswersCard({ id, data, postGame }: Props) {
+export default function AnswersCard({
+	id,
+	answerDocumentId,
+	questionDocumentId,
+	data,
+	postGame,
+}: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	// Navigate to the answersDetails screen
 	const handlePress = () => {
 		navigation.navigate("answersDetails", {
+			id: answerDocumentId ?? questionDocumentId ?? String(id),
+			answerDocumentId: answerDocumentId ?? undefined,
 			questionId: id,
+			questionDocumentId: questionDocumentId ?? undefined,
 			postGame,
 		});
 	};
@@ -38,7 +49,12 @@ export default function AnswersCard({ id, data, postGame }: Props) {
 				},
 			]}
 			onPress={handlePress}>
-			<Text>{data.question}</Text>
+			<Text
+				style={styles.questionText}
+				numberOfLines={1}
+				ellipsizeMode='tail'>
+				{data.question}
+			</Text>
 			<View style={styles.contentWrapper}>
 				<Text style={styles.answerText}>
 					{data.questionAnswer ? "Vrai" : "Faux"}
@@ -53,7 +69,7 @@ const styles = StyleSheet.create({
 		display: "flex",
 		justifyContent: "flex-start",
 		minWidth: "100%",
-		marginBottom: 30,
+		marginBottom: 18,
 		borderRadius: 15,
 		padding: 15,
 		paddingBottom: 10,
@@ -62,6 +78,12 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
 		shadowRadius: 8,
+	},
+	questionText: {
+		fontSize: FontSize16,
+		lineHeight: 22,
+		minHeight: 24,
+		color: colorBlack,
 	},
 	contentWrapper: {
 		display: "flex",

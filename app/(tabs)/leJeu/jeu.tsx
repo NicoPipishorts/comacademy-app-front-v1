@@ -1,5 +1,7 @@
 // File: src/components/leJeu/Jeu.tsx
-import { useNavigation } from "expo-router";
+import { invalidateGameQuestions } from "@/api/game/invalidateGameQueries";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import * as Haptics from "expo-haptics";
 import React, {
 	useCallback,
 	useEffect,
@@ -24,9 +26,9 @@ import FeedbackMessage from "./feedbackMessage";
 
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
+import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { Answer } from "@/types/enums";
 import { NavigationType } from "@/types/general";
@@ -35,9 +37,16 @@ import { QuestionData } from "@/types/userGameSessionStatus";
 import { useInsertAnswer } from "@/api/game/useInsertAnswer";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize20 } from "@/constants/fontsizes";
-import { QK } from "@/helpers/api/queryKeys";
+import { QUESTIONS_PER_ROUND } from "@/helpers/gameProgress";
+import {
+	getDisplayedCardCounter,
+	getNextCardNumber,
+	getSessionCurrentCardNumber,
+	getSessionCurrentIndex,
+} from "@/helpers/gameSessionProgress";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
+import useJwtToken from "@/hooks/useJwtToken";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -58,6 +67,7 @@ const SwipeableCard = ({
 	onSwipe,
 }: SwipeableCardProps) => {
 	const translateX = useRef(new Animated.Value(0)).current;
+	const isSwipingRef = useRef(false);
 	const rotate = useMemo(
 		() =>
 			translateX.interpolate({
@@ -89,6 +99,9 @@ const SwipeableCard = ({
 
 	const triggerSwipe = useCallback(
 		(direction: "left" | "right") => {
+			if (!isTopCard || isSwipingRef.current) return;
+			isSwipingRef.current = true;
+			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,
@@ -98,7 +111,7 @@ const SwipeableCard = ({
 				onSwipe(direction === "right");
 			});
 		},
-		[onSwipe, translateX]
+		[isTopCard, onSwipe, translateX]
 	);
 
 	const panResponder = useMemo(
@@ -136,6 +149,7 @@ const SwipeableCard = ({
 	const translateY = useMemo(() => effectivePosition * 22, [effectivePosition]);
 
 	useEffect(() => {
+		isSwipingRef.current = false;
 		if (!isTopCard) {
 			translateX.setValue(0);
 		}
@@ -210,13 +224,40 @@ export default function Jeu() {
 	const navigation = useNavigation<NavigationType>();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 	const { auth } = useAuthSession();
+	const { token, loading: loadingToken } = useJwtToken();
+	const { categoryId } = useLocalSearchParams<{ categoryId?: string | string[] }>();
 	const [feedbackVisible, setFeedbackVisible] = useState(false);
 	const [feedbackAnswer, setFeedbackAnswer] = useState<Answer | null>(null);
 	const [currentIndex, setCurrentIndex] = useState(0);
-
-	const { dataGame, sessionId, gameStatus } = useGameContext();
+	const [currentCardNumber, setCurrentCardNumber] = useState(1);
+	const [isCompletingSession, setIsCompletingSession] = useState(false);
+	const [activeQuestions, setActiveQuestions] = useState<QuestionData[] | null>(null);
+	const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+	const [activeGameStatus, setActiveGameStatus] = useState<
+		"in_progress" | "finished"
+	>("finished");
+	const submittedAnswerKeysRef = useRef<Set<string>>(new Set());
+	const initializedRunKeyRef = useRef<string | null>(null);
+	const parsedCategoryId = Number(
+		Array.isArray(categoryId) ? categoryId[0] : categoryId,
+	);
+	const categoryFilter =
+		Number.isFinite(parsedCategoryId) && parsedCategoryId > 0
+			? parsedCategoryId
+			: null;
 	const { data: catData } = useCategories();
 	const { isFetched: fqIsFetched } = useGetFavoriteQuestions(auth?.user.id);
+	const { data: sessionData, isLoading: loadingSession } = useGameQuestions(
+		auth?.user.id,
+		categoryFilter,
+		token,
+		loadingToken,
+		{ createIfMissing: true },
+	);
+	const gameSession = sessionData?.data;
+	const dataGame = activeQuestions;
+	const sessionId = activeSessionId;
+	const gameStatus = activeGameStatus;
 
 	const insertAnswer = useInsertAnswer();
 
@@ -226,12 +267,22 @@ export default function Jeu() {
 	}, [hideTabBar, showTabBar]);
 
 	useEffect(() => {
-		if (dataGame?.length) {
-			setCurrentIndex(dataGame.length - 1);
-		} else {
-			setCurrentIndex(0);
+		if (!gameSession) return;
+
+		const runKey = `${gameSession.sessionId}:${categoryFilter ?? "all"}`;
+		if (initializedRunKeyRef.current === runKey) {
+			return;
 		}
-	}, [dataGame]);
+
+		initializedRunKeyRef.current = runKey;
+		setActiveQuestions(gameSession.questionsPool);
+		setActiveSessionId(gameSession.sessionId);
+		setActiveGameStatus(gameSession.status);
+		setCurrentCardNumber(getSessionCurrentCardNumber(gameSession));
+		setCurrentIndex(getSessionCurrentIndex(gameSession.questionsPool));
+		setIsCompletingSession(false);
+		submittedAnswerKeysRef.current.clear();
+	}, [gameSession, categoryFilter]);
 
 	const cardsToRender = useMemo(() => {
 		if (!dataGame || dataGame.length === 0) {
@@ -242,25 +293,37 @@ export default function Jeu() {
 		return dataGame.slice(startIndex, endIndex);
 	}, [dataGame, currentIndex]);
 
-	if (dataGame === null || !catData || !fqIsFetched) {
+	const showFeedback = useCallback((answer: Answer) => {
+		setFeedbackAnswer(answer);
+		setFeedbackVisible(true);
+	}, []);
+
+	const hideFeedback = useCallback(() => {
+		setFeedbackVisible(false);
+		setFeedbackAnswer(null);
+	}, []);
+
+	if (loadingSession || dataGame === null || !catData || !fqIsFetched) {
 		return <Loader />;
 	}
 
-	const cardsTotal = dataGame.length;
-	const cardsSeen = cardsTotal > 0
-		? Math.min(cardsTotal, Math.max(1, cardsTotal - currentIndex))
-		: 0;
+	const cardsTotal = QUESTIONS_PER_ROUND;
+	const cardsSeen = getDisplayedCardCounter(currentCardNumber, dataGame.length);
 
 	const handlePress = () => {
-		if (sessionId && auth?.user.id)
-			queryClient.invalidateQueries({ queryKey: QK.gameSession(sessionId) });
-		queryClient.invalidateQueries({
-			queryKey: QK.gameQuestions(auth?.user.id, null),
-		});
+		void invalidateGameQuestions(queryClient, auth?.user.id);
 
 		showTabBar();
 		setTimeout(() => navigation.navigate("index"), 100);
 	};
+
+	if (isCompletingSession) {
+		return (
+			<View style={styles.wrapper}>
+				<Loader />
+			</View>
+		);
+	}
 
 	if (dataGame.length === 0) {
 		const swiperTopMargin = isHomeButtonModel ? -40 : 0;
@@ -275,7 +338,7 @@ export default function Jeu() {
 						Essaie de relancer une session ou reviens plus tard pour une
 						nouvelle série.
 					</Text>
-					<TouchableOpacity onPress={handlePress} style={styles.backButton}>
+						<TouchableOpacity onPress={handlePress} style={styles.backButton}>
 						<Text style={styles.textBackButton}>Retour</Text>
 					</TouchableOpacity>
 				</View>
@@ -283,39 +346,62 @@ export default function Jeu() {
 		);
 	}
 
-	const showFeedback = (answer: Answer) => {
-		setFeedbackAnswer(answer);
-		setFeedbackVisible(true);
-	};
-
-	const hideFeedback = () => {
-		setFeedbackVisible(false);
-		setFeedbackAnswer(null);
-	};
-
 	const onSwipe = (isRight: boolean) => {
 		const userId = auth?.user.id;
 		if (!dataGame || !sessionId || !userId) return;
 		const currentCard = dataGame[currentIndex];
 		if (!currentCard) return;
+		const isLastCard = currentIndex === 0;
+
+		const answerKey = `${sessionId}:${userId}:${currentCard.id}`;
+		if (submittedAnswerKeysRef.current.has(answerKey)) {
+			return;
+		}
+		submittedAnswerKeysRef.current.add(answerKey);
 
 		const correct = currentCard.attributes.ANSWER;
 		showFeedback(correct === isRight ? Answer.true : Answer.false);
 
-		insertAnswer.mutate({
-			gameId: sessionId,
-			userId,
-			questionId: currentCard.id,
-			categorie: currentCard.attributes.CATEGORIE,
-			answer: isRight,
-		});
+		insertAnswer.mutate(
+			{
+				gameId: sessionId,
+				userId,
+				questionId: currentCard.id,
+				categorie: currentCard.attributes.CATEGORIE,
+				answer: isRight,
+			},
+			{
+				onSuccess: () => {
+					if (isLastCard) {
+						router.push({
+							pathname: "/leJeu/finishedSession",
+							params: { sessionId: String(sessionId) },
+						});
+					}
+				},
+				onError: () => {
+					if (isLastCard) {
+						setIsCompletingSession(false);
+					}
+					submittedAnswerKeysRef.current.delete(answerKey);
+				},
+			}
+		);
 
-		const nextIndex = currentIndex - 1;
-		setCurrentIndex(nextIndex);
-
-		if (nextIndex < 0) {
-			setTimeout(() => navigation.navigate("finishedSession"), 500);
+		if (isLastCard) {
+			setCurrentCardNumber(QUESTIONS_PER_ROUND);
+			setIsCompletingSession(true);
+			setActiveGameStatus("finished");
+			return;
 		}
+
+		setCurrentCardNumber((count) =>
+			getNextCardNumber(count),
+		);
+		setActiveQuestions((prev) =>
+			prev ? prev.filter((question) => question.id !== currentCard.id) : prev,
+		);
+		setCurrentIndex(currentIndex - 1);
 	};
 
 	const swiperTopMargin = isHomeButtonModel ? -40 : 0;
@@ -330,6 +416,12 @@ export default function Jeu() {
 					<Text style={styles.overlayTextNetwork}>
 						Ton jeu reprendra dès que tu la retrouveras.
 					</Text>
+				</View>
+			)}
+
+			{isCompletingSession && (
+				<View style={styles.overlay}>
+					<Loader />
 				</View>
 			)}
 

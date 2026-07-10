@@ -1,9 +1,10 @@
 import CategoriesCards from "@/components/categories/categories";
 import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { clearMetiersCache, useGetMetiers } from "@/hooks/useGetMetiers";
 import React, { useCallback, useState } from "react";
@@ -12,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MetierList from "./list";
 
 const Metier = () => {
+	useTrackRubricOpened("metiers");
 	const insets = useSafeAreaInsets();
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [activeTab, setActiveTab] = useState(0);
@@ -43,22 +45,23 @@ const Metier = () => {
 
 	const listDepsReady = !!dataMetier && !!dataCategory;
 
-	const canShowList = activeTab === 0 && listDepsReady;
+	const canShowList = activeTab === 0;
 	const canShowCategories = activeTab === 1 && !!dataCategory;
-	const showListLoader = activeTab === 0 && !listDepsReady;
 	const showCategoriesLoader = activeTab === 1 && !dataCategory;
+	const showStaticHeader = activeTab !== 0;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<ScreenHeaders content='Métiers' />
+			{showStaticHeader && <PageTitleAvatarHeader title='Metier' />}
 
 			{canShowList && (
 				<MetierList
-					data={dataMetier}
-					categories={dataCategory}
+					data={dataMetier ?? null}
+					categories={dataCategory ?? null}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
-					isLoading={isLoadingMetier || isFetchingMetier}
+					headerTitle='Metier'
+					isLoading={isLoadingMetier || isFetchingMetier || !listDepsReady}
 					refreshing={refreshing}
 					onRefresh={handleRefresh}
 				/>
@@ -70,7 +73,7 @@ const Metier = () => {
 					setActiveTab={setActiveTab}
 				/>
 			)}
-			{(showListLoader || showCategoriesLoader) && <Loader />}
+			{showCategoriesLoader && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
@@ -87,14 +90,15 @@ const Metier = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 25,
+		paddingHorizontal: 24,
+		paddingBottom: 25,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 120, // Adjust this value based on your design
+		bottom: 145,
 		justifyContent: "center",
 		alignItems: "center",
 	},

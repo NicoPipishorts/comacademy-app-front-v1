@@ -1,45 +1,46 @@
-// File: src/app/(tabs)/leJeu/index.tsx
 import {
 	colorBlack,
 	colorWhite,
-	colorYellow,
 	primaryBackground,
 } from "@/constants/colors";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useSessionAction } from "@/api/game/useNewSession";
 import { UseAuth } from "@/auth/AuthContext";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { getGameLevel } from "@/helpers/gameProgress";
 import { useGameQuestions } from "@/hooks/Game/useGameQuestions";
+import { useAnalyticsEventTracker } from "@/hooks/Metrics/useAnalyticsEvents";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useNetwork } from "@/providers/NetworkProvider";
 import { useSubscription } from "@/src/hooks/useSubscription";
-import { NavigationType } from "@/types/general";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 // import { useMemo } from "react";
 import Answers from "./answers";
 import LetsPlay from "./play";
 
 export default function LeJeu() {
 	const insets = useSafeAreaInsets();
-	const navigation = useNavigation<NavigationType>();
 	const { isConnected } = useNetwork();
 	const { selectedTab, setSelectedTab } = useTab();
+	const { showTabBar } = useTabBarVisibility();
+	const trackEvent = useAnalyticsEventTracker();
 
 	const [isEnabled, setIsEnabled] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+	const segmentTranslateX = useRef(new Animated.Value(0)).current;
+	const segmentWidth = 92;
 
 	const { auth } = useAuthSession();
 	const { token, loading: loadingToken } = useJwtToken();
@@ -72,19 +73,6 @@ export default function LeJeu() {
 	const totalAnsweredQuestions =
 		scores?.data?.[0]?.attributes?.totalAnsweredQuestions ?? 0;
 
-	const {
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-		gameStatus,
-		sessionId,
-		answeredCount,
-	} = useGameContext();
-
-	const sessionInProgress =
-		gameStatus === "in_progress" && !!sessionId && answeredCount > 0;
 	const [showSessionTooltip, setShowSessionTooltip] = useState(false);
 	const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -99,6 +87,17 @@ export default function LeJeu() {
 		}, 2000);
 	}, []);
 
+	// session‑restart mutation
+	const {
+		data: sessionData,
+		refetch,
+	} = useGameQuestions(auth?.user.id, null, token, loadingToken);
+
+	const sessionInProgress =
+		sessionData?.data.status === "in_progress" &&
+		!!sessionData.data.sessionId &&
+		sessionData.data.answeredCount > 0;
+
 	const handleTabChange = useCallback(
 		(nextTab: number) => {
 			if (sessionInProgress && nextTab === 1) {
@@ -107,39 +106,8 @@ export default function LeJeu() {
 			}
 			return true;
 		},
-		[sessionInProgress, handleSessionBlockedAction]
+		[sessionInProgress, handleSessionBlockedAction],
 	);
-
-	// session‑restart mutation
-	const { mutate: newSession } = useSessionAction(
-		(payload) => {
-			setGameStatus(payload.status);
-			setSessionsId(payload.sessionId);
-			setQuestionsLeft(payload.questionsLeft);
-			setAnsweredCount(payload.answeredCount);
-			setDataGame(payload.questionsPool);
-		},
-		(err) => console.error("newSession failed:", err)
-	);
-
-	// ref to skip the very first render
-	const didMountRef = useRef(false);
-
-	// whenever filterByCat returns to null, restart the session
-	useEffect(() => {
-		// wait until token is loaded
-		if (loadingToken) return;
-
-		// skip initial mount
-		if (!didMountRef.current) {
-			didMountRef.current = true;
-			return;
-		}
-
-		if (filterByCat === null && token && auth?.user.id) {
-			newSession({ userId: auth?.user.id, token, action: "new" });
-		}
-	}, [filterByCat, token, loadingToken, newSession, auth?.user.id]);
 
 	useEffect(() => {
 		if (sessionInProgress && activeTab === 1) {
@@ -163,41 +131,15 @@ export default function LeJeu() {
 		};
 	}, []);
 
-	// fetch either “all” or “by‑category”
-	// ⬇️ pass token + loading into the hook
-	const {
-		data: sessionData,
-		isLoading: loadingQuestions,
-		refetch,
-	} = useGameQuestions(auth?.user.id, filterByCat, token, loadingToken);
-
 	// ⬇️ ONLY refetch on focus if the token is ready
 	useFocusEffect(
 		useCallback(() => {
+			showTabBar();
 			if (!loadingToken && token && auth?.user.id) {
 				refetch();
 			}
-		}, [loadingToken, token, auth?.user.id, refetch])
+		}, [showTabBar, loadingToken, token, auth?.user.id, refetch]),
 	);
-
-	// when the network fetch returns, update context
-	useEffect(() => {
-		if (loadingQuestions || !sessionData) return;
-
-		setGameStatus(sessionData.data.status);
-		setSessionsId(sessionData.data.sessionId);
-		setQuestionsLeft(sessionData.data.questionsLeft);
-		setAnsweredCount(sessionData.data.answeredCount);
-		setDataGame(sessionData.data.questionsPool);
-	}, [
-		loadingQuestions,
-		sessionData,
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-	]);
 
 	useTrackPageMetrics({ page: "Jeu" });
 
@@ -205,9 +147,18 @@ export default function LeJeu() {
 		setIsEnabled((p) => !p);
 	}, []);
 
+	useEffect(() => {
+		Animated.spring(segmentTranslateX, {
+			toValue: isEnabled ? 1 : 0,
+			useNativeDriver: true,
+			bounciness: 6,
+			speed: 18,
+		}).start();
+	}, [isEnabled, segmentTranslateX]);
+
 	const handlePressPlay = useCallback(() => {
-		// Check if user has reached level 1 (150+ questions)
-		const currentLevel = Math.floor(totalAnsweredQuestions / 150);
+		const currentLevel = getGameLevel(totalAnsweredQuestions);
+		const selectedCategoryId = filterByCat;
 
 		// Only block if user is FREE AND has reached level 1
 		if (isFreeUser && currentLevel >= 1) {
@@ -216,23 +167,79 @@ export default function LeJeu() {
 			return;
 		}
 
-		navigation.navigate("jeu");
-	}, [navigation, totalAnsweredQuestions, isFreeUser]);
+		void trackEvent({
+			eventName: "game_session_started",
+			screenName: "Jeu",
+			properties: {
+				categoryId: selectedCategoryId,
+				level: currentLevel,
+			},
+		});
+
+		setFilterByCat(null);
+
+		router.push({
+			pathname: "/leJeu/jeu",
+			params: {
+				categoryId:
+					selectedCategoryId !== null ? String(selectedCategoryId) : "",
+			},
+		});
+	}, [totalAnsweredQuestions, isFreeUser, filterByCat, trackEvent]);
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<View style={styles.containerHeader}>
 				<Text style={styles.headerMainText}>Le jeu</Text>
-				<View style={styles.containerSwitch}>
-					<Text style={styles.textJouer}>Jouer</Text>
-					<Switch
-						trackColor={{ false: colorBlack, true: colorYellow }}
-						ios_backgroundColor={colorBlack}
-						thumbColor={colorWhite}
-						onValueChange={toggleSwitch}
-						value={isEnabled}
+				<View style={styles.segmentedControl}>
+					<Animated.View
+						pointerEvents='none'
+						style={[
+							styles.segmentIndicator,
+							{
+								transform: [
+									{
+										translateX: segmentTranslateX.interpolate({
+											inputRange: [0, 1],
+											outputRange: [0, segmentWidth],
+										}),
+									},
+								],
+							},
+						]}
 					/>
-					<Text style={styles.textReponses}>Réponses</Text>
+					<Pressable
+						onPress={() => {
+							if (isEnabled) {
+								toggleSwitch();
+							}
+						}}
+						style={[
+							styles.segmentButton,
+						]}>
+						<Text
+							style={[
+								styles.segmentText,
+								!isEnabled && styles.segmentTextActive,
+							]}>
+							Jouer
+						</Text>
+					</Pressable>
+					<Pressable
+						onPress={() => {
+							if (!isEnabled) {
+								toggleSwitch();
+							}
+						}}
+						style={styles.segmentButton}>
+						<Text
+							style={[
+								styles.segmentText,
+								isEnabled && styles.segmentTextActive,
+							]}>
+							Réponses
+						</Text>
+					</Pressable>
 				</View>
 			</View>
 
@@ -286,10 +293,15 @@ export default function LeJeu() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 30,
+		paddingHorizontal: 24,
 		backgroundColor: primaryBackground,
 	},
 	containerHeader: {
+		width: "100%",
+		marginTop: 0,
+		paddingTop: 35,
+		paddingBottom: 14,
+		marginBottom: 12,
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -298,29 +310,50 @@ const styles = StyleSheet.create({
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
 	},
-	containerSwitch: {
+	segmentedControl: {
+		position: "relative",
 		flexDirection: "row",
 		alignItems: "center",
+		padding: 3,
+		borderRadius: 999,
+		backgroundColor: "#E9E9E9",
 	},
-	textJouer: {
-		paddingRight: 8,
-		fontWeight: "bold",
+	segmentIndicator: {
+		position: "absolute",
+		left: 3,
+		top: 3,
+		bottom: 3,
+		width: 92,
+		borderRadius: 999,
+		backgroundColor: colorBlack,
 	},
-	textReponses: {
-		paddingLeft: 8,
+	segmentButton: {
+		minWidth: 92,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 999,
+		alignItems: "center",
+		justifyContent: "center",
+		zIndex: 1,
+	},
+	segmentText: {
 		fontWeight: "bold",
+		fontSize: 13,
+		color: "rgba(0,0,0,0.65)",
+	},
+	segmentTextActive: {
+		color: colorWhite,
 	},
 	categoryWrapper: {
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		paddingTop: 35,
 	},
 	floatingTabbarContainer: {
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 110,
+		bottom: 145,
 		alignItems: "center",
 	},
 	tooltipContainer: {

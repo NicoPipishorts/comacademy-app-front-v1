@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import { Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { clearLogs, LogEntry, subscribeLogs } from "@/logging/logStore";
+import { clearLogs, ensureLogsHydrated, LogEntry, subscribeLogs } from "@/logging/logStore";
 
 const MAX_PREVIEW_LOGS = 25;
 
@@ -21,6 +22,7 @@ const LogOverlay: React.FC = () => {
 	const [logs, setLogs] = useState<LogEntry[]>([]);
 
 	useEffect(() => {
+		void ensureLogsHydrated();
 		const unsubscribe = subscribeLogs((entries) => {
 			setLogs(entries);
 		});
@@ -46,62 +48,74 @@ const LogOverlay: React.FC = () => {
 
 	if (!visible) {
 		return (
-			<Pressable
-				style={[
-					styles.floatingButton,
-					{ bottom: insets.bottom + 20, right: 20 },
-				]}
-				onPress={() => setVisible(true)}>
-				<Text style={styles.floatingLabel}>Logs</Text>
-			</Pressable>
+			<Portal>
+				<View pointerEvents='box-none' style={styles.portalContainer}>
+					<Pressable
+						style={[
+							styles.floatingButton,
+							{ bottom: insets.bottom + 20, right: 20 },
+						]}
+						onPress={() => setVisible(true)}>
+						<Text style={styles.floatingLabel}>Logs</Text>
+					</Pressable>
+				</View>
+			</Portal>
 		);
 	}
 
 	return (
-		<Modal visible={visible} animationType='slide' transparent>
-			<View style={styles.backdrop}>
-				<View style={[styles.sheet, { paddingBottom: insets.bottom + 20 }]}>
-					<View style={styles.sheetHeader}>
-						<Text style={styles.title}>Device Logs</Text>
-						<View style={styles.sheetHeaderActions}>
-							<Pressable
-								style={styles.actionButton}
-								onPress={() => clearLogs()}>
-								<Text style={styles.actionLabel}>Clear</Text>
-							</Pressable>
-							<Pressable
-								style={[styles.actionButton, styles.actionButtonSpacing]}
-								onPress={copyLogsToClipboard}>
-								<Text style={styles.actionLabel}>Copy</Text>
-							</Pressable>
-							<Pressable
-								style={[styles.actionButton, styles.actionButtonSpacing]}
-								onPress={() => setVisible(false)}>
-								<Text style={styles.actionLabel}>Close</Text>
-							</Pressable>
-						</View>
-					</View>
-					<ScrollView style={styles.sheetBody}>
-						{latestLogs.length === 0 && (
-							<Text style={styles.emptyText}>No logs yet.</Text>
-						)}
-						{latestLogs.map((entry) => (
-							<View key={entry.id} style={styles.logRow}>
-								<Text style={styles.logText}>{formatLogEntry(entry)}</Text>
+		<Portal>
+			<Modal visible={visible} animationType='slide' transparent>
+				<View style={styles.backdrop}>
+					<View style={[styles.sheet, { paddingBottom: insets.bottom + 20 }]}>
+						<View style={styles.sheetHeader}>
+							<Text style={styles.title}>Device Logs</Text>
+							<View style={styles.sheetHeaderActions}>
+								<Pressable
+									style={styles.actionButton}
+									onPress={() => clearLogs()}>
+									<Text style={styles.actionLabel}>Clear</Text>
+								</Pressable>
+								<Pressable
+									style={[styles.actionButton, styles.actionButtonSpacing]}
+									onPress={copyLogsToClipboard}>
+									<Text style={styles.actionLabel}>Copy</Text>
+								</Pressable>
+								<Pressable
+									style={[styles.actionButton, styles.actionButtonSpacing]}
+									onPress={() => setVisible(false)}>
+									<Text style={styles.actionLabel}>Close</Text>
+								</Pressable>
 							</View>
-						))}
-					</ScrollView>
+						</View>
+						<Text style={styles.helperText}>
+							Les logs sont conserves apres redemarrage pour aider au diagnostic des crashs.
+						</Text>
+						<ScrollView style={styles.sheetBody}>
+							{latestLogs.length === 0 && (
+								<Text style={styles.emptyText}>No logs yet.</Text>
+							)}
+							{latestLogs.map((entry) => (
+								<View key={entry.id} style={styles.logRow}>
+									<Text style={styles.logText}>{formatLogEntry(entry)}</Text>
+								</View>
+							))}
+						</ScrollView>
+					</View>
 				</View>
-			</View>
-		</Modal>
+			</Modal>
+		</Portal>
 	);
 };
 
 const styles = StyleSheet.create({
-	backdrop: {
+backdrop: {
 		flex: 1,
 		backgroundColor: "rgba(0,0,0,0.5)",
 		justifyContent: "flex-end",
+	},
+	portalContainer: {
+		...StyleSheet.absoluteFillObject,
 	},
 	sheet: {
 		maxHeight: "80%",
@@ -140,6 +154,12 @@ const styles = StyleSheet.create({
 	sheetBody: {
 		paddingVertical: 8,
 	},
+	helperText: {
+		color: "#bbb",
+		fontSize: 12,
+		lineHeight: 18,
+		marginBottom: 6,
+	},
 	emptyText: {
 		color: "#ccc",
 		textAlign: "center",
@@ -158,6 +178,8 @@ const styles = StyleSheet.create({
 	floatingButton: {
 		position: "absolute",
 		right: 20,
+		zIndex: 99999,
+		elevation: 99999,
 		paddingHorizontal: 14,
 		paddingVertical: 8,
 		borderRadius: 999,

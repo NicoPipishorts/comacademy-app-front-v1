@@ -28,7 +28,7 @@ export default function LetsPlay({
 	const { data: dataCategory } = useCategoriesFull();
 	const selectedCategory =
 		dataCategory?.data?.find(
-			(category) => category.attributes.staticId === filterByCat
+			(category) => category.attributes.staticId === filterByCat,
 		) ??
 		(filterByCat != null ? dataCategory?.data?.[filterByCat - 1] : undefined);
 	const selectedCategoryIconUrl =
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
 		width: "100%",
 		alignItems: "center",
 		justifyContent: "center",
-		paddingBottom: 90,
+		paddingBottom: 200,
 	},
 	centerTitle: {
 		fontSize: FontSizeScreenTitles,

@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useForgotPasswordMutation } from "@/api/credentials/forgotPassword";
 import { useLoginMutation } from "@/api/credentials/login";
 import { useResetPasswordMutation } from "@/api/credentials/resetPassword";
+import { sendAnalyticsEvent } from "@/api/analyticsEvents";
 import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
 import ForgotPasswordSheet from "@/components/modal/ForgotPasswordSheet";
@@ -31,6 +32,11 @@ import { FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { AuthResponse } from "@/types/credentials/auth";
 import { NavigationType } from "@/types/general";
+import {
+	getAuthUrl,
+	getForgotPasswordUrl,
+	getResetPasswordUrl,
+} from "@/helpers/api/buildApiUrl";
 import {
 	parseResetPasswordDeepLink,
 	processInitialDeepLink,
@@ -44,9 +50,9 @@ const SignIn = () => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
-	const authUrl = process.env.EXPO_PUBLIC_AUTH_URL;
-	const forgotPasswordUrl = process.env.EXPO_PUBLIC_FORGOT_PASSWORD_URL;
-	const resetPasswordUrl = process.env.EXPO_PUBLIC_RESET_PASSWORD_URL;
+	const authUrl = getAuthUrl();
+	const forgotPasswordUrl = getForgotPasswordUrl();
+	const resetPasswordUrl = getResetPasswordUrl();
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -131,6 +137,13 @@ const SignIn = () => {
 	const onSuccess = async (data: AuthResponse) => {
 		await persistBiometricSession(data, email);
 		await login(data);
+		void sendAnalyticsEvent({
+			eventName: "login_succeeded",
+			authToken: data.jwt,
+			userId: data.user.id,
+			screenName: "SignIn",
+			properties: { method: "password" },
+		});
 		navigation.navigate("(tabs)");
 	};
 
@@ -243,6 +256,17 @@ const SignIn = () => {
 
 			const payload = JSON.parse(payloadRaw) as AuthResponse;
 			await login(payload);
+			const sessionIsCurrent = await checkLoggedIn();
+			if (!sessionIsCurrent) {
+				throw new Error("La session Face ID n’est plus valide.");
+			}
+			void sendAnalyticsEvent({
+				eventName: "login_succeeded",
+				authToken: payload.jwt,
+				userId: payload.user.id,
+				screenName: "SignIn",
+				properties: { method: "biometric" },
+			});
 			navigation.navigate("(tabs)");
 		} catch (error) {
 			showSnackbar(
@@ -253,7 +277,15 @@ const SignIn = () => {
 		} finally {
 			setIsBiometricLoading(false);
 		}
-	}, [biometricLabel, biometricPrompt, isExpoGo, login, navigation, showSnackbar]);
+	}, [
+		biometricLabel,
+		biometricPrompt,
+		checkLoggedIn,
+		isExpoGo,
+		login,
+		navigation,
+		showSnackbar,
+	]);
 
 	const handleForgotPasswordSubmit = useCallback(
 		(targetEmail: string) => {

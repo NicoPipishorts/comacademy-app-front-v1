@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
 		backgroundColor: primaryBackground,
 		flexDirection: "row",
 		borderRadius: 50,
-		padding: 7,
+		padding: 5,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -151,8 +151,8 @@ const styles = StyleSheet.create({
 		height: "100%",
 		backgroundColor: colorBlack,
 		borderRadius: 50,
-		top: 7,
-		left: 7,
+		top: 5,
+		left: 5,
 		zIndex: -1,
 	},
 	textActive: {

@@ -60,7 +60,7 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 					styles.cardContainer,
 					{
 						backgroundColor: backGroundColor,
-						minHeight: isHomeButtonModel ? "85%" : "65%",
+						minHeight: isHomeButtonModel ? "92%" : "82%",
 					},
 				]}>
 				<View style={styles.containerTopRow}>
@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
 		width: "100%",
 		padding: 20,
 		paddingTop: 0,
+		paddingBottom: 108,
 		borderRadius: 25,
 		justifyContent: "flex-start",
 		alignItems: "center",
@@ -130,12 +131,15 @@ const styles = StyleSheet.create({
 	},
 	containerText: {
 		width: "100%",
+		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		marginVertical: 20,
+		marginTop: 16,
+		marginBottom: 24,
 	},
 	textText: {
 		fontSize: FontSize22,
+		lineHeight: 30,
 		color: colorWhite,
 		fontWeight: "bold",
 	},

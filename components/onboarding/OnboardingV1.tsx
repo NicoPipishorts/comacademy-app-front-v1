@@ -14,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const IMAGE_VERTICAL_OFFSET = 20;
 
 const OnboardingV1 = ({ onComplete }: { onComplete?: () => void }) => {
 	const slides = [
@@ -112,10 +113,14 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		alignItems: "center",
+		overflow: "hidden",
 	},
 	slideImage: {
+		position: "absolute",
+		top: -IMAGE_VERTICAL_OFFSET,
+		left: 0,
 		width: SCREEN_WIDTH,
-		height: SCREEN_HEIGHT,
+		height: SCREEN_HEIGHT + IMAGE_VERTICAL_OFFSET,
 	},
 	finishedButton: {
 		position: "absolute",

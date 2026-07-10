@@ -1,6 +1,8 @@
 // src/api/game/useInsertAnswer.ts
+import {
+	invalidateGameResults,
+} from "@/api/game/invalidateGameQueries";
 import useJwtToken from "@/hooks/useJwtToken";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
@@ -15,7 +17,6 @@ type Vars = {
 export function useInsertAnswer() {
 	const queryClient = useQueryClient();
 	const { token } = useJwtToken();
-	const { setQuestionsLeft, setAnsweredCount } = useGameContext();
 
 	return useMutation({
 		mutationFn: async ({
@@ -37,25 +38,8 @@ export function useInsertAnswer() {
 			return data;
 		},
 
-		// Optional: keep a live counter without touching dataGame
-		onMutate: () => {
-			setQuestionsLeft?.((n) =>
-				typeof n === "number" ? Math.max(0, n - 1) : n
-			);
-			setAnsweredCount?.((n) => n + 1);
-		},
-
-		onError: () => {
-			// rollback the counter only (we didn't change dataGame)
-			setQuestionsLeft?.((n) => (typeof n === "number" ? n + 1 : n));
-			setAnsweredCount?.((n) => Math.max(0, n - 1));
-		},
-
 		onSettled: (_res, _err, vars) => {
-			// Reconcile with server; safe because we didn't mutate dataGame mid-swipe
-			queryClient.invalidateQueries({
-				queryKey: ["game-session", vars.gameId],
-			});
+			void invalidateGameResults(queryClient, vars.userId, vars.gameId);
 		},
 	});
 }

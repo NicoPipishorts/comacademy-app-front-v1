@@ -1,18 +1,22 @@
 import Loader from "@/components/experience/loader";
 import FloatingTabBar from "@/components/FloatingTabBar";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useCategoriesFull from "@/hooks/useCategoriesFull";
 import { clearDicoCache, useDicoIds } from "@/hooks/useGetDico";
 import { NavigationType } from "@/types/general";
 import { useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CategoriesCards from "../../../components/categories/categories";
 import DicoList from "./list";
 
 const Dico = () => {
+	useTrackRubricOpened("dico");
+	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
 	const { openDetails } = useGlobalSearchParams();
 	const [activeTab, setActiveTab] = useState(0);
@@ -50,20 +54,28 @@ const Dico = () => {
 	}, [filterByCat, refetch]);
 
 	const listReady = !!dataDico && !!dataCat;
-	const showListLoader = activeTab === 0 && !listReady;
+	const canShowList = activeTab === 0;
 	const showCategoriesLoader = activeTab === 1 && (!dataCat || isLoadingCat);
+	const showStaticHeader = activeTab !== 0;
 
 	return (
-		<View style={styles.wrapper}>
-			<ScreenHeaders content='Dico' />
+		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
+			{showStaticHeader && (
+				<PageTitleAvatarHeader
+					title='Dico'
+					onPressTitle={() => navigation.navigate("newPlaylist")}
+				/>
+			)}
 
-			{listReady && activeTab === 0 && (
+			{canShowList && (
 				<DicoList
-					data={dataDico}
-					categories={dataCat}
+					data={dataDico ?? null}
+					categories={dataCat ?? null}
 					filterByCat={filterByCat}
 					setFilterByCat={setFilterByCat}
-					isLoading={isLoadingData || isFetchingData}
+					headerTitle='Dico'
+					onPressTitle={() => navigation.navigate("newPlaylist")}
+					isLoading={isLoadingData || isFetchingData || !listReady}
 					refreshing={refreshing}
 					onRefresh={handleRefresh}
 				/>
@@ -76,7 +88,7 @@ const Dico = () => {
 				/>
 			)}
 
-			{(showListLoader || showCategoriesLoader) && <Loader />}
+			{showCategoriesLoader && <Loader />}
 
 			<View style={styles.floatingTabbarContainer}>
 				<FloatingTabBar
@@ -93,8 +105,8 @@ const Dico = () => {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		padding: 25,
-		paddingTop: 55,
+		paddingHorizontal: 24,
+		paddingBottom: 25,
 		backgroundColor: primaryBackground,
 	},
 	floatingTabbarContainer: {
@@ -105,7 +117,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-		bottom: 110,
+		bottom: 145,
 		elevation: 5,
 		zIndex: 1,
 	},

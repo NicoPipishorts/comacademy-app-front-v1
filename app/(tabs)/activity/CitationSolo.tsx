@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Loader from "@/components/experience/loader";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { colorBlack, colorWhite, primaryBackground } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import useDailyCitations from "@/hooks/Citations/useGetDailyCitations";
@@ -26,7 +26,7 @@ const LesCitations: React.FC = () => {
 	if (!citation?.id) {
 		return (
 			<SafeAreaView style={styles.wrapper}>
-				<ScreenHeaders content='La citation du jour' />
+				<PageTitleAvatarHeader title='La citation du jour' showAvatar={false} />
 				<View style={styles.centered}>
 					<Text style={styles.noDataText}>Aucune citation disponible.</Text>
 				</View>
@@ -36,8 +36,7 @@ const LesCitations: React.FC = () => {
 
 	return (
 		<SafeAreaView style={styles.wrapper}>
-			{/* Title stays at the top */}
-			<ScreenHeaders content='La citation du jour' />
+			<PageTitleAvatarHeader title='La citation du jour' showAvatar={false} />
 
 			{/* Centered card section */}
 			<View style={styles.centered}>

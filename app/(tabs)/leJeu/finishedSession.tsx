@@ -1,21 +1,19 @@
-// File: src/components/leJeu/FinishedSession.tsx
 import Foundation from "@expo/vector-icons/Foundation";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import Loader from "@/components/experience/loader";
+import { useEndSession } from "@/api/game/useEndSession";
+import { useNewSession } from "@/api/game/useNewSession";
 import {
 	useGetEndOfSession,
 	useGetEndOfSessionResults,
 } from "@/hooks/useGetEndOfSession";
 import useJwtToken from "@/hooks/useJwtToken";
-import { useGameContext } from "@/providers/gameDataContext";
-
-import { useSessionAction } from "@/api/game/useNewSession";
 import { colorBlack, colorWhite } from "@/constants/colors";
 import {
 	FontSize14,
@@ -24,20 +22,23 @@ import {
 	FontSizeScreenTitles,
 } from "@/constants/fontsizes";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import { getRoundProgress } from "@/helpers/gameProgress";
 import useAuthSession from "@/hooks/useAuthSession";
 
 export default function FinishedSession() {
 	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 	const { token } = useJwtToken();
-	const {
-		sessionId,
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-	} = useGameContext();
+	const { sessionId: sessionIdParam } = useLocalSearchParams<{
+		sessionId?: string | string[];
+	}>();
+	const parsedSessionId = Number(
+		Array.isArray(sessionIdParam) ? sessionIdParam[0] : sessionIdParam,
+	);
+	const sessionId =
+		Number.isFinite(parsedSessionId) && parsedSessionId > 0
+			? parsedSessionId
+			: null;
 
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
@@ -50,30 +51,20 @@ export default function FinishedSession() {
 
 	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
 
-	const originalSessionIdRef = React.useRef(sessionId);
-	const { data: sessionResults } = useGetEndOfSessionResults(
-		originalSessionIdRef.current
-	);
+	const { data: sessionResults } = useGetEndOfSessionResults(sessionId);
 
-	const { mutate: sessionAction } = useSessionAction(
-		(payload, action) => {
-			setDataGame(payload.questionsPool);
-			setSessionsId(payload.sessionId);
-			setQuestionsLeft(payload.questionsLeft);
-			setAnsweredCount(payload.answeredCount);
-			setGameStatus(payload.status);
-
-			if (action === "end") {
-				showTabBar();
-				router.replace("/leJeu");
-			} else if (action === "leaderBoard") {
-				showTabBar();
-				router.replace(`/user?openModal=leaderBoard&timestamp=${Date.now()}`);
-			} else {
-				router.replace("/leJeu/jeu");
-			}
+	const { mutate: newSession } = useNewSession(
+		() => {
+			router.replace({ pathname: "/leJeu/jeu", params: { categoryId: "" } });
 		},
-		(err) => console.error("Session action failed:", err)
+		(err) => console.error("New session failed:", err),
+	);
+	const { mutate: endSession } = useEndSession(
+		() => {
+			showTabBar();
+			router.replace("/leJeu");
+		},
+		(err) => console.error("End session failed:", err),
 	);
 
 	if (!gameComments || !sessionResults || !sessionId) {
@@ -81,10 +72,8 @@ export default function FinishedSession() {
 	}
 
 	const roundedScore = Math.round(sessionResults.data.percentageCorrect);
-	const roundsPlayed =
-		Math.round(gameComments.data.totalAnsweredQuestions / 15) % 10;
-	const currentNiveau = Math.floor(
-		gameComments.data.totalAnsweredQuestions / 15 / 10
+	const { roundsPlayedInLevel, level } = getRoundProgress(
+		gameComments.data.totalAnsweredQuestions,
 	);
 
 	return (
@@ -97,8 +86,8 @@ export default function FinishedSession() {
 
 			<View style={{ paddingTop: 10, flexDirection: "row" }}>
 				<View style={styles.levelRoundContainer}>
-					<Text style={styles.levelText}>Niveau: {currentNiveau}</Text>
-					<Text style={styles.levelText}>Round: {roundsPlayed}/10</Text>
+					<Text style={styles.levelText}>Niveau: {level}</Text>
+					<Text style={styles.levelText}>Round: {roundsPlayedInLevel}/10</Text>
 				</View>
 			</View>
 
@@ -139,19 +128,23 @@ export default function FinishedSession() {
 			<View style={[styles.containerBackButton, { bottom: 190, width: "80%" }]}>
 				<TouchableOpacity
 					style={styles.buttonTouchable}
-					onPress={() => router.push("/leJeu/answersPostGame")}>
+					onPress={() =>
+						router.push({
+							pathname: "/leJeu/answersPostGame",
+							params: {
+								sessionId: String(sessionId),
+							},
+						})
+					}>
 					<Text style={styles.buttonText}>Voir les réponses</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity
 					style={styles.buttonResults}
-					onPress={() =>
-						sessionAction({
-							userId: auth?.user.id,
-							token,
-							action: "leaderBoard",
-						})
-					}>
+					onPress={() => {
+						showTabBar();
+						router.replace("/user/leaderBoard");
+					}}>
 					<Foundation
 						name='results-demographics'
 						size={24}
@@ -163,7 +156,7 @@ export default function FinishedSession() {
 			<View style={[styles.containerBackButton, { bottom: 60 }]}>
 				<TouchableOpacity
 					onPress={() =>
-						sessionAction({ userId: auth?.user.id, token, action: "end" })
+						endSession({ userId: auth?.user.id, token, sessionId })
 					}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Quitter</Text>
@@ -171,7 +164,7 @@ export default function FinishedSession() {
 
 				<TouchableOpacity
 					onPress={() =>
-						sessionAction({ userId: auth?.user.id, token, action: "new" })
+						newSession({ userId: auth?.user.id, token, sessionId })
 					}
 					style={styles.backButton}>
 					<Text style={styles.textBackButton}>Suivant</Text>

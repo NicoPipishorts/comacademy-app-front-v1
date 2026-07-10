@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import {
 	Image,
+	ImageSourcePropType,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -9,45 +10,117 @@ import {
 } from "react-native";
 
 // Custom images and constants
-import commandements from "@/assets/imgs/cards/home_10_commandements.png";
-import trentes from "@/assets/imgs/cards/home_30s.png";
-import secrets from "@/assets/imgs/cards/home_3_secrets.png";
-import lesCitations from "@/assets/imgs/cards/home_citations.png";
-import dico from "@/assets/imgs/cards/home_dico.png";
-import feed from "@/assets/imgs/cards/home_feed.png";
-import feedback from "@/assets/imgs/cards/home_feedback.png";
-import topFlops from "@/assets/imgs/cards/home_flops_dis.png";
-import histoires from "@/assets/imgs/cards/home_histoire.png";
-import homeJouer from "@/assets/imgs/cards/home_jouer.png";
-import mesStats from "@/assets/imgs/cards/home_mes_stats.png";
-import metiers from "@/assets/imgs/cards/home_metiers.png";
-import playlists from "@/assets/imgs/cards/home_playlists.png";
+import bonduShortcutCard from "@/assets/imgs/cards/shortcutCards/Bonus.png";
+import feedbackShortcutCard from "@/assets/imgs/cards/shortcutCards/Feedbacks.png";
+import mesStatsShortcutCard from "@/assets/imgs/cards/shortcutCards/Mes stats.png";
+import parcoursShortcutCard from "@/assets/imgs/cards/shortcutCards/parcours.png";
+import playlistsShortcutCard from "@/assets/imgs/cards/shortcutCards/Playlists.png";
+import secretsCard from "@/assets/imgs/cards/v2/3 secrets card.svg";
+import trenteSecondesCard from "@/assets/imgs/cards/v2/30s card.svg";
+import citationsCard from "@/assets/imgs/cards/v2/Citations card.svg";
+import dicoCard from "@/assets/imgs/cards/v2/Dico card.svg";
+import feedCard from "@/assets/imgs/cards/v2/Feed card.svg";
+import jouerCard from "@/assets/imgs/cards/v2/Jouer card.svg";
+import metiersCard from "@/assets/imgs/cards/v2/Metiers card.svg";
+import tipsCard from "@/assets/imgs/cards/v2/Tips card.svg";
+import topDesFlopsCard from "@/assets/imgs/cards/v2/Top des flops.svg";
 import { primaryBackground } from "@/constants/colors";
-import {
-	FontSize10,
-	FontSize12,
-	FontSizeAvaterText,
-	FontSizeH1,
-} from "@/constants/fontsizes";
+import { FontSizeH1, FontSizeScreenTitles } from "@/constants/fontsizes";
 
 // Components and hooks
 import ALaUneCitation from "@/components/ALaUneCitation";
 import ALaUneDico from "@/components/ALaUneDico";
-import AvatarInitials from "@/components/avatars/initials";
-import Loader from "@/components/experience/loader";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
+import { useGetRubricNotifications } from "@/hooks/Rubrics/useRubricNotifications";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetUserInfo from "@/hooks/useGetUserInfo";
 import { NavigationType } from "@/types/general";
-import { useNavigation } from "expo-router";
+import { EMPTY_RUBRIC_NOTIFICATIONS } from "@/types/rubricNotifications";
+import { RubricKey } from "@/types/rubricNotifications";
+import { useAssets } from "expo-asset";
+import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgUri } from "react-native-svg";
+
+type RubriqueCard = {
+	id: string;
+	source: any;
+	route: string;
+	badgeKey?: RubricKey;
+};
+
+type ShortcutCard = {
+	id: string;
+	source: ImageSourcePropType;
+	route: string;
+};
+
+const SHORTCUT_CARD_WIDTH = 140;
+const SHORTCUT_CARD_ASPECT_RATIO = 255 / 200;
+
+const rubriquesCards: RubriqueCard[] = [
+	{ id: "jouer", source: jouerCard, route: "leJeu" },
+	{
+		id: "tips",
+		source: tipsCard,
+		route: "commandements",
+		badgeKey: "commandements",
+	},
+	{ id: "dico", source: dicoCard, route: "dico", badgeKey: "dico" },
+	{
+		id: "trente-secondes",
+		source: trenteSecondesCard,
+		route: "trenteSecondes",
+		badgeKey: "trente-secondes",
+	},
+	{ id: "secrets", source: secretsCard, route: "secrets", badgeKey: "secrets" },
+	{
+		id: "top-des-flops",
+		source: topDesFlopsCard,
+		route: "topDesFlops",
+		badgeKey: "top-des-flops",
+	},
+	{
+		id: "citations",
+		source: citationsCard,
+		route: "citations",
+		badgeKey: "citations",
+	},
+	{ id: "metiers", source: metiersCard, route: "metiers", badgeKey: "metiers" },
+	{ id: "feed", source: feedCard, route: "feed", badgeKey: "feed" },
+];
+
+const shortcutCards: ShortcutCard[] = [
+	{ id: "mes-stats", source: mesStatsShortcutCard, route: "/user/myStats" },
+	{ id: "playlists", source: playlistsShortcutCard, route: "/playlists" },
+	{ id: "parcours", source: parcoursShortcutCard, route: "/parcours" },
+	{ id: "bonus", source: bonduShortcutCard, route: "/bonus" },
+	{ id: "feedback", source: feedbackShortcutCard, route: "/feedback" },
+];
+
+const SvgCard = ({ source }: { source: any }) => {
+	const [assets] = useAssets([source]);
+	const cardUri = assets?.[0]?.localUri ?? assets?.[0]?.uri;
+
+	if (!cardUri) {
+		return null;
+	}
+
+	return <SvgUri uri={cardUri} width='100%' height='100%' />;
+};
 
 const HomeScreen = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation<NavigationType>();
+	const router = useRouter();
 	const { auth } = useAuthSession();
 	const { data: userData } = useGetUserInfo(auth?.user.id);
+	const isHeaderLoading = !userData;
+	const { data: rubricNotifications } = useGetRubricNotifications();
+	const rubricsNotificationMap =
+		rubricNotifications?.data?.rubrics ?? EMPTY_RUBRIC_NOTIFICATIONS.data.rubrics;
 
 	useTrackPageMetrics({ page: "Dashboard" });
 
@@ -55,393 +128,56 @@ const HomeScreen = () => {
 		queryClient.invalidateQueries({ queryKey: ["Citations"] });
 	}, []);
 
-	if (!userData) {
-		return <Loader />;
-	}
-
 	return (
 		<>
-			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-				<View style={styles.screenHeader}>
-					<TouchableOpacity onPress={() => navigation.navigate("newPlaylist")}>
-						<Text style={styles.headerText}>Hello {userData.firstName}</Text>
-					</TouchableOpacity>
-					<View style={{ marginRight: 0 }}>
-						<AvatarInitials size={68} />
-					</View>
-				</View>
-
+			<View style={styles.wrapper}>
 				<ScrollView
 					style={styles.contentContainer}
 					contentContainerStyle={{
 						alignItems: "center",
 					}}
 					showsVerticalScrollIndicator={false}>
+					<PageTitleAvatarHeader
+						title={`Hello ${userData?.firstName ?? ""}`.trim() || "Hello"}
+						titleLoading={isHeaderLoading}
+						avatarLoading={isHeaderLoading}
+						onPressTitle={() => navigation.navigate("newPlaylist")}
+						containerStyle={[
+							styles.screenHeaderContainer,
+							{ paddingTop: insets.top },
+						]}
+						contentStyle={styles.screenHeader}
+						titleStyle={styles.headerText}
+					/>
+
 					<View style={styles.header}>
-						<Text style={styles.headerShortcuts}>Rubriques</Text>
+						<Text style={styles.headerShortcuts}>Les Rubriques</Text>
 					</View>
 					<ScrollView
-						style={styles.shortcutsContainer}
+						style={styles.rubriquesContainer}
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}>
-						<View style={styles.shortcuts}>
-							{/* Les Le Jeu Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("leJeu")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={homeJouer}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Le Jeu
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Vrai ou faux ?</Text>
-								</View>
+						<View style={styles.rubriquesRow}>
+								{rubriquesCards.map((card) => (
+									<TouchableOpacity
+										key={card.id}
+										style={styles.rubriqueCardButton}
+										activeOpacity={0.9}
+										onPress={() => navigation.navigate(card.route)}>
+										<View style={styles.rubriqueCardMedia}>
+											<SvgCard source={card.source} />
+										</View>
+										{card.badgeKey &&
+											rubricsNotificationMap[card.badgeKey]?.hasUnread && (
+												<View style={styles.rubricBadge} />
+											)}
+									</TouchableOpacity>
+								))}
 							</View>
-
-							{/* Les Les Stats Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("user")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={mesStats}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Mes Stats
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Résultats, classement
-									</Text>
-								</View>
-							</View>
-
-							{/* Le Feed Card */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("feed")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={feed}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Le feed
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Pour ne rien louper
-									</Text>
-								</View>
-							</View>
-
-							{/* Les Metiers Card */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("metiers")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={metiers}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Les métiers de la com'
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Focus</Text>
-								</View>
-							</View>
-
-							{/* Les Playlists Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("playlists")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={playlists}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Mes playlists
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>Mes favoris</Text>
-								</View>
-							</View>
-
-							{/* Les Dico Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("dico")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={dico}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Dico
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Déchiffrer le jargon
-									</Text>
-								</View>
-							</View>
-
-							{/* Feedback Card */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("feedback")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={feedback}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Feedback
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Votre voix compte
-									</Text>
-								</View>
-							</View>
-						</View>
-					</ScrollView>
-
-					{/* Second row of shortcuts */}
-					<ScrollView
-						style={[styles.shortcutsContainer, { marginTop: -20 }]}
-						horizontal={true}
-						showsHorizontalScrollIndicator={false}>
-						<View style={styles.shortcuts}>
-							{/* Les 10 Commandements Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("commandements")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={commandements}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Tips and tactics
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Astuces pour réussir
-									</Text>
-								</View>
-							</View>
-
-							{/* Les Petits Histoires Card */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("petitesHistoires")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={histoires}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										La petite histoire...
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Anecdotes pour briller
-									</Text>
-								</View>
-							</View>
-
-							{/* Les Citations Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("citations")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={lesCitations}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Les citations
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Bol d’inspiration
-									</Text>
-								</View>
-							</View>
-
-							{/* Les 3 Secrets Card */}
-							<View style={{ alignItems: "center" }}>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("secrets")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={secrets}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										3 secrets du succès
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Secrets de marques
-									</Text>
-								</View>
-							</View>
-
-							{/* 3à Secondes Chrono */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("trenteSecondes")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={trentes}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										30s top chrono
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										1 pub, 1 analyse, c’est plié
-									</Text>
-								</View>
-							</View>
-
-							{/* Les Flops Card */}
-							<View>
-								<TouchableOpacity
-									style={styles.cardsButton}
-									onPress={() => navigation.navigate("topDesFlops")}>
-									<View style={styles.imageContainer}>
-										<Image
-											source={topFlops}
-											style={styles.shortcutsCards}
-											resizeMode='contain'
-										/>
-									</View>
-								</TouchableOpacity>
-								<View
-									style={{
-										alignItems: "center",
-										marginLeft: -20,
-									}}>
-									<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
-										Top des flops
-									</Text>
-									<Text style={{ fontSize: FontSize10 }}>
-										Petits et grands échecs
-									</Text>
-								</View>
-							</View>
-						</View>
-					</ScrollView>
+						</ScrollView>
 
 					<View style={styles.header}>
-						<Text style={styles.headerShortcuts}>A la une</Text>
+						<Text style={styles.headerShortcuts}>Aujourd'hui</Text>
 					</View>
 					<View style={styles.alLaUneContainer}>
 						<View style={styles.alLaUne}>
@@ -449,6 +185,30 @@ const HomeScreen = () => {
 							<ALaUneDico />
 						</View>
 					</View>
+
+					<View style={styles.header}>
+						<Text style={styles.headerShortcuts}>Raccourcis</Text>
+					</View>
+					<ScrollView
+						style={styles.shortcutCardsContainer}
+						horizontal
+						showsHorizontalScrollIndicator={false}>
+						<View style={styles.shortcutCardsRow}>
+							{shortcutCards.map((card) => (
+								<TouchableOpacity
+									key={card.id}
+									style={styles.shortcutCardButton}
+									activeOpacity={0.9}
+									onPress={() => router.push(card.route as any)}>
+									<Image
+										source={card.source}
+										style={styles.shortcutCardImage}
+										resizeMode='contain'
+									/>
+								</TouchableOpacity>
+							))}
+						</View>
+					</ScrollView>
 				</ScrollView>
 			</View>
 		</>
@@ -459,14 +219,22 @@ const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
 		backgroundColor: primaryBackground,
-		marginTop: 20,
 		paddingBottom: 20,
 	},
+	screenHeaderContainer: {
+		width: "100%",
+		paddingHorizontal: 12,
+		paddingBottom: 12,
+	},
 	screenHeader: {
+		width: "100%",
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		paddingHorizontal: 20,
+		paddingHorizontal: 12,
+		paddingTop: 14,
+		paddingBottom: 14,
+		borderRadius: 18,
 	},
 	header: {
 		minWidth: "100%",
@@ -475,9 +243,10 @@ const styles = StyleSheet.create({
 		alignItems: "flex-start",
 		marginBottom: 10,
 		paddingHorizontal: 20,
+		paddingVertical: 20,
 	},
 	headerText: {
-		fontSize: FontSizeAvaterText,
+		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
 	},
 	profileImage: {
@@ -487,8 +256,7 @@ const styles = StyleSheet.create({
 	},
 	contentContainer: {
 		flex: 1,
-		paddingTop: 30,
-		marginBottom: 80,
+		marginBottom: 60,
 	},
 	headerShortcuts: {
 		fontSize: FontSizeH1,
@@ -498,11 +266,33 @@ const styles = StyleSheet.create({
 		flexGrow: 0,
 		paddingHorizontal: 20,
 	},
-	shortcuts: {
+	shortcutCardsContainer: {
+		flexGrow: 0,
+		width: "100%",
+		marginBottom: 64,
+		paddingVertical: 40,
+		paddingHorizontal: 20,
+		marginTop: -40,
+	},
+	shortcutCardsRow: {
 		flexDirection: "row",
 		justifyContent: "flex-start",
-		minWidth: "100%",
-		marginBottom: 40,
+		paddingRight: 20,
+		gap: 18,
+	},
+	rubriquesContainer: {
+		flexGrow: 0,
+		width: "100%",
+		paddingLeft: 20,
+		marginBottom: 30,
+		overflow: "visible",
+	},
+	rubriquesRow: {
+		flexDirection: "row",
+		justifyContent: "flex-start",
+		paddingRight: 20,
+		marginBottom: 24,
+		overflow: "visible",
 	},
 	alLaUneContainer: {
 		flexDirection: "column",
@@ -516,22 +306,45 @@ const styles = StyleSheet.create({
 		width: "100%",
 		marginBottom: 40,
 	},
-	cardsButton: {
+	rubriqueCardButton: {
+		width: 120,
+		height: 230,
+		marginRight: 17,
 		position: "relative",
-		padding: 0,
-		marginRight: 20,
-		width: 127,
-		height: 110,
+		overflow: "visible",
 	},
-	imageContainer: {
+	rubriqueCardMedia: {
 		width: "100%",
 		height: "100%",
-		alignItems: "center",
+		borderRadius: 11,
+		overflow: "hidden",
 	},
-	shortcutsCards: {
-		alignItems: "flex-end",
+	rubricBadge: {
+		position: "absolute",
+		top: -6,
+		right: -6,
+		width: 19,
+		height: 19,
+		borderRadius: 999,
+		backgroundColor: "#FF0000",
+		zIndex: 10,
+		elevation: 10,
+	},
+	shortcutCardButton: {
+		width: SHORTCUT_CARD_WIDTH,
+		aspectRatio: SHORTCUT_CARD_ASPECT_RATIO,
+		borderRadius: 18,
+		backgroundColor: "#FFFFFF",
+		shadowColor: "#000000",
+		shadowOffset: { width: 0, height: 10 },
+		shadowOpacity: 0.18,
+		shadowRadius: 15,
+		elevation: 12,
+	},
+	shortcutCardImage: {
 		width: "100%",
 		height: "100%",
+		borderRadius: 18,
 	},
 });
 

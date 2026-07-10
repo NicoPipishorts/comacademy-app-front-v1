@@ -26,7 +26,7 @@ import SplashScreen from "@/assets/imgs/spalshSceens/petiteHistoire.png";
 import LockedVideoOverlay from "@/components/experience/LockedVideoOverlay";
 import ExpoVideo, { ManagedVideoHandle } from "@/components/media/ExpoVideo";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
-import ScreenHeaders from "@/components/ScreenHeaders";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { usePlaybackReset } from "@/helpers/videoCrontrolsReset";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import useGetMediaList from "@/hooks/useGetMediaList";
@@ -34,6 +34,26 @@ import useJwtToken from "@/hooks/useJwtToken";
 import { useMinimumLoadingTime } from "@/hooks/useMinimumLoadingTime";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import PetitesHistoiresSkeleton from "./petitesHistoiresSkeleton";
+
+type StoryItem = {
+	id: number | string;
+	videoUri?: {
+		url?: string;
+	};
+};
+
+const getVideoIndices = (refs: Record<number, ManagedVideoHandle | null>) =>
+	Object.keys(refs).map((key) => Number(key));
+
+const ensureFadeValue = (
+	fadeMap: Record<number, Animated.Value>,
+	index: number,
+) => {
+	if (!fadeMap[index]) {
+		fadeMap[index] = new Animated.Value(1);
+	}
+	return fadeMap[index];
+};
 
 const LesPetitesHistoires: React.FC = () => {
 	const { token } = useJwtToken();
@@ -54,7 +74,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const navigation = useNavigation();
 
 	const { width } = Dimensions.get("window");
-	const videoWidth = Math.floor(width * 0.8);
+	const videoWidth = Math.floor(width * 0.78);
 	const videoHeight = Math.floor((videoWidth / 9) * 16);
 
 	const videoRefs = useRef<Record<number, ManagedVideoHandle | null>>({});
@@ -69,7 +89,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const pauseVideoAtIndex = useCallback(
 		async (
 			index: number,
-			{ markAutoPaused = false }: { markAutoPaused?: boolean } = {}
+			{ markAutoPaused = false }: { markAutoPaused?: boolean } = {},
 		) => {
 			const ref = videoRefs.current[index];
 			if (!ref) return;
@@ -80,7 +100,7 @@ const LesPetitesHistoires: React.FC = () => {
 				const position =
 					typeof status.positionMillis === "number"
 						? status.positionMillis
-						: videoPositions.current[index] ?? 0;
+						: (videoPositions.current[index] ?? 0);
 				videoPositions.current[index] = position;
 
 				if (status.isPlaying) {
@@ -96,7 +116,7 @@ const LesPetitesHistoires: React.FC = () => {
 				// ignore
 			}
 		},
-		[]
+		[],
 	);
 
 	const resumeVideoAtIndex = useCallback(async (index: number) => {
@@ -139,7 +159,7 @@ const LesPetitesHistoires: React.FC = () => {
 	const handlePlaybackStatus = usePlaybackReset(
 		videoRefs,
 		videoPositions,
-		setFocusedIndex
+		setFocusedIndex,
 	);
 
 	const onStatusUpdate = useCallback(
@@ -155,13 +175,13 @@ const LesPetitesHistoires: React.FC = () => {
 				handlePlaybackStatus(status, index);
 			}
 		},
-		[handlePlaybackStatus]
+		[handlePlaybackStatus],
 	);
 
 	const pauseAllVideos = useCallback(async () => {
-		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		const indices = getVideoIndices(videoRefs.current);
 		await Promise.all(
-			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false }))
+			indices.map((i) => pauseVideoAtIndex(i, { markAutoPaused: false })),
 		);
 		playingIndicesRef.current.clear();
 	}, [pauseVideoAtIndex]);
@@ -171,7 +191,7 @@ const LesPetitesHistoires: React.FC = () => {
 			return () => {
 				pauseAllVideos();
 			};
-		}, [pauseAllVideos])
+		}, [pauseAllVideos]),
 	);
 
 	useEffect(() => {
@@ -187,8 +207,7 @@ const LesPetitesHistoires: React.FC = () => {
 
 	useEffect(() => {
 		const pauseUnfocused = async () => {
-			const promises = Object.keys(videoRefs.current).map((k) => {
-				const i = Number(k);
+			const promises = getVideoIndices(videoRefs.current).map((i) => {
 				if (i === focusedIndex) return Promise.resolve();
 				return pauseVideoAtIndex(i, { markAutoPaused: false });
 			});
@@ -237,14 +256,10 @@ const LesPetitesHistoires: React.FC = () => {
 				focusedIndexRef.current = newIndex;
 				setFocusedIndex(newIndex);
 
-				if (!fadeAnim[newIndex]) {
-					fadeAnim[newIndex] = new Animated.Value(1);
-				} else {
-					fadeAnim[newIndex].setValue(1);
-				}
+				ensureFadeValue(fadeAnim, newIndex).setValue(1);
 			}
 		},
-		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim]
+		[pauseVideoAtIndex, resumeVideoAtIndex, fadeAnim],
 	);
 
 	const viewabilityConfig = useMemo(
@@ -252,15 +267,16 @@ const LesPetitesHistoires: React.FC = () => {
 			itemVisiblePercentThreshold: 90,
 			minimumViewTime: 100,
 		}),
-		[]
+		[],
 	);
 
 	const handleScrollBegin = useCallback(() => {
-		const indices = Object.keys(videoRefs.current).map((k) => Number(k));
+		const indices = getVideoIndices(videoRefs.current);
 		indices.forEach((i) => void pauseVideoAtIndex(i, { markAutoPaused: true }));
 	}, [pauseVideoAtIndex]);
 
-	const stories = useMemo(() => data?.data ?? [], [data]);
+	const stories = useMemo<StoryItem[]>(() => data?.data ?? [], [data]);
+	const hasStories = stories.length > 0;
 
 	const handleFocusPress = useCallback(
 		(index: number) => {
@@ -270,11 +286,11 @@ const LesPetitesHistoires: React.FC = () => {
 
 			void resumeVideoAtIndex(index);
 		},
-		[resumeVideoAtIndex]
+		[resumeVideoAtIndex],
 	);
 
 	const isActuallyLoading =
-		(!data || stories.length === 0) && (isLoading || isFetching);
+		(!data || !hasStories) && (isLoading || isFetching);
 
 	const showSkeleton = useMinimumLoadingTime({
 		isLoading: isActuallyLoading,
@@ -289,11 +305,7 @@ const LesPetitesHistoires: React.FC = () => {
 		focusedIndexRef.current = initialIndex;
 		setFocusedIndex(initialIndex);
 
-		if (!fadeAnim[initialIndex]) {
-			fadeAnim[initialIndex] = new Animated.Value(1);
-		} else {
-			fadeAnim[initialIndex].setValue(1);
-		}
+		ensureFadeValue(fadeAnim, initialIndex).setValue(1);
 
 		return () => {
 			pauseAllVideos();
@@ -302,14 +314,11 @@ const LesPetitesHistoires: React.FC = () => {
 	}, [isLoading, stories.length, pauseAllVideos]);
 
 	const renderItem = useCallback(
-		({ item, index }: { item: any; index: number }) => {
+		({ item, index }: { item: StoryItem; index: number }) => {
 			const videoUri = item.videoUri?.url;
 			const isFocused = focusedIndex === index;
 			const isLocked = isFreeUser && index >= 5;
-
-			if (!fadeAnim[index]) {
-				fadeAnim[index] = new Animated.Value(1);
-			}
+			const overlayOpacity = ensureFadeValue(fadeAnim, index);
 
 			return (
 				<Animated.View
@@ -340,7 +349,7 @@ const LesPetitesHistoires: React.FC = () => {
 								style={[
 									StyleSheet.absoluteFillObject,
 									styles.overlayContainer,
-									{ opacity: fadeAnim[index] },
+									{ opacity: overlayOpacity },
 								]}>
 								<Image
 									source={SplashScreen}
@@ -374,24 +383,32 @@ const LesPetitesHistoires: React.FC = () => {
 			isFreeUser,
 			handleLockedItemPress,
 			handleFocusPress,
-		]
+			isScreenFocused,
+		],
 	);
+
+	const showEmptyState = !showSkeleton && data && !hasStories;
+	const showStories = !showSkeleton && data && hasStories;
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<View style={styles.headerPadding}>
-				<ScreenHeaders content='La petite histoire' />
-			</View>
+			<PageTitleAvatarHeader
+				title='La petite histoire'
+				showAvatar={false}
+				containerStyle={styles.headerPadding}
+			/>
 
 			{showSkeleton && <PetitesHistoiresSkeleton />}
 
-			{!showSkeleton && data && stories.length === 0 && (
+			{showEmptyState && (
 				<View style={styles.noDataContainer}>
-					<Text style={styles.noDataText}>Aucune vidéo disponible pour le moment</Text>
+					<Text style={styles.noDataText}>
+						Aucune vidéo disponible pour le moment
+					</Text>
 				</View>
 			)}
 
-			{!showSkeleton && data && stories.length > 0 && (
+			{showStories && (
 				<>
 					<UpgradeSubscriptionModal
 						visible={showUpgradeModal}
@@ -429,9 +446,14 @@ const LesPetitesHistoires: React.FC = () => {
 const styles = StyleSheet.create({
 	wrapper: { flex: 1, backgroundColor: "#F5F5F5" },
 	headerPadding: { paddingHorizontal: 30 },
-	list: { marginTop: 30, paddingHorizontal: 30 },
+	list: { paddingHorizontal: 30 },
 	contentPadding: { paddingRight: 25 },
-	noDataContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40 },
+	noDataContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 40,
+	},
 	noDataText: { fontSize: 16, color: "#666", textAlign: "center" },
 	cardWrapper: {
 		marginLeft: 10,

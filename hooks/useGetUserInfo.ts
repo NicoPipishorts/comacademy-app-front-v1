@@ -1,3 +1,4 @@
+import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 import useJwtToken from "@/hooks/useJwtToken";
 import { LoginUser } from "@/types/login";
 import { useQuery } from "@tanstack/react-query";
@@ -8,14 +9,11 @@ const fetchUserInfo = async (
 	userId: number
 ): Promise<LoginUser> => {
 	try {
-		const response = await fetch(
-			`${process.env.EXPO_PUBLIC_API_URL}/users/${userId}?populate=*`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
+		const response = await fetch(buildApiUrl(`/users/${userId}?populate=*`), {
+			headers: {
+				Authorization: `Bearer ${token}`,
 			}
-		);
+		});
 
 		if (!response.ok) {
 			console.error(
@@ -40,6 +38,8 @@ const useGetUserInfo = (userId: number) => {
 		queryKey: ["UserInfo"],
 		queryFn: () => fetchUserInfo(token, userId),
 		enabled: !!token && !!userId,
+		staleTime: 1000 * 60 * 10,
+		gcTime: 1000 * 60 * 60 * 24,
 	});
 };
 

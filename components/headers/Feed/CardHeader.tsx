@@ -78,6 +78,10 @@ interface Props {
 
 export default function FeedCardHeader({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
+	const formattedTime = useMemo(
+		() => formatTimeElapsed(data.createdAt),
+		[data.createdAt]
+	);
 
 	const typeIcon = useMemo(() => {
 		return data.type !== "feed-post"
@@ -124,7 +128,9 @@ export default function FeedCardHeader({ data }: Props) {
 			<View style={styles.textContainer}>
 				<View style={styles.infoContainer}>
 					<Text style={styles.title}>{title}</Text>
-					<Text style={styles.time}>{formatTimeElapsed(data.createdAt)}</Text>
+					{formattedTime ? (
+						<Text style={styles.time}>{formattedTime}</Text>
+					) : null}
 				</View>
 				{subTitle && <Text style={styles.subTitle}>{subTitle}</Text>}
 			</View>
