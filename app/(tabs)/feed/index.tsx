@@ -1,4 +1,5 @@
 import CardRenderer from "@/components/cards/feed/CardRenderer";
+import { useMarkFeedsSeen } from "@/api/feed/markSeen";
 import FeedSkeleton from "@/components/experience/FeedSkeleton";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
@@ -12,7 +13,9 @@ import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
-import React, { useCallback, useRef, useState } from "react";
+import useAuthSession from "@/hooks/useAuthSession";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
@@ -27,11 +30,18 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedItem } from "@/types/feed";
 
+const isGenericLeJeuFeedCard = (item: FeedItem): boolean =>
+	item.type === "question" ||
+	(item.type === "feed-post" && item.payload?.Type === "question");
+
 const Feed = () => {
 	useTrackRubricOpened("feed");
 	const insets = useSafeAreaInsets();
+	const { auth } = useAuthSession();
 	const [visibleItems, setVisibleItems] = useState<number[]>([]);
 	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+	const sessionSeenIdsRef = useRef<Set<number>>(new Set());
+	const flushedSeenIdsRef = useRef<Set<number>>(new Set());
 
 	useTrackPageMetrics({ page: "Feed" });
 
@@ -68,6 +78,67 @@ const Feed = () => {
 		hasNextPage,
 		refetch,
 	} = useGetFeed({ limit: 10 });
+	const { mutateAsync: markFeedsSeen } = useMarkFeedsSeen();
+
+	const flushSeenFeedIds = useCallback(async () => {
+		const pendingFeedIds = Array.from(sessionSeenIdsRef.current).filter(
+			(id) => !flushedSeenIdsRef.current.has(id)
+		);
+
+		if (!pendingFeedIds.length) {
+			return;
+		}
+
+		await markFeedsSeen({ feedIds: pendingFeedIds });
+		pendingFeedIds.forEach((id) => {
+			flushedSeenIdsRef.current.add(id);
+		});
+	}, [markFeedsSeen]);
+
+	useFocusEffect(
+		useCallback(() => {
+			void refetch();
+			return () => {
+				void flushSeenFeedIds();
+			};
+		}, [flushSeenFeedIds, refetch])
+	);
+
+	useEffect(() => {
+		sessionSeenIdsRef.current = new Set();
+		flushedSeenIdsRef.current = new Set();
+	}, [auth?.user?.id]);
+
+	useEffect(() => {
+		if (!auth?.user?.id || visibleItems.length === 0) {
+			return;
+		}
+
+		visibleItems.forEach((id) => {
+			sessionSeenIdsRef.current.add(id);
+		});
+	}, [auth?.user?.id, visibleItems]);
+
+	const feedItems = useMemo(() => {
+		const items = data?.pages.flatMap((page) => page.data) ?? [];
+		if (items.length <= 1 || !isGenericLeJeuFeedCard(items[0])) {
+			return items;
+		}
+
+		const firstNonGenericIndex = items.findIndex(
+			(item, index) => index > 0 && !isGenericLeJeuFeedCard(item)
+		);
+		if (firstNonGenericIndex === -1) {
+			return items;
+		}
+
+		const reordered = [...items];
+		[reordered[0], reordered[firstNonGenericIndex]] = [
+			reordered[firstNonGenericIndex],
+			reordered[0],
+		];
+		return reordered;
+	}, [data?.pages]);
 
 	// Footer loader to show during fetching of the next page
 	const renderFooter = () => {
@@ -93,11 +164,12 @@ const Feed = () => {
 
 		setIsPullRefreshing(true);
 		try {
+			await flushSeenFeedIds();
 			await refetch();
 		} finally {
 			setIsPullRefreshing(false);
 		}
-	}, [isPullRefreshing, refetch]);
+	}, [flushSeenFeedIds, isPullRefreshing, refetch]);
 
 	if (isLoading) {
 		return <FeedSkeleton />;
@@ -135,7 +207,7 @@ const Feed = () => {
 			/>
 			<FlatList
 				style={styles.feedList}
-				data={data?.pages.flatMap((page) => page.data) ?? []}
+				data={feedItems}
 				keyExtractor={(item) => item.id.toString()}
 				renderItem={renderItem}
 				onEndReached={() => {
