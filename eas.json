@@ -8,17 +8,27 @@
 			"autoIncrement": true,
 			"channel": "preview",
 			"env": {
-				"EXPO_PUBLIC_IAP_ENV": "sandbox"
+				"EXPO_PUBLIC_IAP_ENV": "sandbox",
+				"EXPO_PUBLIC_ENABLE_PARCOURS": "false"
 			},
 			"android": {
 				"buildType": "app-bundle",
 				"gradleCommand": ":app:bundleRelease"
 			}
 		},
+		"testflight": {
+			"extends": "production",
+			"channel": "testflight",
+			"env": {
+				"EXPO_PUBLIC_IAP_ENV": "sandbox",
+				"EXPO_PUBLIC_ENABLE_PARCOURS": "true"
+			}
+		},
 		"production": {
 			"node": "20.19.4",
 			"env": {
-				"EXPO_PUBLIC_IAP_ENV": "production"
+				"EXPO_PUBLIC_IAP_ENV": "production",
+				"EXPO_PUBLIC_ENABLE_PARCOURS": "false"
 			},
 			"ios": {
 				"autoIncrement": true,
