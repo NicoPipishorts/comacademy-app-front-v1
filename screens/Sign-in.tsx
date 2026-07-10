@@ -46,7 +46,15 @@ import {
 const BIOMETRIC_AUTH_PAYLOAD_KEY = "auth.biometric.payload";
 const BIOMETRIC_AUTH_HINT_KEY = "auth.biometric.hint";
 
-const SignIn = () => {
+type SignInProps = {
+	initialResetCode?: string | null;
+	initialResetEmail?: string | null;
+};
+
+const SignIn = ({
+	initialResetCode = null,
+	initialResetEmail = null,
+}: SignInProps) => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
@@ -66,6 +74,7 @@ const SignIn = () => {
 	const latestResetPasswordRef = useRef<string>("");
 	const emailInputRef = useRef<TextInput>(null);
 	const passwordInputRef = useRef<TextInput>(null);
+	const lastHandledResetKeyRef = useRef<string | null>(null);
 
 	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
 	const biometricLabel = Platform.OS === "ios" ? "Face ID" : "biométrie";
@@ -341,22 +350,37 @@ const SignIn = () => {
 		latestResetPasswordRef.current = "";
 	}, [resetPasswordMutation]);
 
+	const presentResetPasswordSheet = useCallback(
+		(code: string, nextEmail?: string | null) => {
+			const normalizedCode = code.trim();
+			if (!normalizedCode) return;
+
+			const normalizedEmail = nextEmail?.trim() || null;
+			const resetKey = `${normalizedCode}::${normalizedEmail ?? ""}`;
+			if (lastHandledResetKeyRef.current === resetKey) return;
+
+			lastHandledResetKeyRef.current = resetKey;
+
+			if (normalizedEmail) {
+				setEmail(normalizedEmail);
+			}
+
+			setPendingResetCode(normalizedCode);
+			latestResetPasswordRef.current = "";
+			Keyboard.dismiss();
+			requestAnimationFrame(() => {
+				resetPasswordSheetRef.current?.present();
+			});
+		},
+		[]
+	);
+
 	const handleDeepLink = useCallback((url: string | null) => {
 		const payload = parseResetPasswordDeepLink(url);
 		if (!payload) return;
 
-		if (payload.email) {
-			setEmail(payload.email);
-		}
-
-		setPendingResetCode(payload.code);
-		latestResetPasswordRef.current = "";
-		// Close keyboard before presenting the reset sheet
-		Keyboard.dismiss();
-		requestAnimationFrame(() => {
-			resetPasswordSheetRef.current?.present();
-		});
-	}, []);
+		presentResetPasswordSheet(payload.code, payload.email);
+	}, [presentResetPasswordSheet]);
 
 	useEffect(() => {
 		void processInitialDeepLink({
@@ -376,6 +400,11 @@ const SignIn = () => {
 			subscription.remove();
 		};
 	}, [handleDeepLink]);
+
+	useEffect(() => {
+		if (!initialResetCode) return;
+		presentResetPasswordSheet(initialResetCode, initialResetEmail);
+	}, [initialResetCode, initialResetEmail, presentResetPasswordSheet]);
 
 	useEffect(() => {
 		(async () => {

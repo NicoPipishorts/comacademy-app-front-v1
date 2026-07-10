@@ -1,0 +1,24 @@
+name: Quality checks
+
+on:
+  pull_request: {}
+  push:
+    branches:
+      - main
+
+defaults:
+  tools:
+    node: 20.19.4
+    yarn: 1.22.22
+
+jobs:
+  quality:
+    name: Unit tests and lint
+    type: custom
+    steps:
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run unit tests
+        run: yarn test:ci
+      - name: Run lint
+        run: yarn lint
