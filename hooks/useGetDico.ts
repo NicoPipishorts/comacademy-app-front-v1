@@ -9,6 +9,17 @@ const LEGACY_DICO_STORAGE_PREFIXES = ["dicoList", "dicosList"];
 
 type DicoDocumentLookup = { data: { documentId?: string }[] };
 
+type DicoListPage = DicoLists & {
+	meta?: {
+		pagination?: {
+			page?: number;
+			pageSize?: number;
+			pageCount?: number;
+			total?: number;
+		};
+	};
+};
+
 const fetchDicoById = async (
 	token: string,
 	id: number
@@ -57,34 +68,51 @@ const useDicoById = (id: number) => {
 
 const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 
+const DICO_CACHE_VERSION = "v2";
+const DICO_PAGE_SIZE = 100;
+
 const cacheKeyForFilter = (filterByCat: number | null) =>
-	`dico:${filterByCat ?? "all"}`;
+	`dico:${DICO_CACHE_VERSION}:${filterByCat ?? "all"}`;
 
 const fetchDicoIds = async (
 	token: string,
 	filterByCat: number | null
 ): Promise<DicoLists> => {
-	const params = new URLSearchParams({
-		"fields[0]": "Word",
-	});
+	const params = new URLSearchParams();
+	params.set("fields[0]", "Word");
+	params.set("filters[isActive][$eq]", "true");
+	params.set("pagination[pageSize]", String(DICO_PAGE_SIZE));
 
 	if (filterByCat !== null) {
 		params.set("filters[MainCat][$eq]", String(filterByCat));
 	}
 
-	const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
+	const allItems: DicoLists["data"] = [];
+	let page = 1;
+	let pageCount = 1;
 
-	const response = await fetch(url, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+	do {
+		params.set("pagination[page]", String(page));
+		const url = `${process.env.EXPO_PUBLIC_API_URL}/dicos?${params.toString()}`;
 
-	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
-	}
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
 
-	return (await response.json()) as DicoLists;
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		const result = (await response.json()) as DicoListPage;
+		allItems.push(...(result.data ?? []));
+
+		pageCount = result.meta?.pagination?.pageCount ?? page;
+		page += 1;
+	} while (page <= pageCount);
+
+	return { data: allItems };
 };
 
 const useDicoIds = (filterByCat: number | null) => {

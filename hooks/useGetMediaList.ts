@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 export type MediaRoute =
+	| "capsules"
 	| "petites-histoires"
 	| "trentes-secondes"
 	| "TrenteSecondes"
@@ -19,6 +20,20 @@ export interface VideoUri {
 
 export interface MediaItem {
 	id: number;
+	titre?: string;
+	videoUri?: {
+		url?: string;
+	};
+	videoLink?: string | null;
+	coverPhoto?: {
+		url?: string;
+		formats?: {
+			large?: { url?: string };
+			medium?: { url?: string };
+			small?: { url?: string };
+			thumbnail?: { url?: string };
+		};
+	} | null;
 	attributes: {
 		titre: string;
 		videoUri: VideoUri;

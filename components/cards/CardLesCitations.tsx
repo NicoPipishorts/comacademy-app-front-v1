@@ -3,19 +3,32 @@ import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16, FontSize22 } from "@/constants/fontsizes";
 import { CitationData } from "@/types/lesCitations";
 import React, { memo } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import CitationHeart from "../buttons/CitationHeart";
 
 type Props = {
 	citation: CitationData;
 	/** Optional: show a "+" action for this citation (e.g., add to playlist) */
 	onAddPress?: (citationId: number) => void;
+	showFavorite?: boolean;
+	wrapperStyle?: StyleProp<ViewStyle>;
+	cardStyle?: StyleProp<ViewStyle>;
+	actionsRowStyle?: StyleProp<ViewStyle>;
+	overlay?: React.ReactNode;
 };
 
-function CardLesCitationsBase({ citation, onAddPress }: Props) {
+function CardLesCitationsBase({
+	citation,
+	onAddPress,
+	showFavorite = true,
+	wrapperStyle,
+	cardStyle,
+	actionsRowStyle,
+	overlay,
+}: Props) {
 	return (
-		<View key={citation.id} style={styles.cardWrapper}>
-			<View style={styles.cardContainer}>
+		<View key={citation.id} style={[styles.cardWrapper, wrapperStyle]}>
+			<View style={[styles.cardContainer, cardStyle]}>
 				{/* Decorative quotes */}
 				<Image
 					source={require("@/assets/imgs/icons/quote_close.png")}
@@ -37,16 +50,19 @@ function CardLesCitationsBase({ citation, onAddPress }: Props) {
 						{citation.attributes.AUTEUR}
 					</Text>
 				</View>
+				{overlay ? <View style={styles.overlayContainer}>{overlay}</View> : null}
 			</View>
 
 			{/* Action row (top-right): Plus (optional) + Heart */}
-			<View style={styles.actionsRow}>
-				<CitationHeart
-					id={citation.id}
-					containerStyle={styles.actionIconButton}
-					imageStyle={styles.actionIconImage}
-				/>
-			</View>
+			{showFavorite ? (
+				<View style={[styles.actionsRow, actionsRowStyle]}>
+					<CitationHeart
+						id={citation.id}
+						containerStyle={styles.actionIconButton}
+						imageStyle={styles.actionIconImage}
+					/>
+				</View>
+			) : null}
 		</View>
 	);
 }
@@ -63,8 +79,23 @@ const propsAreEqual = (prev: Props, next: Props) => {
 	// If your API updates other visible fields, add them here as well.
 
 	const sameOnAddPress = prev.onAddPress === next.onAddPress;
+	const sameShowFavorite = prev.showFavorite === next.showFavorite;
+	const sameWrapperStyle = prev.wrapperStyle === next.wrapperStyle;
+	const sameCardStyle = prev.cardStyle === next.cardStyle;
+	const sameActionsRowStyle = prev.actionsRowStyle === next.actionsRowStyle;
+	const sameOverlay = prev.overlay === next.overlay;
 
-	return sameId && sameCitation && sameAuteur && sameOnAddPress;
+	return (
+		sameId &&
+		sameCitation &&
+		sameAuteur &&
+		sameOnAddPress &&
+		sameShowFavorite &&
+		sameWrapperStyle &&
+		sameCardStyle &&
+		sameActionsRowStyle &&
+		sameOverlay
+	);
 };
 
 const CardLesCitations = memo(CardLesCitationsBase, propsAreEqual);
@@ -72,16 +103,13 @@ export default CardLesCitations;
 
 const styles = StyleSheet.create({
 	cardWrapper: {
-		marginTop: 60,
-		maxHeight: 420,
+		marginTop: 24,
+		alignSelf: "center",
 	},
 	cardContainer: {
-		flex: 1,
-		justifyContent: "center",
-		maxWidth: 350,
-		minHeight: 250,
+		maxWidth: "100%",
+		minHeight: 290,
 		backgroundColor: colorBlack,
-		marginHorizontal: 20,
 		borderRadius: 20,
 		shadowColor: colorBlack,
 		shadowOpacity: 0.35,
@@ -91,8 +119,8 @@ const styles = StyleSheet.create({
 	},
 	openIcon: {
 		position: "absolute",
-		top: 20,
-		left: 20,
+		top: 16,
+		left: 16,
 		width: 45,
 		height: 45,
 	},
@@ -105,8 +133,13 @@ const styles = StyleSheet.create({
 	},
 	actionsRow: {
 		marginTop: 10,
-		width: "90%",
+		maxWidth: "100%",
 		alignItems: "flex-end",
+	},
+	overlayContainer: {
+		...StyleSheet.absoluteFillObject,
+		borderRadius: 20,
+		overflow: "hidden",
 	},
 	actionIconButton: {
 		width: 28,
@@ -119,23 +152,30 @@ const styles = StyleSheet.create({
 		height: 28,
 	},
 	cardContent: {
-		padding: 20,
+		paddingTop: 72,
+		paddingHorizontal: 24,
+		paddingBottom: 12,
 		borderRadius: 10,
+		flexShrink: 1,
 	},
 	cardTextCitation: {
 		color: colorWhite,
 		fontSize: FontSize22,
 		fontWeight: "bold",
+		lineHeight: 30,
 	},
 	containerTextAuteur: {
 		width: "100%",
 		justifyContent: "flex-start",
-		paddingHorizontal: 20,
-		paddingBottom: 15,
+		paddingHorizontal: 24,
+		paddingRight: 72,
+		paddingBottom: 28,
+		marginTop: 8,
 	},
 	cardTextAuteur: {
 		color: colorWhite,
 		fontSize: FontSize16,
 		fontWeight: "bold",
+		lineHeight: 22,
 	},
 });

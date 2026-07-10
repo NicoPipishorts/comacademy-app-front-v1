@@ -7,6 +7,8 @@ export type UserPreferenceUser = {
 export type UserPreferenceAttributes = {
 	avatarBackgroundColor?: string | null;
 	avatar?: unknown;
+	avatarImage?: unknown;
+	avatar_image?: unknown;
 	user?: UserPreferenceUser | null;
 	createdAt?: string;
 	updatedAt?: string;
@@ -19,6 +21,8 @@ export type UserPreferenceData = {
 	attributes?: UserPreferenceAttributes;
 	avatarBackgroundColor?: string | null;
 	avatar?: unknown;
+	avatarImage?: unknown;
+	avatar_image?: unknown;
 	user?: UserPreferenceUser | null;
 	[key: string]: unknown;
 };

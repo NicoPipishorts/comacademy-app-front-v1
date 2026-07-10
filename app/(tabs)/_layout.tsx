@@ -1,10 +1,7 @@
 // app/(tabs)/_layout.tsx
 import { UseAuth } from "@/auth/AuthContext";
 import TabBar from "@/components/TabBar";
-import {
-	TabBarVisibilityProvider,
-	useTabBarVisibility,
-} from "@/context/TabBarVisibilityContext";
+import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import Register from "@/screens/Register/Register";
 import * as Notifications from "expo-notifications";
 import { Tabs } from "expo-router";
@@ -44,7 +41,7 @@ const TabsLayout: React.FC = () => {
 	}
 
 	return (
-		<TabBarVisibilityProvider>
+		<>
 			{/* Add the notification scheduler */}
 			<NotificationScheduler />
 			<Tabs tabBar={(props) => <CustomTabBar {...props} />}>
@@ -58,7 +55,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='activity'
 					options={{
-						tabBarLabel: "Accueil",
+						tabBarLabel: "Acceuil",
 						headerShown: false,
 						lazy: true,
 					}}
@@ -79,10 +76,41 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 				<Tabs.Screen
+					name='parcours'
+					options={{
+						tabBarLabel: "Parcours",
+						headerShown: false,
+					}}
+				/>
+				<Tabs.Screen
+					name='bonus/index'
+					options={{
+						tabBarLabel: "Bonus",
+						headerShown: false,
+						href: null,
+					}}
+				/>
+				<Tabs.Screen
+					name='trophees/index'
+					options={{
+						tabBarLabel: "Trophees",
+						headerShown: false,
+						href: null,
+					}}
+				/>
+				<Tabs.Screen
+					name='dashboard'
+					options={{
+						tabBarLabel: "Moi",
+						headerShown: false,
+					}}
+				/>
+				<Tabs.Screen
 					name='playlists'
 					options={{
 						tabBarLabel: "Playlists",
 						headerShown: false,
+						href: null,
 					}}
 				/>
 				<Tabs.Screen
@@ -111,6 +139,7 @@ const TabsLayout: React.FC = () => {
 					options={{
 						tabBarLabel: "User",
 						headerShown: false,
+						href: null,
 					}}
 				/>
 				<Tabs.Screen
@@ -123,7 +152,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='secrets'
 					options={{
-						tabBarLabel: "3 Secrets",
+						tabBarLabel: "La Capsule",
 						headerShown: false,
 						href: null,
 					}}
@@ -169,7 +198,7 @@ const TabsLayout: React.FC = () => {
 					}}
 				/>
 			</Tabs>
-		</TabBarVisibilityProvider>
+		</>
 	);
 };
 

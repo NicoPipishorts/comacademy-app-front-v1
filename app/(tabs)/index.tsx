@@ -5,34 +5,42 @@ import {
 	getOnboardingStatus,
 	setOnboardingStatus,
 } from "@/services/onboarding/Onboarding";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 const HomeScreen: React.FC = () => {
 	const { auth } = useAuthSession();
+	const userId = auth?.user?.id;
 	const [isOnboardingComplete, setIsOnboardingComplete] = useState<
 		boolean | null
 	>(null);
 	const router = useRouter();
 	const { hideTabBar, showTabBar } = useTabBarVisibility();
 
-	useEffect(() => {
-		const fetchOnboardingStatus = async (): Promise<void> => {
-			if (!auth) return; // Skip fetching if no user ID is available
-			const status = await getOnboardingStatus(auth.user.id);
-			setIsOnboardingComplete(status);
-		};
+	const fetchOnboardingStatus = useCallback(async (): Promise<void> => {
+		if (!userId) return;
+		const status = await getOnboardingStatus(userId);
+		setIsOnboardingComplete(status);
+	}, [userId]);
 
-		fetchOnboardingStatus();
-	}, [auth]);
+	useEffect(() => {
+		void fetchOnboardingStatus();
+	}, [fetchOnboardingStatus]);
+
+	useFocusEffect(
+		useCallback(() => {
+			void fetchOnboardingStatus();
+		}, [fetchOnboardingStatus]),
+	);
 
 	const handleOnboardingComplete = useCallback(async (): Promise<void> => {
-		if (!auth) return; // Ensure the user ID is available
-		await setOnboardingStatus(auth.user.id, true);
+		if (!userId) return;
+		await setOnboardingStatus(userId, true);
 		setIsOnboardingComplete(true);
 		showTabBar();
-	}, [auth, showTabBar]);
+	}, [showTabBar, userId]);
 
 	useEffect(() => {
 		if (isOnboardingComplete === true) {

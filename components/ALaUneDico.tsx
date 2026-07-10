@@ -8,26 +8,23 @@ import { useNavigation } from "expo-router";
 import { format } from "date-fns";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Loader from "./experience/loader";
+import SkeletonBlock from "./experience/SkeletonBlock";
 import StyledButton from "./StyledButton";
 
 export default function ALaUneDico() {
 	const navigation = useNavigation<NavigationType>();
 	const { data, isFetched } = useGetOneDico();
-
-	if (!isFetched) return null;
-
 	const firstEntry = data?.data?.[0];
-	if (!firstEntry) return null;
+	const isLoading = !isFetched || !firstEntry;
 
-	const attributes =
-		resolveEntityAttributes<DicoAttributes>(firstEntry) ??
-		firstEntry.attributes;
-	if (!attributes) return null;
+	const attributes = firstEntry
+		? (resolveEntityAttributes<DicoAttributes>(firstEntry) ??
+			firstEntry.attributes)
+		: null;
 
 	const updatedAtValue =
-		attributes.updatedAt ??
-		(attributes as { updated_at?: string }).updated_at ??
+		attributes?.updatedAt ??
+		(attributes as { updated_at?: string } | null)?.updated_at ??
 		"";
 
 	const parsedDate = updatedAtValue ? new Date(updatedAtValue) : null;
@@ -37,23 +34,34 @@ export default function ALaUneDico() {
 			: "N/A";
 
 	const handlePress = () => {
+		if (!firstEntry) return;
 		navigation.navigate("dico", { openDetails: firstEntry.id });
 	};
 
 	return (
-		<TouchableOpacity style={styles.container}>
+		<TouchableOpacity
+			style={styles.container}
+			disabled={isLoading}
+			activeOpacity={isLoading ? 1 : 0.2}>
 			<Text style={styles.smallText}>
-				La définition du jour : {formattedDate}
+				{isLoading ? "La définition du jour" : `La définition du jour : ${formattedDate}`}
 			</Text>
 			<View style={styles.containerBis}>
-				{!isFetched && <Loader />}
-				{isFetched && (
+				{isLoading ? (
+					<>
+						<View style={styles.textSkeletonContainer}>
+							<SkeletonBlock style={styles.lineLarge} />
+							<SkeletonBlock style={styles.lineMedium} />
+						</View>
+						<SkeletonBlock style={styles.buttonSkeleton} />
+					</>
+				) : (
 					<>
 						<Text
 							style={styles.mainText}
 							numberOfLines={2}
 							ellipsizeMode='tail'>
-							{attributes.Word ?? (attributes as { Word?: string }).Word ?? ""}
+							{attributes?.Word ?? (attributes as { Word?: string }).Word ?? ""}
 						</Text>
 						<StyledButton
 							title='Découvrir'
@@ -92,5 +100,23 @@ const styles = StyleSheet.create({
 		maxWidth: "65%",
 		fontSize: FontSize20,
 		fontWeight: "bold",
+	},
+	textSkeletonContainer: {
+		flex: 1,
+		maxWidth: "65%",
+	},
+	lineLarge: {
+		height: 22,
+		width: "95%",
+		marginBottom: 10,
+	},
+	lineMedium: {
+		height: 22,
+		width: "72%",
+	},
+	buttonSkeleton: {
+		width: 92,
+		height: 40,
+		borderRadius: 50,
 	},
 });

@@ -49,6 +49,8 @@ export const useGetUserPreferences = (userId: number) => {
 		queryKey: ["UserPreferences", "me", userId],
 		queryFn: () => fetchUserPreferences(token, userId),
 		enabled: !!token && !!userId,
+		staleTime: 1000 * 60 * 10,
+		gcTime: 1000 * 60 * 60 * 24,
 	});
 };
 

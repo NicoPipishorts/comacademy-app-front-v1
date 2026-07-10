@@ -1,16 +1,19 @@
 PODS:
-  - EASClient (1.0.7):
+  - EASClient (1.0.8):
     - ExpoModulesCore
-  - EXApplication (7.0.7):
+  - EXApplication (7.0.8):
     - ExpoModulesCore
-  - EXConstants (18.0.10):
+  - EXConstants (18.0.13):
     - ExpoModulesCore
+  - EXImageLoader (6.0.0):
+    - ExpoModulesCore
+    - React-Core
   - EXJSONUtils (0.15.0)
-  - EXManifests (1.0.8):
+  - EXManifests (1.0.10):
     - ExpoModulesCore
-  - EXNotifications (0.32.13):
+  - EXNotifications (0.32.16):
     - ExpoModulesCore
-  - Expo (54.0.24):
+  - Expo (54.0.33):
     - ExpoModulesCore
     - hermes-engine
     - RCTRequired
@@ -35,28 +38,34 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoAsset (12.0.10):
+  - ExpoAsset (12.0.12):
     - ExpoModulesCore
-  - ExpoAudio (1.0.14):
+  - ExpoAudio (1.1.1):
     - ExpoModulesCore
-  - ExpoBlur (15.0.7):
+  - ExpoBlur (15.0.8):
     - ExpoModulesCore
-  - ExpoDevice (8.0.9):
+  - ExpoClipboard (8.0.8):
     - ExpoModulesCore
-  - ExpoFileSystem (19.0.18):
+  - ExpoDevice (8.0.10):
     - ExpoModulesCore
-  - ExpoFont (14.0.9):
+  - ExpoFileSystem (19.0.21):
     - ExpoModulesCore
-  - ExpoHead (6.0.15):
+  - ExpoFont (14.0.11):
+    - ExpoModulesCore
+  - ExpoHaptics (15.0.8):
+    - ExpoModulesCore
+  - ExpoHead (6.0.23):
     - ExpoModulesCore
     - RNScreens
-  - ExpoKeepAwake (15.0.7):
+  - ExpoImagePicker (17.0.10):
     - ExpoModulesCore
-  - ExpoLinearGradient (15.0.7):
+  - ExpoKeepAwake (15.0.8):
     - ExpoModulesCore
-  - ExpoLinking (8.0.9):
+  - ExpoLinearGradient (15.0.8):
     - ExpoModulesCore
-  - ExpoModulesCore (3.0.26):
+  - ExpoLinking (8.0.11):
+    - ExpoModulesCore
+  - ExpoModulesCore (3.0.29):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -79,12 +88,12 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoSecureStore (15.0.7):
+  - ExpoSecureStore (15.0.8):
     - ExpoModulesCore
-  - ExpoVideo (3.0.14):
+  - ExpoVideo (3.0.16):
     - ExpoModulesCore
   - EXStructuredHeaders (5.0.0)
-  - EXUpdates (29.0.12):
+  - EXUpdates (29.0.16):
     - EASClient
     - EXManifests
     - ExpoModulesCore
@@ -1518,6 +1527,30 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-skia (2.2.12):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-callinvoker
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - React-NativeModulesApple (0.81.5):
     - hermes-engine
     - React-callinvoker
@@ -1890,6 +1923,28 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNCMaskedView (0.3.2):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNGestureHandler (2.28.0):
     - hermes-engine
     - RCTRequired
@@ -2177,6 +2232,7 @@ DEPENDENCIES:
   - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
+  - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
   - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
   - EXManifests (from `../node_modules/expo-manifests/ios`)
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
@@ -2184,10 +2240,13 @@ DEPENDENCIES:
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoAudio (from `../node_modules/expo-audio/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
+  - ExpoClipboard (from `../node_modules/expo-clipboard/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
+  - ExpoHaptics (from `../node_modules/expo-haptics/ios`)
   - ExpoHead (from `../node_modules/expo-router/ios`)
+  - ExpoImagePicker (from `../node_modules/expo-image-picker/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
@@ -2237,6 +2296,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -2269,6 +2329,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2289,6 +2350,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-application/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
+  EXImageLoader:
+    :path: "../node_modules/expo-image-loader/ios"
   EXJSONUtils:
     :path: "../node_modules/expo-json-utils/ios"
   EXManifests:
@@ -2303,14 +2366,20 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-audio/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
+  ExpoClipboard:
+    :path: "../node_modules/expo-clipboard/ios"
   ExpoDevice:
     :path: "../node_modules/expo-device/ios"
   ExpoFileSystem:
     :path: "../node_modules/expo-file-system/ios"
   ExpoFont:
     :path: "../node_modules/expo-font/ios"
+  ExpoHaptics:
+    :path: "../node_modules/expo-haptics/ios"
   ExpoHead:
     :path: "../node_modules/expo-router/ios"
+  ExpoImagePicker:
+    :path: "../node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
   ExpoLinearGradient:
@@ -2408,6 +2477,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-skia:
+    :path: "../node_modules/@shopify/react-native-skia"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -2472,6 +2543,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCMaskedView:
+    :path: "../node_modules/@react-native-masked-view/masked-view"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
@@ -2488,28 +2561,32 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EASClient: 68127f1248d2b25fdc82dbbfb17be95d1c4700be
-  EXApplication: 296622817d459f46b6c5fe8691f4aac44d2b79e7
-  EXConstants: fd688cef4e401dcf798a021cfb5d87c890c30ba3
+  EASClient: 40dd9e740684782610c49becab2643782ea1a20c
+  EXApplication: 1e98d4b1dccdf30627f92917f4b2c5a53c330e5f
+  EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
+  EXImageLoader: 189e3476581efe3ad4d1d3fb4735b7179eb26f05
   EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
-  EXManifests: 224345a575fca389073c416297b6348163f28d1a
-  EXNotifications: a62e1f8e3edd258dc3b155d3caa49f32920f1c6c
-  Expo: fe949a2afe69e8be60b9d42d661bb6e6c2df6fc5
-  ExpoAsset: d839c8eae8124470332408427327e8f88beb2dfd
-  ExpoAudio: 6a923f661e3360a183503fd96728ff9010ae8afd
-  ExpoBlur: 2dd8f64aa31f5d405652c21d3deb2d2588b1852f
-  ExpoDevice: 148accb4071873d19fba80a2506c58ffa433d620
-  ExpoFileSystem: a67324b609244372efac5abb599f7f555b6584f0
-  ExpoFont: cf9d90ec1d3b97c4f513211905724c8171f82961
-  ExpoHead: 95a6ee0be1142320bccf07961d6a1502ded5d6ac
-  ExpoKeepAwake: 1a2e820692e933c94a565ec3fbbe38ac31658ffe
-  ExpoLinearGradient: a464898cb95153125e3b81894fd479bcb1c7dd27
-  ExpoLinking: 77455aa013e9b6a3601de03ecfab09858ee1b031
-  ExpoModulesCore: e8ec7f8727caf51a49d495598303dd420ca994bf
-  ExpoSecureStore: 9c6571fe3fcb045a671c4011c451546eaaab98fd
-  ExpoVideo: 50f5b3f31c7b5fb5a8f61a0137e674096c54eb4f
+  EXManifests: a8d97683e5c7a3b026ffbd58559c64dc655b747b
+  EXNotifications: 9eec98712cc814ceff916d876cb53859003b0597
+  Expo: aadbcc8c6c14ff3105a9154f1683cb1424ff0d2a
+  ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
+  ExpoAudio: e4cfe3a2f3317b8487460685385a9867a07fb4fb
+  ExpoBlur: b90747a3f22a8b6ceffd9cb0dc41a4184efdc656
+  ExpoClipboard: b36b287d8356887844bb08ed5c84b5979bb4dd1e
+  ExpoDevice: 6327c3c200816795708885adf540d26ecab83d1a
+  ExpoFileSystem: 858a44267a3e6e9057e0888ad7c7cfbf55d52063
+  ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
+  ExpoHaptics: d3a6375d8dcc3a1083d003bc2298ff654fafb536
+  ExpoHead: 7e19b2272edf492262acf8afb391a295198a6b23
+  ExpoImagePicker: 1af3e4e31512d2f34c95c2a3018a3edc40aee748
+  ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
+  ExpoLinearGradient: 809102bdb979f590083af49f7fa4805cd931bd58
+  ExpoLinking: 8f0aaf69aa56f832913030503b6263dc6f647f37
+  ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
+  ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
+  ExpoVideo: 8d9e8a1acd0c4c210e538b4355e34ae8ff5e04f7
   EXStructuredHeaders: c951e77f2d936f88637421e9588c976da5827368
-  EXUpdates: 499c1484e3930cbb1b0b4bd922c982e6fdeff465
+  EXUpdates: fd3ce349c439b18fd8ff05080499789cebbcab76
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
@@ -2552,6 +2629,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 42a1b4f8774b577d03b53de7326e3d5757fe9513
+  react-native-skia: 05327e7acee05e7c27b68a5da0bc80d65f5d790c
   React-NativeModulesApple: 8969913947d5b576de4ed371a939455a8daf28aa
   React-oscompat: ce47230ed20185e91de62d8c6d139ae61763d09c
   React-perflogger: 02b010e665772c7dcb859d85d44c1bfc5ac7c0e4
@@ -2584,6 +2662,7 @@ SPEC CHECKSUMS:
   ReactCommon: 08810150b1206cc44aecf5f6ae19af32f29151a8
   ReactNativeDependencies: 71ce9c28beb282aa720ea7b46980fff9669f428a
   RNCAsyncStorage: 3a4f5e2777dae1688b781a487923a08569e27fe4
+  RNCMaskedView: d2578d41c59b936db122b2798ba37e4722d21035
   RNGestureHandler: 2914750df066d89bf9d8f48a10ad5f0051108ac3
   RNReanimated: d87360cba850e1df46f5b74d6ee74653a520b631
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845

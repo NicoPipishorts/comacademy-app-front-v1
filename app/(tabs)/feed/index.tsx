@@ -1,8 +1,8 @@
-import AvatarInitials from "@/components/avatars/initials";
 import CardRenderer from "@/components/cards/feed/CardRenderer";
-import FeedLoader from "@/components/experience/loader";
+import FeedSkeleton from "@/components/experience/FeedSkeleton";
 import FeedCardFooter from "@/components/footers/Feed/CardFooter";
 import FeedCardHeader from "@/components/headers/Feed/CardHeader";
+import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import {
 	colorDarkGrey,
 	colorGrey,
@@ -11,11 +11,13 @@ import {
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import useGetFeed from "@/hooks/Feed/useGetAllFeed";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import React, { useRef, useState } from "react";
+import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
+import React, { useCallback, useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
 	ListRenderItem,
+	RefreshControl,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
@@ -26,8 +28,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedItem } from "@/types/feed";
 
 const Feed = () => {
+	useTrackRubricOpened("feed");
 	const insets = useSafeAreaInsets();
 	const [visibleItems, setVisibleItems] = useState<number[]>([]);
+	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 
 	useTrackPageMetrics({ page: "Feed" });
 
@@ -44,7 +48,7 @@ const Feed = () => {
 				.map((item) => item.item as FeedItem)
 				.filter((item) => typeof item?.id === "number")
 				.map((item) => item.id);
-		setVisibleItems(visibleIds);
+			setVisibleItems(visibleIds);
 		}
 	).current;
 
@@ -57,7 +61,6 @@ const Feed = () => {
 	const {
 		data,
 		isLoading,
-		isRefetching,
 		isError,
 		error,
 		isFetchingNextPage,
@@ -83,14 +86,27 @@ const Feed = () => {
 		return <FeedWrapper feed={item} visibleItems={visibleItems} />;
 	};
 
+	const handleRefresh = useCallback(async () => {
+		if (isPullRefreshing) {
+			return;
+		}
+
+		setIsPullRefreshing(true);
+		try {
+			await refetch();
+		} finally {
+			setIsPullRefreshing(false);
+		}
+	}, [isPullRefreshing, refetch]);
+
 	if (isLoading) {
-		return <FeedLoader />;
+		return <FeedSkeleton />;
 	}
 
 	if (isError) {
 		return (
 			<View style={styles.statusWrapper}>
-				<Text style={styles.statusTitle}>Impossible de charger le feed</Text>
+				<Text style={styles.statusTitle}>errorTitle de charger le feed</Text>
 				<Text style={styles.statusText}>
 					{error?.message || "Une erreur est survenue."}
 				</Text>
@@ -108,17 +124,17 @@ const Feed = () => {
 
 	return (
 		<View style={styles.wrapper}>
-			<View
-				style={[
+			<PageTitleAvatarHeader
+				title='Feed'
+				containerStyle={[
 					styles.headerWrapper,
 					{
-						paddingTop: insets.top + 10,
+						paddingTop: insets.top,
 					},
-				]}>
-				<Text style={styles.title}>Feed</Text>
-				<AvatarInitials size={68} />
-			</View>
+				]}
+			/>
 			<FlatList
+				style={styles.feedList}
 				data={data?.pages.flatMap((page) => page.data) ?? []}
 				keyExtractor={(item) => item.id.toString()}
 				renderItem={renderItem}
@@ -131,10 +147,16 @@ const Feed = () => {
 				ListFooterComponent={renderFooter} // Loader at the bottom
 				viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
 				contentContainerStyle={styles.scrollContent}
-				refreshing={isRefetching}
-				onRefresh={() => {
-					refetch();
-				}}
+				refreshControl={
+					<RefreshControl
+						refreshing={isPullRefreshing}
+						onRefresh={handleRefresh}
+						tintColor={colorDarkGrey}
+						colors={[colorDarkGrey]}
+						progressBackgroundColor={primaryBackground}
+						progressViewOffset={8}
+					/>
+				}
 				ListEmptyComponent={
 					<View style={styles.emptyState}>
 						<Text style={styles.emptyText}>Aucun contenu pour le moment.</Text>
@@ -174,19 +196,13 @@ const styles = StyleSheet.create({
 	},
 	scrollContent: {
 		paddingBottom: 120,
-		paddingHorizontal: 25,
+		paddingHorizontal: 24,
+	},
+	feedList: {
+		flex: 1,
 	},
 	headerWrapper: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		minWidth: "100%",
-		alignItems: "center",
-		paddingBottom: 20,
-		paddingHorizontal: 20,
-	},
-	title: {
-		fontSize: FontSizeScreenTitles,
-		fontWeight: "bold",
+		paddingHorizontal: 24,
 	},
 	feedWrapper: {
 		width: "100%",

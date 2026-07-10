@@ -1,11 +1,15 @@
+import {
+	invalidateGameQuestions,
+	invalidateGameResults,
+} from "@/api/game/invalidateGameQueries";
 import { queryClient } from "@/hooks/reactQueryConfig";
-import { useGameContext } from "@/providers/gameDataContext";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 
 export interface EndSessionPayload {
 	userId: number;
 	token: string;
+	sessionId?: number | null;
 }
 
 interface EndResponse {
@@ -19,35 +23,22 @@ interface EndResponse {
 
 export const useEndSession = (
 	onSuccess: (status: string | null) => void,
-	onError: (err: AxiosError) => void
+	onError: (err: AxiosError) => void,
 ) => {
-	const {
-		setDataGame,
-		setSessionsId,
-		setGameStatus,
-		setQuestionsLeft,
-		setAnsweredCount,
-	} = useGameContext();
 	return useMutation<EndResponse, AxiosError, EndSessionPayload>({
-		mutationFn: async ({ userId, token }) => {
+		mutationFn: async ({ userId, token, sessionId }) => {
 			const url = `${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/end`;
 			const response: AxiosResponse<EndResponse> = await axios.post(
 				url,
-				{},
+				{ sessionId: sessionId ?? undefined },
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
 			return response.data;
 		},
-		onSuccess: (resp) => {
+		onSuccess: (resp, vars) => {
 			onSuccess(resp.data.status);
-			if (resp.data.status === "finished") {
-				setDataGame([]);
-				setSessionsId(null);
-				setQuestionsLeft(null);
-				setAnsweredCount(0);
-				setGameStatus("finished");
-			}
-			queryClient.refetchQueries({ queryKey: ["GameQuestions"] });
+			void invalidateGameQuestions(queryClient, vars.userId);
+			void invalidateGameResults(queryClient, vars.userId, resp.data.sessionId);
 		},
 		onError,
 	});

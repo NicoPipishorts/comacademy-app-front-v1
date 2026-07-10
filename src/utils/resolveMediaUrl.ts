@@ -1,3 +1,5 @@
+import { getPublicBaseUrl } from "@/helpers/api/buildApiUrl";
+
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
 
 const toNormalizedUrl = (raw: string, baseUrl: string): string => {
@@ -10,7 +12,7 @@ const toNormalizedUrl = (raw: string, baseUrl: string): string => {
 export const resolveMediaUrl = (
 	value: unknown,
 	fallbackUrl: string,
-	baseUrl: string = process.env.EXPO_PUBLIC_URL ?? ""
+	baseUrl: string = getPublicBaseUrl()
 ): string => {
 	if (typeof value === "string") {
 		const resolved = toNormalizedUrl(value, baseUrl);

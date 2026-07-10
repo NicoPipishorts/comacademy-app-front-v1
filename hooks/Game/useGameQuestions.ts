@@ -7,14 +7,23 @@ export interface GameQuestions {
 	data: GameQuestionsResponse;
 }
 
+type UseGameQuestionsOptions = {
+	createIfMissing?: boolean;
+};
+
 const authFrom = (token?: string | null) => (token ? `Bearer ${token}` : "");
 
 const fetchAllQuestions = async (
 	auth: string,
-	userId: number
+	userId: number,
+	options: UseGameQuestionsOptions = {}
 ): Promise<GameQuestions> => {
+	const params = new URLSearchParams();
+	if (options.createIfMissing) {
+		params.set("createIfMissing", "1");
+	}
 	const res = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}`,
+		`${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}${params.size ? `?${params.toString()}` : ""}`,
 		{ headers: { Authorization: auth, Accept: "application/json" } }
 	);
 	if (!res.ok) {
@@ -32,10 +41,15 @@ const fetchAllQuestions = async (
 const fetchQuestionsByCat = async (
 	auth: string,
 	userId: number,
-	categoryId: number
+	categoryId: number,
+	options: UseGameQuestionsOptions = {}
 ): Promise<GameQuestions> => {
+	const params = new URLSearchParams();
+	if (options.createIfMissing) {
+		params.set("createIfMissing", "1");
+	}
 	const res = await fetch(
-		`${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/category/${categoryId}`,
+		`${process.env.EXPO_PUBLIC_API_URL}/user-game-session-status/${userId}/category/${categoryId}${params.size ? `?${params.toString()}` : ""}`,
 		{ headers: { Authorization: auth, Accept: "application/json" } }
 	);
 	if (!res.ok) {
@@ -57,18 +71,19 @@ export const useGameQuestions = (
 	userId: number,
 	filterByCat: number | null,
 	token: string | null,
-	loadingToken: boolean
+	loadingToken: boolean,
+	options: UseGameQuestionsOptions = {}
 ) => {
 	const auth = authFrom(token);
 	const enabled = !!userId && !!auth && !loadingToken; // <-- gate query until JWT exists
 
 	return useQuery<GameQuestions>({
-		queryKey: QK.gameQuestions(userId, filterByCat),
+		queryKey: QK.gameQuestions(userId, filterByCat, options.createIfMissing === true),
 		enabled,
 		queryFn: () =>
 			filterByCat !== null
-				? fetchQuestionsByCat(auth, userId, filterByCat)
-				: fetchAllQuestions(auth, userId),
+				? fetchQuestionsByCat(auth, userId, filterByCat, options)
+				: fetchAllQuestions(auth, userId, options),
 		staleTime: 0,
 		refetchOnMount: "always",
 		refetchOnReconnect: true,

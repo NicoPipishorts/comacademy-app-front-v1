@@ -35,6 +35,7 @@ export interface AuthUser {
 	email: string;
 	confirmed: boolean;
 	blocked: boolean;
+	createdAt: string | null;
 	clients: ClientInfo[];
 	user_preference: UserPreference | null;
 	profile: string | null;

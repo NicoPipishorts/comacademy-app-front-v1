@@ -5,7 +5,9 @@ import { useCallback } from "react";
 
 export default function FavoriteQuestionDetails() {
 	const params = useLocalSearchParams();
-	const questionId = Number(params?.questionId);
+	const questionDocumentId = String(params?.questionDocumentId ?? "");
+	const parsedQuestionId = Number(params?.questionId);
+	const questionId = Number.isFinite(parsedQuestionId) ? parsedQuestionId : null;
 
 	const { showTabBar, hideTabBar } = useTabBarVisibility();
 
@@ -17,6 +19,10 @@ export default function FavoriteQuestionDetails() {
 	);
 
 	return (
-		<QuestionDetails questionId={questionId} refetch='FavoriteQuestionsFull' />
+		<QuestionDetails
+			questionDocumentId={questionDocumentId}
+			questionId={questionId}
+			refetch='FavoriteQuestionsFull'
+		/>
 	);
 }

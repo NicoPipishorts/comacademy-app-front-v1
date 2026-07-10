@@ -1,3 +1,4 @@
+import { QK } from "@/helpers/api/queryKeys";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,8 +20,10 @@ export interface SessionResultsPayload {
 
 export interface SessionResultsAllquestions {
 	id: number;
+	answerDocumentId?: string | null;
 	question: string;
 	questionId?: number;
+	questionDocumentId?: string | null;
 	coef: number;
 	questionAnswer: boolean;
 	userAnswer: boolean;
@@ -30,7 +33,8 @@ export interface SessionResultsAllquestions {
 const fetchData = async <T>(
 	url: string,
 	token: string,
-	fallback: T
+	fallback: T,
+	fallbackStatuses: number[] = [404],
 ): Promise<T> => {
 	try {
 		const response = await fetch(url, {
@@ -40,7 +44,7 @@ const fetchData = async <T>(
 		});
 
 		if (!response.ok) {
-			if (response.status === 404) {
+			if (fallbackStatuses.includes(response.status)) {
 				return fallback;
 			}
 			const errorText = await response.text();
@@ -85,7 +89,7 @@ const useGetEndOfSession = (userId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<EndOfGameSessionPayload>({
-		queryKey: ["EndOfSessionsScore", userId],
+		queryKey: QK.endOfSession(userId),
 		queryFn: () => fetchEndOfSessionPayload(token!, userId),
 		enabled: !!token && !!userId,
 	});
@@ -96,7 +100,8 @@ const fetchEndOfSessionResults = (token: string, gameId: number) =>
 	fetchData<SessionResultsPayload>(
 		`${process.env.EXPO_PUBLIC_API_URL}/end-of-game-session/results/${gameId}`,
 		token,
-		EMPTY_SESSION_RESULTS
+		EMPTY_SESSION_RESULTS,
+		[404, 400],
 	);
 
 // Hook to get the session results
@@ -104,7 +109,7 @@ const useGetEndOfSessionResults = (gameId: number) => {
 	const { token } = useJwtToken();
 
 	return useQuery<SessionResultsPayload>({
-		queryKey: ["EndOfSessionsScore", gameId],
+		queryKey: QK.endOfSessionResults(gameId),
 		queryFn: () => fetchEndOfSessionResults(token!, gameId),
 		enabled: !!token && !!gameId,
 	});

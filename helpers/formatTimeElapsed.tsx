@@ -1,9 +1,28 @@
-import { differenceInMinutes, differenceInHours, differenceInDays, format } from "date-fns";
+import {
+	differenceInDays,
+	differenceInHours,
+	differenceInMinutes,
+	format,
+} from "date-fns";
 
 export const formatTimeElapsed = (createdAt: string): string => {
-	const now = new Date(); // Current time
-	const postTime = new Date(createdAt); // Post creation time
+	if (!createdAt) {
+		return "";
+	}
+
+	const now = new Date();
+	const postTime = new Date(createdAt);
+	const timestamp = postTime.getTime();
+
+	if (!Number.isFinite(timestamp) || timestamp <= 0) {
+		return "";
+	}
+
 	const diffInMinutes = differenceInMinutes(now, postTime);
+
+	if (diffInMinutes < 0) {
+		return "";
+	}
 
 	if (diffInMinutes <= 59) {
 		return `${diffInMinutes} mn`;
@@ -20,5 +39,5 @@ export const formatTimeElapsed = (createdAt: string): string => {
 	}
 
 	// If more than 2 days, return the formatted date
-	return format(new Date(createdAt), "dd/MM/yyyy");
+	return format(postTime, "dd/MM/yyyy");
 };

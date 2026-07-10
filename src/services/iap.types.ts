@@ -33,3 +33,11 @@ export type PendingPurchase = {
 	metadata: PendingPurchaseMetadata;
 	timestamp: number;
 };
+
+export type IosPromotionalOfferSignature = {
+	identifier: string;
+	keyIdentifier: string;
+	nonce: string;
+	signature: string;
+	timestamp: number;
+};

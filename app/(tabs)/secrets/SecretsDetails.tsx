@@ -22,6 +22,7 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Layout constants
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -87,6 +88,7 @@ interface SecretsDetailsProps {
 }
 
 export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
+	const insets = useSafeAreaInsets();
 	const { isAndroid } = useDeviceTypeCheckers();
 	const { itemId: paramId } = useLocalSearchParams();
 	const secretsId = paramId ? String(paramId) : itemId!;
@@ -137,10 +139,10 @@ export default function SecretsDetails({ itemId }: SecretsDetailsProps) {
 	];
 
 	return (
-		<View style={[styles.cardsWrapper, { paddingTop: isAndroid ? 40 : 20 }]}>
+		<View style={[styles.cardsWrapper, { paddingTop: insets.top }]}>
 			<ModalGestureLine />
 			<View style={styles.header}>
-				<Text style={styles.headerText}>3 Secrets du Succès</Text>
+				<Text style={styles.headerText}>3 Secrets du succès</Text>
 			</View>
 
 			<Animated.FlatList

@@ -76,7 +76,11 @@ export const IAPService = {
 	/**
 	 * Purchase a subscription (mock)
 	 */
-	async purchaseSubscription(product: SubscriptionProduct, userId?: string) {
+	async purchaseSubscription(
+		product: SubscriptionProduct,
+		userId?: string,
+		_options?: { iosPromotionalOfferId?: string | null }
+	) {
 		const productId = getSubscriptionProductId(product);
 		if (!productId) {
 			throw new Error("Invalid product identifier");

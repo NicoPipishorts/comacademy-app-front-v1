@@ -16,6 +16,7 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CommandementCard from "@/components/cards/CommandementCard";
 import CommandementTitleCard from "@/components/cards/CommandementTitle";
@@ -104,6 +105,7 @@ interface CommandementsDetailsProps {
 }
 
 export default function CommandementsDetails({ itemId: propItemId }: CommandementsDetailsProps = {}) {
+	const insets = useSafeAreaInsets();
 	const { itemId: paramId } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
 	// Use prop itemId if provided, otherwise use param (which should be documentId string)
@@ -183,7 +185,7 @@ export default function CommandementsDetails({ itemId: propItemId }: Commandemen
 	);
 
 	return (
-		<View style={[styles.container, { paddingTop: isAndroid ? 40 : 20 }]}>
+		<View style={[styles.container, { paddingTop: insets.top }]}>
 			<ModalGestureLine />
 			<Text style={styles.headerText}>Tips & tactics</Text>
 			<Animated.FlatList

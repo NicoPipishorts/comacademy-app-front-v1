@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { getForgotPasswordUrl } from "@/helpers/api/buildApiUrl";
 
 interface ForgotPasswordPayload {
 	email: string;
@@ -11,7 +12,7 @@ interface ForgotPasswordResponse {
 }
 
 export const useForgotPasswordMutation = (
-	forgotPasswordUrl: string | undefined,
+	forgotPasswordUrl: string,
 	onSuccess: (data: ForgotPasswordResponse) => void,
 	onError: (error: AxiosError | Error) => void
 ) => {
@@ -21,15 +22,9 @@ export const useForgotPasswordMutation = (
 		ForgotPasswordPayload
 	>({
 		mutationFn: async ({ email }) => {
-			if (!forgotPasswordUrl) {
-				throw new Error(
-					"EXPO_PUBLIC_FORGOT_PASSWORD_URL is not configured. Unable to trigger password reset."
-				);
-			}
-
 			try {
 				const response: AxiosResponse<ForgotPasswordResponse> = await axios.post(
-					forgotPasswordUrl,
+					forgotPasswordUrl || getForgotPasswordUrl(),
 					{ email }
 				);
 				return response.data;

@@ -202,6 +202,7 @@ const normalizeSessionUser = (raw: unknown): AuthUser => {
 		email: toString(attributes.email ?? ""),
 		confirmed: toBoolean(attributes.confirmed, false),
 		blocked: toBoolean(attributes.blocked, false),
+		createdAt: toString(attributes.createdAt ?? attributes.created_at ?? "") || null,
 		clients: normalizeClients(attributes.clients),
 		user_preference: normalizeUserPreference(attributes.user_preference),
 		profile:
