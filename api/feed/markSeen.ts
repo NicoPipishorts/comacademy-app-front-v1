@@ -1,6 +1,7 @@
 import { buildApiUrl } from "@/helpers/api/buildApiUrl";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useMutation } from "@tanstack/react-query";
+import { normalizeFeedIds } from "./normalizeFeedIds";
 
 type MarkSeenPayload = {
 	feedIds: number[];
@@ -15,13 +16,7 @@ export const useMarkFeedsSeen = () => {
 				throw new Error("Missing authentication token");
 			}
 
-			const normalizedFeedIds = Array.from(
-				new Set(
-					feedIds
-						.map((value) => Number(value))
-						.filter((value) => Number.isInteger(value) && value > 0)
-				)
-			);
+			const normalizedFeedIds = normalizeFeedIds(feedIds);
 
 			if (!normalizedFeedIds.length) {
 				return null;
