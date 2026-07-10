@@ -1,6 +1,7 @@
 {
 	"cli": {
-		"appVersionSource": "remote"
+		"appVersionSource": "remote",
+		"version": ">=20.5.1"
 	},
 	"build": {
 		"preview": {
@@ -58,6 +59,18 @@
 				"gradleCommand": ":app:bundleRelease"
 			},
 			"channel": "production"
+		}
+	},
+	"submit": {
+		"testflight": {
+			"ios": {
+				"appleTeamId": "3XTT8L97BP"
+			}
+		},
+		"production": {
+			"ios": {
+				"appleTeamId": "3XTT8L97BP"
+			}
 		}
 	}
 }

@@ -154,18 +154,87 @@ EXPO_PUBLIC_PRIVACY_POLICY_URL=https://comacademy.fr/politique-de-confidentialit
 
 ```bash
 # Development
-npm start              # Start Metro bundler
-npm run ios           # Run on iOS
-npm run android       # Run on Android
+yarn start             # Start Metro bundler
+yarn ios               # Run on iOS
+yarn android           # Run on Android
 
 # Building
-eas build             # Cloud build
-npx expo run:ios      # Local iOS build
-npx expo run:android  # Local Android build
+yarn eas build        # Cloud build
+yarn expo run:ios     # Local iOS build
+yarn expo run:android # Local Android build
+
+# Release helpers
+yarn build:testflight:ios
+yarn build:production:ios
+yarn build:production:android
+yarn submit:testflight:ios
+yarn submit:production:ios
 
 # Maintenance
-npm install           # Install dependencies
-npm start -- --clear  # Clear Metro cache
+yarn install          # Install dependencies
+yarn start --clear    # Clear Metro cache
+```
+
+## EAS Release Flow
+
+### Build profiles
+
+- `preview`
+  - Internal distribution only
+  - `EXPO_PUBLIC_ENABLE_PARCOURS=false`
+- `testflight`
+  - Store iOS build intended for TestFlight
+  - `EXPO_PUBLIC_ENABLE_PARCOURS=true`
+  - `channel=testflight`
+- `production`
+  - Store builds intended for App Store / Play production
+  - `EXPO_PUBLIC_ENABLE_PARCOURS=false`
+  - `channel=production`
+
+### Submit profiles
+
+`eas.json` now contains explicit `submit` profiles for:
+
+- `testflight`
+- `production`
+
+Both iOS submit profiles already include the Apple team id `3XTT8L97BP`.
+
+### One-time App Store Connect setup still required
+
+To make iOS submission fully non-interactive, add the missing App Store Connect app id to `eas.json`:
+
+```json
+"submit": {
+  "testflight": {
+    "ios": {
+      "appleTeamId": "3XTT8L97BP",
+      "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID"
+    }
+  }
+}
+```
+
+If you also configure an App Store Connect API key for EAS Submit, TestFlight submission can run without Apple ID / 2FA prompts.
+
+### Recommended iOS release commands
+
+Create a TestFlight build:
+
+```bash
+yarn build:testflight:ios
+```
+
+Submit an already finished iOS build to TestFlight:
+
+```bash
+yarn submit:testflight:ios
+```
+
+Or submit a specific build id:
+
+```bash
+yarn eas submit --platform ios --profile testflight --id <eas-build-id>
 ```
 
 ## API Integration

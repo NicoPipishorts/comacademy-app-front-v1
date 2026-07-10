@@ -1,7 +1,7 @@
 {
 	"name": "comacademy-app-api-front-v1",
 	"main": "expo-router/entry",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"scripts": {
 		"start": "expo start",
 		"reset-project": "node ./scripts/reset-project.js",
@@ -9,7 +9,13 @@
 		"android": "expo run:android",
 		"ios": "expo run:ios",
 		"web": "expo start --web",
-		"test": "jest --watchAll",
+		"build:testflight:ios": "eas build --platform ios --profile testflight",
+		"build:production:ios": "eas build --platform ios --profile production",
+		"build:production:android": "eas build --platform android --profile production",
+		"submit:testflight:ios": "eas submit --platform ios --profile testflight",
+		"submit:production:ios": "eas submit --platform ios --profile production",
+		"test": "jest --watch",
+		"test:ci": "jest --ci --runInBand --no-watchman",
 		"lint": "expo lint"
 	},
 	"jest": {

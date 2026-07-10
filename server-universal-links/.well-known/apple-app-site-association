@@ -1,0 +1,19 @@
+{
+	"applinks": {
+		"apps": [],
+		"details": [
+			{
+				"appID": "3XTT8L97BP.com.nicopipishorts.comacademy",
+				"paths": [
+					"/auth/reset-password",
+					"/auth/reset-password/*"
+				]
+			}
+		]
+	},
+	"webcredentials": {
+		"apps": [
+			"com.nicopipishorts.comacademy"
+		]
+	}
+}
