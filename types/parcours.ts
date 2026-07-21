@@ -24,7 +24,7 @@ export interface ParcoursBonusVideoPayload {
 	type: "video";
 	programOrder?: number;
 	themeIndex?: number;
-	rubriqueType?: "thirty_seconds" | "top_deflop";
+	rubriqueType?: "thirty_seconds" | "top_deflop" | "capsule";
 	rubriqueLabel?: string | null;
 	title?: string | null;
 	videoLink?: string | null;
@@ -189,6 +189,8 @@ export interface ParcoursDicoQuestionStep extends ParcoursStepBase {
 	content: {
 		word?: string;
 		definition?: string;
+		extraContext?: string | null;
+		mainCategoryStaticId?: number;
 		correctAnswerKey?: string;
 		answers?: ParcoursDicoAnswerOption[];
 		accentColor?: string;
@@ -199,7 +201,7 @@ export interface ParcoursDicoQuestionStep extends ParcoursStepBase {
 export interface ParcoursSpecificRubriqueStep extends ParcoursStepBase {
 	type: "specific_rubrique";
 	content: {
-		rubriqueType?: "thirty_seconds" | "top_deflop";
+		rubriqueType?: "thirty_seconds" | "top_deflop" | "capsule";
 		title?: string;
 		videoLink?: string | null;
 		videoId?: string | null;

@@ -22,6 +22,7 @@ type SwipeableCardProps = {
 	data: QuestionData;
 	catColors: CategorieColors;
 	stackPosition: number;
+	stackDepth: number;
 	isTopCard: boolean;
 	onSwipe: (isRight: boolean) => void;
 };
@@ -30,6 +31,7 @@ function SwipeableCard({
 	data,
 	catColors,
 	stackPosition,
+	stackDepth,
 	isTopCard,
 	onSwipe,
 }: SwipeableCardProps) {
@@ -69,7 +71,7 @@ function SwipeableCard({
 		(direction: "left" | "right") => {
 			if (!isTopCard || isSwipingRef.current) return;
 			isSwipingRef.current = true;
-			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,
@@ -111,7 +113,11 @@ function SwipeableCard({
 
 	const effectivePosition = Math.min(stackPosition, 4);
 	const scale = useMemo(() => 1 - effectivePosition * 0.05, [effectivePosition]);
-	const translateY = useMemo(() => effectivePosition * 22, [effectivePosition]);
+	const stackCenterOffset = Math.min(Math.max(stackDepth - 1, 0), 4) * 11;
+	const translateY = useMemo(
+		() => effectivePosition * 22 - stackCenterOffset,
+		[effectivePosition, stackCenterOffset]
+	);
 
 	useEffect(() => {
 		isSwipingRef.current = false;
@@ -199,6 +205,7 @@ export default function QuestionSwipeStack({
 						data={card}
 						catColors={catColors}
 						stackPosition={stackPosition}
+						stackDepth={questions.length}
 						isTopCard={isTopCard}
 						onSwipe={(isRight) => {
 							onSwipe(card, isRight);

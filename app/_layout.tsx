@@ -7,6 +7,7 @@ import { TabProvider } from "@/context/floatingTabbarContext";
 import { SnackbarProvider } from "@/context/snackBar";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { NetworkProvider } from "@/providers/NetworkProvider";
+import { ApiFailoverProvider } from "@/providers/api-failover-provider";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
@@ -54,10 +55,11 @@ export default function RootLayout() {
 
 	return (
 		<SafeAreaProvider>
-			<AuthProvider>
-				<AnalyticsSessionTracker />
-				<SubscriptionProvider>
-					<QueryClientProvider client={queryClient}>
+			<ApiFailoverProvider>
+				<AuthProvider>
+					<AnalyticsSessionTracker />
+					<SubscriptionProvider>
+						<QueryClientProvider client={queryClient}>
 						<GestureHandlerRootView style={{ flex: 1 }}>
 							<BottomSheetModalProvider>
 								<PaperProvider>
@@ -87,9 +89,10 @@ export default function RootLayout() {
 								</PaperProvider>
 							</BottomSheetModalProvider>
 						</GestureHandlerRootView>
-					</QueryClientProvider>
-				</SubscriptionProvider>
-			</AuthProvider>
+						</QueryClientProvider>
+					</SubscriptionProvider>
+				</AuthProvider>
+			</ApiFailoverProvider>
 		</SafeAreaProvider>
 	);
 }

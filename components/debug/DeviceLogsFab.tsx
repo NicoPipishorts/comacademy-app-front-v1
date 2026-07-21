@@ -125,8 +125,10 @@ const DeviceLogsFab: React.FC = () => {
 								nestedScrollEnabled
 								keyboardShouldPersistTaps='handled'
 							>
-								{logs.map((entry) => (
-									<View key={entry.id} style={styles.logRow}>
+								{logs.map((entry, index) => (
+									<View
+										key={`${entry.id}-${entry.timestamp}-${index}`}
+										style={styles.logRow}>
 										<Text style={styles.logText}>{formatEntry(entry)}</Text>
 									</View>
 								))}

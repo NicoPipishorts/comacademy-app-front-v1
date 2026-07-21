@@ -49,6 +49,31 @@ const getTipsProgressMap = (stepState: StepStateRecord) =>
 		? stepState.tipsProgress
 		: {};
 
+const isLockedTipsPair = (pairState: StepStateRecord) =>
+	Boolean(
+		pairState.answered ||
+			pairState.answerLocked ||
+			typeof pairState.answerSubmittedKey === "string"
+	);
+
+export const getParcoursTipsRecoveryNavigation = (
+	stepState: StepStateRecord
+): { pairIndex: number; phase: "card" } | null => {
+	if (stepState.tipsPhase === "card") {
+		return null;
+	}
+
+	const pairIndex =
+		typeof stepState.tipsPairIndex === "number"
+			? Math.max(0, Math.floor(stepState.tipsPairIndex))
+			: 0;
+	const pairState = getTipsProgressMap(stepState)[getParcoursTipsPairKey(pairIndex)];
+
+	return pairState && isLockedTipsPair(pairState)
+		? { pairIndex, phase: "card" }
+		: null;
+};
+
 export const resolveParcoursTipsState = ({
 	content,
 	stepState,
@@ -80,6 +105,7 @@ export const resolveParcoursTipsState = ({
 	});
 
 	return {
+		...dicoState,
 		questions,
 		pairIndex,
 		pairKey,
@@ -87,7 +113,6 @@ export const resolveParcoursTipsState = ({
 		currentPair,
 		phase,
 		isLastPair: pairIndex >= questions.length - 1,
-		...dicoState,
 	};
 };
 

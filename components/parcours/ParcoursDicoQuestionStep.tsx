@@ -19,7 +19,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 export default function ParcoursDicoQuestionStep({
 	stepLabel = "Dico Quiz",
 	word,
-	definition,
+	supportingText,
 	answers,
 	selectedAnswerKey,
 	submittedAnswerKey,
@@ -32,7 +32,7 @@ export default function ParcoursDicoQuestionStep({
 }: {
 	stepLabel?: string;
 	word: string;
-	definition?: string | null;
+	supportingText?: string | null;
 	answers: ParcoursDicoAnswerOption[];
 	selectedAnswerKey?: string | null;
 	submittedAnswerKey?: string | null;
@@ -50,7 +50,9 @@ export default function ParcoursDicoQuestionStep({
 			<Text style={styles.stepLabel}>{stepLabel}</Text>
 			<View style={[styles.promptCard, { backgroundColor: accentColor }]}>
 				<Text style={styles.promptWord}>{word}</Text>
-				{definition ? <Text style={styles.promptHint}>{definition}</Text> : null}
+				{supportingText ? (
+					<Text style={styles.promptHint}>{supportingText}</Text>
+				) : null}
 			</View>
 			<View style={styles.answersList}>
 				{answers.map((answer) => {
