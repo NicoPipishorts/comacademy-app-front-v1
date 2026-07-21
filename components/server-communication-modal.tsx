@@ -31,11 +31,11 @@ export function ServerCommunicationModal({
 						</Text>
 					</View>
 					<Text selectable style={styles.title}>
-						Communication perturbée
+						Connexion indisponible
 					</Text>
 					<Text selectable style={styles.message}>
-						Nous rencontrons un problème temporaire avec le serveur. Une connexion
-						de secours est utilisée. Si nécessaire, réessayez dans quelques instants.
+						Impossible de communiquer avec nos serveurs pour le moment. Vérifiez votre
+						connexion internet ou réessayez dans quelques instants.
 					</Text>
 					<Pressable
 						accessibilityRole='button'

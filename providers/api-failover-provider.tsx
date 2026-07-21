@@ -31,12 +31,12 @@ export function ApiFailoverProvider({ children }: { children: React.ReactNode })
 	useEffect(() => {
 		const applySnapshot = (next: ApiFailoverSnapshot) => {
 			setApiState(next);
-			if (next.route !== "fallback") {
+			if (next.route !== "unavailable") {
 				lastAlertedRoute.current = null;
 				setModalVisible(false);
 			}
 			if (
-				next.route === "fallback" &&
+				next.route === "unavailable" &&
 				lastAlertedRoute.current !== next.route
 			) {
 				lastAlertedRoute.current = next.route;
