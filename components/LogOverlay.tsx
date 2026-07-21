@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,6 +20,7 @@ const LogOverlay: React.FC = () => {
 	const insets = useSafeAreaInsets();
 	const [visible, setVisible] = useState(false);
 	const [logs, setLogs] = useState<LogEntry[]>([]);
+	const [exportStatus, setExportStatus] = useState<string | null>(null);
 
 	useEffect(() => {
 		void ensureLogsHydrated();
@@ -30,19 +31,30 @@ const LogOverlay: React.FC = () => {
 	}, []);
 
 	const latestLogs = logs.slice(-MAX_PREVIEW_LOGS).reverse();
-	const copyLogsToClipboard = async () => {
-		const payload =
+	const getLogPayload = () =>
 			latestLogs.length > 0
 				? latestLogs
 						.map((entry) => formatLogEntry(entry))
 						.reverse()
 						.join("\n")
 				: "No logs available.";
+
+	const copyLogsToClipboard = async () => {
+		const payload = getLogPayload();
 		try {
 			await Clipboard.setStringAsync(payload);
-			Alert.alert("Logs copied", "The most recent log entries are on your clipboard.");
-		} catch (error) {
-			Alert.alert("Copy failed", "Unable to copy logs.");
+			setExportStatus(`${latestLogs.length} log(s) copied to the clipboard.`);
+		} catch {
+			setExportStatus("Copy failed. Use Share or select the log text below.");
+		}
+	};
+
+	const shareLogs = async () => {
+		try {
+			await Share.share({ message: getLogPayload(), title: "Com'Academy logs" });
+			setExportStatus("Log share sheet opened.");
+		} catch {
+			setExportStatus("Share failed. Select the log text below instead.");
 		}
 	};
 
@@ -83,6 +95,11 @@ const LogOverlay: React.FC = () => {
 								</Pressable>
 								<Pressable
 									style={[styles.actionButton, styles.actionButtonSpacing]}
+									onPress={shareLogs}>
+									<Text style={styles.actionLabel}>Share</Text>
+								</Pressable>
+								<Pressable
+									style={[styles.actionButton, styles.actionButtonSpacing]}
 									onPress={() => setVisible(false)}>
 									<Text style={styles.actionLabel}>Close</Text>
 								</Pressable>
@@ -91,13 +108,18 @@ const LogOverlay: React.FC = () => {
 						<Text style={styles.helperText}>
 							Les logs sont conserves apres redemarrage pour aider au diagnostic des crashs.
 						</Text>
+						{exportStatus ? (
+							<Text selectable style={styles.exportStatus}>{exportStatus}</Text>
+						) : null}
 						<ScrollView style={styles.sheetBody}>
 							{latestLogs.length === 0 && (
 								<Text style={styles.emptyText}>No logs yet.</Text>
 							)}
-							{latestLogs.map((entry) => (
-								<View key={entry.id} style={styles.logRow}>
-									<Text style={styles.logText}>{formatLogEntry(entry)}</Text>
+							{latestLogs.map((entry, index) => (
+								<View
+									key={`${entry.id}-${entry.timestamp}-${index}`}
+									style={styles.logRow}>
+									<Text selectable style={styles.logText}>{formatLogEntry(entry)}</Text>
 								</View>
 							))}
 						</ScrollView>
@@ -132,6 +154,8 @@ backdrop: {
 	},
 	sheetHeaderActions: {
 		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "flex-end",
 	},
 	title: {
 		color: "#fff",
@@ -159,6 +183,12 @@ backdrop: {
 		fontSize: 12,
 		lineHeight: 18,
 		marginBottom: 6,
+	},
+	exportStatus: {
+		color: "#8BE39A",
+		fontSize: 12,
+		lineHeight: 18,
+		marginBottom: 4,
 	},
 	emptyText: {
 		color: "#ccc",

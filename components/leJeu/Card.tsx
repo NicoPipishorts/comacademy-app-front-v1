@@ -8,7 +8,6 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import jeuIconFalse from "@/assets/imgs/icons/jeu_icon_false.png";
 import jeuIconTrue from "@/assets/imgs/icons/jeu_icon_true.png";
 import Star from "@/assets/imgs/icons/jeu_star.png";
-import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { CategorieColors } from "@/types/categories";
 import { QuestionData } from "@/types/userGameSessionStatus";
 import {
@@ -26,7 +25,6 @@ interface CardProps {
 }
 
 const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
-	const { isHomeButtonModel } = useDeviceTypeCheckers();
 	const insets = useSafeAreaInsets();
 
 	if (!data || !catColors?.data?.length) {
@@ -43,6 +41,16 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 	);
 
 	const smallIconUrl = getCategorySmallIcon(catColors.data, staticId);
+	const questionText = String(data.attributes.QUESTION || "").trim();
+	const questionLength = questionText.length;
+	const questionTextStyle =
+		questionLength >= 190
+			? styles.questionVeryLong
+			: questionLength >= 150
+				? styles.questionLong
+				: questionLength >= 110
+					? styles.questionMedium
+					: null;
 
 	const renderStars = () => {
 		const stars = [];
@@ -58,10 +66,7 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 			<View
 				style={[
 					styles.cardContainer,
-					{
-						backgroundColor: backGroundColor,
-						minHeight: isHomeButtonModel ? "92%" : "82%",
-					},
+					{ backgroundColor: backGroundColor },
 				]}>
 				<View style={styles.containerTopRow}>
 					<View style={styles.containerCatIcon}>{renderStars()}</View>
@@ -76,7 +81,11 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 				</View>
 
 				<View style={styles.containerText}>
-					<Text style={styles.textText}>{data.attributes.QUESTION}</Text>
+					<Text
+						maxFontSizeMultiplier={1.15}
+						style={[styles.textText, questionTextStyle]}>
+						{questionText}
+					</Text>
 				</View>
 
 				<View style={styles.containerCardIcons}>
@@ -95,10 +104,11 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 
 const styles = StyleSheet.create({
 	cardsWrapper: {
-		justifyContent: "flex-start",
-		alignItems: "flex-start",
+		flex: 1,
+		width: "100%",
 	},
 	cardContainer: {
+		flex: 1,
 		width: "100%",
 		padding: 20,
 		paddingTop: 0,
@@ -142,6 +152,20 @@ const styles = StyleSheet.create({
 		lineHeight: 30,
 		color: colorWhite,
 		fontWeight: "bold",
+		textAlign: "center",
+		flexShrink: 1,
+	},
+	questionMedium: {
+		fontSize: 20,
+		lineHeight: 27,
+	},
+	questionLong: {
+		fontSize: 18,
+		lineHeight: 25,
+	},
+	questionVeryLong: {
+		fontSize: 17,
+		lineHeight: 23,
 	},
 	containerCardIcons: {
 		width: "100%",

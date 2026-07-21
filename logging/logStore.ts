@@ -15,6 +15,12 @@ const logs: LogEntry[] = [];
 const subscribers = new Set<(entries: LogEntry[]) => void>();
 let hydrated = false;
 let persistPromise: Promise<void> | null = null;
+let lastLogId = 0;
+
+const createLogId = () => {
+	lastLogId = Math.max(lastLogId + 1, Date.now() * 1000);
+	return lastLogId;
+};
 
 const notifySubscribers = () => {
 	const snapshot = [...logs];
@@ -41,6 +47,10 @@ const hydrateLogs = async () => {
 		const parsed = JSON.parse(raw) as LogEntry[];
 		if (!Array.isArray(parsed)) return;
 		logs.splice(0, logs.length, ...parsed.slice(-MAX_LOG_ENTRIES));
+		lastLogId = logs.reduce(
+			(maxId, entry) => Math.max(maxId, Number(entry.id) || 0),
+			lastLogId
+		);
 	} catch {
 		// Silent fail: logging should never break the app.
 	}
@@ -49,7 +59,7 @@ const hydrateLogs = async () => {
 
 export const appendLog = (message: string, level: LogLevel = "info"): LogEntry => {
 	const entry: LogEntry = {
-		id: Date.now() + logs.length,
+		id: createLogId(),
 		timestamp: new Date().toISOString(),
 		message,
 		level,

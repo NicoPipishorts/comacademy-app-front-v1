@@ -8,6 +8,7 @@ interface FeedbackMessageProps {
 	onHide: () => void;
 	isHomeButtonModel: boolean;
 	durationMs?: number;
+	onExitStart?: () => void;
 }
 
 export default function FeedbackMessage({
@@ -15,6 +16,7 @@ export default function FeedbackMessage({
 	onHide,
 	isHomeButtonModel,
 	durationMs = 500,
+	onExitStart,
 }: FeedbackMessageProps) {
 	const getBackgroundColor = () => {
 		switch (answer) {
@@ -32,6 +34,7 @@ export default function FeedbackMessage({
 			title={answer}
 			backgroundColor={getBackgroundColor()}
 			onHide={onHide}
+			onExitStart={onExitStart}
 			durationMs={durationMs}
 			height={isHomeButtonModel ? 236 : 336}
 			titleSize={100}

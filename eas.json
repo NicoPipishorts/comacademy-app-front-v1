@@ -1,7 +1,7 @@
 {
 	"cli": {
 		"appVersionSource": "remote",
-		"version": ">=20.5.1"
+		"version": ">=16.23.0"
 	},
 	"build": {
 		"preview": {
@@ -25,6 +25,7 @@
 		},
 		"testflight": {
 			"extends": "production",
+			"environment": "preview",
 			"channel": "testflight",
 			"env": {
 				"EXPO_PUBLIC_URL": "https://api.comacademy.fr",
