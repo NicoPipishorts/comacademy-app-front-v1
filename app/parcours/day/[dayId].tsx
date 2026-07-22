@@ -72,6 +72,7 @@ import {
 	getParcoursVideoCheckpoint,
 	getParcoursVideoNextUnlocked,
 	hasParcoursVideoReachedNextThreshold,
+	hasUsableParcoursVideoStatus,
 	resolveParcoursVideoUri,
 	shouldPersistParcoursVideoCheckpoint,
 } from "@/helpers/parcours/video";
@@ -1555,7 +1556,7 @@ function ParcoursDayContent() {
 			day.progression.isReadOnly ||
 			!requiresSpecificVideoWatch ||
 			currentStepId !== specificVideoProgressRef.current.stepId ||
-			!status.isLoaded
+			!hasUsableParcoursVideoStatus(status)
 		) {
 			return;
 		}

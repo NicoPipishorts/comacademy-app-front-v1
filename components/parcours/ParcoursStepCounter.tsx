@@ -1,5 +1,5 @@
 import { colorBlack } from "@/constants/colors";
-import { FontSize14, FontSize18 } from "@/constants/fontsizes";
+import { FontSize14, FontSize20 } from "@/constants/fontsizes";
 import { mixParcoursColorWithWhite } from "@/helpers/parcours/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
 		marginBottom: 0,
 	},
 	counterText: {
-		fontSize: FontSize18,
+		fontSize: FontSize20,
 		fontWeight: "800",
 		color: colorBlack,
 		marginBottom: 10,
