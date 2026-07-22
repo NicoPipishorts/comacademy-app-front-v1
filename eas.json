@@ -5,6 +5,7 @@
 	},
 	"build": {
 		"preview": {
+			"node": "22.14.0",
 			"distribution": "internal",
 			"autoIncrement": true,
 			"channel": "preview",
@@ -39,7 +40,7 @@
 			}
 		},
 		"production": {
-			"node": "20.19.4",
+			"node": "22.14.0",
 			"env": {
 				"EXPO_PUBLIC_URL": "https://api.comacademy.fr",
 				"EXPO_PUBLIC_API_URL": "https://api.comacademy.fr/api",
