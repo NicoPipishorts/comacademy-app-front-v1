@@ -134,20 +134,23 @@ function BonusUnlockIcon({
 	week,
 	imageTranslateY,
 	shouldCelebrate,
+	isDevelopmentPreview,
 	onCelebrationStart,
 }: {
 	week: ParcoursTimelineWeek;
 	imageTranslateY: number;
 	shouldCelebrate: boolean;
+	isDevelopmentPreview: boolean;
 	onCelebrationStart: () => void;
 }) {
 	const progress = useSharedValue(shouldCelebrate ? 0 : 1);
 	const hasStartedRef = useRef(false);
 	const isUnlocked =
 		week.bonus?.status === "unlocked" || week.bonus?.status === "viewed";
+	const canReveal = isUnlocked || isDevelopmentPreview;
 
 	useEffect(() => {
-		if (!shouldCelebrate || !isUnlocked || hasStartedRef.current) {
+		if (!shouldCelebrate || !canReveal || hasStartedRef.current) {
 			return undefined;
 		}
 
@@ -162,7 +165,7 @@ function BonusUnlockIcon({
 		);
 
 		return () => clearTimeout(celebrationTimer);
-	}, [isUnlocked, onCelebrationStart, progress, shouldCelebrate]);
+	}, [canReveal, onCelebrationStart, progress, shouldCelebrate]);
 
 	const lockedStyle = useAnimatedStyle<ViewStyle>(() => ({
 		opacity: interpolate(progress.value, [0, 0.48, 0.7], [1, 1, 0]),
@@ -179,7 +182,7 @@ function BonusUnlockIcon({
 		] as ViewStyle["transform"],
 	}));
 
-	if (!shouldCelebrate || !isUnlocked) {
+	if (!shouldCelebrate || !canReveal) {
 		return (
 			<PngAsset
 				source={getBonusIcon(week)}
@@ -216,18 +219,23 @@ function TimelineWeekSection({
 	week,
 	index,
 	celebratingBonusWeekId,
+	previewingBonusWeekId,
 	onBonusCelebrationStart,
+	onBonusPreview,
 }: {
 	week: ParcoursTimelineWeek;
 	index: number;
 	celebratingBonusWeekId: number | null;
+	previewingBonusWeekId: number | null;
 	onBonusCelebrationStart: (weekId: number) => void;
+	onBonusPreview: (weekId: number) => void;
 }) {
 	const isRightAligned = index % 2 === 1;
 	const connectorSource = index % 2 === 0 ? connectorLeftIcon : connectorRightIcon;
 	const isWeekOpen = isParcoursWeekOpen(week);
 	const activityIconOffsetY = isRightAligned ? 22 : 18;
 	const bonusIconOffsetY = isRightAligned ? 0 : 18;
+	const bonusLongPressHandledRef = useRef(false);
 	const handleBonusCelebrationStart = useCallback(
 		() => onBonusCelebrationStart(week.id),
 		[onBonusCelebrationStart, week.id]
@@ -298,8 +306,24 @@ function TimelineWeekSection({
 			</View>
 
 			<Pressable
-				disabled={!week.bonus || week.bonus.status === "locked"}
+				delayLongPress={500}
+				disabled={
+					!__DEV__ && (!week.bonus || week.bonus.status === "locked")
+				}
+				onLongPress={() => {
+					if (!__DEV__) {
+						return;
+					}
+
+					bonusLongPressHandledRef.current = true;
+					onBonusPreview(week.id);
+				}}
 				onPress={() => {
+					if (bonusLongPressHandledRef.current) {
+						bonusLongPressHandledRef.current = false;
+						return;
+					}
+
 					if (!week.bonus || week.bonus.status === "locked") {
 						return;
 					}
@@ -327,6 +351,7 @@ function TimelineWeekSection({
 							week={week}
 							imageTranslateY={bonusIconOffsetY}
 							shouldCelebrate={celebratingBonusWeekId === week.id}
+							isDevelopmentPreview={previewingBonusWeekId === week.id}
 							onCelebrationStart={handleBonusCelebrationStart}
 						/>
 					</View>
@@ -365,6 +390,9 @@ function ParcoursTimelineScreen() {
 	const [celebratingBonusWeekId, setCelebratingBonusWeekId] = useState<
 		number | null
 	>(null);
+	const [previewingBonusWeekId, setPreviewingBonusWeekId] = useState<
+		number | null
+	>(null);
 	const [confettiRunId, setConfettiRunId] = useState(0);
 	const { token, loading: loadingToken } = useJwtToken();
 	const {
@@ -391,6 +419,7 @@ function ParcoursTimelineScreen() {
 		}
 
 		setCelebratingBonusWeekId(weekId);
+		setPreviewingBonusWeekId(null);
 		router.setParams({ bonusUnlockWeekId: undefined });
 	}, [bonusUnlockWeekIdParam]);
 
@@ -414,7 +443,19 @@ function ParcoursTimelineScreen() {
 			setCelebratingBonusWeekId((current) =>
 				current === weekId ? null : current
 			);
+			setPreviewingBonusWeekId((current) =>
+				current === weekId ? null : current
+			);
 		}, 3400);
+	}, []);
+
+	const handleBonusPreview = useCallback((weekId: number) => {
+		if (!__DEV__) {
+			return;
+		}
+
+		setPreviewingBonusWeekId(weekId);
+		setCelebratingBonusWeekId(weekId);
 	}, []);
 
 	const scrollToLatestWeek = useCallback(() => {
@@ -498,7 +539,9 @@ function ParcoursTimelineScreen() {
 							week={week}
 							index={index}
 							celebratingBonusWeekId={celebratingBonusWeekId}
+							previewingBonusWeekId={previewingBonusWeekId}
 							onBonusCelebrationStart={handleBonusCelebrationStart}
+							onBonusPreview={handleBonusPreview}
 						/>
 					))
 				) : (

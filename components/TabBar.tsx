@@ -100,13 +100,14 @@ export default function CustomTabBar({
 
 					const isFocused =
 						activeRouteName === route.name ||
-						(tab.routeName === "parcours" && activeRouteName === "playlists") ||
 						(tab.routeName === "parcours" &&
 							(activeRouteName === "parcours" ||
 								activeRouteName?.startsWith("parcours/"))) ||
 						(tab.routeName === "dashboard" &&
 							(activeRouteName === "dashboard" ||
 								activeRouteName?.startsWith("dashboard/") ||
+								activeRouteName === "playlists" ||
+								activeRouteName?.startsWith("playlists/") ||
 								activeRouteName === "bonus" ||
 								activeRouteName?.startsWith("bonus/")));
 
