@@ -1,107 +1,118 @@
 {
-	"expo": {
-		"name": "Com'Academy",
-		"slug": "comacademy",
-		"version": "2.1.11",
-		"orientation": "portrait",
-		"icon": "./assets/imgs/icons/favicon.png",
-		"scheme": "comacademy",
-		"userInterfaceStyle": "automatic",
-
-		"splash": {
-			"image": "./assets/imgs/splash/splashscreen_logo.png",
-			"resizeMode": "contain",
-			"backgroundColor": "#EDBE00"
-		},
-
-		"notification": {
-			"icon": "./assets/imgs/icons/favicon.png",
-			"color": "#ffffff"
-		},
-
-		"ios": {
-			"supportsTablet": false,
-			"bundleIdentifier": "com.nicopipishorts.comacademy",
-			"buildNumber": "9",
-			"infoPlist": {
-				"ITSAppUsesNonExemptEncryption": false,
-				"NSFaceIDUsageDescription": "Utiliser Face ID pour vous connecter rapidement à votre compte.",
-				"NSPhotoLibraryUsageDescription": "Autorise Com'Academy à accéder à tes photos pour importer un avatar."
-			},
-			"associatedDomains": [
-				"applinks:comacademy.fr",
-				"applinks:www.comacademy.fr"
-			]
-		},
-
-		"android": {
-			"icon": "./assets/imgs/AppIconAndroid.png",
-			"adaptiveIcon": {
-				"backgroundColor": "#EDBE00",
-				"foregroundImage": "./assets/imgs/AppIconAndroid.png"
-			},
-
-			"softwareKeyboardLayoutMode": "resize",
-			"package": "com.nicopipishorts.comacademy",
-			"splash": {
-				"image": "./assets/imgs/splash/splashscreen_logo.png",
-				"resizeMode": "contain",
-				"backgroundColor": "#EDBE00"
-			},
-			"intentFilters": [
-				{
-					"action": "VIEW",
-					"autoVerify": true,
-					"data": [
-						{
-							"scheme": "https",
-							"host": "comacademy.fr",
-							"pathPrefix": "/auth/reset-password"
-						},
-						{
-							"scheme": "https",
-							"host": "www.comacademy.fr",
-							"pathPrefix": "/auth/reset-password"
-						}
-					],
-					"category": ["BROWSABLE", "DEFAULT"]
-				}
-			]
-		},
-
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./assets/imgs/icons/favicon.png"
-		},
-
-		"plugins": [
-			"expo-router",
-			"expo-font",
-			"expo-image-picker",
-			"react-native-iap",
-			[
-				"expo-build-properties",
-				{
-					"android": {
-						"kotlinVersion": "2.1.21",
-						"minifyEnabled": true,
-						"enableProguardInReleaseBuilds": true,
-						"enableShrinkResourcesInReleaseBuilds": true
-					}
-				}
-			],
-			"./config-plugins/withMinifyInReleaseBuilds"
-		],
-		"experiments": { "typedRoutes": true },
-		"extra": {
-			"router": { "origin": false },
-			"eas": { "projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e" }
-		},
-		"owner": "nicopipishorts",
-		"runtimeVersion": "2.1.11",
-		"updates": {
-			"url": "https://u.expo.dev/0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
-		}
-	}
+  "expo": {
+    "name": "Com'Academy",
+    "slug": "comacademy",
+    "version": "2.2.4",
+    "orientation": "portrait",
+    "icon": "./assets/imgs/icons/favicon.png",
+    "scheme": "comacademy",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nicopipishorts.comacademy",
+      "buildNumber": "10",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "Utiliser Face ID pour vous connecter rapidement à votre compte.",
+        "NSPhotoLibraryUsageDescription": "Autorise Com'Academy à accéder à tes photos pour importer un avatar."
+      },
+      "associatedDomains": [
+        "applinks:comacademy.fr",
+        "applinks:www.comacademy.fr"
+      ]
+    },
+    "android": {
+      "icon": "./assets/imgs/AppIconAndroid.png",
+      "adaptiveIcon": {
+        "backgroundColor": "#EDBE00",
+        "foregroundImage": "./assets/imgs/AppIconAndroid.png"
+      },
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.nicopipishorts.comacademy",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "comacademy.fr",
+              "pathPrefix": "/auth/reset-password"
+            },
+            {
+              "scheme": "https",
+              "host": "www.comacademy.fr",
+              "pathPrefix": "/auth/reset-password"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/imgs/icons/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/imgs/splash/splashscreen_logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#EDBE00"
+        }
+      ],
+      "expo-font",
+      "expo-image-picker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/imgs/icons/favicon.png",
+          "color": "#ffffff"
+        }
+      ],
+      "react-native-iap",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.4"
+          },
+          "android": {
+            "kotlinVersion": "2.1.21",
+            "minifyEnabled": true,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "./config-plugins/withMinifyInReleaseBuilds",
+      "expo-asset",
+      "expo-audio",
+      "expo-secure-store",
+      "expo-video"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
+      }
+    },
+    "owner": "nicopipishorts",
+    "runtimeVersion": "2.2.4",
+    "updates": {
+      "url": "https://u.expo.dev/0fc2cb8b-887f-4ed1-8b55-b94bf6cfec3e"
+    }
+  }
 }

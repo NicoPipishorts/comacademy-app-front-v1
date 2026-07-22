@@ -25,6 +25,7 @@ import { useResetPasswordMutation } from "@/api/credentials/resetPassword";
 import { sendAnalyticsEvent } from "@/api/analyticsEvents";
 import { UseAuth } from "@/auth/AuthContext";
 import LogoPageTop from "@/components/headers/LogoPageTop";
+import { LoginServiceUnavailable } from "@/components/login-service-unavailable";
 import ForgotPasswordSheet from "@/components/modal/ForgotPasswordSheet";
 import ResetPasswordSheet from "@/components/modal/ResetPasswordSheet";
 import { colorBlack, colorGrey, colorWhite } from "@/constants/colors";
@@ -42,17 +43,28 @@ import {
 	processInitialDeepLink,
 	subscribeToDeepLinks,
 } from "@/src/utils/resetPasswordDeepLink";
+import { useApiFailover } from "@/providers/api-failover-provider";
 
 const BIOMETRIC_AUTH_PAYLOAD_KEY = "auth.biometric.payload";
 const BIOMETRIC_AUTH_HINT_KEY = "auth.biometric.hint";
 
-const SignIn = () => {
+type SignInProps = {
+	initialResetCode?: string | null;
+	initialResetEmail?: string | null;
+};
+
+const SignIn = ({
+	initialResetCode = null,
+	initialResetEmail = null,
+}: SignInProps) => {
 	const insets = useSafeAreaInsets();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
 	const authUrl = getAuthUrl();
 	const forgotPasswordUrl = getForgotPasswordUrl();
 	const resetPasswordUrl = getResetPasswordUrl();
+	const { route: apiRoute } = useApiFailover();
+	const apiUnavailable = apiRoute === "unavailable";
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -66,6 +78,7 @@ const SignIn = () => {
 	const latestResetPasswordRef = useRef<string>("");
 	const emailInputRef = useRef<TextInput>(null);
 	const passwordInputRef = useRef<TextInput>(null);
+	const lastHandledResetKeyRef = useRef<string | null>(null);
 
 	const { login, checkLoggedIn, setIsRegistering } = UseAuth();
 	const biometricLabel = Platform.OS === "ios" ? "Face ID" : "biométrie";
@@ -341,22 +354,37 @@ const SignIn = () => {
 		latestResetPasswordRef.current = "";
 	}, [resetPasswordMutation]);
 
+	const presentResetPasswordSheet = useCallback(
+		(code: string, nextEmail?: string | null) => {
+			const normalizedCode = code.trim();
+			if (!normalizedCode) return;
+
+			const normalizedEmail = nextEmail?.trim() || null;
+			const resetKey = `${normalizedCode}::${normalizedEmail ?? ""}`;
+			if (lastHandledResetKeyRef.current === resetKey) return;
+
+			lastHandledResetKeyRef.current = resetKey;
+
+			if (normalizedEmail) {
+				setEmail(normalizedEmail);
+			}
+
+			setPendingResetCode(normalizedCode);
+			latestResetPasswordRef.current = "";
+			Keyboard.dismiss();
+			requestAnimationFrame(() => {
+				resetPasswordSheetRef.current?.present();
+			});
+		},
+		[]
+	);
+
 	const handleDeepLink = useCallback((url: string | null) => {
 		const payload = parseResetPasswordDeepLink(url);
 		if (!payload) return;
 
-		if (payload.email) {
-			setEmail(payload.email);
-		}
-
-		setPendingResetCode(payload.code);
-		latestResetPasswordRef.current = "";
-		// Close keyboard before presenting the reset sheet
-		Keyboard.dismiss();
-		requestAnimationFrame(() => {
-			resetPasswordSheetRef.current?.present();
-		});
-	}, []);
+		presentResetPasswordSheet(payload.code, payload.email);
+	}, [presentResetPasswordSheet]);
 
 	useEffect(() => {
 		void processInitialDeepLink({
@@ -378,11 +406,17 @@ const SignIn = () => {
 	}, [handleDeepLink]);
 
 	useEffect(() => {
+		if (!initialResetCode) return;
+		presentResetPasswordSheet(initialResetCode, initialResetEmail);
+	}, [initialResetCode, initialResetEmail, presentResetPasswordSheet]);
+
+	useEffect(() => {
+		if (apiUnavailable) return;
 		(async () => {
 			const loggedIn = await checkLoggedIn();
 			if (loggedIn) navigation.navigate("(tabs)");
 		})();
-	}, [navigation, checkLoggedIn]);
+	}, [apiUnavailable, navigation, checkLoggedIn]);
 
 	useEffect(() => {
 		void refreshBiometricAvailability();
@@ -422,9 +456,13 @@ const SignIn = () => {
 						showsVerticalScrollIndicator={false}
 						contentInsetAdjustmentBehavior='never'>
 						<View style={styles.centerWrap}>
-							<Text style={styles.title}>C'est bon de se revoir !</Text>
+							{apiUnavailable ? (
+								<LoginServiceUnavailable />
+							) : (
+								<>
+									<Text style={styles.title}>C'est bon de se revoir !</Text>
 
-							<Pressable
+									<Pressable
 								style={styles.inputField}
 								onPress={() => emailInputRef.current?.focus()}>
 								<TextInput
@@ -501,7 +539,7 @@ const SignIn = () => {
 								)}
 							</Pressable>
 
-							{canUseBiometricLogin && (
+									{canUseBiometricLogin && (
 								<Pressable
 									style={styles.biometricButton}
 									onPress={handleBiometricLogin}
@@ -525,10 +563,13 @@ const SignIn = () => {
 										</>
 									)}
 								</Pressable>
+									)}
+								</>
 							)}
 						</View>
 					</ScrollView>
 
+					{!apiUnavailable ? (
 					<View style={[styles.registerRow, { paddingBottom: bottomInset }]}>
 						<Pressable
 							hitSlop={8}
@@ -541,9 +582,12 @@ const SignIn = () => {
 							</Text>
 						</Pressable>
 					</View>
+					) : null}
 				</View>
 			</KeyboardAvoidingView>
 
+			{!apiUnavailable ? (
+			<>
 			<ForgotPasswordSheet
 				ref={forgotPasswordSheetRef}
 				initialEmail={email}
@@ -559,6 +603,8 @@ const SignIn = () => {
 				onSubmit={handleResetPasswordSubmit}
 				onDismiss={handleResetSheetDismiss}
 			/>
+			</>
+			) : null}
 		</>
 	);
 };

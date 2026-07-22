@@ -1,5 +1,5 @@
 import { colorBlack } from "@/constants/colors";
-import { FontSizeH1 } from "@/constants/fontsizes";
+import { FontSize14, FontSize18 } from "@/constants/fontsizes";
 import { mixParcoursColorWithWhite } from "@/helpers/parcours/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -8,19 +8,36 @@ export default function ParcoursStepCounter({
 	currentIndex,
 	totalSteps,
 	accentColor,
+	stepTitle,
+	stepSubtitle,
+	hasTrailing = false,
 }: {
 	currentIndex: number;
 	totalSteps: number;
 	accentColor: string;
+	stepTitle: string;
+	stepSubtitle?: string | null;
+	hasTrailing?: boolean;
 }) {
 	const safeTotal = Math.max(totalSteps, 1);
 	const safeCurrent = Math.min(currentIndex + 1, safeTotal);
 	const trackColor = mixParcoursColorWithWhite(accentColor, 0.82);
 
 	return (
-		<View style={styles.counterBlock}>
-			<Text style={styles.counterText}>
-				{safeCurrent}/{safeTotal}
+		<View
+			style={[
+				styles.counterBlock,
+				stepSubtitle && styles.counterBlockWithSubtitle,
+			]}>
+			<Text
+				style={[
+					styles.counterText,
+					hasTrailing && styles.counterTextWithTrailing,
+				]}>
+				<Text style={styles.counterNumber}>
+					{safeCurrent}/{safeTotal}
+				</Text>
+				{` - ${stepTitle}`}
 			</Text>
 			<View style={[styles.counterTrack, { backgroundColor: trackColor }]}>
 				<View
@@ -31,6 +48,9 @@ export default function ParcoursStepCounter({
 					]}
 				/>
 			</View>
+			{stepSubtitle ? (
+				<Text style={styles.stepSubtitle}>{stepSubtitle}</Text>
+			) : null}
 		</View>
 	);
 }
@@ -40,11 +60,20 @@ const styles = StyleSheet.create({
 		marginBottom: 22,
 		marginTop: 12,
 	},
+	counterBlockWithSubtitle: {
+		marginBottom: 0,
+	},
 	counterText: {
-		fontSize: FontSizeH1,
+		fontSize: FontSize18,
 		fontWeight: "800",
 		color: colorBlack,
 		marginBottom: 10,
+	},
+	counterTextWithTrailing: {
+		paddingRight: 96,
+	},
+	counterNumber: {
+		fontVariant: ["tabular-nums"],
 	},
 	counterTrack: {
 		height: 4,
@@ -54,5 +83,13 @@ const styles = StyleSheet.create({
 	counterFill: {
 		height: "100%",
 		borderRadius: 999,
+	},
+	stepSubtitle: {
+		fontSize: FontSize14,
+		lineHeight: 20,
+		fontWeight: "700",
+		color: colorBlack,
+		marginTop: 24,
+		paddingLeft: 16,
 	},
 });

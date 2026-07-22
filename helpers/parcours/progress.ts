@@ -9,6 +9,7 @@ export type StepStateRecord = {
 	answerWasCorrect?: boolean;
 	answerLocked?: boolean;
 	answered?: boolean;
+	dicoPhase?: "question" | "definition";
 	videoCheckpointMillis?: number;
 	videoDurationMillis?: number;
 	videoNextUnlocked?: boolean;

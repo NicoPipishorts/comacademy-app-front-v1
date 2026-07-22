@@ -8,6 +8,7 @@ import {
 	colorWhite,
 } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
+import { logDevice } from "@/helpers/logDevice";
 
 export default function ParcoursFloatingNav({
 	canAdvance,
@@ -30,6 +31,8 @@ export default function ParcoursFloatingNav({
 	bottomOffset: number;
 	accentColor: string;
 }) {
+	const nextDisabled = !canAdvance || isCompleting;
+
 	return (
 		<View pointerEvents='box-none' style={[styles.floatingNav, { bottom: bottomOffset }]}>
 			<Pressable onPress={isFirstStep ? onQuit : onBack} style={styles.quitButton}>
@@ -39,12 +42,22 @@ export default function ParcoursFloatingNav({
 				<Text style={styles.quitLabel}>{isFirstStep ? "Quitter" : "Retour"}</Text>
 			</Pressable>
 			<Pressable
-				disabled={!canAdvance || isCompleting}
-				onPress={onNext}
+				accessibilityState={{ disabled: nextDisabled }}
+				onPress={() => {
+					logDevice("[Parcours][Next button] press attempt", {
+						canAdvance,
+						isCompleting,
+						disabled: nextDisabled,
+						nextLabel,
+					});
+					if (!nextDisabled) {
+						onNext();
+					}
+				}}
 				style={[
 					styles.nextButton,
 					{ backgroundColor: accentColor },
-					(!canAdvance || isCompleting) && styles.nextButtonDisabled,
+					nextDisabled && styles.nextButtonDisabled,
 				]}>
 				<View style={styles.nextIconWrap}>
 					<Ionicons name='arrow-forward' size={18} color={accentColor} />

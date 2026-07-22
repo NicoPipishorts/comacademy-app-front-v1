@@ -28,11 +28,11 @@ import type { SharedValue } from "react-native-reanimated";
 
 const REVEAL_THRESHOLD = 0.93;
 // Soft round brush. Visual stroke + blur ≈ erase radius.
-const BRUSH_STROKE = 42;
-const BRUSH_BLUR = 16;
-const PROGRESS_BRUSH_RADIUS = 34;
+const BRUSH_STROKE = 56;
+const BRUSH_BLUR = 18;
+const PROGRESS_BRUSH_RADIUS = 44;
 const MIN_MOVE_SQ = 9; // 3 px minimum travel between samples
-const FADE_DURATION = 360;
+const FADE_DURATION = 700;
 // Invisible coarse grid used only for the 90 % math (never rendered).
 const PROGRESS_CELL = 14;
 const SPARKLE_COUNT = 46;
@@ -162,7 +162,7 @@ export default function ParcoursCitationRevealCard({
 	useEffect(() => {
 		overlayOpacity.value = withTiming(locallyRevealed || revealed ? 0 : 1, {
 			duration: FADE_DURATION,
-			easing: Easing.out(Easing.cubic),
+			easing: Easing.inOut(Easing.quad),
 		});
 	}, [locallyRevealed, revealed, overlayOpacity]);
 
@@ -353,6 +353,7 @@ export default function ParcoursCitationRevealCard({
 						showFavorite={revealFinished}
 						wrapperStyle={styles.cardWrapper}
 						cardStyle={styles.cardStyle}
+						actionsRowStyle={styles.favoriteRow}
 					/>
 				</CitationFavoritesProvider>
 
@@ -436,6 +437,12 @@ const styles = StyleSheet.create({
 		shadowRadius: 0,
 		shadowOffset: { width: 0, height: 0 },
 		elevation: 0,
+	},
+	favoriteRow: {
+		position: "absolute",
+		right: 12,
+		bottom: -38,
+		marginTop: 0,
 	},
 	overlayRoot: {
 		...StyleSheet.absoluteFillObject,

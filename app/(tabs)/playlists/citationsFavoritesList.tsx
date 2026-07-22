@@ -11,10 +11,11 @@ import useGetFavoriteCitationsFull from "@/hooks/Citations/useGetFavoriteCitatio
 import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
-import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function CitationsFavoritesList() {
+	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 
 	const { data: favoriteResponse, isFetched } =
@@ -22,13 +23,7 @@ export default function CitationsFavoritesList() {
 	const { data: categories } = useCategories();
 
 	const favorites = favoriteResponse?.data?.results?.data ?? [];
-	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(false);
-	useEffect(() => {
-		if (isFetched) {
-			const count = favoriteResponse?.data?.count ?? 0;
-			setIsEmptyArray(count === 0);
-		}
-	}, [favoriteResponse, isFetched]);
+	const isEmptyArray = favorites.length === 0;
 
 	if (!categories || !isFetched) {
 		return <Loader />;
@@ -36,7 +31,11 @@ export default function CitationsFavoritesList() {
 
 	return (
 		<SwipeToGoBack>
-			<ScrollView contentContainerStyle={styles.wrapper}>
+			<ScrollView
+				contentContainerStyle={[
+					styles.wrapper,
+					{ paddingBottom: insets.bottom + 100 },
+				]}>
 				<ReturnButton />
 
 				<View style={styles.headerContainer}>

@@ -101,7 +101,7 @@ const SwipeableCard = ({
 		(direction: "left" | "right") => {
 			if (!isTopCard || isSwipingRef.current) return;
 			isSwipingRef.current = true;
-			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,
@@ -480,8 +480,8 @@ const styles = StyleSheet.create({
 	},
 	cardWrapper: {
 		position: "absolute",
-		width: "100%",
-		height: "80%",
+		width: "94%",
+		height: "75%",
 		borderRadius: 24,
 		...Platform.select({
 			ios: {

@@ -2,7 +2,7 @@ import {
 	useFocusEffect,
 	useIsFocused,
 	useNavigation,
-} from "@react-navigation/native";
+} from "expo-router";
 import React, {
 	useCallback,
 	useEffect,

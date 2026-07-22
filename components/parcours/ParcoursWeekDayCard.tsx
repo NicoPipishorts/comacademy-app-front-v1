@@ -98,7 +98,7 @@ const getDayCardPresentation = (
 				: styles.dayCardDefault,
 			titleStyle: styles.dayTitle,
 			subtitleStyle: styles.daySubtitle,
-			label: isCurrentReadyDay ? "Commencer" : "Disponible",
+			label: isCurrentReadyDay ? "Go" : "Disponible",
 			labelStyle: isCurrentReadyDay ? null : styles.metaPillMuted,
 			labelTextStyle: isCurrentReadyDay ? null : styles.metaPillMutedText,
 			buttonStyle: isCurrentReadyDay
@@ -256,7 +256,6 @@ const styles = StyleSheet.create({
 		paddingVertical: 14,
 		borderRadius: 999,
 		backgroundColor: colorPink,
-		minWidth: 118,
 		alignItems: "center",
 		justifyContent: "center",
 	},

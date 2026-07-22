@@ -1,8 +1,7 @@
 import { colorWhite } from "@/constants/colors";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
-	runOnJS,
 	useAnimatedStyle,
 	useSharedValue,
 	withTiming,
@@ -13,6 +12,7 @@ export default function BottomFeedbackSheet({
 	subtitle,
 	backgroundColor,
 	onHide,
+	onExitStart,
 	durationMs = 500,
 	height = 236,
 	titleSize = 84,
@@ -23,6 +23,7 @@ export default function BottomFeedbackSheet({
 	subtitle?: string | null;
 	backgroundColor: string;
 	onHide: () => void;
+	onExitStart?: () => void;
 	durationMs?: number;
 	height?: number;
 	titleSize?: number;
@@ -30,30 +31,50 @@ export default function BottomFeedbackSheet({
 	textColor?: string;
 }) {
 	const slideAnim = useSharedValue(height + 60);
-	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const onHideRef = useRef(onHide);
+	const onExitStartRef = useRef(onExitStart);
+
+	useEffect(() => {
+		onHideRef.current = onHide;
+	}, [onHide]);
+
+	useEffect(() => {
+		onExitStartRef.current = onExitStart;
+	}, [onExitStart]);
+
+	const notifyHidden = useCallback(() => {
+		onHideRef.current();
+	}, []);
 
 	useEffect(() => {
 		if (timerRef.current) {
 			clearTimeout(timerRef.current);
 		}
+		if (hideTimerRef.current) {
+			clearTimeout(hideTimerRef.current);
+		}
 
 		slideAnim.value = withTiming(0, { duration: 250 });
 
 		timerRef.current = setTimeout(() => {
-			slideAnim.value = withTiming(height + 60, { duration: 250 }, (finished) => {
-				if (finished) {
-					runOnJS(onHide)();
-				}
-			});
+			onExitStartRef.current?.();
+			slideAnim.value = withTiming(height + 60, { duration: 250 });
 		}, durationMs);
+		hideTimerRef.current = setTimeout(notifyHidden, durationMs + 250);
 
 		return () => {
 			if (timerRef.current) {
 				clearTimeout(timerRef.current);
 				timerRef.current = null;
 			}
+			if (hideTimerRef.current) {
+				clearTimeout(hideTimerRef.current);
+				hideTimerRef.current = null;
+			}
 		};
-	}, [durationMs, height, onHide, slideAnim, title, subtitle]);
+	}, [durationMs, height, notifyHidden, slideAnim]);
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		transform: [{ translateY: slideAnim.value }],

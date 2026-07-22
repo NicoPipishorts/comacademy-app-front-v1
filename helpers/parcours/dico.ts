@@ -36,8 +36,10 @@ export const resolveParcoursDicoState = ({
 			? stepState.answerSubmittedKey
 			: null;
 	const answerLocked = Boolean(isReadOnly) || Boolean(stepState.answerLocked || answered);
+	const phase = stepState.dicoPhase === "definition" ? "definition" : "question";
 
 	return {
+		phase,
 		answered,
 		correctAnswerKey,
 		selectedAnswerKey,
@@ -54,6 +56,10 @@ export const resolveParcoursDicoState = ({
 				: correctAnswerKey,
 	};
 };
+
+export const buildParcoursDicoPhasePatch = (
+	phase: "question" | "definition"
+): StepStateRecord => ({ dicoPhase: phase });
 
 export const buildValidatedParcoursDicoStepPatch = ({
 	selectedAnswerKey,

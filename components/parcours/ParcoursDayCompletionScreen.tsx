@@ -1,5 +1,6 @@
 import endImage from "@/assets/imgs/parcours/OnboardingPages/end.png";
-import { colorBlack, colorGreen, colorWhite, colorYellow } from "@/constants/colors";
+import CelebrationConfetti from "@/components/experience/CelebrationConfetti";
+import { colorBlack, colorWhite } from "@/constants/colors";
 import { FontSize16 } from "@/constants/fontsizes";
 import { getParcoursQuizIconForProgramOrder } from "@/helpers/parcours/icons";
 import React from "react";
@@ -11,6 +12,7 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 export default function ParcoursDayCompletionScreen({
 	dateLabel,
@@ -27,7 +29,7 @@ export default function ParcoursDayCompletionScreen({
 	const titleFontSize = Math.min(56, Math.max(42, width * 0.14));
 
 	return (
-		<View style={styles.wrapper}>
+		<Animated.View entering={FadeIn.duration(450)} style={styles.wrapper}>
 			<View style={styles.topBlock}>
 				<Text style={styles.dateLabel}>{dateLabel}</Text>
 				<Image
@@ -45,9 +47,10 @@ export default function ParcoursDayCompletionScreen({
 			</View>
 
 			<View style={styles.mountainWrap}>
-				<Image
+				<Animated.Image
 					source={endImage}
 					resizeMode='contain'
+					entering={FadeIn.duration(600).delay(80)}
 					style={{
 						width: mountainSize,
 						height: mountainSize,
@@ -55,6 +58,8 @@ export default function ParcoursDayCompletionScreen({
 					}}
 				/>
 			</View>
+
+			<CelebrationConfetti />
 
 			<View style={styles.bottomBlock}>
 				<Text style={styles.missionTitle}>
@@ -67,7 +72,7 @@ export default function ParcoursDayCompletionScreen({
 					<Text style={styles.returnButtonText}>Retour au Parcours</Text>
 				</Pressable>
 			</View>
-		</View>
+		</Animated.View>
 	);
 }
 

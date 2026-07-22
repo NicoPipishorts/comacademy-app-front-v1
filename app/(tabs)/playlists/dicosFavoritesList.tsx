@@ -12,10 +12,11 @@ import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
-import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function QuestionsFavoritesList() {
+	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 
 	const { data: favoriteResponse, isFetched } =
@@ -23,15 +24,9 @@ export default function QuestionsFavoritesList() {
 	const { data: categories } = useCategories();
 	const { colorByStaticId, iconByStaticId } = buildCategoryLookups(categories);
 
-	const [isEmptyArray, setIsEmptyArray] = useState<boolean>(false);
-const favoriteEntry = favoriteResponse?.data?.[0];
-const favoriteWords = favoriteEntry?.attributes?.words?.data ?? [];
-
-	useEffect(() => {
-		if (isFetched) {
-			setIsEmptyArray(favoriteWords.length === 0);
-		}
-	}, [favoriteWords, isFetched]);
+	const favoriteEntry = favoriteResponse?.data?.[0];
+	const favoriteWords = favoriteEntry?.attributes?.words?.data ?? [];
+	const isEmptyArray = favoriteWords.length === 0;
 
 	if (!categories || !isFetched) {
 		return <Loader />;
@@ -39,7 +34,11 @@ const favoriteWords = favoriteEntry?.attributes?.words?.data ?? [];
 
 	return (
 		<SwipeToGoBack>
-			<ScrollView contentContainerStyle={styles.wrapper}>
+			<ScrollView
+				contentContainerStyle={[
+					styles.wrapper,
+					{ paddingBottom: insets.bottom + 100 },
+				]}>
 				<ReturnButton />
 
 				<View style={styles.headerContainer}>

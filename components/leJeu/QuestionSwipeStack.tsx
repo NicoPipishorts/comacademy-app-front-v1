@@ -17,6 +17,9 @@ import { QuestionData } from "@/types/userGameSessionStatus";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
+const MAX_VISIBLE_STACK_POSITION = 4;
+const STACK_CARD_OFFSET = 18;
+const STACK_CARD_SCALE_STEP = 0.04;
 
 type SwipeableCardProps = {
 	data: QuestionData;
@@ -34,6 +37,11 @@ function SwipeableCard({
 	onSwipe,
 }: SwipeableCardProps) {
 	const translateX = useRef(new Animated.Value(0)).current;
+	const stackProgress = useRef(
+		new Animated.Value(
+			Math.min(stackPosition, MAX_VISIBLE_STACK_POSITION)
+		)
+	).current;
 	const isSwipingRef = useRef(false);
 
 	const rotate = useMemo(
@@ -69,7 +77,7 @@ function SwipeableCard({
 		(direction: "left" | "right") => {
 			if (!isTopCard || isSwipingRef.current) return;
 			isSwipingRef.current = true;
-			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
 			Animated.timing(translateX, {
 				toValue,
@@ -109,9 +117,43 @@ function SwipeableCard({
 		[isTopCard, translateX, triggerSwipe]
 	);
 
-	const effectivePosition = Math.min(stackPosition, 4);
-	const scale = useMemo(() => 1 - effectivePosition * 0.05, [effectivePosition]);
-	const translateY = useMemo(() => effectivePosition * 22, [effectivePosition]);
+	const effectivePosition = Math.min(
+		stackPosition,
+		MAX_VISIBLE_STACK_POSITION
+	);
+	const scale = useMemo(
+		() =>
+			stackProgress.interpolate({
+				inputRange: [0, MAX_VISIBLE_STACK_POSITION],
+				outputRange: [
+					1,
+					1 - MAX_VISIBLE_STACK_POSITION * STACK_CARD_SCALE_STEP,
+				],
+				extrapolate: "clamp",
+			}),
+		[stackProgress]
+	);
+	const translateY = useMemo(
+		() =>
+			stackProgress.interpolate({
+				inputRange: [0, MAX_VISIBLE_STACK_POSITION],
+				outputRange: [
+					0,
+					MAX_VISIBLE_STACK_POSITION * STACK_CARD_OFFSET,
+				],
+				extrapolate: "clamp",
+			}),
+		[stackProgress]
+	);
+
+	useEffect(() => {
+		Animated.spring(stackProgress, {
+			toValue: effectivePosition,
+			speed: 18,
+			bounciness: 3,
+			useNativeDriver: true,
+		}).start();
+	}, [effectivePosition, stackProgress]);
 
 	useEffect(() => {
 		isSwipingRef.current = false;
@@ -121,7 +163,7 @@ function SwipeableCard({
 	}, [isTopCard, translateX]);
 
 	const transform = useMemo(() => {
-		const baseTransform = [{ scale }, { translateY }];
+		const baseTransform = [{ translateY }, { scale }];
 		if (isTopCard) {
 			return [{ translateX }, { rotate }, ...baseTransform];
 		}
@@ -173,6 +215,7 @@ function SwipeableCard({
 					catColors={catColors}
 					onSwipeFalse={handleSwipeFalse}
 					onSwipeTrue={handleSwipeTrue}
+					variant="parcours"
 				/>
 			</View>
 		</Animated.View>

@@ -1,5 +1,5 @@
 // File: src/components/leJeu/TopDesFlops.tsx
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused } from "expo-router";
 import React, {
 	useCallback,
 	useEffect,

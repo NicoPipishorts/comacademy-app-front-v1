@@ -1,5 +1,5 @@
 import { primaryBackground } from "@/constants/colors";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";

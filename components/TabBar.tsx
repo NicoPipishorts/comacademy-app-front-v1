@@ -5,12 +5,16 @@ import navProfileIcon from "@/assets/imgs/icons/nav_profile.svg";
 import navRubriquesIcon from "@/assets/imgs/icons/nav_rubriques.svg";
 import { colorBlack, primaryBackground } from "@/constants/colors";
 import { FontSizeTabbar } from "@/constants/fontsizes";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useAssets } from "expo-asset";
+import { Tabs } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
+
+type BottomTabBarProps = Parameters<
+	NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>
+>[0];
 
 const tabItems = [
 	{
@@ -100,13 +104,14 @@ export default function CustomTabBar({
 
 					const isFocused =
 						activeRouteName === route.name ||
-						(tab.routeName === "parcours" && activeRouteName === "playlists") ||
 						(tab.routeName === "parcours" &&
 							(activeRouteName === "parcours" ||
 								activeRouteName?.startsWith("parcours/"))) ||
 						(tab.routeName === "dashboard" &&
 							(activeRouteName === "dashboard" ||
 								activeRouteName?.startsWith("dashboard/") ||
+								activeRouteName === "playlists" ||
+								activeRouteName?.startsWith("playlists/") ||
 								activeRouteName === "bonus" ||
 								activeRouteName?.startsWith("bonus/")));
 
