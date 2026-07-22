@@ -1,12 +1,10 @@
 import {
 	colorBlack,
-	colorDarkGrey,
 	colorGreen,
 	colorLightGrey,
 	colorWhite,
 } from "@/constants/colors";
 import {
-	FontSize12,
 	FontSize14,
 	FontSize16,
 	FontSize18,
@@ -17,7 +15,6 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function ParcoursDicoQuestionStep({
-	stepLabel = "Dico Quiz",
 	word,
 	supportingText,
 	answers,
@@ -30,7 +27,6 @@ export default function ParcoursDicoQuestionStep({
 	disabled = false,
 	locked = false,
 }: {
-	stepLabel?: string;
 	word: string;
 	supportingText?: string | null;
 	answers: ParcoursDicoAnswerOption[];
@@ -47,7 +43,6 @@ export default function ParcoursDicoQuestionStep({
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.stepLabel}>{stepLabel}</Text>
 			<View style={[styles.promptCard, { backgroundColor: accentColor }]}>
 				<Text style={styles.promptWord}>{word}</Text>
 				{supportingText ? (
@@ -121,11 +116,6 @@ const styles = StyleSheet.create({
 	container: {
 		gap: 16,
 	},
-	stepLabel: {
-		fontSize: FontSize12,
-		fontWeight: "800",
-		color: colorBlack,
-	},
 	promptCard: {
 		borderRadius: 22,
 		paddingHorizontal: 18,
@@ -188,7 +178,7 @@ const styles = StyleSheet.create({
 		fontSize: FontSize14,
 		lineHeight: 20,
 		fontWeight: "700",
-		color: colorDarkGrey,
+		color: colorBlack,
 	},
 	answerLabelCorrect: {
 		color: colorBlack,

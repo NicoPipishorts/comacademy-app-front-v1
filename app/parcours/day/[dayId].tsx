@@ -298,6 +298,9 @@ function ParcoursDayContent() {
 	const [timeoutFeedbackLabel, setTimeoutFeedbackLabel] = useState<string | null>(null);
 	const [isDayCompletionScreenVisible, setIsDayCompletionScreenVisible] =
 		useState(false);
+	const [newlyUnlockedBonusWeekId, setNewlyUnlockedBonusWeekId] = useState<
+		number | null
+	>(null);
 	const [isFinalizingGameStep, setIsFinalizingGameStep] = useState(false);
 	const [optimisticGameQuestions, setOptimisticGameQuestions] = useState<QuestionData[] | null>(
 		null
@@ -328,7 +331,6 @@ function ParcoursDayContent() {
 	const pendingCorrectAdvanceRef = useRef(false);
 	const dicoFinalizingRef = useRef(false);
 	const tipsFinalizingRef = useRef(false);
-	const pendingDayCompletionRef = useRef(false);
 	const specificVideoProgressRef = useRef<{
 		stepId: string | null;
 		checkpointMillis: number;
@@ -400,7 +402,6 @@ function ParcoursDayContent() {
 		setDicoReviewPhaseByStepId({});
 		setLocallyUnlockedVideoStepId(null);
 		pendingCorrectAdvanceRef.current = false;
-		pendingDayCompletionRef.current = false;
 	}, [day?.id]);
 
 	useEffect(() => {
@@ -473,6 +474,21 @@ function ParcoursDayContent() {
 	const isGameStep = isGameBlockParcoursStep(currentStep);
 	const isSpecificRubriqueStep = isSpecificRubriqueParcoursStep(currentStep);
 	const isTipsStep = isTipsAndTacticsParcoursStep(currentStep);
+	const currentStepTitle = isCitationStep
+		? "Citation du jour"
+		: isDicoStep
+			? "Dico Quiz"
+			: isSpecificRubriqueStep
+				? "Vidéo du jour"
+				: isTipsStep
+					? "Tips & Tactics"
+					: isGameStep
+						? "Vrai ou Faux"
+						: "Étape du parcours";
+	const currentStepSubtitle =
+		isTipsStep && typeof currentStepContent.theme === "string"
+			? currentStepContent.theme.trim()
+			: null;
 	const citationRevealed =
 		Boolean(persistedStepState.citationRevealed) ||
 		locallyRevealedStepId === currentStepId;
@@ -655,10 +671,6 @@ function ParcoursDayContent() {
 		Number.isFinite(persistedStepState.gameSessionId)
 			? persistedStepState.gameSessionId
 			: null;
-	const { data: completedGameResults, isLoading: isLoadingCompletedGameResults } =
-		useGetEndOfSessionResults(
-			isCompletedReview && isGameStep ? persistedGameSessionId || 0 : 0
-		);
 	const {
 		data: parcoursGameSessionData,
 		isLoading: isLoadingParcoursGameSession,
@@ -682,6 +694,16 @@ function ParcoursDayContent() {
 		session: parcoursGameSession,
 		questionCount: gameQuestionCount,
 	});
+	const isGameResultsPhase =
+		isGameStep && parcoursGameCompleted && !isCompletedReview;
+	const shouldLoadGameResults =
+		isGameStep && (isCompletedReview || isGameResultsPhase);
+	const { data: completedGameResults, isLoading: isLoadingCompletedGameResults } =
+		useGetEndOfSessionResults(
+			shouldLoadGameResults
+				? parcoursGameSessionId || persistedGameSessionId || 0
+				: 0
+		);
 	const shouldShowGameLoader =
 		(isFinalizingGameStep || isLoadingParcoursGameSession) &&
 		!parcoursGameCompleted &&
@@ -734,7 +756,9 @@ function ParcoursDayContent() {
 				(day?.progression.isReadOnly ||
 					((!requiresReveal || citationRevealed) &&
 						(!isDicoStep || dicoAnswered || dicoHasSelection) &&
-						(!isGameStep || parcoursGameCompleted) &&
+						(!isGameStep ||
+							(parcoursGameCompleted &&
+								(!isGameResultsPhase || !isLoadingCompletedGameResults))) &&
 						(!isTipsStep ||
 							(isTipsQuestionPhase
 								? tipsAnswered || tipsHasSelection
@@ -1057,9 +1081,7 @@ function ParcoursDayContent() {
 		});
 	};
 
-	const completeParcoursDayAndShowScreen = async ({
-		revealImmediately = false,
-	}: { revealImmediately?: boolean } = {}) => {
+	const completeParcoursDayAndShowScreen = async () => {
 		if (
 			!day ||
 			!token ||
@@ -1070,11 +1092,8 @@ function ParcoursDayContent() {
 			return;
 		}
 
-		if (revealImmediately) {
-			setIsDayCompletionScreenVisible(true);
-		}
 		await progressWriteQueueRef.current.catch(() => undefined);
-		await completeDay.mutateAsync({
+		const completionResponse = await completeDay.mutateAsync({
 			dayId: day.id,
 			token,
 			payload: {
@@ -1085,9 +1104,26 @@ function ParcoursDayContent() {
 				}),
 			},
 		});
-		if (!revealImmediately) {
-			setIsDayCompletionScreenVisible(true);
+		const previousBonusStatus = day.week.bonus?.status ?? "locked";
+		const completedBonusStatus = completionResponse.data.week.bonus?.status;
+		const completedDaysCount = completionResponse.data.week.completedDaysCount;
+		const totalDaysCount = completionResponse.data.week.totalDaysCount;
+		const completedFinalRequiredDay =
+			typeof completedDaysCount === "number" &&
+			typeof totalDaysCount === "number" &&
+			totalDaysCount > 0 &&
+			completedDaysCount >= totalDaysCount;
+
+		if (
+			previousBonusStatus === "locked" &&
+			(completedBonusStatus === "unlocked" ||
+				completedBonusStatus === "viewed" ||
+				completedFinalRequiredDay)
+		) {
+			setNewlyUnlockedBonusWeekId(completionResponse.data.week.id);
 		}
+
+		setIsDayCompletionScreenVisible(true);
 	};
 
 	const revealTipsCardAfterFeedback = async () => {
@@ -1666,14 +1702,6 @@ function ParcoursDayContent() {
 				}),
 			});
 
-			if (
-				isGameStep &&
-				activeIndex === steps.length - 1 &&
-				refreshedSession.status === "finished" &&
-				!day?.progression.isReadOnly
-			) {
-				pendingDayCompletionRef.current = true;
-			}
 			if (isLastGameQuestion) {
 				setFeedbackAnswer(gameFeedbackAnswer);
 			}
@@ -1717,7 +1745,14 @@ function ParcoursDayContent() {
 					dateLabel={dayDateLabel}
 					weekProgramOrder={day?.week.programOrder}
 					onReturn={() => {
-						router.replace("/parcours");
+						router.replace({
+							pathname: "/parcours",
+							params: newlyUnlockedBonusWeekId
+								? {
+										bonusUnlockWeekId: String(newlyUnlockedBonusWeekId),
+								  }
+								: {},
+						});
 					}}
 				/>
 			) : shouldShowCitationOnboarding ? (
@@ -1775,6 +1810,8 @@ function ParcoursDayContent() {
 					showsVerticalScrollIndicator={false}>
 					<ParcoursDayHeader
 						dateLabel={dayDateLabel}
+						stepTitle={currentStepTitle}
+						stepSubtitle={currentStepSubtitle}
 						currentIndex={activeIndex}
 						totalSteps={totalSteps}
 						accentColor={currentAccentColor}
@@ -1809,10 +1846,12 @@ function ParcoursDayContent() {
 						paddingTop: 2,
 						flexGrow: 1,
 					}}
-					scrollEnabled={!isGameStep || isCompletedReview}
+					scrollEnabled={!isGameStep || isCompletedReview || isGameResultsPhase}
 					showsVerticalScrollIndicator={false}>
 					<ParcoursDayHeader
 						dateLabel={dayDateLabel}
+						stepTitle={currentStepTitle}
+						stepSubtitle={currentStepSubtitle}
 						currentIndex={activeIndex}
 						totalSteps={totalSteps}
 						accentColor={currentAccentColor}
@@ -1849,13 +1888,17 @@ function ParcoursDayContent() {
 					<View
 						style={[
 							styles.stepStage,
-							isGameStep && !isCompletedReview && styles.stepStageCentered,
+							isGameStep &&
+								!isCompletedReview &&
+								!isGameResultsPhase &&
+								styles.stepStageCentered,
 							isTipsCardPhase && styles.stepStageCentered,
+							isTipsQuestionPhase && styles.tipsQuestionStage,
 						]}>
 						{isDicoQuestionPhase ? (
 							<ParcoursDicoQuestionStep
 								word={String(currentStepContent.word || "")}
-								supportingText='Une seule réponse est juste. À toi de jouer.'
+								supportingText={'Quelle est la bonne définition ?\nÀ toi de jouer !'}
 								answers={dicoAnswers}
 								selectedAnswerKey={dicoDisplayedAnswerKey}
 								submittedAnswerKey={dicoSubmittedAnswerKey}
@@ -1884,7 +1927,6 @@ function ParcoursDayContent() {
 						) : isTipsStep && tipsCurrentPair ? (
 							isTipsQuestionPhase ? (
 								<ParcoursDicoQuestionStep
-									stepLabel='Tips & Tactics'
 									word={String(tipsCurrentPair.question || "")}
 									answers={tipsQuestionAnswers}
 									selectedAnswerKey={tipsDisplayedAnswerKey}
@@ -1909,7 +1951,7 @@ function ParcoursDayContent() {
 								/>
 							)
 						) : isGameStep ? (
-							isCompletedReview ? (
+							isCompletedReview || isGameResultsPhase ? (
 								isLoadingCompletedGameResults ? (
 									<Loader />
 								) : (
@@ -1980,6 +2022,8 @@ function ParcoursDayContent() {
 					nextLabel={
 						hasNoReviewableSteps
 							? "Retour"
+							: isGameResultsPhase
+								? "Suivant"
 							: activeIndex < steps.length - 1
 								? "Suivant"
 								: "Terminer"
@@ -1993,28 +2037,14 @@ function ParcoursDayContent() {
 					answer={feedbackAnswer}
 					durationMs={1500}
 					isHomeButtonModel
-					onExitStart={() => {
-						if (pendingDayCompletionRef.current) {
-							void completeParcoursDayAndShowScreen({
-								revealImmediately: true,
-							});
-						}
-					}}
 					onHide={() => {
 						const shouldAdvance = pendingCorrectAdvanceRef.current;
 						const shouldRevealDicoDefinition =
 							isDicoStep && isDicoQuestionPhase;
 						const shouldRevealTipsCard =
 							isTipsStep && isTipsQuestionPhase;
-						const shouldShowCompletionScreen =
-							pendingDayCompletionRef.current;
 						pendingCorrectAdvanceRef.current = false;
-						pendingDayCompletionRef.current = false;
 						setFeedbackAnswer(null);
-						if (shouldShowCompletionScreen) {
-							void completeParcoursDayAndShowScreen();
-							return;
-						}
 						if (shouldRevealDicoDefinition) {
 							void moveToDicoPhase("definition");
 							return;
@@ -2081,6 +2111,9 @@ const styles = StyleSheet.create({
 	stepStageCentered: {
 		justifyContent: "center",
 		paddingBottom: 32,
+	},
+	tipsQuestionStage: {
+		paddingTop: 14,
 	},
 	emptyReviewState: {
 		flex: 1,

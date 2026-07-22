@@ -1,11 +1,11 @@
 import { colorBlack, colorGrey } from "@/constants/colors";
-import { FontSize16 } from "@/constants/fontsizes";
+import { FontSize14 } from "@/constants/fontsizes";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
-const TIMER_SIZE = 78;
-const STROKE_WIDTH = 6;
+const TIMER_SIZE = 64;
+const STROKE_WIDTH = 5;
 const RADIUS = (TIMER_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 	},
 	label: {
-		fontSize: FontSize16,
+		fontSize: FontSize14,
 		fontWeight: "800",
 		color: colorBlack,
 	},

@@ -1,5 +1,5 @@
 import { colorBlack } from "@/constants/colors";
-import { FontSize18 } from "@/constants/fontsizes";
+import { FontSize14 } from "@/constants/fontsizes";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -7,19 +7,28 @@ import ParcoursStepCounter from "./ParcoursStepCounter";
 
 export default function ParcoursDayHeader({
 	dateLabel,
+	stepTitle,
+	stepSubtitle,
 	currentIndex,
 	totalSteps,
 	accentColor,
 	trailing,
 }: {
 	dateLabel: string;
+	stepTitle: string;
+	stepSubtitle?: string | null;
 	currentIndex: number;
 	totalSteps: number;
 	accentColor: string;
 	trailing?: ReactNode;
 }) {
 	return (
-		<View style={[styles.topMeta, trailing && styles.topMetaWithTrailing]}>
+		<View
+			style={[
+				styles.topMeta,
+				stepSubtitle && styles.topMetaWithSubtitle,
+				trailing && styles.topMetaWithTrailing,
+			]}>
 			<Text style={[styles.dateLabel, trailing && styles.dateLabelWithTrailing]}>
 				{dateLabel}
 			</Text>
@@ -28,6 +37,9 @@ export default function ParcoursDayHeader({
 				currentIndex={currentIndex}
 				totalSteps={totalSteps}
 				accentColor={accentColor}
+				stepTitle={stepTitle}
+				stepSubtitle={stepSubtitle}
+				hasTrailing={Boolean(trailing)}
 			/>
 		</View>
 	);
@@ -35,10 +47,10 @@ export default function ParcoursDayHeader({
 
 const styles = StyleSheet.create({
 	dateLabel: {
-		fontSize: FontSize18,
-		fontWeight: "800",
+		fontSize: FontSize14,
+		fontWeight: "600",
 		color: colorBlack,
-		marginBottom: 14,
+		marginBottom: 6,
 	},
 	dateLabelWithTrailing: {
 		paddingRight: 96,
@@ -50,6 +62,9 @@ const styles = StyleSheet.create({
 	},
 	topMetaWithTrailing: {
 		minHeight: 88,
+	},
+	topMetaWithSubtitle: {
+		marginBottom: -6,
 	},
 	trailingWrap: {
 		position: "absolute",

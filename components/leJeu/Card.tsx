@@ -22,9 +22,16 @@ interface CardProps {
 	catColors: CategorieColors; // expects shape with .data (Strapi categories array)
 	onSwipeFalse: () => void;
 	onSwipeTrue: () => void;
+	variant?: "game" | "parcours";
 }
 
-const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
+const Card = ({
+	data,
+	catColors,
+	onSwipeFalse,
+	onSwipeTrue,
+	variant = "game",
+}: CardProps) => {
 	const insets = useSafeAreaInsets();
 
 	if (!data || !catColors?.data?.length) {
@@ -44,13 +51,21 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 	const questionText = String(data.attributes.QUESTION || "").trim();
 	const questionLength = questionText.length;
 	const questionTextStyle =
-		questionLength >= 190
-			? styles.questionVeryLong
-			: questionLength >= 150
-				? styles.questionLong
-				: questionLength >= 110
-					? styles.questionMedium
-					: null;
+		variant === "parcours"
+			? questionLength >= 180
+				? styles.parcoursQuestionVeryLong
+				: questionLength >= 135
+					? styles.parcoursQuestionLong
+					: questionLength >= 95
+						? styles.parcoursQuestionMedium
+						: styles.parcoursQuestion
+			: questionLength >= 190
+				? styles.questionVeryLong
+				: questionLength >= 150
+					? styles.questionLong
+					: questionLength >= 110
+						? styles.questionMedium
+						: null;
 
 	const renderStars = () => {
 		const stars = [];
@@ -82,7 +97,10 @@ const Card = ({ data, catColors, onSwipeFalse, onSwipeTrue }: CardProps) => {
 
 				<View style={styles.containerText}>
 					<Text
+						adjustsFontSizeToFit
+						minimumFontScale={variant === "parcours" ? 0.6 : 0.7}
 						maxFontSizeMultiplier={1.15}
+						numberOfLines={12}
 						style={[styles.textText, questionTextStyle]}>
 						{questionText}
 					</Text>
@@ -166,6 +184,22 @@ const styles = StyleSheet.create({
 	questionVeryLong: {
 		fontSize: 17,
 		lineHeight: 23,
+	},
+	parcoursQuestion: {
+		fontSize: 20,
+		lineHeight: 27,
+	},
+	parcoursQuestionMedium: {
+		fontSize: 18,
+		lineHeight: 24,
+	},
+	parcoursQuestionLong: {
+		fontSize: 16,
+		lineHeight: 22,
+	},
+	parcoursQuestionVeryLong: {
+		fontSize: 15,
+		lineHeight: 20,
 	},
 	containerCardIcons: {
 		width: "100%",

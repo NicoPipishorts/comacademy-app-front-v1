@@ -1075,14 +1075,14 @@
     node-forge "^1.2.1"
     nullthrows "^1.1.1"
 
-"@expo/config-plugins@~54.0.4":
-  version "54.0.4"
-  resolved "https://registry.npmjs.org/@expo/config-plugins/-/config-plugins-54.0.4.tgz"
-  integrity sha512-g2yXGICdoOw5i3LkQSDxl2Q5AlQCrG7oniu0pCPPO+UxGb7He4AFqSvPSy8HpRUj55io17hT62FTjYRD+d6j3Q==
+"@expo/config-plugins@~54.0.4", "@expo/config-plugins@~54.0.5":
+  version "54.0.5"
+  resolved "https://registry.npmjs.org/@expo/config-plugins/-/config-plugins-54.0.5.tgz"
+  integrity sha512-aWQ3sViNRoQWw6So4A2qhWCt24CuGBK6MrRHI1AG+V6/NQAjIZCHaSvcXK2gXKpmisRhTSUWaKPIgLJQFB+AeQ==
   dependencies:
     "@expo/config-types" "^54.0.10"
-    "@expo/json-file" "~10.0.8"
-    "@expo/plist" "^0.4.8"
+    "@expo/json-file" "~10.0.16"
+    "@expo/plist" "^0.4.9"
     "@expo/sdk-runtime-versions" "^1.0.0"
     chalk "^4.1.2"
     debug "^4.3.5"
@@ -1184,15 +1184,15 @@
     slugify "^1.3.4"
     sucrase "3.35.0"
 
-"@expo/config@~12.0.13":
-  version "12.0.13"
-  resolved "https://registry.npmjs.org/@expo/config/-/config-12.0.13.tgz"
-  integrity sha512-Cu52arBa4vSaupIWsF0h7F/Cg//N374nYb7HAxV0I4KceKA7x2UXpYaHOL7EEYYvp7tZdThBjvGpVmr8ScIvaQ==
+"@expo/config@~12.0.13", "@expo/config@~12.0.14":
+  version "12.0.14"
+  resolved "https://registry.npmjs.org/@expo/config/-/config-12.0.14.tgz"
+  integrity sha512-3dfbBd9LnPDgyylhCgkOsaG8Adg52uOVOTQYH5lf23a/t8M5eQpXKCvzUarrf62B78057n2NnkiofK9TfPgvzw==
   dependencies:
     "@babel/code-frame" "~7.10.4"
-    "@expo/config-plugins" "~54.0.4"
+    "@expo/config-plugins" "~54.0.5"
     "@expo/config-types" "^54.0.10"
-    "@expo/json-file" "^10.0.8"
+    "@expo/json-file" "^10.0.16"
     deepmerge "^4.3.1"
     getenv "^2.0.0"
     glob "^13.0.0"
@@ -1353,26 +1353,18 @@
     "@babel/code-frame" "^7.20.0"
     json5 "^2.2.3"
 
-"@expo/json-file@^10.0.8", "@expo/json-file@~10.0.8":
-  version "10.0.12"
-  resolved "https://registry.npmjs.org/@expo/json-file/-/json-file-10.0.12.tgz"
-  integrity sha512-inbDycp1rMAelAofg7h/mMzIe+Owx6F7pur3XdQ3EPTy00tme+4P6FWgHKUcjN8dBSrnbRNpSyh5/shzHyVCyQ==
+"@expo/json-file@^10.0.8", "@expo/json-file@~10.0.16":
+  version "10.0.16"
+  resolved "https://registry.npmjs.org/@expo/json-file/-/json-file-10.0.16.tgz"
+  integrity sha512-fcVkWEj+hLuP2yt5W0aw6LmDRqSPWDLUSxOMcmFeV+algmIF59sQVKCwB9btjQLd4V6x9N0pISkQEkBubUHrCw==
   dependencies:
-    "@babel/code-frame" "^7.20.0"
+    "@babel/code-frame" "~7.10.4"
     json5 "^2.2.3"
 
 "@expo/json-file@^9.0.0", "@expo/json-file@^9.0.2":
   version "9.1.5"
   resolved "https://registry.npmjs.org/@expo/json-file/-/json-file-9.1.5.tgz"
   integrity sha512-prWBhLUlmcQtvN6Y7BpW2k9zXGd3ySa3R6rAguMJkp1z22nunLN64KYTUWfijFlprFoxm9r2VNnGkcbndAlgKA==
-  dependencies:
-    "@babel/code-frame" "~7.10.4"
-    json5 "^2.2.3"
-
-"@expo/json-file@~10.0.16":
-  version "10.0.16"
-  resolved "https://registry.npmjs.org/@expo/json-file/-/json-file-10.0.16.tgz"
-  integrity sha512-fcVkWEj+hLuP2yt5W0aw6LmDRqSPWDLUSxOMcmFeV+algmIF59sQVKCwB9btjQLd4V6x9N0pISkQEkBubUHrCw==
   dependencies:
     "@babel/code-frame" "~7.10.4"
     json5 "^2.2.3"
@@ -1546,7 +1538,7 @@
     base64-js "^1.2.3"
     xmlbuilder "^14.0.0"
 
-"@expo/plist@^0.4.8", "@expo/plist@^0.4.9":
+"@expo/plist@^0.4.9":
   version "0.4.9"
   resolved "https://registry.npmjs.org/@expo/plist/-/plist-0.4.9.tgz"
   integrity sha512-MPVpmKGfnQEnrCzgxuXcmPP/y/t6AVm+DcSb2Myp21LKWv1N3l8uFxMggesfF4ixAxkRlGmMMx9GyDC9M+XklQ==
@@ -1586,15 +1578,15 @@
     tslib "^2.4.0"
 
 "@expo/prebuild-config@^54.0.8":
-  version "54.0.8"
-  resolved "https://registry.npmjs.org/@expo/prebuild-config/-/prebuild-config-54.0.8.tgz"
-  integrity sha512-EA7N4dloty2t5Rde+HP0IEE+nkAQiu4A/+QGZGT9mFnZ5KKjPPkqSyYcRvP5bhQE10D+tvz6X0ngZpulbMdbsg==
+  version "54.0.9"
+  resolved "https://registry.npmjs.org/@expo/prebuild-config/-/prebuild-config-54.0.9.tgz"
+  integrity sha512-3/Rmyzt8vduPjnSVHbnc0wYFrlhwLWn2g596rDyKcLGeqN2WTLJbzVeznsrUwyzhBNXgnTomZWO5HDzbZ/4E7g==
   dependencies:
-    "@expo/config" "~12.0.13"
-    "@expo/config-plugins" "~54.0.4"
+    "@expo/config" "~12.0.14"
+    "@expo/config-plugins" "~54.0.5"
     "@expo/config-types" "^54.0.10"
     "@expo/image-utils" "^0.8.8"
-    "@expo/json-file" "^10.0.8"
+    "@expo/json-file" "^10.0.16"
     "@react-native/normalize-colors" "0.81.5"
     debug "^4.3.1"
     resolve-from "^5.0.0"
@@ -2605,7 +2597,7 @@
     component-type "^1.2.1"
     join-component "^1.1.0"
 
-"@shopify/react-native-skia@*", "@shopify/react-native-skia@2.2.12":
+"@shopify/react-native-skia@2.2.12":
   version "2.2.12"
   resolved "https://registry.npmjs.org/@shopify/react-native-skia/-/react-native-skia-2.2.12.tgz"
   integrity sha512-P5wZSMPTp00hM0do+awNFtb5aPh5hSpodMGwy7NaxK90AV+SmUu7wZe6NGevzQIwgFa89Epn6xK3j4jKWdQi+A==
@@ -5317,6 +5309,13 @@ expo-server@^1.0.7:
   version "1.0.7"
   resolved "https://registry.npmjs.org/expo-server/-/expo-server-1.0.7.tgz"
   integrity sha512-mcmyML3oXcqFUXUxtdtCL1O00ztNI2v76d+MdniXRUgHNxIcHZ05zo+DqBaOOT6LQnPk4vA4YHqQl7iGUfRb3g==
+
+expo-splash-screen@~31.0.13:
+  version "31.0.13"
+  resolved "https://registry.npmjs.org/expo-splash-screen/-/expo-splash-screen-31.0.13.tgz"
+  integrity sha512-1epJLC1cDlwwj089R2h8cxaU5uk4ONVAC+vzGiTZH4YARQhL4Stlz1MbR6yAS173GMosvkE6CAeihR7oIbCkDA==
+  dependencies:
+    "@expo/prebuild-config" "^54.0.8"
 
 expo-structured-headers@~5.0.0:
   version "5.0.0"
@@ -9274,7 +9273,7 @@ react-native-web@*, react-native-web@^0.21.0:
     postcss-value-parser "^4.2.0"
     styleq "^0.1.3"
 
-react-native-worklets@*, react-native-worklets@>=0.5.0, react-native-worklets@0.5.1:
+react-native-worklets@>=0.5.0, react-native-worklets@0.5.1:
   version "0.5.1"
   resolved "https://registry.npmjs.org/react-native-worklets/-/react-native-worklets-0.5.1.tgz"
   integrity sha512-lJG6Uk9YuojjEX/tQrCbcbmpdLCSFxDK1rJlkDhgqkVi1KZzG7cdcBFQRqyNOOzR9Y0CXNuldmtWTGOyM0k0+w==

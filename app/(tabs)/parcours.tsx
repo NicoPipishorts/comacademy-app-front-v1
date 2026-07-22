@@ -8,6 +8,7 @@ import connectorRightIcon from "@/assets/imgs/parcours/line-connecter-rightsvg.s
 import ParcoursComingSoonScreen from "@/components/parcours/ParcoursComingSoonScreen";
 import { ParcoursDayStatusBadge } from "@/components/parcours/ParcoursDayStatusBadge";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
+import CelebrationConfetti from "@/components/experience/CelebrationConfetti";
 import Loader from "@/components/experience/loader";
 import { colorBlack, colorDarkGrey, primaryBackground } from "@/constants/colors";
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
@@ -18,7 +19,7 @@ import { getParcoursTimelineActivityIcon } from "@/helpers/parcours/icons";
 import useJwtToken from "@/hooks/useJwtToken";
 import { ParcoursTimelineWeek } from "@/types/parcours";
 import { useAssets } from "expo-asset";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	Image,
@@ -28,9 +29,18 @@ import {
 	StyleSheet,
 	Text,
 	View,
+	ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
+import Animated, {
+	Easing,
+	interpolate,
+	useAnimatedStyle,
+	useSharedValue,
+	withDelay,
+	withTiming,
+} from "react-native-reanimated";
 
 const bonusAssets = [bonusPinkIcon, bonusGreenIcon, bonusBlueIcon];
 
@@ -120,18 +130,108 @@ function getBonusIcon(week: ParcoursTimelineWeek) {
 	return bonusLockedIcon;
 }
 
+function BonusUnlockIcon({
+	week,
+	imageTranslateY,
+	shouldCelebrate,
+	onCelebrationStart,
+}: {
+	week: ParcoursTimelineWeek;
+	imageTranslateY: number;
+	shouldCelebrate: boolean;
+	onCelebrationStart: () => void;
+}) {
+	const progress = useSharedValue(shouldCelebrate ? 0 : 1);
+	const hasStartedRef = useRef(false);
+	const isUnlocked =
+		week.bonus?.status === "unlocked" || week.bonus?.status === "viewed";
+
+	useEffect(() => {
+		if (!shouldCelebrate || !isUnlocked || hasStartedRef.current) {
+			return undefined;
+		}
+
+		hasStartedRef.current = true;
+		const celebrationTimer = setTimeout(onCelebrationStart, 520);
+		progress.value = withDelay(
+			260,
+			withTiming(1, {
+				duration: 820,
+				easing: Easing.out(Easing.cubic),
+			})
+		);
+
+		return () => clearTimeout(celebrationTimer);
+	}, [isUnlocked, onCelebrationStart, progress, shouldCelebrate]);
+
+	const lockedStyle = useAnimatedStyle<ViewStyle>(() => ({
+		opacity: interpolate(progress.value, [0, 0.48, 0.7], [1, 1, 0]),
+		transform: [
+			{ scale: interpolate(progress.value, [0, 0.5, 1], [1, 0.78, 0.78]) },
+			{ rotateZ: `${interpolate(progress.value, [0, 0.55], [0, -10])}deg` },
+		] as ViewStyle["transform"],
+	}));
+	const unlockedStyle = useAnimatedStyle<ViewStyle>(() => ({
+		opacity: interpolate(progress.value, [0, 0.42, 0.72, 1], [0, 0, 1, 1]),
+		transform: [
+			{ scale: interpolate(progress.value, [0, 0.45, 0.78, 1], [0.65, 0.65, 1.16, 1]) },
+			{ rotateZ: `${interpolate(progress.value, [0.42, 0.72, 1], [9, -3, 0])}deg` },
+		] as ViewStyle["transform"],
+	}));
+
+	if (!shouldCelebrate || !isUnlocked) {
+		return (
+			<PngAsset
+				source={getBonusIcon(week)}
+				width={72}
+				height={72}
+				imageTranslateY={imageTranslateY}
+			/>
+		);
+	}
+
+	return (
+		<View style={styles.bonusIconLayers}>
+			<Animated.View style={[styles.bonusIconLayer, lockedStyle]}>
+				<PngAsset
+					source={bonusLockedIcon}
+					width={72}
+					height={72}
+					imageTranslateY={imageTranslateY}
+				/>
+			</Animated.View>
+			<Animated.View style={[styles.bonusIconLayer, unlockedStyle]}>
+				<PngAsset
+					source={bonusAssets[getBonusThemeIndex(week)]}
+					width={72}
+					height={72}
+					imageTranslateY={imageTranslateY}
+				/>
+			</Animated.View>
+		</View>
+	);
+}
+
 function TimelineWeekSection({
 	week,
 	index,
+	celebratingBonusWeekId,
+	onBonusCelebrationStart,
 }: {
 	week: ParcoursTimelineWeek;
 	index: number;
+	celebratingBonusWeekId: number | null;
+	onBonusCelebrationStart: (weekId: number) => void;
 }) {
 	const isRightAligned = index % 2 === 1;
 	const connectorSource = index % 2 === 0 ? connectorLeftIcon : connectorRightIcon;
 	const isWeekOpen = isParcoursWeekOpen(week);
 	const activityIconOffsetY = isRightAligned ? 22 : 18;
 	const bonusIconOffsetY = isRightAligned ? 0 : 18;
+	const handleBonusCelebrationStart = useCallback(
+		() => onBonusCelebrationStart(week.id),
+		[onBonusCelebrationStart, week.id]
+	);
 
 	return (
 		<View style={styles.sectionBlock}>
@@ -220,11 +320,14 @@ function TimelineWeekSection({
 						isRightAligned && styles.bonusIconColumnRight,
 					]}>
 					<View style={styles.bonusIconWrap}>
-						<PngAsset
-							source={getBonusIcon(week)}
-							width={72}
-							height={72}
+						<BonusUnlockIcon
+							key={
+								celebratingBonusWeekId === week.id ? "celebrating" : "idle"
+							}
+							week={week}
 							imageTranslateY={bonusIconOffsetY}
+							shouldCelebrate={celebratingBonusWeekId === week.id}
+							onCelebrationStart={handleBonusCelebrationStart}
 						/>
 					</View>
 				</View>
@@ -251,8 +354,18 @@ export default function ParcoursScreen() {
 
 function ParcoursTimelineScreen() {
 	const insets = useSafeAreaInsets();
+	const params = useLocalSearchParams<{
+		bonusUnlockWeekId?: string | string[];
+	}>();
 	const scrollViewRef = useRef<ScrollView>(null);
+	const celebrationCleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null
+	);
 	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+	const [celebratingBonusWeekId, setCelebratingBonusWeekId] = useState<
+		number | null
+	>(null);
+	const [confettiRunId, setConfettiRunId] = useState(0);
 	const { token, loading: loadingToken } = useJwtToken();
 	const {
 		data,
@@ -267,6 +380,42 @@ function ParcoursTimelineScreen() {
 	const weeks = data?.data || [];
 	const errorMessage =
 		error instanceof Error ? error.message : "Erreur inconnue";
+	const bonusUnlockWeekIdParam = Array.isArray(params.bonusUnlockWeekId)
+		? params.bonusUnlockWeekId[0]
+		: params.bonusUnlockWeekId;
+
+	useEffect(() => {
+		const weekId = Number(bonusUnlockWeekIdParam);
+		if (!Number.isFinite(weekId) || weekId <= 0) {
+			return;
+		}
+
+		setCelebratingBonusWeekId(weekId);
+		router.setParams({ bonusUnlockWeekId: undefined });
+	}, [bonusUnlockWeekIdParam]);
+
+	useEffect(
+		() => () => {
+			if (celebrationCleanupTimerRef.current) {
+				clearTimeout(celebrationCleanupTimerRef.current);
+			}
+		},
+		[]
+	);
+
+	const handleBonusCelebrationStart = useCallback((weekId: number) => {
+		setConfettiRunId((current) => current + 1);
+
+		if (celebrationCleanupTimerRef.current) {
+			clearTimeout(celebrationCleanupTimerRef.current);
+		}
+
+		celebrationCleanupTimerRef.current = setTimeout(() => {
+			setCelebratingBonusWeekId((current) =>
+				current === weekId ? null : current
+			);
+		}, 3400);
+	}, []);
 
 	const scrollToLatestWeek = useCallback(() => {
 		requestAnimationFrame(() => {
@@ -348,6 +497,8 @@ function ParcoursTimelineScreen() {
 							key={week.id}
 							week={week}
 							index={index}
+							celebratingBonusWeekId={celebratingBonusWeekId}
+							onBonusCelebrationStart={handleBonusCelebrationStart}
 						/>
 					))
 				) : (
@@ -359,6 +510,7 @@ function ParcoursTimelineScreen() {
 					</View>
 				)}
 			</ScrollView>
+			{confettiRunId > 0 ? <CelebrationConfetti key={confettiRunId} /> : null}
 		</View>
 	);
 }
@@ -456,6 +608,13 @@ const styles = StyleSheet.create({
 	bonusIconWrap: {
 		width: 72,
 		height: 72,
+	},
+	bonusIconLayers: {
+		width: 72,
+		height: 72,
+	},
+	bonusIconLayer: {
+		...StyleSheet.absoluteFillObject,
 	},
 	pngIconSlot: {
 		alignItems: "center",

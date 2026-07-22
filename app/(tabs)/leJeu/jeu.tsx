@@ -480,8 +480,8 @@ const styles = StyleSheet.create({
 	},
 	cardWrapper: {
 		position: "absolute",
-		width: "100%",
-		height: "80%",
+		width: "94%",
+		height: "75%",
 		borderRadius: 24,
 		...Platform.select({
 			ios: {

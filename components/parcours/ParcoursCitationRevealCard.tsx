@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
 	},
 	favoriteRow: {
 		position: "absolute",
-		right: 0,
+		right: 12,
 		bottom: -38,
 		marginTop: 0,
 	},

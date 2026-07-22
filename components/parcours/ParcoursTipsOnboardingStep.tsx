@@ -46,7 +46,7 @@ export default function ParcoursTipsOnboardingStep({
 			body={<>Sauras-tu deviner le tip du jour ?</>}
 			bodyStyle={styles.body}
 			supportText={
-				<>Retrouve le en intégralité dans la rubrique Tips &amp; Tactics</>
+				<>Retrouve-le en intégralité dans la rubrique Tips &amp; Tactics</>
 			}
 		/>
 	);

@@ -8,12 +8,6 @@
 		"scheme": "comacademy",
 		"userInterfaceStyle": "automatic",
 
-		"splash": {
-			"image": "./assets/imgs/splash/splashscreen_logo.png",
-			"resizeMode": "contain",
-			"backgroundColor": "#EDBE00"
-		},
-
 		"notification": {
 			"icon": "./assets/imgs/icons/favicon.png",
 			"color": "#ffffff"
@@ -43,11 +37,6 @@
 
 			"softwareKeyboardLayoutMode": "resize",
 			"package": "com.nicopipishorts.comacademy",
-			"splash": {
-				"image": "./assets/imgs/splash/splashscreen_logo.png",
-				"resizeMode": "contain",
-				"backgroundColor": "#EDBE00"
-			},
 			"intentFilters": [
 				{
 					"action": "VIEW",
@@ -77,6 +66,15 @@
 
 		"plugins": [
 			"expo-router",
+			[
+				"expo-splash-screen",
+				{
+					"image": "./assets/imgs/splash/splashscreen_logo.png",
+					"imageWidth": 200,
+					"resizeMode": "contain",
+					"backgroundColor": "#EDBE00"
+				}
+			],
 			"expo-font",
 			"expo-image-picker",
 			"react-native-iap",

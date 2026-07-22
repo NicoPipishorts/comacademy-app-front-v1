@@ -1,5 +1,5 @@
 import { colorBlack, colorDarkGrey } from "@/constants/colors";
-import { FontSize12, FontSize14, FontSize16, FontSize20 } from "@/constants/fontsizes";
+import { FontSize14, FontSize16, FontSize20 } from "@/constants/fontsizes";
 import { mixParcoursColorWithWhite } from "@/helpers/parcours/theme";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -19,7 +19,6 @@ export default function ParcoursDicoDefinitionStep({
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.stepLabel}>Dico Quiz</Text>
 			<View style={styles.wordWrap}>
 				<Text style={styles.word}>{word}</Text>
 			</View>
@@ -42,11 +41,6 @@ export default function ParcoursDicoDefinitionStep({
 const styles = StyleSheet.create({
 	container: {
 		gap: 16,
-	},
-	stepLabel: {
-		fontSize: FontSize12,
-		fontWeight: "800",
-		color: colorBlack,
 	},
 	wordWrap: {
 		paddingHorizontal: 6,
