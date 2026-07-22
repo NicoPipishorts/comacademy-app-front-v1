@@ -1896,6 +1896,7 @@ function ParcoursDayContent() {
 								styles.stepStageCentered,
 							isTipsCardPhase && styles.stepStageCentered,
 							isTipsQuestionPhase && styles.tipsQuestionStage,
+							requiresSpecificVideoWatch && styles.videoStepStage,
 						]}>
 						{isDicoQuestionPhase ? (
 							<ParcoursDicoQuestionStep
@@ -2117,6 +2118,11 @@ const styles = StyleSheet.create({
 	},
 	tipsQuestionStage: {
 		paddingTop: 14,
+	},
+	videoStepStage: {
+		justifyContent: "center",
+		alignItems: "center",
+		paddingBottom: 24,
 	},
 	emptyReviewState: {
 		flex: 1,

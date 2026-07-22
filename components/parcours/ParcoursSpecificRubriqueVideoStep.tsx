@@ -15,11 +15,13 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
+	useWindowDimensions,
 	View,
 } from "react-native";
 
-const VIDEO_WIDTH = 280;
-const VIDEO_HEIGHT = 498;
+const MAX_VIDEO_WIDTH = 310;
+const VIDEO_ASPECT_RATIO = 9 / 16;
+const VIDEO_HORIZONTAL_GUTTER = 16;
 
 export default function ParcoursSpecificRubriqueVideoStep({
 	videoUri,
@@ -34,8 +36,14 @@ export default function ParcoursSpecificRubriqueVideoStep({
 	completed?: boolean;
 	onPlaybackStatusUpdate?: (status: CompatVideoStatus) => void;
 }) {
+	const { width: windowWidth } = useWindowDimensions();
+	const videoWidth = Math.min(
+		MAX_VIDEO_WIDTH,
+		windowWidth - 48 - VIDEO_HORIZONTAL_GUTTER
+	);
+	const videoHeight = videoWidth / VIDEO_ASPECT_RATIO;
 	const videoRef = useRef<ManagedVideoHandle | null>(null);
-	const overlayOpacity = useRef(new Animated.Value(1)).current;
+	const [overlayOpacity] = useState(() => new Animated.Value(1));
 	const previousPositionMillisRef = useRef(initialPositionMillis);
 	const hasFinishedPlaybackRef = useRef(completed);
 	const [isPlaying, setIsPlaying] = useState(false);
@@ -93,7 +101,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 
 	useEffect(() => {
 		if (!isPlaying || !videoRef.current || !onPlaybackStatusUpdate) {
-			return;
+			return undefined;
 		}
 
 		const interval = setInterval(() => {
@@ -123,7 +131,11 @@ export default function ParcoursSpecificRubriqueVideoStep({
 
 	return (
 		<View style={styles.container}>
-			<View style={[styles.videoCard, { borderColor: accentColor }]}>
+			<View
+				style={[
+					styles.videoCard,
+					{ borderColor: accentColor, width: videoWidth, height: videoHeight },
+				]}>
 				<ExpoVideo
 					ref={(ref) => {
 						videoRef.current = ref;
@@ -150,7 +162,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 				{!isPlaying ? (
 					<Animated.View
 						style={[
-							StyleSheet.absoluteFillObject,
+							StyleSheet.absoluteFill,
 							styles.overlayContainer,
 							{
 								opacity: overlayOpacity,
@@ -190,11 +202,10 @@ export default function ParcoursSpecificRubriqueVideoStep({
 
 const styles = StyleSheet.create({
 	container: {
+		width: "100%",
 		alignItems: "center",
 	},
 	videoCard: {
-		width: VIDEO_WIDTH,
-		height: VIDEO_HEIGHT,
 		borderRadius: 28,
 		overflow: "hidden",
 		backgroundColor: primaryBackground,
@@ -210,7 +221,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#000000",
 	},
 	thumbnail: {
-		...StyleSheet.absoluteFillObject,
+		...StyleSheet.absoluteFill,
 		width: "100%",
 		height: "100%",
 	},
