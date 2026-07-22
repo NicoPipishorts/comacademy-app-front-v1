@@ -14,7 +14,7 @@ import useGetFeed from "@/hooks/Feed/useGetAllFeed";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
 import { useTrackRubricOpened } from "@/hooks/Rubrics/useRubricNotifications";
 import useAuthSession from "@/hooks/useAuthSession";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	ActivityIndicator,

@@ -1,7 +1,6 @@
 import QuestionDetails from "@/components/details/questionDetails";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import { useFocusEffect } from "@react-navigation/native";
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import { View } from "react-native";
 

@@ -5,7 +5,7 @@ import {
 	RubricKey,
 	RubricNotificationsResponse,
 } from "@/types/rubricNotifications";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { buildApiUrl } from "@/helpers/api/buildApiUrl";

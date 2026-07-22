@@ -5,8 +5,7 @@ import {
 	getOnboardingStatus,
 	setOnboardingStatus,
 } from "@/services/onboarding/Onboarding";
-import { useFocusEffect } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
