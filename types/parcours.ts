@@ -24,7 +24,10 @@ export interface ParcoursBonusVideoPayload {
 	type: "video";
 	programOrder?: number;
 	themeIndex?: number;
-	rubriqueType?: "thirty_seconds" | "top_deflop" | "capsule";
+	rubriqueType?:
+		| "vie_de_com"
+		| "marque_mystere"
+		| "petite_histoire";
 	rubriqueLabel?: string | null;
 	title?: string | null;
 	videoLink?: string | null;

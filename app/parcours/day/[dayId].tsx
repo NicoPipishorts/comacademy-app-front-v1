@@ -664,7 +664,8 @@ function ParcoursDayContent() {
 	const requiresSpecificVideoWatch =
 		isSpecificRubriqueStep &&
 		(currentStepContent.rubriqueType === "thirty_seconds" ||
-			currentStepContent.rubriqueType === "top_deflop") &&
+			currentStepContent.rubriqueType === "top_deflop" ||
+			currentStepContent.rubriqueType === "capsule") &&
 		Boolean(specificVideoUri);
 	const persistedGameSessionId =
 		typeof persistedStepState.gameSessionId === "number" &&
@@ -1981,7 +1982,8 @@ function ParcoursDayContent() {
 							)
 						) : requiresSpecificVideoWatch &&
 						  (currentStepContent.rubriqueType === "thirty_seconds" ||
-								currentStepContent.rubriqueType === "top_deflop") &&
+								currentStepContent.rubriqueType === "top_deflop" ||
+								currentStepContent.rubriqueType === "capsule") &&
 						  specificVideoUri ? (
 							<ParcoursSpecificRubriqueVideoStep
 								videoUri={specificVideoUri}
