@@ -10,6 +10,7 @@ import { SessionResultsAllquestions } from "@/hooks/useGetEndOfSession";
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 const booleanLabel = (value: boolean) => (value ? "Vrai" : "Faux");
 const reviewCardBackground = "#F5F5F5";
@@ -31,7 +32,7 @@ export default function ParcoursGameAnswersReview({
 	}
 
 	return (
-		<View style={styles.wrapper}>
+		<Animated.View entering={FadeIn.duration(240)} style={styles.wrapper}>
 			<Text style={styles.eyebrow}>Quiz</Text>
 			<Text style={styles.title}>Tes réponses</Text>
 			<View style={styles.answersList}>
@@ -78,7 +79,7 @@ export default function ParcoursGameAnswersReview({
 					);
 				})}
 			</View>
-		</View>
+		</Animated.View>
 	);
 }
 

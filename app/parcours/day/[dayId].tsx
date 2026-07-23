@@ -303,6 +303,9 @@ function ParcoursDayContent() {
 		number | null
 	>(null);
 	const [isFinalizingGameStep, setIsFinalizingGameStep] = useState(false);
+	const [pendingGameAnswersStepId, setPendingGameAnswersStepId] = useState<
+		string | null
+	>(null);
 	const [optimisticGameQuestions, setOptimisticGameQuestions] = useState<QuestionData[] | null>(
 		null
 	);
@@ -392,6 +395,7 @@ function ParcoursDayContent() {
 		setTimeoutFeedbackLabel(null);
 		setIsDayCompletionScreenVisible(false);
 		setIsFinalizingGameStep(false);
+		setPendingGameAnswersStepId(null);
 		setOptimisticGameQuestions(null);
 		setSeenDicoOnboardingStepIds({});
 		setPendingDicoOnboardingStepIndex(null);
@@ -1673,6 +1677,9 @@ function ParcoursDayContent() {
 				: currentQuestions
 		);
 		setIsFinalizingGameStep(isLastGameQuestion);
+		if (isLastGameQuestion) {
+			setPendingGameAnswersStepId(currentStepId);
+		}
 		if (!isLastGameQuestion) {
 			setFeedbackAnswer(gameFeedbackAnswer);
 		}
@@ -1955,7 +1962,10 @@ function ParcoursDayContent() {
 							)
 						) : isGameStep ? (
 							isCompletedReview || isGameResultsPhase ? (
-								isLoadingCompletedGameResults ? (
+								!isCompletedReview &&
+								pendingGameAnswersStepId === currentStepId ? (
+									<View style={styles.gameResultsTransitionSpacer} />
+								) : isLoadingCompletedGameResults ? (
 									<Loader />
 								) : (
 									<ParcoursGameAnswersReview
@@ -2047,8 +2057,13 @@ function ParcoursDayContent() {
 							isDicoStep && isDicoQuestionPhase;
 						const shouldRevealTipsCard =
 							isTipsStep && isTipsQuestionPhase;
+						const shouldRevealGameAnswers = isGameResultsPhase;
 						pendingCorrectAdvanceRef.current = false;
 						setFeedbackAnswer(null);
+						if (shouldRevealGameAnswers) {
+							setPendingGameAnswersStepId(null);
+							return;
+						}
 						if (shouldRevealDicoDefinition) {
 							void moveToDicoPhase("definition");
 							return;
@@ -2123,6 +2138,9 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		paddingBottom: 24,
+	},
+	gameResultsTransitionSpacer: {
+		flex: 1,
 	},
 	emptyReviewState: {
 		flex: 1,
