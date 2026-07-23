@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
 	cardWrapper: {
 		position: "absolute",
 		width: "100%",
-		height: "88%",
+		height: "94%",
 		borderRadius: 24,
 		...Platform.select({
 			ios: {
