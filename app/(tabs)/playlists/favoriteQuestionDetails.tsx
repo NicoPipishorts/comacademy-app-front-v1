@@ -1,7 +1,6 @@
 import QuestionDetails from "@/components/details/questionDetails";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
+import { useLocalSearchParams } from "expo-router";
 
 export default function FavoriteQuestionDetails() {
 	const params = useLocalSearchParams();
@@ -9,14 +8,7 @@ export default function FavoriteQuestionDetails() {
 	const parsedQuestionId = Number(params?.questionId);
 	const questionId = Number.isFinite(parsedQuestionId) ? parsedQuestionId : null;
 
-	const { showTabBar, hideTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	return (
 		<QuestionDetails

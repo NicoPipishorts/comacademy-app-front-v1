@@ -1,9 +1,14 @@
 import FilteredByCat from "@/components/filters/filteredByCat";
+import {
+	AlphabetSidebar,
+	alphabeticalListStyles,
+	LoadingLines,
+	normalizeString,
+} from "@/components/lists/alphabeticalList";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import Searchbar from "@/components/Searchbar";
 import { colorBlack } from "@/constants/colors";
-import { FontSize12, FontSize22, FontSizeH3 } from "@/constants/fontsizes";
 import { useSubscriptionLimit } from "@/hooks/useSubscriptionLimit";
 import { CategoriePayload } from "@/types/categories";
 import { NavigationType } from "@/types/general";
@@ -25,8 +30,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-
-const SIDEBAR_HIT_SLOP = { top: 4, bottom: 4, left: 12, right: 12 } as const;
 
 type Props = {
 	data: MetiersList | null;
@@ -111,9 +114,6 @@ const MetierList = ({
 		items: SelectedMetier[],
 		property: keyof SelectedMetier,
 	) {
-		const normalizeString = (str: string) =>
-			str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
 		items.sort((a, b) => {
 			const propA = a[property];
 			const propB = b[property];
@@ -219,7 +219,7 @@ const MetierList = ({
 				message='Un métier de chaque lettre est gratuit. Passez à un abonnement premium pour accéder à tous les métiers.'
 			/>
 
-			<View style={styles.contentContainer}>
+			<View style={alphabeticalListStyles.contentContainer}>
 				<ScrollView
 					refreshControl={
 						onRefresh ? (
@@ -231,32 +231,24 @@ const MetierList = ({
 						) : undefined
 					}
 					ref={scrollViewRef}
-					style={styles.listWrapper}
-					contentContainerStyle={styles.listContainer}
+					style={alphabeticalListStyles.listWrapper}
+					contentContainerStyle={alphabeticalListStyles.listContainer}
 					stickyHeaderIndices={[1]}
 					showsVerticalScrollIndicator={false}>
 					<PageTitleAvatarHeader
 						title={headerTitle}
-						containerStyle={styles.listPageHeader}
+						containerStyle={alphabeticalListStyles.listPageHeader}
 					/>
-					<View style={styles.stickySearchContainer}>
+					<View style={alphabeticalListStyles.stickySearchContainer}>
 						<Searchbar
 							placeholder='Rechercher'
 							onChangeText={handleSearch}
-							containerStyle={styles.searchBar}
+							containerStyle={alphabeticalListStyles.searchBar}
 						/>
 					</View>
-					<View style={styles.listBodyContent}>
+					<View style={alphabeticalListStyles.listBodyContent}>
 						{isListLoading ? (
-							Array.from({ length: 25 }).map((_, index) => (
-								<View
-									key={index}
-									style={[
-										styles.loadingLine,
-										index % 4 === 0 && styles.loadingLineShort,
-									]}
-								/>
-							))
+							<LoadingLines count={25} />
 						) : (
 							<>
 								{filterByCat && (
@@ -277,15 +269,20 @@ const MetierList = ({
 													key={index}
 													onPress={() => handlePress(item.id, index)}>
 													<Text
-														style={[styles.listItem, locked && styles.lockedItem]}>
+														style={[
+															alphabeticalListStyles.listItem,
+															locked && alphabeticalListStyles.lockedItem,
+														]}>
 														{item.METIER}
 													</Text>
 												</TouchableOpacity>
 											);
 										})
 									) : (
-										<View style={styles.noDataContainer}>
-											<Text style={styles.noDataText}>Aucun métier trouvé.</Text>
+										<View style={alphabeticalListStyles.noDataContainer}>
+											<Text style={alphabeticalListStyles.noDataText}>
+												Aucun métier trouvé.
+											</Text>
 										</View>
 									)
 								) : (
@@ -295,7 +292,9 @@ const MetierList = ({
 											ref={(el) => {
 												sectionRefs[letter] = el;
 											}}>
-											<Text style={styles.listHeader}>{letter}</Text>
+											<Text style={alphabeticalListStyles.listHeader}>
+												{letter}
+											</Text>
 											{groupedData[letter]?.map((item, indexInGroup) => {
 												const locked = isMetierLocked(indexInGroup);
 												return (
@@ -306,8 +305,8 @@ const MetierList = ({
 														}>
 														<Text
 															style={[
-																styles.listItem,
-																locked && styles.lockedItem,
+																alphabeticalListStyles.listItem,
+																locked && alphabeticalListStyles.lockedItem,
 															]}>
 															{item.METIER}
 														</Text>
@@ -323,16 +322,11 @@ const MetierList = ({
 				</ScrollView>
 
 					{!isListLoading && !searchQuery && filteredData.length > 0 && (
-						<View style={styles.sidebar}>
-							{alphabet.map((letter, index) => (
-								<TouchableOpacity
-									key={index}
-									hitSlop={SIDEBAR_HIT_SLOP}
-									onPress={() => scrollToSection(letter)}>
-									<Text style={styles.sidebarText}>{letter}</Text>
-								</TouchableOpacity>
-							))}
-						</View>
+						<AlphabetSidebar
+							letters={alphabet}
+							onPressLetter={scrollToSection}
+							style={styles.sidebar}
+						/>
 					)}
 			</View>
 		</>
@@ -340,64 +334,6 @@ const MetierList = ({
 };
 
 const styles = StyleSheet.create({
-	contentContainer: {
-		flex: 1,
-		marginBottom: 80,
-		position: "relative",
-	},
-	listWrapper: {
-		flex: 1,
-	},
-	listContainer: {
-		paddingBottom: 60,
-	},
-	listBodyContent: {
-		paddingHorizontal: 5,
-		paddingRight: 44,
-	},
-	listPageHeader: {
-		paddingBottom: 8,
-	},
-	stickySearchContainer: {
-		width: "100%",
-		paddingTop: 8,
-		paddingBottom: 6,
-		backgroundColor: "transparent",
-	},
-	searchBar: {
-		width: "100%",
-		borderWidth: 2,
-		borderColor: "#F5F5F5",
-		backgroundColor: "#FFFFFF",
-		shadowOpacity: 0,
-		elevation: 0,
-	},
-	loadingLine: {
-		height: 20,
-		borderRadius: 10,
-		backgroundColor: "#E4E4E4",
-		marginBottom: 16,
-		width: "100%",
-	},
-	loadingLineShort: {
-		width: "70%",
-	},
-	listHeader: {
-		fontWeight: "bold",
-		fontSize: FontSizeH3,
-		paddingVertical: 5,
-		marginTop: 20,
-		overflow: "hidden",
-	},
-	listItem: {
-		paddingVertical: 5,
-		color: colorBlack,
-		fontSize: 18,
-		fontWeight: "500",
-	},
-	lockedItem: {
-		opacity: 0.4,
-	},
 	sidebar: {
 		position: "absolute",
 		right: 0,
@@ -407,23 +343,6 @@ const styles = StyleSheet.create({
 		paddingTop: 36,
 		justifyContent: "center",
 		alignItems: "center",
-	},
-	sidebarText: {
-		padding: 1,
-		fontSize: FontSize12,
-		fontWeight: "bold",
-	},
-	noDataContainer: {
-		flex: 1,
-		minHeight: "50%",
-		justifyContent: "center",
-		alignItems: "center",
-		textAlign: "center",
-	},
-	noDataText: {
-		fontSize: FontSize22,
-		fontWeight: "bold",
-		marginBottom: 20,
 	},
 });
 

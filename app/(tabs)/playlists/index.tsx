@@ -14,8 +14,9 @@ import useGetPlaylistsByUser from "@/hooks/Playlistss/useGetPlaylistsByUser";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
+import useSwipeableRows from "@/hooks/useSwipeableRows";
 import { AxiosError } from "axios";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
 	Image,
 	Keyboard,
@@ -42,8 +43,12 @@ const Playlist = () => {
 	useTrackPageMetrics({ page: "Playlists" });
 
 	// PlaylistCard Swipe Refs
-	const [openedSwipeable, setOpenedSwipeable] = useState(null);
-	const swipeableRefs = useRef({});
+	const {
+		openedSwipeable,
+		setOpenedSwipeable,
+		swipeableRefs,
+		closeOpenedSwipeable,
+	} = useSwipeableRows();
 
 	const showSnackbar = useSnackbar(); // Use the snackbar context
 
@@ -52,10 +57,7 @@ const Playlist = () => {
 			queryKey: ["Playlists"],
 		});
 		showSnackbar(message, "success");
-		if (openedSwipeable) {
-			openedSwipeable.close();
-			setOpenedSwipeable(null);
-		}
+		closeOpenedSwipeable();
 	};
 
 	const onError = (error: AxiosError) => {
@@ -94,16 +96,9 @@ const Playlist = () => {
 		return <PlaylistsSkeleton />;
 	}
 
-	const closeSwipeable = () => {
-		if (openedSwipeable) {
-			openedSwipeable.close();
-			setOpenedSwipeable(null);
-		}
-	};
-
 	const handleOutsidePress = () => {
 		Keyboard.dismiss();
-		closeSwipeable();
+		closeOpenedSwipeable();
 	};
 
 	return (
@@ -124,10 +119,7 @@ const Playlist = () => {
 							setModalVisible(true);
 							setPlaylistId(null);
 							setModalType("new");
-							if (openedSwipeable) {
-								openedSwipeable.close();
-								setOpenedSwipeable(null);
-							}
+							closeOpenedSwipeable();
 						}}>
 						<Image source={AddPlaylist} style={styles.addPlaylistImage} />
 						<View style={{ flexDirection: "column" }}>

@@ -4,6 +4,7 @@ import React, {
 	ReactNode,
 	useCallback,
 	useContext,
+	useMemo,
 	useState,
 } from "react";
 
@@ -45,9 +46,13 @@ export const TabBarVisibilityProvider: React.FC<
 		setTabBarVisible(false);
 	}, []);
 
+	const value = useMemo(
+		() => ({ isTabBarVisible, showTabBar, hideTabBar }),
+		[isTabBarVisible, showTabBar, hideTabBar]
+	);
+
 	return (
-		<TabBarVisibilityContext.Provider
-			value={{ isTabBarVisible, showTabBar, hideTabBar }}>
+		<TabBarVisibilityContext.Provider value={value}>
 			{children}
 		</TabBarVisibilityContext.Provider>
 	);

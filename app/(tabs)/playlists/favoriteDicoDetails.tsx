@@ -1,20 +1,12 @@
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import { useLocalSearchParams } from "expo-router";
 import DicoDetails from "../dico/dicoDetails";
 
-export default function FavoriteQuestionDetails() {
+export default function FavoriteDicoDetails() {
 	const { dicoId } = useLocalSearchParams();
 
-	const { showTabBar, hideTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	return (
 		<SwipeToGoBack>

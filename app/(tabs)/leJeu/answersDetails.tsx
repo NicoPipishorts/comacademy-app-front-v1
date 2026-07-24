@@ -1,7 +1,6 @@
 import QuestionDetails from "@/components/details/questionDetails";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
+import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 
 export default function AnswersDetails() {
@@ -33,14 +32,7 @@ export default function AnswersDetails() {
 		? params.postGame[0]
 		: params?.postGame;
 	const postGame = postGameParam === "true" || postGameParam === "1";
-	const { hideTabBar, showTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	return (
 		<View style={{ flex: 1 }}>

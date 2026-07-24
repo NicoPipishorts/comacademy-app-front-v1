@@ -2,7 +2,14 @@
 import { useSnackbar } from "@/context/snackBar";
 import { logDevice } from "@/helpers/logDevice";
 import NetInfo from "@react-native-community/netinfo";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, {
+	createContext,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 interface NetworkContextType {
 	isConnected: boolean;
@@ -40,10 +47,10 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
 		};
 	}, [showSnackbar]);
 
+	const value = useMemo(() => ({ isConnected }), [isConnected]);
+
 	return (
-		<NetworkContext.Provider value={{ isConnected }}>
-			{children}
-		</NetworkContext.Provider>
+		<NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>
 	);
 };
 

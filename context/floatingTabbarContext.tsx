@@ -5,6 +5,7 @@ import React, {
 	ReactNode,
 	SetStateAction,
 	useContext,
+	useMemo,
 	useState,
 } from "react";
 
@@ -20,11 +21,9 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
 	const [selectedTab, setSelectedTab] = useState<boolean>(false);
 
-	return (
-		<TabContext.Provider value={{ selectedTab, setSelectedTab }}>
-			{children}
-		</TabContext.Provider>
-	);
+	const value = useMemo(() => ({ selectedTab, setSelectedTab }), [selectedTab]);
+
+	return <TabContext.Provider value={value}>{children}</TabContext.Provider>;
 };
 
 export const useTab = (): TabContextType => {
