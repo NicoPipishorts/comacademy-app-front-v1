@@ -1,21 +1,13 @@
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import { useLocalSearchParams } from "expo-router";
 import MetierDetails from "../metiers/metierDetails";
 
-export default function FavoriteQuestionDetails() {
+export default function FavoriteMetierDetails() {
 	const params = useLocalSearchParams();
 	const metierId = Number(params?.metierId);
 
-	const { showTabBar, hideTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	return (
 		<SwipeToGoBack>

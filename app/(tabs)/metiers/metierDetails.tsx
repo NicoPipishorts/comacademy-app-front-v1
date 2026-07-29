@@ -15,10 +15,10 @@ import GradientContainer from "@/components/GradientContainer";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
 import UnorderedList from "@/components/UnorderedList";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import useDeviceTypeCheckers from "@/helpers/deviceModel";
 import { useGetMetierById } from "@/hooks/useGetMetiers";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
+import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
@@ -48,14 +48,7 @@ export default function MetierDetails({ metierId: paramsMetierId }: Props) {
 
 	const handleModalOpen = useCallback(() => setModalVisible(true), []);
 	const handleModalClose = useCallback(() => setModalVisible(false), []);
-	const { showTabBar, hideTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	if (metierId == null) {
 		return (

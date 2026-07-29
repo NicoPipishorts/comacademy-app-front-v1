@@ -1,7 +1,7 @@
 import Foundation from "@expo/vector-icons/Foundation";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -24,6 +24,7 @@ import {
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { getRoundProgress } from "@/helpers/gameProgress";
 import useAuthSession from "@/hooks/useAuthSession";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
 
 export default function FinishedSession() {
 	const insets = useSafeAreaInsets();
@@ -40,14 +41,9 @@ export default function FinishedSession() {
 			? parsedSessionId
 			: null;
 
-	const { hideTabBar, showTabBar } = useTabBarVisibility();
+	const { showTabBar } = useTabBarVisibility();
 
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	const { data: gameComments } = useGetEndOfSession(auth?.user.id);
 

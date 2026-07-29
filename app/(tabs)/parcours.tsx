@@ -657,7 +657,11 @@ const styles = StyleSheet.create({
 		height: 72,
 	},
 	bonusIconLayer: {
-		...StyleSheet.absoluteFillObject,
+		position: "absolute",
+		top: 0,
+		left: 0,
+		width: 72,
+		height: 72,
 	},
 	pngIconSlot: {
 		alignItems: "center",

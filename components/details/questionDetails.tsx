@@ -3,15 +3,15 @@ import HeartFull from "@/assets/imgs/icons/heart-full.png";
 import Heart from "@/assets/imgs/icons/heart.png";
 import Plus from "@/assets/imgs/icons/plus.png";
 import { colorBlack, colorWhite } from "@/constants/colors";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 import useJwtToken from "@/hooks/useJwtToken";
 import useQuestionById from "@/hooks/useQuestionById";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
 import useResponseDetailsByDocumentId from "@/hooks/useResponseDetailsByDocumentId";
 import { logDevice } from "@/helpers/logDevice";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
 	Image,
@@ -176,14 +176,7 @@ export default function QuestionDetails({
 		LOCAL_RESPONSE_DEBUG_DELAY_MS === 0,
 	);
 
-	const { showTabBar, hideTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	const handleBackPress = useCallback(() => {
 		if (typeof router.canGoBack === "function" && router.canGoBack()) {
