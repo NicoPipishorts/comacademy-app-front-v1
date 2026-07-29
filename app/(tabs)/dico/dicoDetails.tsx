@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React, {
 	useCallback,
 	useEffect,
@@ -24,7 +24,7 @@ import ReturnButton from "@/components/buttons/returnButton";
 import Loader from "@/components/experience/loader";
 import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import AddToPlaylistModal from "@/components/modal/AddToPlaylistModal";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 
 // Adapters
@@ -50,14 +50,7 @@ interface Props {
 export default function DicoDetails({ dicoId: paramsDicoId }: Props) {
 	const { id } = useLocalSearchParams();
 	const { isAndroid } = useDeviceTypeCheckers();
-	const { showTabBar, hideTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	// Modal visibility
 	const [modalVisible, setModalVisible] = useState(false);

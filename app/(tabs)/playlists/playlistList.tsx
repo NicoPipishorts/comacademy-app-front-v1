@@ -8,12 +8,13 @@ import { truncateString } from "@/helpers/truncateText";
 import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
+import useSwipeableRows from "@/hooks/useSwipeableRows";
 import { NavigationType } from "@/types/general";
 import PlaylistDisplayImage from "@/utils/playlist/PlaylistDisplayImage";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
 import { AxiosError } from "axios";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useRef, useState } from "react";
+import React from "react";
 import {
 	Animated,
 	Image,
@@ -38,8 +39,12 @@ const PlaylistList = () => {
 	const { data: playlistData, isFetched } =
 		useGetPlaylistById(playlistIdNumber);
 
-	const [openedSwipeable, setOpenedSwipeable] = useState(null);
-	const swipeableRefs = useRef({});
+	const {
+		openedSwipeable,
+		setOpenedSwipeable,
+		swipeableRefs,
+		closeOpenedSwipeable,
+	} = useSwipeableRows();
 
 	const onSuccess = () => {
 		queryClient.refetchQueries({
@@ -88,13 +93,8 @@ const PlaylistList = () => {
 		}
 	};
 
-	const handleOutsidePress = () => {
-		// Close the currently opened swipeable card
-		if (openedSwipeable) {
-			openedSwipeable.close();
-			setOpenedSwipeable(null);
-		}
-	};
+	// Close the currently opened swipeable card
+	const handleOutsidePress = closeOpenedSwipeable;
 
 	function RightAction(dragX, elementId) {
 		const trans = dragX.interpolate({

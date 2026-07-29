@@ -129,7 +129,7 @@ export default function CelebrationConfetti() {
 
 const styles = StyleSheet.create({
 	overlay: {
-		...StyleSheet.absoluteFillObject,
+		...StyleSheet.absoluteFill,
 		zIndex: 20,
 		overflow: "hidden",
 	},

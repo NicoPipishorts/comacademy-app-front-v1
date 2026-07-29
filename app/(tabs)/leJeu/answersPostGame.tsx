@@ -9,11 +9,10 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize14, FontSize16 } from "@/constants/fontsizes";
-import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
 import { useGetEndOfSessionResults } from "@/hooks/useGetEndOfSession";
+import useHideTabBarOnFocus from "@/hooks/useHideTabBarOnFocus";
 import SwipeToGoBack from "@/utils/swipeToGoBack";
-import { useCallback } from "react";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function AnswersPostGame() {
@@ -28,14 +27,7 @@ export default function AnswersPostGame() {
 
 	const { data: allAnswerData } = useGetEndOfSessionResults(gameId);
 
-	const { hideTabBar, showTabBar } = useTabBarVisibility();
-
-	useFocusEffect(
-		useCallback(() => {
-			hideTabBar();
-			return () => showTabBar();
-		}, [hideTabBar, showTabBar])
-	);
+	useHideTabBarOnFocus();
 
 	if (!allAnswerData) {
 		return <Loader />;

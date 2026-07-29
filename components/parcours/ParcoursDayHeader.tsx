@@ -1,5 +1,5 @@
 import { colorBlack } from "@/constants/colors";
-import { FontSize14 } from "@/constants/fontsizes";
+import { FontSize16 } from "@/constants/fontsizes";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -47,7 +47,7 @@ export default function ParcoursDayHeader({
 
 const styles = StyleSheet.create({
 	dateLabel: {
-		fontSize: FontSize14,
+		fontSize: FontSize16,
 		fontWeight: "600",
 		color: colorBlack,
 		marginBottom: 6,

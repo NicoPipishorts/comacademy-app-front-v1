@@ -6,7 +6,7 @@ import {
 	setupNotificationChannels,
 } from "@/services/NotificationService";
 import * as Notifications from "expo-notifications";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useMemo, useState } from "react";
 
 interface PushNotificationContextType {
 	expoPushToken: string | null;
@@ -56,8 +56,13 @@ export const PushNotificationProvider: React.FC<{
 		]);
 	}, []);
 
+	const value = useMemo(
+		() => ({ expoPushToken, notification }),
+		[expoPushToken, notification]
+	);
+
 	return (
-		<PushNotificationContext.Provider value={{ expoPushToken, notification }}>
+		<PushNotificationContext.Provider value={value}>
 			{children}
 		</PushNotificationContext.Provider>
 	);

@@ -20,6 +20,7 @@ const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
 const MAX_VISIBLE_STACK_POSITION = 4;
 const STACK_CARD_OFFSET = 18;
 const STACK_CARD_SCALE_STEP = 0.04;
+const STACK_VERTICAL_OFFSET = -44;
 
 type SwipeableCardProps = {
 	data: QuestionData;
@@ -259,11 +260,12 @@ const styles = StyleSheet.create({
 		width: "100%",
 		justifyContent: "center",
 		alignItems: "center",
+		transform: [{ translateY: STACK_VERTICAL_OFFSET }],
 	},
 	cardWrapper: {
 		position: "absolute",
 		width: "100%",
-		height: "88%",
+		height: "94%",
 		borderRadius: 24,
 		...Platform.select({
 			ios: {

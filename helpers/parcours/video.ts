@@ -118,6 +118,21 @@ export const hasParcoursVideoReachedNextThreshold = ({
 	return durationMillis - positionMillis <= VIDEO_NEXT_UNLOCK_THRESHOLD_MS;
 };
 
+export const hasUsableParcoursVideoStatus = ({
+	isLoaded,
+	durationMillis,
+	didJustFinish,
+}: {
+	isLoaded: boolean;
+	durationMillis?: number | null;
+	didJustFinish: boolean;
+}) =>
+	isLoaded ||
+	didJustFinish ||
+	(typeof durationMillis === "number" &&
+		Number.isFinite(durationMillis) &&
+		durationMillis > 0);
+
 export const getParcoursVideoNextUnlocked = (
 	stepState: StepStateRecord | undefined
 ) => Boolean(stepState?.videoNextUnlocked || stepState?.videoCompleted);
