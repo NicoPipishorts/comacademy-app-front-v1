@@ -5,6 +5,7 @@ import useAuthSession from "@/hooks/useAuthSession";
 import useCategories from "@/hooks/useCategories";
 
 export default function CitationsFavoritesList() {
+	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 
 	const { data: favoriteResponse, isFetched } =

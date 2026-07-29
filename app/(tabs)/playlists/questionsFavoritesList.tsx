@@ -5,6 +5,7 @@ import useCategoryLookups from "@/hooks/useCategoryLookups";
 import useGetFavoriteQuestions from "@/hooks/useGetFavoriteQuestions";
 
 export default function QuestionsFavoritesList() {
+	const insets = useSafeAreaInsets();
 	const { auth } = useAuthSession();
 
 	const { data: favoriteResponse, isFetched } =
