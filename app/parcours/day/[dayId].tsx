@@ -74,6 +74,7 @@ import {
 	hasParcoursVideoReachedNextThreshold,
 	hasUsableParcoursVideoStatus,
 	resolveParcoursVideoUri,
+	shouldRequireParcoursVideoWatch,
 	shouldPersistParcoursVideoCheckpoint,
 } from "@/helpers/parcours/video";
 import { getReviewableParcoursSteps } from "@/helpers/parcours/review";
@@ -116,14 +117,20 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function StepFallback({ step }: { step: ParcoursDayStep }) {
+function StepFallback({
+	step,
+	message = "Cette etape n'est pas encore designée dans le player parcours.",
+}: {
+	step: ParcoursDayStep;
+	message?: string;
+}) {
 	return (
 		<View style={styles.fallbackCard}>
 			<Text style={styles.fallbackType}>
 				{String(step.type || "Etape").replace(/_/g, " ")}
 			</Text>
 			<Text style={styles.fallbackBody}>
-				Cette etape n&apos;est pas encore designée dans le player parcours.
+				{message}
 			</Text>
 		</View>
 	);
@@ -329,6 +336,8 @@ function ParcoursDayContent() {
 	const [locallyUnlockedVideoStepId, setLocallyUnlockedVideoStepId] = useState<string | null>(
 		null
 	);
+	const [specificVideoPlaybackErrorStepId, setSpecificVideoPlaybackErrorStepId] =
+		useState<string | null>(null);
 	const lastProgressPayloadRef = useRef<Record<string, unknown> | null>(
 		day?.progression?.lastProgressPayload || null
 	);
@@ -652,6 +661,8 @@ function ParcoursDayContent() {
 			? currentStepContent.categoryStaticId
 			: null;
 	const specificVideoUri = resolveParcoursVideoUri(currentStepContent);
+	const specificVideoPlaybackFailed =
+		specificVideoPlaybackErrorStepId === currentStepId;
 	const specificVideoNextUnlocked =
 		getParcoursVideoNextUnlocked(persistedStepState) ||
 		locallyUnlockedVideoStepId === currentStepId;
@@ -666,12 +677,18 @@ function ParcoursDayContent() {
 			: typeof persistedStepState.videoCheckpointMillis === "number"
 			? persistedStepState.videoCheckpointMillis
 			: 0;
-	const requiresSpecificVideoWatch =
+	// Any specific-rubrique step that carries a playable video must be watched
+	// before "Suivant" unlocks. Gate on the presence of a video rather than an
+	// allowlist of rubrique types, so newly added video types (vie_de_com,
+	// marque_mystere, petite_histoire, …) stay gated too.
+	const requiresSpecificVideoWatch = shouldRequireParcoursVideoWatch({
+		isSpecificRubriqueStep,
+		videoUri: specificVideoUri,
+		playbackFailed: specificVideoPlaybackFailed,
+	});
+	const specificVideoUnavailable =
 		isSpecificRubriqueStep &&
-		(currentStepContent.rubriqueType === "thirty_seconds" ||
-			currentStepContent.rubriqueType === "top_deflop" ||
-			currentStepContent.rubriqueType === "capsule") &&
-		Boolean(specificVideoUri);
+		(!specificVideoUri || specificVideoPlaybackFailed);
 	const persistedGameSessionId =
 		typeof persistedStepState.gameSessionId === "number" &&
 		Number.isFinite(persistedStepState.gameSessionId)
@@ -1501,6 +1518,7 @@ function ParcoursDayContent() {
 		const {
 			positionMillis,
 			durationMillis,
+			nextUnlocked,
 			completed,
 			rewatchedHalf,
 			rewatchCountIncremented,
@@ -1549,7 +1567,7 @@ function ParcoursDayContent() {
 		return buildParcoursVideoProgressPatch({
 			positionMillis,
 			durationMillis,
-			nextUnlocked: completed ? true : false,
+			nextUnlocked,
 			completed,
 		});
 	};
@@ -1992,17 +2010,21 @@ function ParcoursDayContent() {
 									}}
 								/>
 							)
-						) : requiresSpecificVideoWatch &&
-						  (currentStepContent.rubriqueType === "thirty_seconds" ||
-								currentStepContent.rubriqueType === "top_deflop" ||
-								currentStepContent.rubriqueType === "capsule") &&
-						  specificVideoUri ? (
+						) : specificVideoUnavailable ? (
+							<StepFallback
+								step={currentStep || {}}
+								message="Cette vidéo est indisponible. Vous pouvez continuer le parcours."
+							/>
+						) : requiresSpecificVideoWatch && specificVideoUri ? (
 							<ParcoursSpecificRubriqueVideoStep
 								videoUri={specificVideoUri}
 								accentColor={currentAccentColor}
 								initialPositionMillis={specificVideoResumeMillis}
 								completed={Boolean(persistedStepState.videoCompleted)}
 								onPlaybackStatusUpdate={handleSpecificVideoStatusUpdate}
+								onPlaybackError={() => {
+									setSpecificVideoPlaybackErrorStepId(currentStepId);
+								}}
 							/>
 						) : (
 							<StepFallback step={currentStep || {}} />

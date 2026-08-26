@@ -136,3 +136,16 @@ export const hasUsableParcoursVideoStatus = ({
 export const getParcoursVideoNextUnlocked = (
 	stepState: StepStateRecord | undefined
 ) => Boolean(stepState?.videoNextUnlocked || stepState?.videoCompleted);
+
+export const shouldRequireParcoursVideoWatch = ({
+	isSpecificRubriqueStep,
+	videoUri,
+	playbackFailed = false,
+}: {
+	isSpecificRubriqueStep: boolean;
+	videoUri?: string | null;
+	playbackFailed?: boolean;
+}) =>
+	isSpecificRubriqueStep &&
+	!playbackFailed &&
+	Boolean(String(videoUri || "").trim());

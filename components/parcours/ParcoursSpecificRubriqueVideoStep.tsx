@@ -29,12 +29,14 @@ export default function ParcoursSpecificRubriqueVideoStep({
 	initialPositionMillis = 0,
 	completed = false,
 	onPlaybackStatusUpdate,
+	onPlaybackError,
 }: {
 	videoUri: string;
 	accentColor: string;
 	initialPositionMillis?: number;
 	completed?: boolean;
 	onPlaybackStatusUpdate?: (status: CompatVideoStatus) => void;
+	onPlaybackError?: (message: string) => void;
 }) {
 	const { width: windowWidth } = useWindowDimensions();
 	const videoWidth = Math.min(
@@ -157,6 +159,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 						previousPositionMillisRef.current = status.positionMillis;
 						onPlaybackStatusUpdate?.(status);
 					}}
+					onError={onPlaybackError}
 				/>
 
 				{!isPlaying ? (
