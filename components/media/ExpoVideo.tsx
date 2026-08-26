@@ -53,6 +53,7 @@ type Props = {
 	useNativeControls?: boolean;
 	resizeMode?: VideoContentFit;
 	onPlaybackStatusUpdate?: (status: CompatVideoStatus) => void;
+	onError?: (message: string) => void;
 	onLoadStart?: () => void;
 	onReadyForDisplay?: (event: LoadEventPayload) => void;
 	/** Configure a shared audio session suitable for video playback. */
@@ -80,6 +81,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		useNativeControls = true,
 		resizeMode = "contain",
 		onPlaybackStatusUpdate,
+		onError,
 		onLoadStart,
 		onReadyForDisplay,
 		useAudioSession = true,
@@ -88,6 +90,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 
 	const statusRef = useRef<CompatVideoStatus>({ ...defaultStatus });
 	const onPlaybackStatusUpdateRef = useRef(onPlaybackStatusUpdate);
+	const onErrorRef = useRef(onError);
 	const videoTrackSizeRef = useRef<{ width: number; height: number } | null>(
 		null
 	);
@@ -95,6 +98,10 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	useEffect(() => {
 		onPlaybackStatusUpdateRef.current = onPlaybackStatusUpdate;
 	}, [onPlaybackStatusUpdate]);
+
+	useEffect(() => {
+		onErrorRef.current = onError;
+	}, [onError]);
 
 	const player = useVideoPlayer(source, (instance) => {
 		instance.loop = isLooping;
@@ -203,6 +210,15 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 		}
 		const { status } = payload;
 		if (!status) {
+			return;
+		}
+		if (status === "error") {
+			emitStatus({ isLoaded: false, isPlaying: false });
+			onErrorRef.current?.(
+				typeof payload.error?.message === "string"
+					? payload.error.message
+					: "Impossible de charger la vidéo."
+			);
 			return;
 		}
 		if (status === "loading") {
