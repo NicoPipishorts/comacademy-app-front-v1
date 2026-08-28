@@ -26,6 +26,7 @@ export interface ParcoursBonusVideoPayload {
 	themeIndex?: number;
 	rubriqueType?:
 		| "vie_de_com"
+		| "le_declic"
 		| "marque_mystere"
 		| "petite_histoire";
 	rubriqueLabel?: string | null;
