@@ -214,6 +214,8 @@ export interface ParcoursSpecificRubriqueStep extends ParcoursStepBase {
 			width?: number | null;
 			height?: number | null;
 		} | null;
+		/** Duration probed server-side from the media file, in milliseconds. */
+		videoDurationMillis?: number | null;
 		accentColor?: string;
 		[key: string]: unknown;
 	};

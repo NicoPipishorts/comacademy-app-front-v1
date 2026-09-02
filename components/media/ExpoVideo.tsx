@@ -31,6 +31,8 @@ export type CompatVideoStatus = {
 	positionMillis: number;
 	durationMillis: number | null;
 	didJustFinish: boolean;
+	/** Set by consumers that meter real playback (see ParcoursSpecificRubriqueVideoStep). */
+	watchedMillis?: number;
 };
 
 export interface ManagedVideoHandle {
@@ -151,7 +153,9 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	const syncDuration = useCallback(
 		(currentPlayer: VideoPlayer) => {
 			const durationSeconds = currentPlayer.duration;
-			if (Number.isFinite(durationSeconds) && durationSeconds >= 0) {
+			// expo-video reports 0 until the item's metadata is loaded; never
+			// surface that as a real duration.
+			if (Number.isFinite(durationSeconds) && durationSeconds > 0) {
 				emitStatus({ durationMillis: durationSeconds * 1000 });
 			}
 		},
@@ -267,11 +271,16 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 	});
 
 	useEvent(player, "playToEnd", () => {
+		const durationMillis =
+			Number.isFinite(player.duration) && player.duration > 0
+				? player.duration * 1000
+				: statusRef.current.durationMillis;
 		emitStatus({
 			didJustFinish: true,
 			isPlaying: false,
 			positionMillis:
-				statusRef.current.durationMillis ?? statusRef.current.positionMillis,
+				durationMillis ?? statusRef.current.positionMillis,
+			durationMillis,
 		});
 	});
 
@@ -330,7 +339,7 @@ const ExpoVideo = forwardRef<ManagedVideoHandle, Props>((props, ref) => {
 			},
 			async getStatusAsync() {
 				const durationMillis =
-					Number.isFinite(player.duration) && player.duration >= 0
+					Number.isFinite(player.duration) && player.duration > 0
 						? player.duration * 1000
 						: statusRef.current.durationMillis;
 				const positionMillis = Number.isFinite(player.currentTime)

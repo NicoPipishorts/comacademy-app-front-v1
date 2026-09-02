@@ -8,6 +8,10 @@ import {
 	primaryBackground,
 } from "@/constants/colors";
 import { FontSize14 } from "@/constants/fontsizes";
+import {
+	VIDEO_NEXT_UNLOCK_RATIO,
+	resolveParcoursVideoDuration,
+} from "@/helpers/parcours/video";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Animated,
@@ -22,19 +26,32 @@ import {
 const MAX_VIDEO_WIDTH = 310;
 const VIDEO_ASPECT_RATIO = 9 / 16;
 const VIDEO_HORIZONTAL_GUTTER = 16;
+/** How often playback is sampled while the user is watching. */
+const WATCH_TICK_MS = 1000;
+/**
+ * Largest position jump between two ticks that still counts as watching.
+ * Anything larger is a seek (native scrubber, resume) and is not credited.
+ */
+const MAX_CREDITED_TICK_MS = 2500;
 
 export default function ParcoursSpecificRubriqueVideoStep({
 	videoUri,
 	accentColor,
 	initialPositionMillis = 0,
+	initialWatchedMillis = 0,
 	completed = false,
+	durationMillis = null,
 	onPlaybackStatusUpdate,
 	onPlaybackError,
 }: {
 	videoUri: string;
 	accentColor: string;
 	initialPositionMillis?: number;
+	/** Watched time already persisted for this step, so a resume keeps counting. */
+	initialWatchedMillis?: number;
 	completed?: boolean;
+	/** Server-provided duration, used when the player has no metadata yet. */
+	durationMillis?: number | null;
 	onPlaybackStatusUpdate?: (status: CompatVideoStatus) => void;
 	onPlaybackError?: (message: string) => void;
 }) {
@@ -46,8 +63,12 @@ export default function ParcoursSpecificRubriqueVideoStep({
 	const videoHeight = videoWidth / VIDEO_ASPECT_RATIO;
 	const videoRef = useRef<ManagedVideoHandle | null>(null);
 	const [overlayOpacity] = useState(() => new Animated.Value(1));
-	const previousPositionMillisRef = useRef(initialPositionMillis);
 	const hasFinishedPlaybackRef = useRef(completed);
+	// Milliseconds of real playback observed so far. Only advances from ticks
+	// taken while the player reports it is playing, and only by plausible
+	// increments, so seeks and phantom "ended" events never inflate it.
+	const watchedMillisRef = useRef(Math.max(0, initialWatchedMillis));
+	const lastTickPositionRef = useRef<number | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [hasFinishedPlayback, setHasFinishedPlayback] = useState(completed);
 	const [startPositionMillis] = useState(initialPositionMillis);
@@ -69,67 +90,132 @@ export default function ParcoursSpecificRubriqueVideoStep({
 		}).start();
 	}, [overlayOpacity]);
 
+	const getKnownDurationMillis = useCallback(
+		(status?: CompatVideoStatus) =>
+			resolveParcoursVideoDuration({
+				serverDurationMillis: durationMillis,
+				playerDurationMillis: status?.durationMillis,
+			}),
+		[durationMillis]
+	);
+
+	const withWatchedTime = useCallback(
+		(status: CompatVideoStatus): CompatVideoStatus => ({
+			...status,
+			watchedMillis: watchedMillisRef.current,
+		}),
+		[]
+	);
+
+	/** Credit real playback between two consecutive samples. */
+	const recordTick = useCallback((status: CompatVideoStatus) => {
+		const position =
+			typeof status.positionMillis === "number" &&
+			Number.isFinite(status.positionMillis)
+				? status.positionMillis
+				: null;
+		if (position === null) {
+			return;
+		}
+
+		const previous = lastTickPositionRef.current;
+		lastTickPositionRef.current = position;
+		if (!status.isPlaying || previous === null) {
+			return;
+		}
+
+		const delta = position - previous;
+		if (delta > 0 && delta <= MAX_CREDITED_TICK_MS) {
+			watchedMillisRef.current += delta;
+		}
+	}, []);
+
+	/**
+	 * The player's "ended" signal is only believed once watched time backs it:
+	 * expo-video can fire it on load, before any frame has played.
+	 */
+	const isProvenEnd = useCallback(
+		(status: CompatVideoStatus) => {
+			const knownDurationMillis = getKnownDurationMillis(status);
+			return Boolean(
+				status.didJustFinish &&
+					knownDurationMillis &&
+					watchedMillisRef.current / knownDurationMillis >=
+						VIDEO_NEXT_UNLOCK_RATIO
+			);
+		},
+		[getKnownDurationMillis]
+	);
+
 	const finalizePlayback = useCallback(
-		(status?: CompatVideoStatus) => {
+		(status: CompatVideoStatus) => {
 			hasFinishedPlaybackRef.current = true;
 			setHasFinishedPlayback(true);
 			setIsPlaying(false);
 			showOverlay();
+			const knownDurationMillis = getKnownDurationMillis(status);
 			const endPositionMillis =
-				typeof status?.durationMillis === "number" && status.durationMillis > 0
-					? Math.max(status.durationMillis - 250, 0)
-					: status?.positionMillis ?? 0;
-			previousPositionMillisRef.current = endPositionMillis;
+				knownDurationMillis !== null
+					? Math.max(knownDurationMillis - 250, 0)
+					: status.positionMillis ?? 0;
+			lastTickPositionRef.current = endPositionMillis;
 			videoRef.current
 				?.setPositionAsync(endPositionMillis, { toleranceMillis: 0 })
 				.catch(() => {})
 				.finally(() => {
 					videoRef.current?.pauseAsync().catch(() => {});
 				});
-			if (status) {
-				onPlaybackStatusUpdate?.({
+			onPlaybackStatusUpdate?.(
+				withWatchedTime({
 					...status,
 					isPlaying: false,
-					positionMillis:
-						typeof status.durationMillis === "number"
-							? status.durationMillis
-							: status.positionMillis,
+					durationMillis: knownDurationMillis ?? status.durationMillis,
 					didJustFinish: true,
-				});
-			}
+				})
+			);
 		},
-		[onPlaybackStatusUpdate, showOverlay]
+		[getKnownDurationMillis, onPlaybackStatusUpdate, showOverlay, withWatchedTime]
+	);
+
+	const handleStatus = useCallback(
+		(status: CompatVideoStatus, { fromTick }: { fromTick: boolean }) => {
+			if (fromTick) {
+				recordTick(status);
+			}
+
+			if (status.didJustFinish) {
+				if (isProvenEnd(status)) {
+					if (!hasFinishedPlaybackRef.current) {
+						finalizePlayback(status);
+					}
+					return;
+				}
+				// Unproven end: report the sample but never as a completion.
+				onPlaybackStatusUpdate?.(
+					withWatchedTime({ ...status, didJustFinish: false })
+				);
+				return;
+			}
+
+			onPlaybackStatusUpdate?.(withWatchedTime(status));
+		},
+		[finalizePlayback, isProvenEnd, onPlaybackStatusUpdate, recordTick, withWatchedTime]
 	);
 
 	useEffect(() => {
-		if (!isPlaying || !videoRef.current || !onPlaybackStatusUpdate) {
+		if (!isPlaying || !videoRef.current) {
 			return undefined;
 		}
 
 		const interval = setInterval(() => {
 			videoRef.current
 				?.getStatusAsync()
-				.then((status) => {
-					const previousPositionMillis = previousPositionMillisRef.current;
-					const wrappedToStart =
-						typeof status.durationMillis === "number" &&
-						previousPositionMillis >= status.durationMillis - 5_000 &&
-						status.positionMillis < 1_000;
-
-					if ((!status.isPlaying && status.didJustFinish) || wrappedToStart) {
-						finalizePlayback(status);
-						previousPositionMillisRef.current = status.positionMillis;
-						return;
-					}
-
-					previousPositionMillisRef.current = status.positionMillis;
-					onPlaybackStatusUpdate(status);
-				})
+				.then((status) => handleStatus(status, { fromTick: true }))
 				.catch(() => {});
-		}, 1000);
+		}, WATCH_TICK_MS);
 
 		return () => clearInterval(interval);
-	}, [finalizePlayback, isPlaying, onPlaybackStatusUpdate]);
+	}, [handleStatus, isPlaying]);
 
 	return (
 		<View style={styles.container}>
@@ -151,13 +237,9 @@ export default function ParcoursSpecificRubriqueVideoStep({
 					useNativeControls
 					resizeMode='cover'
 					onPlaybackStatusUpdate={(status) => {
-						if (!status.isPlaying && status.didJustFinish) {
-							finalizePlayback(status);
-							previousPositionMillisRef.current = status.positionMillis;
-							return;
-						}
-						previousPositionMillisRef.current = status.positionMillis;
-						onPlaybackStatusUpdate?.(status);
+						// Event-driven samples only forward state; watched time is
+						// credited from the timed ticks so nothing is counted twice.
+						handleStatus(status, { fromTick: false });
 					}}
 					onError={onPlaybackError}
 				/>
@@ -187,7 +269,7 @@ export default function ParcoursSpecificRubriqueVideoStep({
 								if (hasFinishedPlaybackRef.current) {
 									hasFinishedPlaybackRef.current = false;
 									setHasFinishedPlayback(false);
-									previousPositionMillisRef.current = 0;
+									lastTickPositionRef.current = 0;
 									videoRef.current?.setPositionAsync(0, { toleranceMillis: 0 }).catch(() => {});
 								}
 								setIsPlaying(true);
