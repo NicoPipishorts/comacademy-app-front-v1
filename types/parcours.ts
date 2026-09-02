@@ -26,6 +26,7 @@ export interface ParcoursBonusVideoPayload {
 	themeIndex?: number;
 	rubriqueType?:
 		| "vie_de_com"
+		| "le_declic"
 		| "marque_mystere"
 		| "petite_histoire";
 	rubriqueLabel?: string | null;
@@ -213,6 +214,8 @@ export interface ParcoursSpecificRubriqueStep extends ParcoursStepBase {
 			width?: number | null;
 			height?: number | null;
 		} | null;
+		/** Duration probed server-side from the media file, in milliseconds. */
+		videoDurationMillis?: number | null;
 		accentColor?: string;
 		[key: string]: unknown;
 	};

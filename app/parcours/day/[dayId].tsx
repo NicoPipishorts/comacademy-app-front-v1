@@ -69,10 +69,12 @@ import {
 } from "@/helpers/parcours/theme";
 import {
 	buildParcoursVideoProgressPatch,
-	getParcoursVideoCheckpoint,
 	getParcoursVideoNextUnlocked,
+	getParcoursVideoWatchedMillis,
 	hasParcoursVideoReachedNextThreshold,
 	hasUsableParcoursVideoStatus,
+	resolveParcoursVideoDuration,
+	resolveParcoursVideoDurationMillis,
 	resolveParcoursVideoUri,
 	shouldRequireParcoursVideoWatch,
 	shouldPersistParcoursVideoCheckpoint,
@@ -346,8 +348,12 @@ function ParcoursDayContent() {
 	const tipsFinalizingRef = useRef(false);
 	const specificVideoProgressRef = useRef<{
 		stepId: string | null;
+		/** Watched time at the last persisted write, to throttle writes. */
 		checkpointMillis: number;
+		/** Latest playback position (resume point). Not proof of watching. */
 		positionMillis: number;
+		/** Real playback metered by the video step. The only proof for the gate. */
+		watchedMillis: number;
 		durationMillis: number | null;
 		nextUnlocked: boolean;
 		completed: boolean;
@@ -357,6 +363,7 @@ function ParcoursDayContent() {
 		stepId: null,
 		checkpointMillis: 0,
 		positionMillis: 0,
+		watchedMillis: 0,
 		durationMillis: null,
 		nextUnlocked: false,
 		completed: false,
@@ -661,17 +668,27 @@ function ParcoursDayContent() {
 			? currentStepContent.categoryStaticId
 			: null;
 	const specificVideoUri = resolveParcoursVideoUri(currentStepContent);
+	// Duration probed by the server from the media file. This is what the 90%
+	// gate is measured against; the player's own metadata is only a fallback.
+	const specificVideoDurationMillis =
+		resolveParcoursVideoDurationMillis(currentStepContent);
+	const specificVideoKnownDurationMillis = resolveParcoursVideoDuration({
+		serverDurationMillis: specificVideoDurationMillis,
+		persistedDurationMillis: persistedStepState.videoDurationMillis,
+	});
+	const specificVideoWatchedMillis =
+		getParcoursVideoWatchedMillis(persistedStepState);
 	const specificVideoPlaybackFailed =
 		specificVideoPlaybackErrorStepId === currentStepId;
 	const specificVideoNextUnlocked =
-		getParcoursVideoNextUnlocked(persistedStepState) ||
+		getParcoursVideoNextUnlocked(persistedStepState, specificVideoDurationMillis) ||
 		locallyUnlockedVideoStepId === currentStepId;
 	const specificVideoResumeMillis =
-		Boolean(persistedStepState.videoCompleted)
+		Boolean(persistedStepState.videoCompleted) && specificVideoNextUnlocked
 			? Math.max(
-					(typeof persistedStepState.videoDurationMillis === "number"
-						? persistedStepState.videoDurationMillis
-						: persistedStepState.videoCheckpointMillis || 0) - 250,
+					(specificVideoKnownDurationMillis ??
+						persistedStepState.videoCheckpointMillis ??
+						0) - 250,
 					0
 			  )
 			: typeof persistedStepState.videoCheckpointMillis === "number"
@@ -753,29 +770,31 @@ function ParcoursDayContent() {
 	useEffect(() => {
 		specificVideoProgressRef.current = {
 			stepId: currentStepId,
-			checkpointMillis: specificVideoResumeMillis,
+			checkpointMillis: specificVideoWatchedMillis,
 			positionMillis: specificVideoResumeMillis,
-			durationMillis:
-				typeof persistedStepState.videoDurationMillis === "number"
-					? persistedStepState.videoDurationMillis
-					: null,
+			watchedMillis: specificVideoWatchedMillis,
+			durationMillis: specificVideoKnownDurationMillis,
 			nextUnlocked: specificVideoNextUnlocked,
-			completed: Boolean(persistedStepState.videoCompleted),
+			// A completed flag only counts when persisted watched time backs it.
+			completed:
+				Boolean(persistedStepState.videoCompleted) && specificVideoNextUnlocked,
 			rewatchedHalf: false,
 			rewatchCountIncremented: false,
 		};
 	}, [
 		currentStepId,
 		persistedStepState.videoCompleted,
-		persistedStepState.videoDurationMillis,
+		specificVideoKnownDurationMillis,
 		specificVideoNextUnlocked,
 		specificVideoResumeMillis,
+		specificVideoWatchedMillis,
 	]);
 
 	const canAdvance =
 		Boolean(
 			!feedbackAnswer &&
 				!timeoutFeedbackLabel &&
+				(!requiresSpecificVideoWatch || specificVideoNextUnlocked) &&
 				(day?.progression.isReadOnly ||
 					((!requiresReveal || citationRevealed) &&
 						(!isDicoStep || dicoAnswered || dicoHasSelection) &&
@@ -785,8 +804,7 @@ function ParcoursDayContent() {
 						(!isTipsStep ||
 							(isTipsQuestionPhase
 								? tipsAnswered || tipsHasSelection
-								: isTipsCardPhase)) &&
-						(!requiresSpecificVideoWatch || specificVideoNextUnlocked)))
+								: isTipsCardPhase))))
 		);
 
 	useEffect(() => {
@@ -1173,6 +1191,10 @@ function ParcoursDayContent() {
 	};
 
 	const handleNext = async () => {
+		const videoWatchIncomplete = Boolean(
+			requiresSpecificVideoWatch &&
+				!specificVideoNextUnlocked
+		);
 		logDevice("[Parcours][Next] pressed", {
 			stepId: currentStepId,
 			stepIndex: activeIndex,
@@ -1188,11 +1210,16 @@ function ParcoursDayContent() {
 			feedbackVisible: Boolean(feedbackAnswer),
 			timeoutFeedbackVisible: Boolean(timeoutFeedbackLabel),
 			nextStepType: nextStep?.type || null,
+			videoWatchIncomplete,
 		});
 
-		if (!day || !canAdvance) {
+		if (!day || !canAdvance || videoWatchIncomplete) {
 			logDevice("[Parcours][Next] blocked", {
-				reason: !day ? "missing-day" : "can-advance-false",
+				reason: !day
+					? "missing-day"
+					: videoWatchIncomplete
+						? "video-watch-incomplete"
+						: "can-advance-false",
 			});
 			return;
 		}
@@ -1517,30 +1544,22 @@ function ParcoursDayContent() {
 
 		const {
 			positionMillis,
+			watchedMillis,
 			durationMillis,
 			nextUnlocked,
 			completed,
 			rewatchedHalf,
 			rewatchCountIncremented,
-		} =
-			specificVideoProgressRef.current;
-		const wasCompleted = Boolean(persistedStepState.videoCompleted);
+		} = specificVideoProgressRef.current;
+		const wasCompleted =
+			Boolean(persistedStepState.videoCompleted) && specificVideoNextUnlocked;
 		const persistedRewatchCount =
 			typeof persistedStepState.videoRewatchCount === "number" &&
 			Number.isFinite(persistedStepState.videoRewatchCount)
 				? persistedStepState.videoRewatchCount
 				: 0;
 
-		if (!Number.isFinite(positionMillis) || positionMillis <= 0) {
-			if (completed && !wasCompleted) {
-				return buildParcoursVideoProgressPatch({
-					positionMillis: durationMillis || 0,
-					durationMillis,
-					nextUnlocked: true,
-					completed: true,
-				});
-			}
-
+		if (!Number.isFinite(watchedMillis) || watchedMillis <= 0) {
 			return undefined;
 		}
 
@@ -1556,6 +1575,7 @@ function ParcoursDayContent() {
 
 			return buildParcoursVideoProgressPatch({
 				positionMillis,
+				watchedMillis,
 				durationMillis,
 				nextUnlocked: true,
 				completed: true,
@@ -1566,6 +1586,7 @@ function ParcoursDayContent() {
 
 		return buildParcoursVideoProgressPatch({
 			positionMillis,
+			watchedMillis,
 			durationMillis,
 			nextUnlocked,
 			completed,
@@ -1577,45 +1598,78 @@ function ParcoursDayContent() {
 			!day ||
 			day.progression.isReadOnly ||
 			!requiresSpecificVideoWatch ||
-			currentStepId !== specificVideoProgressRef.current.stepId ||
-			!hasUsableParcoursVideoStatus(status)
+			currentStepId !== specificVideoProgressRef.current.stepId
 		) {
 			return;
 		}
 
 		const previousState = specificVideoProgressRef.current;
+		// The server duration is authoritative. The player's metadata is only a
+		// fallback for legacy days whose payload has no duration yet.
+		const effectiveDurationMillis = resolveParcoursVideoDuration({
+			serverDurationMillis: specificVideoDurationMillis,
+			persistedDurationMillis: previousState.durationMillis,
+			playerDurationMillis: status.durationMillis,
+		});
+		if (!effectiveDurationMillis && !hasUsableParcoursVideoStatus(status)) {
+			return;
+		}
+
+		const observedPositionMillis =
+			typeof status.positionMillis === "number" &&
+			Number.isFinite(status.positionMillis)
+				? Math.max(0, status.positionMillis)
+				: previousState.positionMillis;
+		// Real playback metered by the video step (only credited while playing,
+		// in plausible one-second increments). Position and "ended" events are
+		// never proof: expo-video fires "ended" on load, before any frame plays.
+		const watchedMillis = Math.max(
+			previousState.watchedMillis,
+			typeof status.watchedMillis === "number" &&
+				Number.isFinite(status.watchedMillis)
+				? status.watchedMillis
+				: 0
+		);
+		const reachedThresholdNow = hasParcoursVideoReachedNextThreshold({
+			watchedMillis,
+			durationMillis: effectiveDurationMillis,
+		});
+		const nextUnlocked = previousState.nextUnlocked || reachedThresholdNow;
+		const completed =
+			previousState.completed || (status.didJustFinish && reachedThresholdNow);
 		const checkpointMillis = previousState.checkpointMillis;
-		const effectiveDurationMillis =
-			typeof status.durationMillis === "number"
-				? status.durationMillis
-				: previousState.durationMillis;
-		const nextUnlockedNow =
-			status.didJustFinish ||
-			hasParcoursVideoReachedNextThreshold({
-				positionMillis: status.positionMillis,
-				durationMillis: effectiveDurationMillis,
-			});
-		const nextCheckpointMillis = shouldPersistParcoursVideoCheckpoint({
+		const checkpointAdvanced = shouldPersistParcoursVideoCheckpoint({
 			previousCheckpointMillis: checkpointMillis,
-			nextPositionMillis: status.positionMillis,
-		})
-			? Math.max(checkpointMillis, getParcoursVideoCheckpoint(status.positionMillis))
-			: checkpointMillis;
-		const nextUnlocked = nextUnlockedNow || previousState.nextUnlocked;
-		const completed = status.didJustFinish || previousState.completed;
+			nextPositionMillis: watchedMillis,
+		});
+		const shouldPersist =
+			checkpointAdvanced ||
+			nextUnlocked !== previousState.nextUnlocked ||
+			completed !== previousState.completed;
+		const nowIso = new Date().toISOString();
+		const startedAt =
+			persistedStepState.videoStartedAt ||
+			(watchedMillis > 0 ? nowIso : undefined);
+		const reached90At =
+			persistedStepState.videoReached90At ||
+			(nextUnlocked && !previousState.nextUnlocked ? nowIso : undefined);
+		const completedAt =
+			persistedStepState.videoCompletedAt ||
+			(completed && !previousState.completed ? nowIso : undefined);
 		const alreadyCompleted =
-			previousState.completed || Boolean(persistedStepState.videoCompleted);
+			previousState.completed ||
+			(Boolean(persistedStepState.videoCompleted) && specificVideoNextUnlocked);
 		const rewatchedHalf =
 			previousState.rewatchedHalf ||
-			(Boolean(alreadyCompleted) &&
+			(alreadyCompleted &&
 				typeof effectiveDurationMillis === "number" &&
-				effectiveDurationMillis > 0 &&
-				status.positionMillis >= effectiveDurationMillis / 2);
+				observedPositionMillis >= effectiveDurationMillis / 2);
 
 		specificVideoProgressRef.current = {
 			...previousState,
-			checkpointMillis: nextCheckpointMillis,
-			positionMillis: status.positionMillis,
+			checkpointMillis: shouldPersist ? watchedMillis : checkpointMillis,
+			positionMillis: observedPositionMillis,
+			watchedMillis,
 			durationMillis: effectiveDurationMillis,
 			nextUnlocked,
 			completed,
@@ -1624,49 +1678,35 @@ function ParcoursDayContent() {
 		};
 
 		if (nextUnlocked && !previousState.nextUnlocked) {
+			logDevice("[Parcours][Video] 90% watched, Suivant unlocked", {
+				stepId: currentStepId,
+				watchedMillis,
+				durationMillis: effectiveDurationMillis,
+				serverDurationMillis: specificVideoDurationMillis,
+			});
 			setLocallyUnlockedVideoStepId(currentStepId);
 		}
 
-		const completionChanged =
-			completed && !Boolean(persistedStepState.videoCompleted);
-		if (
-			completionChanged &&
-			videoCompletionPersistedStepIdRef.current !== currentStepId
-		) {
-			videoCompletionPersistedStepIdRef.current = currentStepId;
-			void persistProgress({
-				nextIndex: activeIndex,
-				activeStepId: currentStepId,
-				stepId: currentStepId,
-				stepPatch: buildParcoursVideoProgressPatch({
-					positionMillis:
-						typeof effectiveDurationMillis === "number"
-							? effectiveDurationMillis
-							: status.positionMillis,
-					durationMillis: effectiveDurationMillis,
-					nextUnlocked: true,
-					completed: true,
-				}),
-			});
+		if (!shouldPersist) {
 			return;
 		}
 
-		if (
-			nextCheckpointMillis > checkpointMillis ||
-			nextUnlocked !== previousState.nextUnlocked
-		) {
-			void persistProgress({
-				nextIndex: activeIndex,
-				activeStepId: currentStepId,
-				stepId: currentStepId,
-				stepPatch: buildParcoursVideoProgressPatch({
-					positionMillis: status.positionMillis,
-					durationMillis: effectiveDurationMillis,
-					nextUnlocked,
-					completed,
-				}),
-			});
-		}
+		void persistProgress({
+			nextIndex: activeIndex,
+			activeStepId: currentStepId,
+			stepId: currentStepId,
+			stepPatch: buildParcoursVideoProgressPatch({
+				positionMillis: observedPositionMillis,
+				watchedMillis,
+				durationMillis: effectiveDurationMillis,
+				nextUnlocked,
+				completed,
+				startedAt,
+				progressRecordedAt: nowIso,
+				reached90At,
+				completedAt,
+			}),
+		});
 	};
 
 	const handleGameSwipe = async (questionId: number, categorie: number, isRight: boolean) => {
@@ -2020,7 +2060,12 @@ function ParcoursDayContent() {
 								videoUri={specificVideoUri}
 								accentColor={currentAccentColor}
 								initialPositionMillis={specificVideoResumeMillis}
-								completed={Boolean(persistedStepState.videoCompleted)}
+								initialWatchedMillis={specificVideoWatchedMillis}
+								completed={
+									Boolean(persistedStepState.videoCompleted) &&
+									specificVideoNextUnlocked
+								}
+								durationMillis={specificVideoKnownDurationMillis}
 								onPlaybackStatusUpdate={handleSpecificVideoStatusUpdate}
 								onPlaybackError={() => {
 									setSpecificVideoPlaybackErrorStepId(currentStepId);

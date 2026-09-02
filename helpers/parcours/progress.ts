@@ -11,9 +11,16 @@ export type StepStateRecord = {
 	answered?: boolean;
 	dicoPhase?: "question" | "definition";
 	videoCheckpointMillis?: number;
+	/** Milliseconds actually watched while playing; the only proof for the 90% gate. */
+	videoWatchedMillis?: number;
 	videoDurationMillis?: number;
+	videoProgressPercent?: number;
 	videoNextUnlocked?: boolean;
 	videoCompleted?: boolean;
+	videoStartedAt?: string;
+	videoLastProgressAt?: string;
+	videoReached90At?: string;
+	videoCompletedAt?: string;
 	videoRewatched?: boolean;
 	videoRewatchCount?: number;
 	gameSessionId?: number;
