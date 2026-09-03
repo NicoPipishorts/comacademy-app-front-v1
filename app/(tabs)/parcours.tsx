@@ -111,23 +111,10 @@ function PngAsset({
 }
 
 function getBonusIcon(week: ParcoursTimelineWeek) {
-	const isUpcomingLockedWeek =
-		week.status === "not_started" &&
-		week.days.every((day) => day.status === "locked");
-
-	if (isUpcomingLockedWeek) {
-		return bonusLockedIcon;
-	}
-
-	if (!week.bonus || week.bonus.status === "locked") {
-		return bonusLockedIcon;
-	}
-
-	if (week.bonus.status === "unlocked" || week.bonus.status === "viewed") {
-		return bonusAssets[getBonusThemeIndex(week)];
-	}
-
-	return bonusLockedIcon;
+	// Always use the native colored bonus icon, including for locked/upcoming weeks.
+	// (Previously swapped to the Bonus-Lock.png padlock art when locked.) The unlock
+	// celebration in BonusUnlockIcon still animates from the padlock on reveal.
+	return bonusAssets[getBonusThemeIndex(week)];
 }
 
 function BonusUnlockIcon({
