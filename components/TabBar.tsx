@@ -19,7 +19,7 @@ type BottomTabBarProps = Parameters<
 const tabItems = [
 	{
 		routeName: "activity",
-		label: "Acceuil",
+		label: "Accueil",
 		icon: navRubriquesIcon,
 		iconWidth: 32,
 		iconHeight: 26,
