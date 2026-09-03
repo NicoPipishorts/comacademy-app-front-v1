@@ -62,7 +62,13 @@ function ParcoursWeekContent() {
 	if (!week) {
 		return (
 			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-				<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
+				<Stack.Screen
+					options={{
+						headerShown: false,
+						presentation: "card",
+						gestureEnabled: false,
+					}}
+				/>
 				<PageTitleAvatarHeader
 					title='Activités'
 					showAvatar={false}
@@ -77,7 +83,13 @@ function ParcoursWeekContent() {
 	if (!isWeekOpen) {
 		return (
 			<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-				<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
+				<Stack.Screen
+					options={{
+						headerShown: false,
+						presentation: "card",
+						gestureEnabled: false,
+					}}
+				/>
 				<PageTitleAvatarHeader
 					title='Activités'
 					showAvatar={false}
@@ -96,7 +108,13 @@ function ParcoursWeekContent() {
 
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
-			<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
+			<Stack.Screen
+				options={{
+					headerShown: false,
+					presentation: "card",
+					gestureEnabled: false,
+				}}
+			/>
 			<PageTitleAvatarHeader
 				title='Activités'
 				showAvatar={false}

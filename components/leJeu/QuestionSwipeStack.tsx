@@ -80,10 +80,13 @@ function SwipeableCard({
 			isSwipingRef.current = true;
 			void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 			const toValue = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
+			// Must match the pan's non-native driver: translateX is driven by
+			// PanResponder (JS) during the drag, so every animation on it has to
+			// stay non-native. Mixing drivers on one value freezes the card.
 			Animated.timing(translateX, {
 				toValue,
 				duration: 200,
-				useNativeDriver: true,
+				useNativeDriver: false,
 			}).start(() => {
 				onSwipe(direction === "right");
 			});
@@ -110,7 +113,7 @@ function SwipeableCard({
 						Animated.spring(translateX, {
 							toValue: 0,
 							friction: 6,
-							useNativeDriver: true,
+							useNativeDriver: false,
 						}).start();
 					}
 				},
@@ -148,11 +151,14 @@ function SwipeableCard({
 	);
 
 	useEffect(() => {
+		// stackProgress feeds scale/translateY, which sit in the SAME transform
+		// array as the pan-driven translateX/rotate on the top card. All values
+		// in one transform must share a driver, so this stays non-native too.
 		Animated.spring(stackProgress, {
 			toValue: effectivePosition,
 			speed: 18,
 			bounciness: 3,
-			useNativeDriver: true,
+			useNativeDriver: false,
 		}).start();
 	}, [effectivePosition, stackProgress]);
 

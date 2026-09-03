@@ -8,6 +8,8 @@ export default function ParcoursLayout() {
 				headerShown: false,
 				animation: "none",
 				presentation: "card",
+				gestureEnabled: false,
+				fullScreenGestureEnabled: false,
 			}}
 		/>
 	);

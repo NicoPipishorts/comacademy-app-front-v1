@@ -1799,7 +1799,13 @@ function ParcoursDayContent() {
 							  colorWhite,
 				},
 			]}>
-			<Stack.Screen options={{ headerShown: false, presentation: "card" }} />
+			<Stack.Screen
+				options={{
+					headerShown: false,
+					presentation: "card",
+					gestureEnabled: false,
+				}}
+			/>
 			{hasNoReviewableSteps ? (
 				<View style={styles.emptyReviewState}>
 					<Text style={styles.emptyReviewTitle}>Aucune étape terminée</Text>
