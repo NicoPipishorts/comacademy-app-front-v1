@@ -13,38 +13,50 @@ import { ParcoursDayStatus } from "@/types/parcours";
 type BadgeTone = {
 	backgroundColor: string;
 	iconColor: string;
-	iconName: keyof typeof MaterialCommunityIcons.glyphMap;
+	// null = a plain filled circle with no glyph (the customer's "expired" red).
+	iconName: keyof typeof MaterialCommunityIcons.glyphMap | null;
 	label: string;
 };
 
+// Palette supplied by the customer on 2026-09-03. Four visuals cover five
+// states: `ready` (unlocked, not started) and `in_progress` share the light
+// green "active" look, since the customer asked for available days to read as
+// green and gave no separate visual for the untouched case.
+const TONE_LOCKED_BG = "#E4E4E4";
+const TONE_LOCKED_ICON = "#5C5C5C";
+const TONE_ACTIVE_BG = "#D6EDD9";
+const TONE_ACTIVE_ICON = "#5CB870";
+const TONE_DONE_BG = "#0A6B2A";
+const TONE_EXPIRED_BG = "#F63E3E";
+
 const STATUS_TONES: Record<ParcoursDayStatus, BadgeTone> = {
 	completed: {
-		backgroundColor: "#2FB35A",
+		backgroundColor: TONE_DONE_BG,
 		iconColor: colorWhite,
 		iconName: "check",
 		label: "Termine",
 	},
 	in_progress: {
-		backgroundColor: "#F29C38",
-		iconColor: colorWhite,
-		iconName: "minus",
+		backgroundColor: TONE_ACTIVE_BG,
+		iconColor: TONE_ACTIVE_ICON,
+		iconName: "dots-horizontal",
 		label: "Continuer",
 	},
 	ready: {
-		backgroundColor: "#F29C38",
-		iconColor: colorWhite,
-		iconName: "minus",
+		backgroundColor: TONE_ACTIVE_BG,
+		iconColor: TONE_ACTIVE_ICON,
+		iconName: "dots-horizontal",
 		label: "Jouer",
 	},
 	expired: {
-		backgroundColor: "#D84C43",
+		backgroundColor: TONE_EXPIRED_BG,
 		iconColor: colorWhite,
-		iconName: "close",
+		iconName: null,
 		label: "Lecture seule",
 	},
 	locked: {
-		backgroundColor: "#D9DDE5",
-		iconColor: "#8E95A3",
+		backgroundColor: TONE_LOCKED_BG,
+		iconColor: TONE_LOCKED_ICON,
 		iconName: "circle-medium",
 		label: "Verrouille",
 	},
@@ -74,11 +86,13 @@ export function ParcoursDayStatusBadge({
 					backgroundColor: tone.backgroundColor,
 				},
 			]}>
-			<MaterialCommunityIcons
-				name={tone.iconName}
-				size={iconSize}
-				color={tone.iconColor}
-			/>
+			{tone.iconName ? (
+				<MaterialCommunityIcons
+					name={tone.iconName}
+					size={iconSize}
+					color={tone.iconColor}
+				/>
+			) : null}
 		</View>
 	);
 }
