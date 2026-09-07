@@ -7,6 +7,7 @@ import connectorLeftIcon from "@/assets/imgs/parcours/line-connecter-left.svg";
 import connectorRightIcon from "@/assets/imgs/parcours/line-connecter-rightsvg.svg";
 import ParcoursComingSoonScreen from "@/components/parcours/ParcoursComingSoonScreen";
 import { ParcoursDayStatusBadge } from "@/components/parcours/ParcoursDayStatusBadge";
+import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
 import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import CelebrationConfetti from "@/components/experience/CelebrationConfetti";
 import Loader from "@/components/experience/loader";
@@ -14,7 +15,12 @@ import { colorBlack, colorDarkGrey, primaryBackground } from "@/constants/colors
 import { FontSize14, FontSize16, FontSizeH1 } from "@/constants/fontsizes";
 import { isParcoursEnabled } from "@/constants/featureFlags";
 import { useTrackPageMetrics } from "@/hooks/Metrics/usePageMetrics";
-import { isParcoursWeekOpen } from "@/helpers/parcours/week";
+import {
+	getParcoursDayVisualState,
+	getParcoursPaywallMessage,
+	isParcoursWeekOpen,
+	isParcoursWeekPaywalled,
+} from "@/helpers/parcours/week";
 import { getParcoursTimelineActivityIcon } from "@/helpers/parcours/icons";
 import useJwtToken from "@/hooks/useJwtToken";
 import { ParcoursTimelineWeek } from "@/types/parcours";
@@ -222,6 +228,7 @@ function TimelineWeekSection({
 	previewingBonusWeekId,
 	onBonusCelebrationStart,
 	onBonusPreview,
+	onPaywallPress,
 }: {
 	week: ParcoursTimelineWeek;
 	index: number;
@@ -229,10 +236,12 @@ function TimelineWeekSection({
 	previewingBonusWeekId: number | null;
 	onBonusCelebrationStart: (weekId: number) => void;
 	onBonusPreview: (weekId: number) => void;
+	onPaywallPress: () => void;
 }) {
 	const isRightAligned = index % 2 === 1;
 	const connectorSource = index % 2 === 0 ? connectorLeftIcon : connectorRightIcon;
 	const isWeekOpen = isParcoursWeekOpen(week);
+	const isPaywalled = isParcoursWeekPaywalled(week);
 	const activityIconOffsetY = isRightAligned ? 22 : 18;
 	const bonusIconOffsetY = isRightAligned ? 0 : 18;
 	const bonusLongPressHandledRef = useRef(false);
@@ -241,22 +250,37 @@ function TimelineWeekSection({
 		[onBonusCelebrationStart, week.id]
 	);
 
+	// Shared by the whole activity node and by the day dots, so a tap behaves
+	// the same wherever it lands: a paywalled week always offers the upsell, an
+	// open week always opens, and a week the calendar has not reached is inert.
+	const handleActivityPress = useCallback(() => {
+		// A paywalled week is not "come back later" - it is a week the user could
+		// open right now by subscribing, so it gets the upsell sheet instead of a
+		// dead tap.
+		if (isPaywalled) {
+			onPaywallPress();
+			return;
+		}
+
+		if (!isWeekOpen) {
+			return;
+		}
+
+		router.push({
+			pathname: "/parcours/week/[weekId]",
+			params: { weekId: String(week.id) },
+		});
+	}, [isPaywalled, isWeekOpen, onPaywallPress, week.id]);
+
+	const isActivityPressDisabled = !isWeekOpen && !isPaywalled;
+
 	return (
 		<View style={styles.sectionBlock}>
 			<Text style={styles.sectionWeekLabel}>{weekLabel(week)}</Text>
 
 			<Pressable
-				disabled={!isWeekOpen}
-				onPress={() => {
-					if (!isWeekOpen) {
-						return;
-					}
-
-					router.push({
-						pathname: "/parcours/week/[weekId]",
-						params: { weekId: String(week.id) },
-					});
-				}}
+				disabled={isActivityPressDisabled}
+				onPress={handleActivityPress}
 				style={[
 					styles.nodeRow,
 					styles.activityNodeRow,
@@ -280,14 +304,26 @@ function TimelineWeekSection({
 						isRightAligned && styles.activityContentColumnRight,
 					]}>
 					<Text style={styles.nodeTitle}>Activites</Text>
-					<View style={styles.daysStatusRow}>
+					{/*
+					  * The dots are their own press target, not just children of the
+					  * row above: tapping a grey dot is the most natural way to ask
+					  * "why can I not get in?", and it must never depend on the tap
+					  * happening to land inside the parent's hit area.
+					  */}
+					<Pressable
+						disabled={isActivityPressDisabled}
+						onPress={handleActivityPress}
+						style={styles.daysStatusRow}>
 						{week.days.map((day) => (
 							<View key={day.id} style={styles.dayStatusItem}>
-								<ParcoursDayStatusBadge status={day.status} size={20} />
+								<ParcoursDayStatusBadge
+									status={getParcoursDayVisualState(day)}
+									size={20}
+								/>
 								<Text style={styles.dayLabel}>{dayLabel(day.dayKey)}</Text>
 							</View>
 						))}
-					</View>
+					</Pressable>
 				</View>
 			</Pressable>
 
@@ -308,7 +344,9 @@ function TimelineWeekSection({
 			<Pressable
 				delayLongPress={500}
 				disabled={
-					!__DEV__ && (!week.bonus || week.bonus.status === "locked")
+					!__DEV__ &&
+					!isPaywalled &&
+					(!week.bonus || week.bonus.status === "locked")
 				}
 				onLongPress={() => {
 					if (!__DEV__) {
@@ -321,6 +359,11 @@ function TimelineWeekSection({
 				onPress={() => {
 					if (bonusLongPressHandledRef.current) {
 						bonusLongPressHandledRef.current = false;
+						return;
+					}
+
+					if (isPaywalled) {
+						onPaywallPress();
 						return;
 					}
 
@@ -394,6 +437,7 @@ function ParcoursTimelineScreen() {
 		number | null
 	>(null);
 	const [confettiRunId, setConfettiRunId] = useState(0);
+	const [isPaywallSheetVisible, setIsPaywallSheetVisible] = useState(false);
 	const { token, loading: loadingToken } = useJwtToken();
 	const {
 		data,
@@ -447,6 +491,14 @@ function ParcoursTimelineScreen() {
 				current === weekId ? null : current
 			);
 		}, 3400);
+	}, []);
+
+	const handlePaywallPress = useCallback(() => {
+		setIsPaywallSheetVisible(true);
+	}, []);
+
+	const handlePaywallClose = useCallback(() => {
+		setIsPaywallSheetVisible(false);
 	}, []);
 
 	const handleBonusPreview = useCallback((weekId: number) => {
@@ -542,6 +594,7 @@ function ParcoursTimelineScreen() {
 							previewingBonusWeekId={previewingBonusWeekId}
 							onBonusCelebrationStart={handleBonusCelebrationStart}
 							onBonusPreview={handleBonusPreview}
+							onPaywallPress={handlePaywallPress}
 						/>
 					))
 				) : (
@@ -554,6 +607,11 @@ function ParcoursTimelineScreen() {
 				)}
 			</ScrollView>
 			{confettiRunId > 0 ? <CelebrationConfetti key={confettiRunId} /> : null}
+			<UpgradeSubscriptionModal
+				visible={isPaywallSheetVisible}
+				onClose={handlePaywallClose}
+				message={getParcoursPaywallMessage(data?.meta?.freemium?.reason)}
+			/>
 		</View>
 	);
 }
