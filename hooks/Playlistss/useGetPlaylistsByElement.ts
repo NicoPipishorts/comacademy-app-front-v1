@@ -51,7 +51,9 @@ const useGetPlaylistsForElement = (
 	const { token } = useJwtToken();
 
 	return useQuery<PlaylistListResponse>({
-		queryKey: ["Playlists", userId],
+		// Prefixed with "Playlists" so refetchQueries(["Playlists"]) still hits it,
+		// but distinct from useGetPlaylistsByUser which returns a different payload.
+		queryKey: ["Playlists", "forElement", userId, type, elementId],
 		queryFn: () => fetchData(token!, userId, type, elementId),
 		enabled: !!token && !!userId,
 	});

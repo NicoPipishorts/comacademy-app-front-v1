@@ -53,6 +53,7 @@ type FavoriteQuestionRelationItem = {
 
 type FavoriteQuestionEntry = {
 	id?: number;
+	documentId?: string;
 	attributes?: {
 		questions?: {
 			data?: FavoriteQuestionRelationItem[];
@@ -171,7 +172,7 @@ export default function QuestionDetails({
 	const [filterIfFavoriteExists, setFilterIfFavoriteExists] =
 		useState<boolean>(false);
 	const [idArray, setIdArray] = useState<number[]>([]);
-	const [dataId, setDataId] = useState<number | null>(null);
+	const [dataId, setDataId] = useState<string | number | null>(null);
 	const [localDelayComplete, setLocalDelayComplete] = useState(
 		LOCAL_RESPONSE_DEBUG_DELAY_MS === 0,
 	);
@@ -290,7 +291,11 @@ export default function QuestionDetails({
 
 		const nextIds = extractFavoriteQuestionIds(favoriteEntry);
 		setIdArray(nextIds);
-		setDataId(typeof favoriteEntry.id === "number" ? favoriteEntry.id : null);
+		// Strapi 5 only accepts the documentId on PUT /favorite-questions/:id
+		setDataId(
+			favoriteEntry.documentId ??
+				(typeof favoriteEntry.id === "number" ? favoriteEntry.id : null)
+		);
 	}, [userFavoriteQuestions?.data]);
 
 	useEffect(() => {

@@ -18,7 +18,6 @@ import {
 import { AxiosError } from "axios";
 import React, {
 	useCallback,
-	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -33,6 +32,7 @@ import {
 } from "react-native";
 import ModalGestureLine from "../experience/modalGestureLine";
 import NewPlaylistModal from "./NewPlaylistModal";
+import useBottomSheetVisibility from "@/hooks/useBottomSheetVisibility";
 
 interface Props {
 	visible: boolean;
@@ -63,6 +63,7 @@ export default function AddToPlaylistModal({
 
 	const onAddSuccess = () => {
 		queryClient.refetchQueries({ queryKey: ["Playlists"] });
+		queryClient.invalidateQueries({ queryKey: ["Playlist"] });
 	};
 
 	const onAddError = (error: AxiosError) => {
@@ -75,7 +76,7 @@ export default function AddToPlaylistModal({
 	const [newPlaylistVisible, setNewPlaylistVisible] = useState(false);
 
 	const handleSubmitToPlaylist = useCallback(
-		(playlistId: number) => {
+		(playlistId: number | string) => {
 			addToPlaylist({
 				playlistId,
 				elementId,
@@ -135,23 +136,16 @@ export default function AddToPlaylistModal({
 		[]
 	);
 
-	useEffect(() => {
-		if (visible) {
-			bottomSheetRef.current?.present();
-		} else {
-			bottomSheetRef.current?.dismiss();
-		}
-	}, [visible]);
+	const notifyDismissed = useBottomSheetVisibility(bottomSheetRef, visible);
 
 	const handleDismiss = useCallback(() => {
+		notifyDismissed();
 		onClose();
-	}, [onClose]);
+	}, [notifyDismissed, onClose]);
 
 	const handleOpenNewPlaylist = useCallback(() => {
 		setNewPlaylistVisible(true);
 	}, []);
-
-	if (!isFetched) return null;
 
 	return (
 		<>
@@ -187,7 +181,9 @@ export default function AddToPlaylistModal({
 											<View style={styles.disabledOverlay} />
 										)}
 										<Pressable
-											onPress={() => handleSubmitToPlaylist(playlist.id)}
+											onPress={() =>
+											handleSubmitToPlaylist(playlist.documentId ?? playlist.id)
+										}
 											style={styles.playlistRow}
 											disabled={playlist.attributes.inPlaylist}>
 											<PlaylistDisplayImage
@@ -206,7 +202,9 @@ export default function AddToPlaylistModal({
 						) : (
 							<View style={styles.emptyState}>
 								<Text style={styles.emptyStateText}>
-									Aucune playlist disponible.
+									{isFetched
+										? "Aucune playlist disponible."
+										: "Chargement des playlists…"}
 								</Text>
 							</View>
 						)}
