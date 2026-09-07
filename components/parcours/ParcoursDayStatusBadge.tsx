@@ -18,18 +18,31 @@ type BadgeTone = {
 	label: string;
 };
 
-// Palette supplied by the customer on 2026-09-03. Four visuals cover five
-// states: `ready` (unlocked, not started) and `in_progress` share the light
-// green "active" look, since the customer asked for available days to read as
-// green and gave no separate visual for the untouched case.
+// Palette supplied by the customer on 2026-09-03. `ready` (unlocked, not
+// started) and `in_progress` share the light green "active" look, since the
+// customer asked for available days to read as green and gave no separate
+// visual for the untouched case.
+//
+// The past-week states are split in two, because they mean different things to
+// the reader: a day left unfinished when the Sunday cut-off froze it reads
+// orange (you were there, you can still review it), while a day never opened at
+// all keeps the customer's solid red.
 const TONE_LOCKED_BG = "#E4E4E4";
 const TONE_LOCKED_ICON = "#5C5C5C";
 const TONE_ACTIVE_BG = "#D6EDD9";
 const TONE_ACTIVE_ICON = "#5CB870";
 const TONE_DONE_BG = "#0A6B2A";
 const TONE_EXPIRED_BG = "#F63E3E";
+const TONE_UNFINISHED_BG = "#FBE3C7";
+const TONE_UNFINISHED_ICON = "#E3801B";
 
-const STATUS_TONES: Record<ParcoursDayStatus, BadgeTone> = {
+/**
+ * The badge draws one more state than the server sends: `unfinished` is an
+ * `expired` day the user had already started. See `getParcoursDayVisualState`.
+ */
+export type ParcoursDayVisualState = ParcoursDayStatus | "unfinished";
+
+const STATUS_TONES: Record<ParcoursDayVisualState, BadgeTone> = {
 	completed: {
 		backgroundColor: TONE_DONE_BG,
 		iconColor: colorWhite,
@@ -48,6 +61,12 @@ const STATUS_TONES: Record<ParcoursDayStatus, BadgeTone> = {
 		iconName: "dots-horizontal",
 		label: "Jouer",
 	},
+	unfinished: {
+		backgroundColor: TONE_UNFINISHED_BG,
+		iconColor: TONE_UNFINISHED_ICON,
+		iconName: "circle-medium",
+		label: "Lecture seule",
+	},
 	expired: {
 		backgroundColor: TONE_EXPIRED_BG,
 		iconColor: colorWhite,
@@ -62,14 +81,15 @@ const STATUS_TONES: Record<ParcoursDayStatus, BadgeTone> = {
 	},
 };
 
-export const getParcoursDayStatusMeta = (status: ParcoursDayStatus): BadgeTone =>
-	STATUS_TONES[status];
+export const getParcoursDayStatusMeta = (
+	status: ParcoursDayVisualState
+): BadgeTone => STATUS_TONES[status];
 
 export function ParcoursDayStatusBadge({
 	status,
 	size = 22,
 }: {
-	status: ParcoursDayStatus;
+	status: ParcoursDayVisualState;
 	size?: number;
 }) {
 	const tone = getParcoursDayStatusMeta(status);
@@ -100,7 +120,7 @@ export function ParcoursDayStatusBadge({
 export function ParcoursDayStatusPill({
 	status,
 }: {
-	status: ParcoursDayStatus;
+	status: ParcoursDayVisualState;
 }) {
 	const tone = getParcoursDayStatusMeta(status);
 

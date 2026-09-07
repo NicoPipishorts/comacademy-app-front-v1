@@ -82,6 +82,7 @@ export interface ParcoursTimelineDay {
 	isPlayable: boolean;
 	isReadOnly: boolean;
 	isLocked: boolean;
+	isPaywalled: boolean;
 	currentStepIndex: number;
 	completedAt: string | null;
 }
@@ -100,6 +101,7 @@ export interface ParcoursTimelineWeek {
 	status: "not_started" | "in_progress" | "completed" | "expired";
 	completedDaysCount: number;
 	totalDaysCount: number;
+	isPaywalled: boolean;
 	bonus: ParcoursBonus | null;
 	days: ParcoursTimelineDay[];
 }
@@ -149,6 +151,26 @@ export interface ParcoursDayDetail {
 	};
 }
 
+/**
+ * Why the free trial is (or is not) restricting this user. `subscribed` and
+ * `disabled` mean no paywall at all; `trial_not_started` and `trial_active`
+ * mean the free week is still usable; `trial_expired` means it is spent.
+ */
+export interface ParcoursFreemiumMeta {
+	isGated: boolean;
+	reason:
+		| "subscribed"
+		| "disabled"
+		| "trial_not_started"
+		| "trial_active"
+		| "trial_expired";
+	hasStartedTrial: boolean;
+	trialWeekOrder: number | null;
+	trialLastWeekOrder: number | null;
+	freeWeekOrders: number[] | null;
+	startedAt: string | null;
+}
+
 export interface ParcoursResponse<T> {
 	data: T;
 	meta: {
@@ -156,6 +178,7 @@ export interface ParcoursResponse<T> {
 		currentWeekOrder?: number;
 		startedAt?: string;
 		unlockedDayCountInCurrentWeek?: number;
+		freemium?: ParcoursFreemiumMeta | null;
 	};
 }
 
