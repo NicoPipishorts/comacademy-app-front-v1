@@ -1,17 +1,20 @@
 import { useAddFavoriteDico } from "@/api/favoriteDico";
 import { FavoriteAdapter } from "@/components/buttons/favoriteToggleButton";
+import {
+	collectFavoriteIds,
+	latestFavoriteRow,
+	normalizeFavoriteRows,
+} from "@/helpers/strapiEntity";
 import useGetFavoriteDicos from "@/hooks/useGetFavoriteDicos";
 
-const selectIds = (favoritesData: any | undefined): number[] => {
-	const first = favoritesData?.data?.[0];
-	if (!first) return [];
-	return (
-		first.attributes?.words?.data?.map((it: { id: number }) => it.id) ?? []
-	);
-};
+/** Merge ids across every row (users can own historical duplicates). */
+const selectIds = (favoritesData: any | undefined): number[] =>
+	collectFavoriteIds(normalizeFavoriteRows(favoritesData, "words"));
 
-const selectDataId = (favoritesData: any | undefined): number | null => {
-	return favoritesData?.data?.[0]?.id ?? null;
+/** Latest row, addressed by documentId (Strapi 5 rejects numeric ids). */
+const selectDataId = (favoritesData: any | undefined): string | number | null => {
+	const latest = latestFavoriteRow(normalizeFavoriteRows(favoritesData, "words"));
+	return latest ? latest.documentId ?? latest.id : null;
 };
 
 const dicoFavoriteAdapter: FavoriteAdapter = {

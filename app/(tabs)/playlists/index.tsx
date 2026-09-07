@@ -35,7 +35,7 @@ const Playlist = () => {
 	const { token } = useJwtToken();
 	const [modalVisible, setModalVisible] = useState<boolean>(false);
 	const [modalType, setModalType] = useState<"new" | "edit" | null>(null);
-	const [playlistId, setPlaylistId] = useState<number | null>(null);
+	const [playlistId, setPlaylistId] = useState<string | null>(null);
 
 	const { data: playlistsData, isFetched } = useGetPlaylistsByUser(
 		auth?.user.id,
@@ -86,8 +86,8 @@ const Playlist = () => {
 		deletePlaylist({ elementId: id, authToken: token });
 	};
 
-	const handleEditPlaylist = (id: number) => {
-		setPlaylistId(id);
+	const handleEditPlaylist = (documentId: string) => {
+		setPlaylistId(documentId);
 		setModalType("edit");
 		setModalVisible(true);
 	};
@@ -146,6 +146,7 @@ const Playlist = () => {
 									<CardPlaylist
 										key={playlist.id}
 										id={playlist.id}
+										documentId={playlist.documentId}
 										refKey={refKey}
 										swipeableRefs={swipeableRefs}
 										openedSwipeable={openedSwipeable}

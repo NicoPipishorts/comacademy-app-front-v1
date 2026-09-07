@@ -46,12 +46,14 @@ import {
 } from "react-native";
 import ModalGestureLine from "../experience/modalGestureLine";
 import { colorArray } from "../user/changeAvatar";
+import useBottomSheetVisibility from "@/hooks/useBottomSheetVisibility";
 
 interface NewPlaylistModalProps {
 	visible: boolean;
 	onClose: () => void;
 	onSubmit: (name: string, selectedColor: string) => void;
-	playlistId?: number | null;
+	/** Strapi 5 documentId of the playlist to edit */
+	playlistId?: string | null;
 }
 
 const IMAGE_OPTIONS = [
@@ -91,8 +93,9 @@ const NewPlaylistModal = ({
 	);
 
 	const hasPlaylist = playlistId !== undefined && playlistId !== null;
-	const playlistQueryId = hasPlaylist ? playlistId! : 0;
-	const { data: playlistData } = useGetPlaylistById(playlistQueryId);
+	const { data: playlistData } = useGetPlaylistById(
+		hasPlaylist ? playlistId! : null
+	);
 
 	const resetForm = useCallback(() => {
 		setPlaylistName("");
@@ -110,18 +113,13 @@ const NewPlaylistModal = ({
 		}
 	}, [hasPlaylist, playlistData, resetForm]);
 
-	useEffect(() => {
-		if (visible) {
-			bottomSheetRef.current?.present();
-		} else {
-			bottomSheetRef.current?.dismiss();
-		}
-	}, [visible]);
+	const notifyDismissed = useBottomSheetVisibility(bottomSheetRef, visible);
 
 	const handleDismiss = useCallback(() => {
+		notifyDismissed();
 		resetForm();
 		onClose();
-	}, [onClose, resetForm]);
+	}, [notifyDismissed, onClose, resetForm]);
 
 	const handleNameChange = useCallback(
 		(value: string) => {

@@ -22,6 +22,8 @@ import Animated, {
 
 interface Props {
 	id: number;
+	/** Strapi 5 documentId, used for navigation and edits */
+	documentId?: string;
 	title: string;
 	color: string;
 	refKey: string;
@@ -29,13 +31,14 @@ interface Props {
 	setOpenedSwipeable: React.Dispatch<any>;
 	swipeableRefs: React.MutableRefObject<Record<number, unknown>>;
 	handDeletePlaylist: (id: number) => void;
-	handleEditPlaylist: (id: number) => void;
+	handleEditPlaylist: (documentId: string) => void;
 }
 
 export default function CardPlaylist({
 	title,
 	color,
 	id,
+	documentId,
 	openedSwipeable,
 	setOpenedSwipeable,
 	swipeableRefs,
@@ -50,7 +53,7 @@ export default function CardPlaylist({
 	}, [id, swipeableRefs]);
 
 	const handlePress = () => {
-		navigation.navigate("playlistList", { playlistId: id });
+		navigation.navigate("playlistList", { playlistId: documentId ?? id });
 	};
 
 	const closeSwipeable = () => {
@@ -79,7 +82,7 @@ export default function CardPlaylist({
 					<Pressable
 						style={[styles.actionButton, styles.actionEdit, styles.rightAction]}
 						onPress={() => {
-							handleEditPlaylist(id);
+							if (documentId) handleEditPlaylist(documentId);
 							closeSwipeable();
 						}}
 						android_ripple={{ color: "rgba(255, 255, 255, 0.3)" }}>

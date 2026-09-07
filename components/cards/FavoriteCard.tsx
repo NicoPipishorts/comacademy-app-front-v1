@@ -48,10 +48,10 @@ export default function FavoriteCard({
 export const favoriteCardStyles = StyleSheet.create({
 	icon: {
 		marginRight: 5,
-		width: 24,
-		height: 24,
-		borderRadius: 50,
-		resizeMode: "contain",
+		width: 30,
+		height: 30,
+		borderRadius: 15,
+		overflow: "hidden",
 	},
 });
 

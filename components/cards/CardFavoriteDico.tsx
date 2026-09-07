@@ -1,23 +1,30 @@
 import Loader from "@/components/experience/loader";
+import SmallCategroieIcons from "@/components/icons/SmallCategroieIcons";
 import { FontSizeH3 } from "@/constants/fontsizes";
 import { truncateString } from "@/helpers/truncateText";
-import { DicoFavoritesWord } from "@/types/dico";
 import { NavigationType } from "@/types/general";
+import { DicoFavoritesWord } from "@/types/dico";
 import { useNavigation } from "expo-router";
-import { Image } from "react-native";
+import { View } from "react-native";
 import FavoriteCard, { favoriteCardStyles } from "./FavoriteCard";
 
 interface Props {
 	data: DicoFavoritesWord;
-	categoriesColors: { [key: number]: string };
-	categoriesIcons: { [key: number]: string };
 }
 
-export default function CardFavoriteDico({
-	data,
-	categoriesColors,
-	categoriesIcons,
-}: Props) {
+/** Category icons come from the bundled assets, like the detail screens. */
+const renderCategoryIcons = (categories?: string | null) =>
+	(categories ?? "")
+		.split(",")
+		.map((cat) => Number(cat.trim()))
+		.filter((cat) => Number.isFinite(cat) && cat > 0)
+		.map((cat) => (
+			<View key={cat} style={favoriteCardStyles.icon}>
+				<SmallCategroieIcons cats={cat} />
+			</View>
+		));
+
+export default function CardFavoriteDico({ data }: Props) {
 	const navigation = useNavigation<NavigationType>();
 
 	if (!data) {
@@ -31,21 +38,7 @@ export default function CardFavoriteDico({
 			onPress={() =>
 				navigation.navigate("favoriteDicoDetails", { dicoId: data.id })
 			}
-			icons={data.attributes.Categories?.split(",").map((cat, index) => {
-				if (!cat) return null;
-				return (
-					<Image
-						key={index}
-						style={[
-							favoriteCardStyles.icon,
-							{ backgroundColor: `${categoriesColors}` },
-						]}
-						source={{
-							uri: `${process.env.EXPO_PUBLIC_URL}${categoriesIcons}`,
-						}}
-					/>
-				);
-			})}
+			icons={renderCategoryIcons(data.attributes.Categories)}
 		/>
 	);
 }
