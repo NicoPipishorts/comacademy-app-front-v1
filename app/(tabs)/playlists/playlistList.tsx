@@ -5,6 +5,7 @@ import { colorRed } from "@/constants/colors";
 import { FontSize12, FontSize18, FontSizeH1 } from "@/constants/fontsizes";
 import { useSnackbar } from "@/context/snackBar";
 import { truncateString } from "@/helpers/truncateText";
+import { buildEmptyPlaylist } from "@/helpers/playlists";
 import useGetPlaylistById from "@/hooks/Playlistss/useGetPlaylistById";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useJwtToken from "@/hooks/useJwtToken";
@@ -34,10 +35,11 @@ const PlaylistList = () => {
 	const { playlistId } = useLocalSearchParams();
 	const showSnackbar = useSnackbar();
 	const navigation = useNavigation<NavigationType>();
-	const playlistIdNumber = playlistId ? Number(playlistId) : null;
+	const playlistDocumentId =
+		typeof playlistId === "string" && playlistId ? playlistId : null;
 
 	const { data: playlistData, isFetched } =
-		useGetPlaylistById(playlistIdNumber);
+		useGetPlaylistById(playlistDocumentId);
 
 	const {
 		openedSwipeable,
@@ -48,7 +50,7 @@ const PlaylistList = () => {
 
 	const onSuccess = () => {
 		queryClient.refetchQueries({
-			queryKey: ["Playlist", playlistIdNumber],
+			queryKey: ["Playlist", playlistDocumentId],
 		});
 		showSnackbar("L'élément a était retiré", "success");
 	};
@@ -66,7 +68,9 @@ const PlaylistList = () => {
 		return <PlaylistDetailsSkeleton />;
 	}
 
-	const playlistContents = playlistData.data.attributes.playlist_contents;
+	// A failed fetch must not crash the screen: fall back to an empty playlist.
+	const playlist = playlistData ?? buildEmptyPlaylist(playlistDocumentId ?? "");
+	const playlistContents = playlist.data.attributes.playlist_contents;
 
 	const handlePress = (type: string, value: number) => {
 		switch (type) {
@@ -142,8 +146,8 @@ const PlaylistList = () => {
 					<View style={styles.headerContainer}>
 						<View>
 							<PlaylistDisplayImage
-								title={playlistData.data.attributes.name}
-								image={playlistData.data.attributes.selectedColor}
+								title={playlist.data.attributes.name}
+								image={playlist.data.attributes.selectedColor}
 								width={100}
 								height={100}
 							/>
@@ -153,7 +157,7 @@ const PlaylistList = () => {
 								Playlist
 							</Text>
 							<Text style={{ fontSize: FontSizeH1, fontWeight: "bold" }}>
-								{truncateString(playlistData.data.attributes.name, 16)}
+								{truncateString(playlist.data.attributes.name, 16)}
 							</Text>
 							<Text style={{ fontSize: FontSize12, fontWeight: "bold" }}>
 								{playlistContents.length} éléments
@@ -190,7 +194,7 @@ const PlaylistList = () => {
 											friction={2}
 											enableTrackpadTwoFingerGesture
 											renderRightActions={(progress, dragX) =>
-												RightAction(dragX, content.id)
+												RightAction(dragX, content.documentId ?? content.id)
 											}
 											onSwipeableWillOpen={() => {
 												if (
@@ -215,7 +219,7 @@ const PlaylistList = () => {
 												}>
 												<View>
 													<PlaylistDisplayImage
-														image={playlistData.data.attributes.selectedColor}
+														image={playlist.data.attributes.selectedColor}
 														width={70}
 														height={70}
 													/>

@@ -36,7 +36,6 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import React, {
 	useCallback,
-	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -50,6 +49,7 @@ import {
 	Text,
 	View,
 } from "react-native";
+import useBottomSheetVisibility from "@/hooks/useBottomSheetVisibility";
 
 interface Props {
 	visible: boolean;
@@ -83,13 +83,7 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	const selectedColor = preference?.avatarBackgroundColor || colorYellow;
 	const avatarUrl = resolveUserPreferenceAvatarUrl(preference);
 
-	useEffect(() => {
-		if (visible) {
-			bottomSheetRef.current?.present();
-		} else {
-			bottomSheetRef.current?.dismiss();
-		}
-	}, [visible]);
+	const notifyDismissed = useBottomSheetVisibility(bottomSheetRef, visible);
 
 	const renderBackdrop = useCallback(
 		(props: BottomSheetBackdropProps) => (
@@ -239,8 +233,9 @@ export default function ProfileAvatarSheet({ visible, onClose }: Props) {
 	};
 
 	const onDismiss = useCallback(() => {
+		notifyDismissed();
 		onClose();
-	}, [onClose]);
+	}, [notifyDismissed, onClose]);
 
 	return (
 		<BottomSheetModal

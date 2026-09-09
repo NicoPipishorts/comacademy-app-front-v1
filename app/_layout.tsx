@@ -76,10 +76,13 @@ export default function RootLayout() {
 															name='(tabs)'
 															options={{ headerShown: false }}
 														/>
-														<Stack.Screen
-															name='parcours'
-															options={{ headerShown: false }}
-														/>
+												<Stack.Screen
+													name='parcours'
+													options={{
+														headerShown: false,
+														gestureEnabled: false,
+													}}
+												/>
 													</Stack>
 													{shouldShowDeviceLogs ? <LogOverlay /> : null}
 												</TabProvider>

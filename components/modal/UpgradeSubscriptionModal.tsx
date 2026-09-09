@@ -3,10 +3,11 @@ import { buttonBlack } from "@/constants/commonStyles";
 import { FontSize16, FontSize18 } from "@/constants/fontsizes";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { usePathname, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BlurBackdrop from "../experience/backdropComponent";
 import ModalGestureLine from "../experience/modalGestureLine";
+import useBottomSheetVisibility from "@/hooks/useBottomSheetVisibility";
 
 interface Props {
 	visible: boolean;
@@ -69,17 +70,12 @@ export default function UpgradeSubscriptionModal({
 	const bottomSheetRef = useRef<BottomSheetModal>(null);
 	const snapPoints = useMemo(() => SNAP_POINTS, []);
 
-	useEffect(() => {
-		if (visible) {
-			bottomSheetRef.current?.present();
-		} else {
-			bottomSheetRef.current?.dismiss();
-		}
-	}, [visible]);
+	const notifyDismissed = useBottomSheetVisibility(bottomSheetRef, visible);
 
 	const handleDismiss = useCallback(() => {
+		notifyDismissed();
 		onClose();
-	}, [onClose]);
+	}, [notifyDismissed, onClose]);
 
 	const handleUpgradePress = useCallback(() => {
 		onClose();

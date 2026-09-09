@@ -55,7 +55,7 @@ const TabsLayout: React.FC = () => {
 				<Tabs.Screen
 					name='activity'
 					options={{
-						tabBarLabel: "Acceuil",
+						tabBarLabel: "Accueil",
 						headerShown: false,
 						lazy: true,
 					}}

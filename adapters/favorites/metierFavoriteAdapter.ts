@@ -1,33 +1,21 @@
 import { useAddFavoritesMetierMutation } from "@/api/favoriteMetier";
 import { FavoriteAdapter } from "@/components/buttons/favoriteToggleButton";
+import {
+	collectFavoriteIds,
+	latestFavoriteRow,
+	normalizeFavoriteRows,
+} from "@/helpers/strapiEntity";
 import { queryClient } from "@/hooks/reactQueryConfig";
 import useGetFavoriteMetiers from "@/hooks/useGetFavoriteMetiers";
 
 /** Merge ALL ids across all rows (handles historical duplicates) */
-const selectIds = (favoritesData: any | undefined): number[] => {
-	const rows = favoritesData?.data ?? [];
-	const set = new Set<number>();
-	for (const row of rows) {
-		const items = row?.attributes?.metiers?.data ?? [];
-		for (const it of items) {
-			const n = Number(it?.id);
-			if (Number.isFinite(n)) set.add(n);
-		}
-	}
-	return Array.from(set);
-};
+const selectIds = (favoritesData: any | undefined): number[] =>
+	collectFavoriteIds(normalizeFavoriteRows(favoritesData, "metiers"));
 
-/** Prefer the latest row (highest numeric id) as the container to update */
-const selectDataId = (favoritesData: any | undefined): number | null => {
-	const rows = favoritesData?.data ?? [];
-	if (!rows.length) return null;
-	const latest = rows.reduce((acc: any, r: any) => {
-		const rid = Number(r?.id);
-		const aid = Number(acc?.id);
-		return !acc || (Number.isFinite(rid) && rid > aid) ? r : acc;
-	}, null);
-	const n = Number(latest?.id);
-	return Number.isFinite(n) ? n : null;
+/** Latest row, addressed by documentId (Strapi 5 rejects numeric ids). */
+const selectDataId = (favoritesData: any | undefined): string | number | null => {
+	const latest = latestFavoriteRow(normalizeFavoriteRows(favoritesData, "metiers"));
+	return latest ? latest.documentId ?? latest.id : null;
 };
 
 const metierFavoriteAdapter: FavoriteAdapter = {
@@ -49,7 +37,7 @@ const metierFavoriteAdapter: FavoriteAdapter = {
 				token,
 			}: {
 				userId?: number;
-				dataId?: number;
+				dataId?: number | string;
 				updatedIds: number[];
 				token?: string;
 			}) => {

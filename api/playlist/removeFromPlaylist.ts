@@ -3,7 +3,8 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
 interface payload {
-	elementId: number;
+	/** Strapi 5 documentId of the playlist-content row */
+	elementId: number | string;
 	authToken: string;
 }
 

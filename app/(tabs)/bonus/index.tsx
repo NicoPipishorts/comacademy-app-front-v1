@@ -37,11 +37,21 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
+	useWindowDimensions,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const bonusAssets = [bonusPinkIcon, bonusGreenIcon, bonusBlueIcon];
+const DEFAULT_BONUS_VIDEO_ASPECT_RATIO = 9 / 16;
+
+const getMediaAspectRatio = (
+	media?: { width?: number | null; height?: number | null } | null
+) => {
+	const width = Number(media?.width);
+	const height = Number(media?.height);
+	return width > 0 && height > 0 ? width / height : null;
+};
 
 const toAbsoluteMediaUrl = (value?: string | null) => {
 	const raw = String(value || "").trim();
@@ -90,20 +100,49 @@ function BonusVideoModal({
 	onClose: () => void;
 }) {
 	const videoRef = useRef<ManagedVideoHandle | null>(null);
-	const [isPlaying, setIsPlaying] = useState(false);
+	const insets = useSafeAreaInsets();
+	const window = useWindowDimensions();
+	const [playingBonusId, setPlayingBonusId] = useState<number | null>(null);
+	const [detectedVideoRatio, setDetectedVideoRatio] = useState<{
+		bonusId: number;
+		ratio: number;
+	} | null>(null);
 	const videoUri = bonus?.payload
 		? resolveParcoursVideoUri(
 				bonus.payload as unknown as Record<string, unknown>
 		  )
 		: null;
 	const coverUri = toAbsoluteMediaUrl(bonus?.payload?.coverPhoto?.url);
+	const payloadAspectRatio = useMemo(
+		() =>
+			getMediaAspectRatio(bonus?.payload?.videoUri) ??
+			getMediaAspectRatio(bonus?.payload?.coverPhoto) ??
+			DEFAULT_BONUS_VIDEO_ASPECT_RATIO,
+		[bonus?.payload?.coverPhoto, bonus?.payload?.videoUri]
+	);
+	const isPlaying = Boolean(bonus && playingBonusId === bonus.id);
+	const videoAspectRatio =
+		bonus && detectedVideoRatio?.bonusId === bonus.id
+			? detectedVideoRatio.ratio
+			: payloadAspectRatio;
+	const videoCardSize = useMemo(() => {
+		const maxWidth = Math.max(1, Math.min(window.width - 56, 720));
+		const maxHeight = Math.max(
+			180,
+			window.height - insets.top - insets.bottom - 250
+		);
+		const widthAtMaxHeight = maxHeight * videoAspectRatio;
 
-	useEffect(() => {
-		setIsPlaying(false);
-	}, [bonus?.id]);
+		if (widthAtMaxHeight <= maxWidth) {
+			return { width: widthAtMaxHeight, height: maxHeight };
+		}
+
+		return { width: maxWidth, height: maxWidth / videoAspectRatio };
+	}, [insets.bottom, insets.top, videoAspectRatio, window.height, window.width]);
 
 	const closeModal = () => {
 		videoRef.current?.pauseAsync().catch(() => {});
+		setPlayingBonusId(null);
 		onClose();
 	};
 
@@ -113,7 +152,14 @@ function BonusVideoModal({
 			animationType='slide'
 			presentationStyle='fullScreen'
 			onRequestClose={closeModal}>
-			<View style={styles.modalWrapper}>
+			<View
+				style={[
+					styles.modalWrapper,
+					{
+						paddingTop: insets.top + 12,
+						paddingBottom: insets.bottom + 16,
+					},
+				]}>
 				<View style={styles.modalHeader}>
 					<Pressable onPress={closeModal} style={styles.modalClose}>
 						<Text style={styles.modalCloseText}>Fermer</Text>
@@ -122,7 +168,7 @@ function BonusVideoModal({
 				<Text style={styles.modalWeek}>{bonus ? formatBonusWeek(bonus) : ""}</Text>
 				<Text style={styles.modalTitle}>{bonus?.title || "Bonus"}</Text>
 
-				<View style={styles.videoCard}>
+				<View style={[styles.videoCard, videoCardSize]}>
 					{videoUri ? (
 						<ExpoVideo
 							ref={videoRef}
@@ -132,7 +178,19 @@ function BonusVideoModal({
 							isLooping={false}
 							isMuted={false}
 							useNativeControls
-							resizeMode='cover'
+							resizeMode='contain'
+							onReadyForDisplay={({ naturalSize }) => {
+								if (
+									bonus &&
+									naturalSize.width > 0 &&
+									naturalSize.height > 0
+								) {
+									setDetectedVideoRatio({
+										bonusId: bonus.id,
+										ratio: naturalSize.width / naturalSize.height,
+									});
+								}
+							}}
 						/>
 					) : (
 						<View style={styles.videoUnavailable}>
@@ -144,15 +202,15 @@ function BonusVideoModal({
 					{videoUri && !isPlaying ? (
 						<Pressable
 							onPress={() => {
-								setIsPlaying(true);
+								setPlayingBonusId(bonus?.id ?? null);
 								videoRef.current?.playAsync().catch(() => {});
 							}}
 							style={styles.videoOverlay}>
 							{coverUri ? (
 								<Image
 									source={{ uri: coverUri }}
-									resizeMode='cover'
-									style={StyleSheet.absoluteFillObject}
+									resizeMode='contain'
+									style={StyleSheet.absoluteFill}
 								/>
 							) : null}
 							<View style={styles.playButton}>
@@ -205,6 +263,8 @@ export default function BonusScreen() {
 		);
 		if (requestedBonus) {
 			autoOpenedBonusIdRef.current = requestedBonusId;
+			// The bonus arrives asynchronously from the route-backed query.
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setSelectedBonus(requestedBonus);
 			if (requestedBonus.status === "unlocked") {
 				markBonusViewed({ bonusId: requestedBonus.id, token });
@@ -387,7 +447,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: primaryBackground,
 		paddingHorizontal: 28,
-		paddingTop: 58,
 		alignItems: "center",
 	},
 	modalHeader: {
@@ -420,9 +479,6 @@ const styles = StyleSheet.create({
 		marginBottom: 26,
 	},
 	videoCard: {
-		width: "100%",
-		maxWidth: 360,
-		aspectRatio: 9 / 16,
 		borderRadius: 30,
 		overflow: "hidden",
 		backgroundColor: colorBlack,
@@ -432,7 +488,11 @@ const styles = StyleSheet.create({
 		height: "100%",
 	},
 	videoOverlay: {
-		...StyleSheet.absoluteFillObject,
+		position: "absolute",
+		top: 0,
+		right: 0,
+		bottom: 0,
+		left: 0,
 		alignItems: "center",
 		justifyContent: "center",
 		backgroundColor: "#191919",

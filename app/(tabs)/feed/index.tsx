@@ -18,6 +18,8 @@ import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	ActivityIndicator,
+	AppState,
+	AppStateStatus,
 	FlatList,
 	ListRenderItem,
 	RefreshControl,
@@ -42,6 +44,7 @@ const Feed = () => {
 	const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 	const sessionSeenIdsRef = useRef<Set<number>>(new Set());
 	const flushedSeenIdsRef = useRef<Set<number>>(new Set());
+	const flushInFlightRef = useRef<Promise<void> | null>(null);
 
 	useTrackPageMetrics({ page: "Feed" });
 
@@ -80,29 +83,71 @@ const Feed = () => {
 	} = useGetFeed({ limit: 10 });
 	const { mutateAsync: markFeedsSeen } = useMarkFeedsSeen();
 
-	const flushSeenFeedIds = useCallback(async () => {
+	// Sends the ids seen during this session to the server. Never throws: a
+	// failed flush keeps its ids pending so the next flush retries them, and the
+	// callers (blur, background, pull-to-refresh) keep going regardless.
+	const flushSeenFeedIds = useCallback((): Promise<void> => {
+		if (flushInFlightRef.current) {
+			return flushInFlightRef.current;
+		}
+
 		const pendingFeedIds = Array.from(sessionSeenIdsRef.current).filter(
 			(id) => !flushedSeenIdsRef.current.has(id)
 		);
 
 		if (!pendingFeedIds.length) {
-			return;
+			return Promise.resolve();
 		}
 
-		await markFeedsSeen({ feedIds: pendingFeedIds });
-		pendingFeedIds.forEach((id) => {
-			flushedSeenIdsRef.current.add(id);
-		});
+		const flush = (async () => {
+			try {
+				await markFeedsSeen({ feedIds: pendingFeedIds });
+				pendingFeedIds.forEach((id) => {
+					flushedSeenIdsRef.current.add(id);
+				});
+			} catch (error) {
+				console.warn("Failed to mark feed items as seen", error);
+			} finally {
+				flushInFlightRef.current = null;
+			}
+		})();
+		flushInFlightRef.current = flush;
+		return flush;
 	}, [markFeedsSeen]);
 
 	useFocusEffect(
 		useCallback(() => {
-			void refetch();
+			let cancelled = false;
+			// Wait for the flush started on the previous blur so the refetch
+			// reflects the freshly recorded seen markers.
+			void (async () => {
+				await flushInFlightRef.current;
+				if (!cancelled) {
+					await refetch();
+				}
+			})();
 			return () => {
+				cancelled = true;
 				void flushSeenFeedIds();
 			};
 		}, [flushSeenFeedIds, refetch])
 	);
+
+	// Also flush when the app leaves the foreground, so items seen right before
+	// the app is backgrounded or killed still land in the history.
+	useEffect(() => {
+		const subscription = AppState.addEventListener(
+			"change",
+			(state: AppStateStatus) => {
+				if (state === "background" || state === "inactive") {
+					void flushSeenFeedIds();
+				}
+			}
+		);
+		return () => {
+			subscription.remove();
+		};
+	}, [flushSeenFeedIds]);
 
 	useEffect(() => {
 		sessionSeenIdsRef.current = new Set();

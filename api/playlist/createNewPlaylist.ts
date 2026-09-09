@@ -8,7 +8,8 @@ interface payload {
 	selectedColor: string | number;
 	authToken: string;
 	modalType?: "new" | "edit";
-	playlistId?: number | null;
+	/** Strapi 5 documentId of the playlist being edited */
+	playlistId?: number | string | null;
 }
 
 interface SuccessResponse {

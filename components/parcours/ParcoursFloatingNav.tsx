@@ -42,6 +42,7 @@ export default function ParcoursFloatingNav({
 				<Text style={styles.quitLabel}>{isFirstStep ? "Quitter" : "Retour"}</Text>
 			</Pressable>
 			<Pressable
+				disabled={nextDisabled}
 				accessibilityState={{ disabled: nextDisabled }}
 				onPress={() => {
 					logDevice("[Parcours][Next button] press attempt", {

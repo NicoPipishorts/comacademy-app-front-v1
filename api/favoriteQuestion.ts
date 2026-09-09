@@ -3,7 +3,8 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
 interface AddFavoriteQuestionPayload {
-	dataId?: number;
+	/** numeric id or (preferred) Strapi 5 documentId of the favorites row */
+	dataId?: number | string;
 	userId?: number;
 	updatedFavoriteQuestions: number[];
 	token: string;

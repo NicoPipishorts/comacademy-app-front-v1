@@ -7,15 +7,17 @@ import { QuestionById } from "./question";
 export interface PlaylistListResponse {
 	data: {
 		id: number;
+		/** Strapi 5 document id; the only id accepted by REST routes */
+		documentId?: string;
 		attributes: {
 			name: string;
-			createdAt: string;
-			updatedAt: string;
-			publishedAt: string;
+			createdAt?: string;
+			updatedAt?: string;
+			publishedAt?: string;
 			selectedColor: string;
 			inPlaylist?: boolean;
 		};
-	}[];
+	}[] | null;
 }
 
 // Playlist Contents Definition, not grouped
@@ -50,6 +52,7 @@ export interface PlaylistContentResponse {
 export interface PlaylistContentGrouped {
 	data: {
 		id: number;
+		documentId?: string;
 		attributes: {
 			name: string;
 			createdAt: string;
@@ -58,7 +61,9 @@ export interface PlaylistContentGrouped {
 			selectedColor: string;
 			playlist_contents: {
 				id: number;
+				documentId?: string;
 				itemId: number;
+				itemDocumentId?: string;
 				value: string;
 				group: "dico" | "métier" | "question";
 			}[];

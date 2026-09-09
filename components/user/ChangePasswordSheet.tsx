@@ -23,7 +23,6 @@ import {
 } from "@gorhom/bottom-sheet";
 import React, {
 	useCallback,
-	useEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -37,6 +36,7 @@ import {
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import useBottomSheetVisibility from "@/hooks/useBottomSheetVisibility";
 
 interface Props {
 	visible: boolean;
@@ -74,13 +74,7 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	useEffect(() => {
-		if (visible) {
-			bottomSheetRef.current?.present();
-			return;
-		}
-		bottomSheetRef.current?.dismiss();
-	}, [visible]);
+	const notifyDismissed = useBottomSheetVisibility(bottomSheetRef, visible);
 
 	const resetForm = useCallback(() => {
 		setCurrentPassword("");
@@ -177,9 +171,10 @@ export default function ChangePasswordSheet({ visible, onClose }: Props) {
 	};
 
 	const onDismiss = useCallback(() => {
+		notifyDismissed();
 		resetForm();
 		onClose();
-	}, [onClose, resetForm]);
+	}, [notifyDismissed, onClose, resetForm]);
 
 	const handleAnimate = useCallback((_fromIndex: number, toIndex: number) => {
 		if (toIndex === -1) {

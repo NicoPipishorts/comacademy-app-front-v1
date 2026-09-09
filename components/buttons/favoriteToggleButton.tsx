@@ -18,7 +18,7 @@ export type FavoriteAdapter = {
 	useFavorites: (userId: number | undefined) => { data: any | undefined };
 	selectIds: (favoritesData: any | undefined) => number[];
 	/** For list-style adapters return container id; for pair-based return null */
-	selectDataId: (favoritesData: any | undefined) => number | null;
+	selectDataId: (favoritesData: any | undefined) => string | number | null;
 	/** Query key used to refetch/invalidates after toggle */
 	queryKey: (userId: number | undefined) => unknown[];
 	useMutate: (
@@ -27,7 +27,7 @@ export type FavoriteAdapter = {
 	) => {
 		mutate: (params: {
 			userId?: number;
-			dataId?: number;
+			dataId?: string | number;
 			updatedIds: number[];
 			token?: string;
 			___internalTargetId?: number;

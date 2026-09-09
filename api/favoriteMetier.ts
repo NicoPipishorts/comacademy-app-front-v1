@@ -3,7 +3,8 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 
 // Define the payload and response types
 interface AddFavoriteMetiers {
-	dataId?: number;
+	/** numeric id or (preferred) Strapi 5 documentId of the favorites row */
+	dataId?: number | string;
 	userId?: number;
 	updatedFavoriteMetiers: number[];
 	token: string;
