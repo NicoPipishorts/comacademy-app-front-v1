@@ -16,6 +16,8 @@ export const useRegisterNewUser = (
 					username: formPayload.username,
 					email: formPayload.email,
 					password: formPayload.password,
+					firstName: formPayload.firstName,
+					lastName: formPayload.lastName,
 				};
 
 				const response = await axios.post(getRegisterUrl(), registerPayload);
