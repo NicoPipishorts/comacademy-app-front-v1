@@ -1,5 +1,6 @@
 import {
 	colorBlack,
+	colorDarkGrey,
 	colorWhite,
 	primaryBackground,
 } from "@/constants/colors";
@@ -7,10 +8,15 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Ionicons } from "@expo/vector-icons";
+
 import { UseAuth } from "@/auth/AuthContext";
 import CategoriesCards from "@/components/categories/categories";
 import FloatingTabBar from "@/components/FloatingTabBar";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
+import SectionAboutCta from "@/components/onboarding/SectionAboutCta";
+import SectionAboutModal from "@/components/onboarding/SectionAboutModal";
+import { SECTION_ABOUT } from "@/constants/sectionOnboarding";
 import { FontSizeScreenTitles } from "@/constants/fontsizes";
 import { useTab } from "@/context/floatingTabbarContext";
 import { useTabBarVisibility } from "@/context/TabBarVisibilityContext";
@@ -22,6 +28,11 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useGetUserScore } from "@/hooks/useGetUsersScore";
 import useJwtToken from "@/hooks/useJwtToken";
 import { useNetwork } from "@/providers/NetworkProvider";
+import {
+	getSectionOnboardingSeen,
+	resetSectionOnboardingSeen,
+	setSectionOnboardingSeen,
+} from "@/services/onboarding/SectionOnboarding";
 import { useSubscription } from "@/src/hooks/useSubscription";
 import { router, useFocusEffect } from "expo-router";
 // import { useMemo } from "react";
@@ -39,6 +50,9 @@ export default function LeJeu() {
 	const [activeTab, setActiveTab] = useState(0);
 	const [filterByCat, setFilterByCat] = useState<number | null>(null);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+	const [hasSeenAbout, setHasSeenAbout] = useState<boolean | null>(null);
+	const [isAboutSheetVisible, setIsAboutSheetVisible] = useState(false);
+	const [shouldAnimateAboutCta, setShouldAnimateAboutCta] = useState(false);
 	const segmentTranslateX = useRef(new Animated.Value(0)).current;
 	const segmentWidth = 92;
 
@@ -46,6 +60,67 @@ export default function LeJeu() {
 	const { token, loading: loadingToken } = useJwtToken();
 	const { session } = UseAuth();
 	const { hasPremiumAccess: backendHasPremiumAccess } = useSubscription();
+	const userId = auth?.user?.id;
+
+	// First visit (per user) auto-opens the explanations; afterwards the "A propos"
+	// link under the Jouer/Reponses tabs is the way back in.
+	useEffect(() => {
+		let cancelled = false;
+
+		if (!userId) {
+			return () => {
+				cancelled = true;
+			};
+		}
+
+		void getSectionOnboardingSeen("jeu", userId).then((seen) => {
+			if (cancelled) {
+				return;
+			}
+
+			setHasSeenAbout(seen);
+
+			if (!seen) {
+				setIsAboutSheetVisible(true);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [userId]);
+
+	const handleAboutPress = useCallback(() => {
+		setShouldAnimateAboutCta(false);
+		setIsAboutSheetVisible(true);
+	}, []);
+
+	const handleAboutClose = useCallback(() => {
+		setIsAboutSheetVisible(false);
+
+		if (hasSeenAbout === false) {
+			setShouldAnimateAboutCta(true);
+		}
+
+		if (!userId || hasSeenAbout) {
+			return;
+		}
+
+		setHasSeenAbout(true);
+		void setSectionOnboardingSeen("jeu", userId, true);
+	}, [hasSeenAbout, userId]);
+
+	// Dev-only: clears the seen flag and replays the sheet straight away.
+	const handleReplayAbout = useCallback(async () => {
+		if (!userId) {
+			return;
+		}
+
+		await resetSectionOnboardingSeen("jeu", userId);
+		setShouldAnimateAboutCta(false);
+		setHasSeenAbout(false);
+		setIsAboutSheetVisible(true);
+	}, [userId]);
 
 	// Check premium access status
 	const hasPremiumAccess = React.useMemo(() => {
@@ -243,6 +318,27 @@ export default function LeJeu() {
 				</View>
 			</View>
 
+			<View style={styles.aboutRow}>
+				{__DEV__ ? (
+					<Pressable
+						onPress={() => {
+							void handleReplayAbout();
+						}}
+						accessibilityRole='button'
+						accessibilityLabel='Rejouer les explications du jeu'
+						style={styles.devReplayButton}>
+						<Ionicons name='refresh' size={16} color={colorDarkGrey} />
+					</Pressable>
+				) : null}
+				{hasSeenAbout ? (
+					<SectionAboutCta
+						onPress={handleAboutPress}
+						animateIn={shouldAnimateAboutCta}
+						tabIndex={SECTION_ABOUT.jeu.tabIndex}
+					/>
+				) : null}
+			</View>
+
 			{activeTab === 0 && !isEnabled && (
 				<LetsPlay
 					setSelectedTab={setSelectedTab}
@@ -281,6 +377,11 @@ export default function LeJeu() {
 
 			{isEnabled && <Answers />}
 
+			<SectionAboutModal
+				section='jeu'
+				visible={isAboutSheetVisible}
+				onClose={handleAboutClose}
+			/>
 			<UpgradeSubscriptionModal
 				visible={showSubscriptionModal}
 				onClose={() => setShowSubscriptionModal(false)}
@@ -309,6 +410,22 @@ const styles = StyleSheet.create({
 	headerMainText: {
 		fontSize: FontSizeScreenTitles,
 		fontWeight: "bold",
+	},
+	aboutRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "flex-end",
+		gap: 4,
+		marginTop: -8,
+		marginBottom: 4,
+	},
+	devReplayButton: {
+		width: 28,
+		height: 28,
+		borderRadius: 14,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "rgba(0,0,0,0.06)",
 	},
 	segmentedControl: {
 		position: "relative",

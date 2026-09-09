@@ -22,6 +22,8 @@ type PageTitleAvatarHeaderProps = {
 	titleStyle?: StyleProp<TextStyle>;
 	titleLoading?: boolean;
 	avatarLoading?: boolean;
+	/** Rendered on the trailing edge in place of the avatar (or its placeholder). */
+	rightAccessory?: React.ReactNode;
 };
 
 const PageTitleAvatarHeader = ({
@@ -34,6 +36,7 @@ const PageTitleAvatarHeader = ({
 	titleStyle,
 	titleLoading = false,
 	avatarLoading = false,
+	rightAccessory,
 }: PageTitleAvatarHeaderProps) => {
 	return (
 		<View style={[styles.container, containerStyle]}>
@@ -51,7 +54,9 @@ const PageTitleAvatarHeader = ({
 						)}
 					</>
 				)}
-				{showAvatar ? (
+				{rightAccessory ? (
+					rightAccessory
+				) : showAvatar ? (
 					<AvatarInitials
 						size={avatarSize}
 						loading={avatarLoading}

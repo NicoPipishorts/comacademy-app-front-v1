@@ -8,6 +8,7 @@ import PageTitleAvatarHeader from "@/components/PageTitleAvatarHeader";
 import { primaryBackground } from "@/constants/colors";
 import useAuthSession from "@/hooks/useAuthSession";
 import { resetOnboardingStatus } from "@/services/onboarding/Onboarding";
+import { resetAllSectionOnboardingSeen } from "@/services/onboarding/SectionOnboarding";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
@@ -43,7 +44,11 @@ export default function DashboardScreen() {
 
 	const handleReplayOnboarding = async () => {
 		if (auth?.user?.id) {
-			await resetOnboardingStatus(auth.user.id);
+			// "Tutos" replays every explainer, the section sheets included.
+			await Promise.all([
+				resetOnboardingStatus(auth.user.id),
+				resetAllSectionOnboardingSeen(auth.user.id),
+			]);
 		}
 		router.replace("/");
 	};

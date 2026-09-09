@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useParcoursTimeline } from "@/api/parcours/useParcours";
 import bonusPinkIcon from "@/assets/imgs/parcours/Bonus-1.png";
 import bonusGreenIcon from "@/assets/imgs/parcours/Bonus-2.png";
@@ -5,6 +6,8 @@ import bonusBlueIcon from "@/assets/imgs/parcours/Bonus-3.png";
 import bonusLockedIcon from "@/assets/imgs/parcours/Bonus-Lock.png";
 import connectorLeftIcon from "@/assets/imgs/parcours/line-connecter-left.svg";
 import connectorRightIcon from "@/assets/imgs/parcours/line-connecter-rightsvg.svg";
+import SectionAboutCta from "@/components/onboarding/SectionAboutCta";
+import SectionAboutModal from "@/components/onboarding/SectionAboutModal";
 import ParcoursComingSoonScreen from "@/components/parcours/ParcoursComingSoonScreen";
 import { ParcoursDayStatusBadge } from "@/components/parcours/ParcoursDayStatusBadge";
 import UpgradeSubscriptionModal from "@/components/modal/UpgradeSubscriptionModal";
@@ -22,7 +25,14 @@ import {
 	isParcoursWeekPaywalled,
 } from "@/helpers/parcours/week";
 import { getParcoursTimelineActivityIcon } from "@/helpers/parcours/icons";
+import useAuthSession from "@/hooks/useAuthSession";
 import useJwtToken from "@/hooks/useJwtToken";
+import {
+	getSectionOnboardingSeen,
+	resetSectionOnboardingSeen,
+	setSectionOnboardingSeen,
+} from "@/services/onboarding/SectionOnboarding";
+import { SECTION_ABOUT } from "@/constants/sectionOnboarding";
 import { ParcoursTimelineWeek } from "@/types/parcours";
 import { useAssets } from "expo-asset";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -438,6 +448,13 @@ function ParcoursTimelineScreen() {
 	>(null);
 	const [confettiRunId, setConfettiRunId] = useState(0);
 	const [isPaywallSheetVisible, setIsPaywallSheetVisible] = useState(false);
+	const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(
+		null
+	);
+	const [isAboutSheetVisible, setIsAboutSheetVisible] = useState(false);
+	const [shouldAnimateAboutCta, setShouldAnimateAboutCta] = useState(false);
+	const { auth } = useAuthSession();
+	const userId = auth?.user?.id;
 	const { token, loading: loadingToken } = useJwtToken();
 	const {
 		data,
@@ -493,6 +510,67 @@ function ParcoursTimelineScreen() {
 		}, 3400);
 	}, []);
 
+	// First visit (per user) auto-opens the explanations; afterwards the "A propos"
+	// link in the header is the way back in.
+	useEffect(() => {
+		let cancelled = false;
+
+		if (!userId) {
+			return () => {
+				cancelled = true;
+			};
+		}
+
+		void getSectionOnboardingSeen("parcours", userId).then((seen) => {
+			if (cancelled) {
+				return;
+			}
+
+			setHasSeenOnboarding(seen);
+
+			if (!seen) {
+				setIsAboutSheetVisible(true);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [userId]);
+
+	const handleAboutPress = useCallback(() => {
+		setShouldAnimateAboutCta(false);
+		setIsAboutSheetVisible(true);
+	}, []);
+
+	const handleAboutClose = useCallback(() => {
+		setIsAboutSheetVisible(false);
+
+		if (hasSeenOnboarding === false) {
+			setShouldAnimateAboutCta(true);
+		}
+
+		if (!userId || hasSeenOnboarding) {
+			return;
+		}
+
+		setHasSeenOnboarding(true);
+		void setSectionOnboardingSeen("parcours", userId, true);
+	}, [hasSeenOnboarding, userId]);
+
+	// Dev-only: clears the seen flag and replays the sheet straight away, so the
+	// reveal animation can be iterated on without digging into AsyncStorage.
+	const handleReplayAboutOnboarding = useCallback(async () => {
+		if (!userId) {
+			return;
+		}
+
+		await resetSectionOnboardingSeen("parcours", userId);
+		setShouldAnimateAboutCta(false);
+		setHasSeenOnboarding(false);
+		setIsAboutSheetVisible(true);
+	}, [userId]);
+
 	const handlePaywallPress = useCallback(() => {
 		setIsPaywallSheetVisible(true);
 	}, []);
@@ -540,12 +618,38 @@ function ParcoursTimelineScreen() {
 		return <Loader />;
 	}
 
+	const aboutCta = hasSeenOnboarding ? (
+		<SectionAboutCta
+			onPress={handleAboutPress}
+			animateIn={shouldAnimateAboutCta}
+			tabIndex={SECTION_ABOUT.parcours.tabIndex}
+		/>
+	) : null;
+
+	const headerAccessory = __DEV__ ? (
+		<View style={styles.headerAccessory}>
+			<Pressable
+				onPress={() => {
+					void handleReplayAboutOnboarding();
+				}}
+				accessibilityRole='button'
+				accessibilityLabel='Rejouer l&apos;onboarding du parcours'
+				style={styles.devReplayButton}>
+				<Ionicons name='refresh' size={16} color={colorDarkGrey} />
+			</Pressable>
+			{aboutCta}
+		</View>
+	) : (
+		aboutCta ?? undefined
+	);
+
 	return (
 		<View style={[styles.wrapper, { paddingTop: insets.top }]}>
 			<PageTitleAvatarHeader
 				title='Parcours'
 				showAvatar={false}
 				containerStyle={styles.headerContainer}
+				rightAccessory={headerAccessory}
 			/>
 			<ScrollView
 				ref={scrollViewRef}
@@ -607,6 +711,11 @@ function ParcoursTimelineScreen() {
 				)}
 			</ScrollView>
 			{confettiRunId > 0 ? <CelebrationConfetti key={confettiRunId} /> : null}
+			<SectionAboutModal
+				section='parcours'
+				visible={isAboutSheetVisible}
+				onClose={handleAboutClose}
+			/>
 			<UpgradeSubscriptionModal
 				visible={isPaywallSheetVisible}
 				onClose={handlePaywallClose}
@@ -623,6 +732,19 @@ const styles = StyleSheet.create({
 	},
 	headerContainer: {
 		paddingHorizontal: 24,
+	},
+	headerAccessory: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 4,
+	},
+	devReplayButton: {
+		width: 28,
+		height: 28,
+		borderRadius: 14,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "rgba(0,0,0,0.06)",
 	},
 	sectionBlock: {
 		paddingTop: 10,
