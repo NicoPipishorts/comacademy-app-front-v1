@@ -37,7 +37,10 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
 
 				// Show a snackbar message if the connection is lost
 				if (!isConnected) {
-					showSnackbar("No internet connection", "error");
+					showSnackbar(
+						"Oups, une connexion est nécessaire pour utiliser l’appli ! Reviens nous voir quand tu seras connecté.",
+						"error"
+					);
 				}
 			}
 		});

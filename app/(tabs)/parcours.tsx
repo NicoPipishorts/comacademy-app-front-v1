@@ -33,6 +33,7 @@ import {
 	setSectionOnboardingSeen,
 } from "@/services/onboarding/SectionOnboarding";
 import { SECTION_ABOUT } from "@/constants/sectionOnboarding";
+import { useNetwork } from "@/providers/NetworkProvider";
 import { ParcoursTimelineWeek } from "@/types/parcours";
 import { useAssets } from "expo-asset";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -455,6 +456,7 @@ function ParcoursTimelineScreen() {
 	const [shouldAnimateAboutCta, setShouldAnimateAboutCta] = useState(false);
 	const { auth } = useAuthSession();
 	const userId = auth?.user?.id;
+	const { isConnected } = useNetwork();
 	const { token, loading: loadingToken } = useJwtToken();
 	const {
 		data,
@@ -467,7 +469,7 @@ function ParcoursTimelineScreen() {
 	useTrackPageMetrics({ page: "Parcours" });
 
 	const weeks = data?.data || [];
-	const errorMessage =
+	const debugErrorMessage =
 		error instanceof Error ? error.message : "Erreur inconnue";
 	const bonusUnlockWeekIdParam = Array.isArray(params.bonusUnlockWeekId)
 		? params.bonusUnlockWeekId[0]
@@ -680,13 +682,14 @@ function ParcoursTimelineScreen() {
 				}>
 				{isError ? (
 					<View style={styles.emptyState}>
-						<Text style={styles.emptyTitle}>API parcours indisponible</Text>
-						<Text style={styles.emptyDescription}>{errorMessage}</Text>
-						<Text style={styles.debugHint}>
-							Verifie que Strapi a redemarre avec les routes `parcours`,
-							que le role `Authenticated` peut y acceder, et qu&apos;au
-							moins une semaine est en `generated` ou `published`.
+						<Text style={styles.emptyDescription}>
+							{isConnected
+								? "Oups, le parcours n’est pas disponible pour le moment. Reviens nous voir dans quelques instants !"
+								: "Oups, une connexion est nécessaire pour utiliser l’appli ! Reviens nous voir quand tu seras connecté."}
 						</Text>
+						{__DEV__ ? (
+							<Text style={styles.debugHint}>{debugErrorMessage}</Text>
+						) : null}
 					</View>
 				) : weeks.length > 0 ? (
 					weeks.map((week, index) => (
